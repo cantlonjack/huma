@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { type Phase, PHASES } from "@/engine/types";
 import { type SavedConversation } from "@/lib/persistence";
+import { useAuth } from "@/components/AuthProvider";
 import ShapeChart from "@/components/ShapeChart";
 
 const SAMPLE_SHAPE_SCORES = [4, 3, 5, 4, 4, 3, 4, 3];
@@ -33,15 +34,26 @@ interface LandingViewProps {
 
 export default function LandingView({ savedConvo, onStart, onResume, onClearSaved }: LandingViewProps) {
   const [confirmFresh, setConfirmFresh] = useState(false);
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-sage-50/40 via-transparent to-amber-400/5 pointer-events-none" />
 
       <div className="relative z-10 flex flex-col items-center px-6 pt-16 md:pt-24 pb-16">
-        <p className="text-sm uppercase tracking-[0.4em] text-sage-600 mb-12 md:mb-16 font-medium">
-          HUMA
-        </p>
+        <div className="flex items-center justify-between w-full max-w-2xl mb-12 md:mb-16">
+          <p className="text-sm uppercase tracking-[0.4em] text-sage-600 font-medium">
+            HUMA
+          </p>
+          {user && (
+            <a
+              href="/operate"
+              className="text-sm text-sage-600 hover:text-sage-700 transition-colors"
+            >
+              Weekly Review &rarr;
+            </a>
+          )}
+        </div>
 
         <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-earth-900 text-center leading-[1.15] mb-10 max-w-2xl">
           See your land and your life as a connected whole
