@@ -8,6 +8,12 @@ const fallbackMap = new Map<string, { count: number; resetAt: number }>();
 
 function getFallbackLimited(ip: string): boolean {
   const now = Date.now();
+  // Purge expired entries when map grows too large (prevent memory leak)
+  if (fallbackMap.size > 1000) {
+    for (const [key, val] of fallbackMap) {
+      if (now > val.resetAt) fallbackMap.delete(key);
+    }
+  }
   const entry = fallbackMap.get(ip);
   if (!entry || now > entry.resetAt) {
     fallbackMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW * 1000 });

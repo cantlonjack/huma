@@ -1,12 +1,5 @@
-import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
-
-function getRedis() {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
-  if (!url || !token) return null;
-  return new Redis({ url, token });
-}
+import { getRedis } from "@/lib/redis";
 
 interface MapPayload {
   markdown: string;
@@ -33,7 +26,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Map too large" }, { status: 400 });
   }
 
-  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const id = crypto.randomUUID();
   const data: Record<string, unknown> = {
     markdown: body.markdown,
     name: body.name || "",

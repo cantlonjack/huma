@@ -1,12 +1,5 @@
-import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
-
-function getRedis() {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
-  if (!url || !token) return null;
-  return new Redis({ url, token });
-}
+import { getRedis } from "@/lib/redis";
 
 export async function GET(
   _request: Request,
