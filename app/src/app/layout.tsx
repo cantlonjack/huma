@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Source_Sans_3 } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
+import AuthProvider from "@/components/AuthProvider";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -33,10 +34,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${cormorant.variable} ${sourceSans.variable} font-sans antialiased`}>
-        <a href="#main-content" className="skip-nav">Skip to main content</a>
-        <main id="main-content">
-        {children}
-        </main>
+        <AuthProvider>
+          <a href="#main-content" className="skip-nav">Skip to main content</a>
+          <main id="main-content">
+          {children}
+          </main>
+        </AuthProvider>
         <Analytics />
       </body>
     </html>
