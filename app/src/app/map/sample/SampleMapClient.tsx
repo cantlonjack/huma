@@ -53,7 +53,7 @@ export default function SampleMapClient() {
           <span className="text-xs text-earth-500 italic hidden sm:inline">Sample map</span>
           <a
             href="/"
-            className="px-4 sm:px-5 py-2 text-sm bg-amber-600 text-earth-900 rounded-full hover:bg-amber-500 transition-all font-medium whitespace-nowrap"
+            className="px-4 sm:px-5 py-2 text-sm bg-amber-600 text-white rounded-full hover:bg-amber-700 transition-all font-medium whitespace-nowrap"
           >
             <span className="hidden sm:inline">Start Your Own Map</span>
             <span className="sm:hidden">Start Map</span>

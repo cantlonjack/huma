@@ -90,7 +90,7 @@ export default function MapClient({ id }: MapClientProps) {
           </p>
           <a
             href="/"
-            className="px-6 py-3 bg-amber-400 text-earth-900 rounded-full hover:bg-amber-500 transition-all"
+            className="px-6 py-3 bg-amber-600 text-white rounded-full hover:bg-amber-700 transition-all"
           >
             Create a new map
           </a>
@@ -152,13 +152,14 @@ export default function MapClient({ id }: MapClientProps) {
           </button>
           <button
             onClick={() => window.print()}
-            className="px-4 sm:px-5 py-2 text-sm bg-amber-400 text-earth-900 rounded-full hover:bg-amber-500 transition-all font-medium whitespace-nowrap hidden sm:block"
+            className="px-4 sm:px-5 py-2 text-sm bg-amber-600 text-white rounded-full hover:bg-amber-700 transition-all font-medium whitespace-nowrap"
           >
-            Save as PDF
+            <span className="hidden sm:inline">Save as PDF</span>
+            <span className="sm:hidden">PDF</span>
           </button>
           <a
             href="/"
-            className="px-4 sm:px-5 py-2 text-sm bg-amber-600 text-earth-900 rounded-full hover:bg-amber-500 transition-all font-medium whitespace-nowrap"
+            className="px-4 sm:px-5 py-2 text-sm bg-amber-600 text-white rounded-full hover:bg-amber-700 transition-all font-medium whitespace-nowrap"
           >
             <span className="hidden sm:inline">Start Your Own Map</span>
             <span className="sm:hidden">New Map</span>

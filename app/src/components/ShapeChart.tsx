@@ -59,7 +59,7 @@ export default function ShapeChart({
 
   return (
     <svg
-      viewBox="-200 -200 400 400"
+      viewBox="-220 -210 440 420"
       {...(size ? { width: size, height: size } : {})}
       className={`${className} ${breathing ? "shape-breathe" : ""}`}
       role="img"

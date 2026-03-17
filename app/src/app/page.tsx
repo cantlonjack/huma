@@ -65,6 +65,7 @@ export default function Home() {
   const [contextToast, setContextToast] = useState<string | null>(null);
   const [confirmFresh, setConfirmFresh] = useState(false);
   const [mapView, setMapView] = useState<"canvas" | "document">("canvas");
+  const [confirmExit, setConfirmExit] = useState(false);
   const contextRef = useRef<Partial<ConversationContext>>({});
   const nameInputRef = useRef<HTMLInputElement>(null);
 
@@ -459,7 +460,7 @@ export default function Home() {
           {/* Primary CTA */}
           <button
             onClick={() => setAppState("welcome")}
-            className="group px-10 py-4 bg-amber-400 text-earth-900 text-lg font-medium rounded-full hover:bg-amber-500 transition-all hover:shadow-lg hover:shadow-amber-400/20"
+            className="group px-10 py-4 bg-amber-600 text-white text-lg font-medium rounded-full hover:bg-amber-700 transition-all hover:shadow-lg hover:shadow-amber-600/20"
           >
             Start Your Map
             <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">&rarr;</span>
@@ -592,7 +593,7 @@ export default function Home() {
             type="text"
             value={operatorName}
             onChange={(e) => setOperatorName(e.target.value)}
-            className="w-full bg-transparent border-b-2 border-sand-300 focus:border-sage-500 text-center font-serif text-xl text-earth-800 py-3 outline-none transition-colors placeholder:text-earth-400/40"
+            className="w-full bg-transparent border-b-2 border-sand-300 focus:border-sage-500 text-center font-serif text-xl text-earth-800 py-3 outline-none transition-colors placeholder:text-earth-400"
             placeholder="Your name"
           />
 
@@ -604,7 +605,7 @@ export default function Home() {
             type="text"
             value={operatorLocation}
             onChange={(e) => setOperatorLocation(e.target.value)}
-            className="w-full bg-transparent border-b-2 border-sand-300 focus:border-sage-500 text-center font-serif text-lg text-earth-700 py-3 outline-none transition-colors placeholder:text-earth-400/40"
+            className="w-full bg-transparent border-b-2 border-sand-300 focus:border-sage-500 text-center font-serif text-lg text-earth-700 py-3 outline-none transition-colors placeholder:text-earth-400"
             placeholder="e.g., Southern Oregon, Vermont hilltop, or just a dream"
           />
           <p className="text-xs text-earth-400 mt-2">Optional</p>
@@ -612,7 +613,7 @@ export default function Home() {
           <button
             type="submit"
             disabled={!operatorName.trim()}
-            className="mt-16 px-10 py-4 bg-amber-400 text-earth-900 text-lg font-medium rounded-full hover:bg-amber-500 transition-all hover:shadow-lg hover:shadow-amber-400/20 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="mt-16 px-10 py-4 bg-amber-600 text-white text-lg font-medium rounded-full hover:bg-amber-700 transition-all hover:shadow-lg hover:shadow-amber-600/20 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Let&apos;s begin
           </button>
@@ -637,7 +638,7 @@ export default function Home() {
               <div className="flex items-center justify-center gap-4">
                 <button
                   onClick={() => generateMap()}
-                  className="px-6 py-3 bg-amber-400 text-earth-900 font-medium rounded-full hover:bg-amber-500 transition-all"
+                  className="px-6 py-3 bg-amber-600 text-white font-medium rounded-full hover:bg-amber-700 transition-all"
                 >
                   Try again
                 </button>
@@ -725,9 +726,10 @@ export default function Home() {
             )}
             <button
               onClick={() => window.print()}
-              className="px-4 sm:px-5 py-2 text-sm bg-amber-400 text-earth-900 rounded-full hover:bg-amber-500 transition-all font-medium whitespace-nowrap hidden sm:block"
+              className="px-4 sm:px-5 py-2 text-sm bg-amber-600 text-white rounded-full hover:bg-amber-700 transition-all font-medium whitespace-nowrap"
             >
-              Save as PDF
+              <span className="hidden sm:inline">Save as PDF</span>
+              <span className="sm:hidden">PDF</span>
             </button>
             <button
               onClick={handleShareFromMap}
@@ -764,7 +766,32 @@ export default function Home() {
   return (
     <div className="h-screen flex flex-col">
       <header className="no-print border-b border-sand-200 px-6 md:px-16 lg:px-24 py-3 flex items-center justify-between">
-        <span className="text-sm uppercase tracking-[0.3em] text-sage-600 font-medium">HUMA</span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setConfirmExit(true)}
+            className="text-sm uppercase tracking-[0.3em] text-sage-600 font-medium hover:text-sage-800 transition-colors"
+            aria-label="Return to home"
+          >
+            HUMA
+          </button>
+          {confirmExit && (
+            <span className="flex items-center gap-2 text-sm animate-fade-in">
+              <span className="text-earth-600">Leave conversation?</span>
+              <button
+                onClick={() => { setConfirmExit(false); setAppState("landing"); }}
+                className="text-amber-600 hover:text-amber-700 font-medium transition-colors"
+              >
+                Yes
+              </button>
+              <button
+                onClick={() => setConfirmExit(false)}
+                className="text-earth-400 hover:text-earth-600 transition-colors"
+              >
+                No
+              </button>
+            </span>
+          )}
+        </div>
         <PhaseIndicator currentPhase={currentPhase} />
       </header>
       <Chat

@@ -2,34 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { buildFullPrompt, buildDocumentPrompt } from "@/engine/phases";
 import { buildCanvasDataPrompt } from "@/engine/canvas-prompt";
 import { type Phase, type ConversationContext } from "@/engine/types";
-
-// ─── Rate Limiting (in-memory, per-deployment) ───
-
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT_WINDOW = 60_000; // 1 minute
-const RATE_LIMIT_MAX = 10; // 10 requests per minute per IP
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
-    return false;
-  }
-  entry.count++;
-  return entry.count > RATE_LIMIT_MAX;
-}
-
-// Periodic cleanup to prevent memory growth
-if (typeof globalThis !== "undefined") {
-  const cleanup = () => {
-    const now = Date.now();
-    for (const [ip, entry] of rateLimitMap) {
-      if (now > entry.resetAt) rateLimitMap.delete(ip);
-    }
-  };
-  setInterval(cleanup, 300_000);
-}
+import { isRateLimited } from "@/lib/rate-limit";
 
 // ─── Validation ───
 
@@ -78,7 +51,7 @@ export async function POST(request: Request) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
     || request.headers.get("x-real-ip")
     || "unknown";
-  if (isRateLimited(ip)) {
+  if (await isRateLimited(ip)) {
     return new Response(
       JSON.stringify({ error: "Too many requests. Please wait a moment." }),
       { status: 429, headers: { "Content-Type": "application/json" } }

@@ -149,7 +149,7 @@ export default function Chat({
             </p>
             <button
               onClick={onRetry}
-              className="px-4 py-1.5 text-sm bg-amber-400 rounded-full hover:bg-amber-500 text-earth-900 transition-all"
+              className="px-4 py-1.5 text-sm bg-amber-600 rounded-full hover:bg-amber-700 text-white transition-all"
             >
               Try again
             </button>
@@ -171,12 +171,12 @@ export default function Chat({
             placeholder={INPUT_PLACEHOLDERS[currentPhase] || "Share what comes to mind\u2026"}
             disabled={isLoading}
             rows={1}
-            className="flex-1 resize-none bg-white border border-sand-200 rounded-lg px-4 py-3 text-earth-800 placeholder:text-earth-500/50 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 disabled:opacity-50"
+            className="flex-1 resize-none bg-white border border-sand-200 rounded-lg px-4 py-3 text-earth-800 placeholder:text-earth-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="px-5 py-3 bg-amber-400 text-earth-900 rounded-full font-medium hover:bg-amber-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-5 py-3 bg-amber-600 text-white rounded-full font-medium hover:bg-amber-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label="Send message"
           >
             Send
