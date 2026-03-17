@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HUMA — Living Canvas — Sarah Chen</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   HUMA — Living Canvas
+   The spatial relational map.
+   
+   This is the "glasses moment" — the first time
+   someone sees their whole life-on-land as a
+   connected system. Every element is in relationship.
+   You can trace any action back to the purpose
+   that generated it.
+═══════════════════════════════════════════════ */
+
+:root {
+  --sand-50: #FAF8F3;
+  --sand-100: #F6F1E9;
+  --sand-200: #EDE6D8;
+  --sand-300: #DDD4C0;
+  --sand-400: #C4B89E;
+  
+  --sage-900: #1E3622;
+  --sage-800: #2A4A30;
+  --sage-700: #3A5A40;
+  --sage-600: #4A6E50;
+  --sage-500: #5C7A62;
+  --sage-400: #8BAF8E;
+  --sage-300: #A8C4AA;
+  --sage-200: #C4D9C6;
+  --sage-100: #E0EDE1;
+  --sage-50: #EBF3EC;
+  
+  --amber-700: #8B4513;
+  --amber-600: #B5621E;
+  --amber-500: #C87A3A;
+  --amber-400: #E8935A;
+  --amber-300: #F0B88A;
+  --amber-200: #F5D4B3;
+  --amber-100: #FFF4EC;
+  
+  --ink-900: #1A1714;
+  --ink-800: #2C2620;
+  --ink-700: #3D3830;
+  --ink-600: #554D42;
+  --ink-500: #6B6358;
+  --ink-400: #8C8274;
+  --ink-300: #A89E90;
+  --ink-200: #C4BAA8;
+  
+  --sky: #2E6B8A;
+  --sky-light: #D6EAF2;
+  --rose: #8B3A3A;
+  --rose-light: #F0DEDE;
+  --gold: #8A6D1E;
+  --gold-light: #F5EED4;
+  --lilac: #6B5A7A;
+  --lilac-light: #EDE8F2;
+  
+  --f-display: 'Cormorant Garamond', 'Georgia', serif;
+  --f-body: 'Source Sans 3', 'Helvetica Neue', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+body { background: var(--sand-50); color: var(--ink-800); font-family: var(--f-body); overflow-x: hidden; }
+
+/* ─── Top bar ─── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 24px;
+  background: rgba(250,248,243,0.92); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--sand-300);
+}
+.topbar-logo {
+  font-family: var(--f-display); font-size: 15px; font-weight: 500;
+  letter-spacing: 0.25em; color: var(--sage-700); text-transform: uppercase;
+}
+.topbar-meta {
+  font-family: var(--f-body); font-size: 12px; color: var(--ink-400);
+}
+.topbar-actions { display: flex; gap: 8px; }
+.topbar-btn {
+  font-family: var(--f-body); font-size: 12px; font-weight: 500;
+  padding: 6px 16px; border-radius: 100px; cursor: pointer; border: none;
+  transition: all 0.2s;
+}
+.topbar-btn.ghost { background: transparent; color: var(--ink-500); border: 1px solid var(--sand-300); }
+.topbar-btn.ghost:hover { border-color: var(--sage-400); color: var(--sage-700); }
+.topbar-btn.primary { background: var(--amber-600); color: white; }
+.topbar-btn.primary:hover { background: var(--amber-500); }
+
+/* ═══════════════════════════════════════════════
+   CANVAS CONTAINER
+   The radial map. Everything radiates from center.
+═══════════════════════════════════════════════ */
+
+.canvas-container {
+  padding: 80px 24px 60px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ─── ESSENCE CORE ─── */
+.essence-core {
+  text-align: center;
+  margin: 40px 0 12px;
+  position: relative;
+}
+
+.essence-glow {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 260px; height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--sage-200) 0%, transparent 70%);
+  opacity: 0.5;
+  animation: breathe 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
+  50% { transform: translate(-50%, -50%) scale(1.08); opacity: 0.6; }
+}
+
+.essence-name {
+  font-family: var(--f-display); font-size: 2.2rem; font-weight: 400;
+  color: var(--ink-900); position: relative; z-index: 1;
+  letter-spacing: -0.01em; line-height: 1.15;
+}
+.essence-land {
+  font-family: var(--f-display); font-size: 1.15rem; font-weight: 300;
+  font-style: italic; color: var(--sage-600); position: relative; z-index: 1;
+  margin-top: 4px;
+}
+.essence-phrase {
+  font-family: var(--f-display); font-size: 0.95rem; font-weight: 300;
+  font-style: italic; color: var(--ink-400); position: relative; z-index: 1;
+  margin-top: 16px; max-width: 360px; line-height: 1.6;
+}
+
+.ring-label {
+  font-family: var(--f-body); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-300);
+  text-align: center; margin: 36px 0 16px; position: relative;
+}
+.ring-label::before, .ring-label::after {
+  content: ''; position: absolute; top: 50%;
+  width: 60px; height: 1px; background: var(--sand-300);
+}
+.ring-label::before { right: calc(50% + 60px); }
+.ring-label::after { left: calc(50% + 60px); }
+
+/* ═══════════════════════════════════════════════
+   RING 1: QUALITY OF LIFE
+   The innermost ring. Soft nodes radiating.
+═══════════════════════════════════════════════ */
+
+.qol-ring {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 10px; max-width: 640px; margin: 0 auto;
+}
+
+.qol-node {
+  padding: 10px 18px;
+  background: var(--sage-50);
+  border: 1px solid var(--sage-200);
+  border-radius: 100px;
+  font-family: var(--f-body); font-size: 0.8rem; font-weight: 400;
+  color: var(--sage-800); line-height: 1.4;
+  max-width: 280px; text-align: center;
+  transition: all 0.3s;
+}
+.qol-node:hover {
+  background: var(--sage-100); border-color: var(--sage-300);
+  transform: translateY(-1px);
+}
+
+/* ═══════════════════════════════════════════════
+   RING 2: PRODUCTION FORMS
+═══════════════════════════════════════════════ */
+
+.production-ring {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 10px; max-width: 640px; margin: 0 auto;
+}
+
+.production-node {
+  padding: 10px 18px;
+  background: var(--amber-100);
+  border: 1px solid var(--amber-200);
+  border-radius: 100px;
+  font-family: var(--f-body); font-size: 0.8rem; font-weight: 400;
+  color: var(--amber-700); line-height: 1.4;
+  transition: all 0.3s;
+}
+
+/* ═══════════════════════════════════════════════
+   RING 3: FUTURE RESOURCE BASE
+═══════════════════════════════════════════════ */
+
+.resource-ring {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 10px; max-width: 640px; margin: 0 auto;
+}
+
+.resource-node {
+  padding: 10px 18px;
+  background: var(--sky-light);
+  border: 1px solid #B8D4E2;
+  border-radius: 100px;
+  font-family: var(--f-body); font-size: 0.8rem; font-weight: 400;
+  color: var(--sky); line-height: 1.4;
+  transition: all 0.3s;
+}
+
+/* ═══════════════════════════════════════════════
+   RING 4: LANDSCAPE (Regrarians)
+   Visual stack — but horizontal, showing the
+   hierarchy from permanent to flexible
+═══════════════════════════════════════════════ */
+
+.landscape-ring {
+  width: 100%; max-width: 760px; margin: 0 auto;
+}
+
+.landscape-layers {
+  display: flex; gap: 3px;
+  border-radius: 6px; overflow: hidden;
+}
+
+.land-layer {
+  flex: 1; padding: 14px 8px; text-align: center;
+  position: relative; cursor: default;
+  transition: all 0.3s;
+  min-width: 0;
+}
+.land-layer:hover { filter: brightness(1.05); transform: translateY(-2px); }
+
+.land-layer.permanent { background: var(--sage-900); color: var(--sage-100); }
+.land-layer.development { background: var(--sage-600); color: var(--sage-50); }
+.land-layer.management { background: var(--amber-700); color: var(--amber-100); }
+
+.land-layer-name {
+  font-family: var(--f-body); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  opacity: 0.85; margin-bottom: 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.land-layer-status {
+  display: inline-block;
+  font-family: var(--f-body); font-size: 0.55rem; font-weight: 500;
+  padding: 2px 8px; border-radius: 100px;
+}
+.st-strong { background: rgba(255,255,255,0.18); }
+.st-moderate { background: rgba(255,255,255,0.1); }
+.st-leverage { background: rgba(255,200,100,0.25); color: #FFE0B0; }
+.st-needs { background: rgba(255,255,255,0.06); }
+
+.land-layer-note {
+  font-family: var(--f-body); font-size: 0.65rem; font-weight: 300;
+  margin-top: 6px; opacity: 0.6; line-height: 1.4;
+  display: none;
+}
+.land-layer:hover .land-layer-note { display: block; }
+
+/* ═══════════════════════════════════════════════
+   8 FORMS OF CAPITAL — The living underlay
+   Small ring of 8 circles, always present,
+   sized by strength.
+═══════════════════════════════════════════════ */
+
+.capital-constellation {
+  display: flex; justify-content: center;
+  margin: 12px 0 0;
+}
+
+.capital-constellation svg { width: 320px; height: 160px; }
+
+.cap-circle {
+  transition: r 1s ease, opacity 0.3s;
+  cursor: default;
+}
+.cap-circle:hover { opacity: 1 !important; }
+
+.cap-label {
+  font-family: 'Source Sans 3', sans-serif;
+  font-weight: 500; letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: opacity 0.3s;
+}
+
+/* ═══════════════════════════════════════════════
+   RING 5: ENTERPRISES
+   Cards anchored to the landscape. Connected
+   to capitals they build.
+═══════════════════════════════════════════════ */
+
+.enterprise-ring {
+  width: 100%; max-width: 760px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .enterprise-ring { grid-template-columns: 1fr; }
+}
+
+.ent-card {
+  background: white;
+  border: 1px solid var(--sand-300);
+  border-radius: 8px;
+  padding: 20px;
+  position: relative;
+  transition: all 0.3s;
+}
+.ent-card:hover {
+  border-color: var(--sage-300);
+  box-shadow: 0 4px 24px rgba(58,90,64,0.08);
+  transform: translateY(-2px);
+}
+
+.ent-card.wide {
+  grid-column: 1 / -1;
+}
+
+.ent-accent {
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  border-radius: 8px 8px 0 0;
+}
+
+.ent-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+
+.ent-name {
+  font-family: var(--f-display); font-size: 1.2rem; font-weight: 500;
+  color: var(--ink-900); line-height: 1.2;
+}
+.ent-category {
+  font-family: var(--f-body); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--sage-600);
+  margin-top: 3px;
+}
+
+.ent-tag {
+  font-family: var(--f-body); font-size: 0.6rem; font-weight: 600;
+  padding: 3px 10px; border-radius: 100px; white-space: nowrap; flex-shrink: 0;
+}
+.ent-tag.anchor { background: var(--sage-50); color: var(--sage-700); }
+.ent-tag.foundation { background: var(--amber-100); color: var(--amber-700); }
+.ent-tag.partner { background: var(--sky-light); color: var(--sky); }
+.ent-tag.longgame { background: var(--gold-light); color: var(--gold); }
+.ent-tag.multiplier { background: var(--lilac-light); color: var(--lilac); }
+
+.ent-desc {
+  font-family: var(--f-body); font-size: 0.82rem; font-weight: 300;
+  color: var(--ink-600); line-height: 1.65; margin-bottom: 16px;
+}
+
+/* Financial micro-ledger */
+.ent-financials {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 1px; background: var(--sand-300);
+  border-radius: 4px; overflow: hidden; margin-bottom: 14px;
+}
+
+.ent-fin-cell {
+  background: var(--sand-50); padding: 8px 10px;
+}
+
+.ent-fin-label {
+  font-family: var(--f-body); font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-400);
+  margin-bottom: 2px;
+}
+.ent-fin-value {
+  font-family: var(--f-body); font-size: 0.82rem; font-weight: 500; color: var(--ink-800);
+}
+.ent-fin-value.money { color: var(--sage-800); font-weight: 600; }
+
+/* Capital dots — which capitals this enterprise builds */
+.ent-capitals {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;
+}
+.ent-cap-dot {
+  display: flex; align-items: center; gap: 4px;
+  font-family: var(--f-body); font-size: 0.65rem; font-weight: 500;
+  color: var(--ink-500); padding: 3px 8px;
+  background: var(--sand-100); border-radius: 100px;
+}
+.ent-cap-dot .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+}
+
+/* Fit line */
+.ent-fit {
+  font-family: var(--f-body); font-size: 0.78rem; font-weight: 300;
+  color: var(--ink-500); line-height: 1.6; font-style: italic;
+  padding-top: 12px; border-top: 1px solid var(--sand-200);
+}
+
+/* ═══════════════════════════════════════════════
+   RING 6: NODAL INTERVENTIONS
+   Actions with cascade chains. The outermost ring.
+═══════════════════════════════════════════════ */
+
+.nodal-ring {
+  width: 100%; max-width: 760px; margin: 0 auto;
+  display: flex; flex-direction: column; gap: 16px;
+}
+
+.nodal-card {
+  background: linear-gradient(135deg, var(--sage-50) 0%, var(--sand-100) 100%);
+  border: 1px solid var(--sage-200);
+  border-radius: 8px;
+  padding: 24px;
+  position: relative;
+}
+
+.nodal-num {
+  position: absolute; top: -10px; left: 20px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--sage-700); color: white;
+  font-family: var(--f-body); font-size: 0.65rem; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.nodal-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+
+.nodal-action {
+  font-family: var(--f-display); font-size: 1.15rem; font-weight: 500; color: var(--ink-900);
+}
+.nodal-timing {
+  font-family: var(--f-body); font-size: 0.72rem; font-weight: 500; color: var(--sage-600);
+}
+
+.nodal-why {
+  font-family: var(--f-body); font-size: 0.85rem; font-weight: 300;
+  color: var(--ink-600); line-height: 1.7; margin-bottom: 16px;
+}
+
+/* Cascade chain — the visual story of how one move serves five outcomes */
+.cascade {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 5px;
+}
+.cascade-node {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 11px;
+  background: white; border: 1px solid var(--sage-200);
+  border-radius: 100px;
+  font-family: var(--f-body); font-size: 0.68rem; font-weight: 500;
+  color: var(--sage-800); white-space: nowrap;
+}
+.cascade-arrow { color: var(--sage-300); font-size: 0.75rem; }
+
+.nodal-setup {
+  font-family: var(--f-body); font-size: 0.78rem; font-weight: 300;
+  color: var(--ink-500); font-style: italic; line-height: 1.6;
+  padding-top: 12px; border-top: 1px solid var(--sage-200); margin-top: 14px;
+}
+
+/* ═══════════════════════════════════════════════
+   CLOSING
+═══════════════════════════════════════════════ */
+
+.closing {
+  text-align: center; max-width: 520px;
+  margin: 20px auto 60px; padding-top: 40px;
+}
+.closing-text {
+  font-family: var(--f-display); font-size: 1rem; font-style: italic;
+  font-weight: 300; color: var(--ink-400); line-height: 1.75;
+  margin-bottom: 24px;
+}
+.closing-sig {
+  font-family: var(--f-display); font-size: 0.8rem; font-style: italic;
+  color: var(--ink-300); line-height: 1.6; margin-bottom: 16px;
+}
+.closing-huma {
+  font-family: var(--f-display); font-size: 0.7rem; font-weight: 500;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--sage-500); opacity: 0.5;
+}
+
+/* ─── Connection lines (SVG overlay) ─── */
+.connections-layer {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 0;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 640px) {
+  .essence-name { font-size: 1.8rem; }
+  .landscape-layers { flex-wrap: wrap; }
+  .land-layer { flex: none; width: calc(33.33% - 2px); }
+  .ent-financials { grid-template-columns: 1fr 1fr; }
+}
+
+/* ─── Print ─── */
+@media print {
+  body { background: white; font-size: 14px; }
+  .topbar { display: none; }
+  .canvas-container { padding: 20px; }
+  .ent-card { break-inside: avoid; page-break-inside: avoid; }
+  .nodal-card { break-inside: avoid; page-break-inside: avoid; }
+  * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="topbar-logo">HUMA</div>
+  <div class="topbar-meta">Sarah Chen · Rogue Valley · March 2026</div>
+  <div class="topbar-actions">
+    <button class="topbar-btn ghost">Print</button>
+    <button class="topbar-btn ghost">Share</button>
+    <button class="topbar-btn primary">Start Your Own Map</button>
+  </div>
+</div>
+
+<div class="canvas-container">
+
+  <!-- ═══ ESSENCE CORE ═══ -->
+  <div class="essence-core">
+    <div class="essence-glow"></div>
+    <div class="essence-name">Sarah Chen</div>
+    <div class="essence-land">& Twelve Acres in the Rogue Valley</div>
+    <p class="essence-phrase">"A builder who works through living systems — precise eye for water, no patience for abstraction that doesn't become action."</p>
+  </div>
+
+  <!-- ═══ RING 1: Quality of Life ═══ -->
+  <div class="ring-label">Quality of Life</div>
+  <div class="qol-ring">
+    <div class="qol-node">Days that start before dawn with observation, not alarms</div>
+    <div class="qol-node">Physical work that leaves me tired in a good way by 3pm</div>
+    <div class="qol-node">Evenings free for my daughter</div>
+    <div class="qol-node">A financial floor that removes ambient anxiety</div>
+    <div class="qol-node">Winter time to read, plan, and rest without guilt</div>
+    <div class="qol-node">Weekends not consumed by the operation</div>
+  </div>
+
+  <!-- ═══ RING 2: Production Forms ═══ -->
+  <div class="ring-label">Forms of Production</div>
+  <div class="production-ring">
+    <div class="production-node">Growing food — hands in it, not managing from a laptop</div>
+    <div class="production-node">Raising animals that improve the land</div>
+    <div class="production-node">Teaching what I learn — part of the purpose, not a side hustle</div>
+    <div class="production-node">People on the land, seeing what's possible</div>
+  </div>
+
+  <!-- ═══ RING 3: Future Resource Base ═══ -->
+  <div class="ring-label">Future Resource Base · 10 Years</div>
+  <div class="resource-ring">
+    <div class="resource-node">Measurably healthier soil across all 12 acres</div>
+    <div class="resource-node">Water system that captures and infiltrates, not sheds</div>
+    <div class="resource-node">Diversified income — no single enterprise or season dependency</div>
+    <div class="resource-node">Marriage stronger because of the farm, not strained by it</div>
+    <div class="resource-node">5 other families started operations because they visited ours</div>
+  </div>
+
+  <!-- ═══ 8 FORMS OF CAPITAL ═══ -->
+  <div class="ring-label">Capital Profile · All 8 Forms</div>
+  <div class="capital-constellation">
+    <svg viewBox="0 0 420 100" xmlns="http://www.w3.org/2000/svg">
+      <!-- 8 circles in a row, sized by strength, spaced evenly -->
+      <!-- Financial: 4/5 -->
+      <circle cx="30" cy="50" r="18" fill="var(--sage-600)" opacity="0.7" class="cap-circle"/>
+      <text x="30" y="82" text-anchor="middle" class="cap-label" font-size="7" fill="var(--ink-400)">Financial</text>
+      
+      <!-- Material: 3/5 -->
+      <circle cx="85" cy="50" r="13" fill="var(--sage-500)" opacity="0.55" class="cap-circle"/>
+      <text x="85" y="82" text-anchor="middle" class="cap-label" font-size="7" fill="var(--ink-400)">Material</text>
+      
+      <!-- Living: 5/5 -->
+      <circle cx="140" cy="50" r="24" fill="var(--sage-800)" opacity="0.8" class="cap-circle"/>
+      <text x="140" y="82" text-anchor="middle" class="cap-label" font-size="7" fill="var(--ink-400)">Living</text>
+      
+      <!-- Social: 4.5/5 -->
+      <circle cx="200" cy="50" r="21" fill="var(--sage-700)" opacity="0.75" class="cap-circle"/>
+      <text x="200" y="82" text-anchor="middle" class="cap-label" font-size="7" fill="var(--ink-400)">Social</text>
+      
+      <!-- Intellectual: 3.5/5 -->
+      <circle cx="258" cy="50" r="16" fill="var(--sage-600)" opacity="0.6" class="cap-circle"/>
+      <text x="258" y="82" text-anchor="middle" class="cap-label" font-size="7" fill="var(--ink-400)">Intellectual</text>
+      
+      <!-- Experiential: 4.5/5 -->
+      <circle cx="315" cy="50" r="20" fill="var(--sage-700)" opacity="0.75" class="cap-circle"/>
+      <text x="315" y="82" text-anchor="middle" class="cap-label" font-size="7" fill="var(--ink-400)">Experiential</text>
+      
+      <!-- Spiritual: 3.5/5 -->
+      <circle cx="370" cy="50" r="16" fill="var(--sage-600)" opacity="0.6" class="cap-circle"/>
+      <text x="370" y="82" text-anchor="middle" class="cap-label" font-size="7" fill="var(--ink-400)">Spiritual</text>
+      
+      <!-- Cultural: 3/5 -->
+      <circle cx="420" cy="50" r="12" fill="var(--sage-400)" opacity="0.5" class="cap-circle"/>
+      <text x="420" y="82" text-anchor="middle" class="cap-label" font-size="7" fill="var(--ink-400)">Cultural</text>
+    </svg>
+  </div>
+
+  <!-- ═══ RING 4: LANDSCAPE ═══ -->
+  <div class="ring-label">Your Landscape · Regrarians Reading</div>
+  <div class="landscape-ring">
+    <div class="landscape-layers">
+      <div class="land-layer permanent">
+        <div class="land-layer-name">Climate</div>
+        <div class="land-layer-status st-strong">Strong</div>
+        <div class="land-layer-note">7b · 220-day season</div>
+      </div>
+      <div class="land-layer permanent">
+        <div class="land-layer-name">Geography</div>
+        <div class="land-layer-status st-strong">Strong</div>
+        <div class="land-layer-note">SSW slope · cold air drainage</div>
+      </div>
+      <div class="land-layer permanent">
+        <div class="land-layer-name">Water</div>
+        <div class="land-layer-status st-leverage">★ Leverage</div>
+        <div class="land-layer-note">Year-round spring · uncaptured</div>
+      </div>
+      <div class="land-layer development">
+        <div class="land-layer-name">Access</div>
+        <div class="land-layer-status st-moderate">Adequate</div>
+        <div class="land-layer-note">Paved road · no internal lanes</div>
+      </div>
+      <div class="land-layer development">
+        <div class="land-layer-name">Forestry</div>
+        <div class="land-layer-status st-moderate">Foundation</div>
+        <div class="land-layer-note">3 mature oaks · west boundary</div>
+      </div>
+      <div class="land-layer development">
+        <div class="land-layer-name">Buildings</div>
+        <div class="land-layer-status st-moderate">Usable</div>
+        <div class="land-layer-note">Barn needs roofing</div>
+      </div>
+      <div class="land-layer development">
+        <div class="land-layer-name">Fencing</div>
+        <div class="land-layer-status st-needs">Needs Work</div>
+        <div class="land-layer-note">Perimeter only · no cross-fencing</div>
+      </div>
+      <div class="land-layer management">
+        <div class="land-layer-name">Soils</div>
+        <div class="land-layer-status st-moderate">Recovering</div>
+        <div class="land-layer-note">Compacted from hay · biology present</div>
+      </div>
+      <div class="land-layer management">
+        <div class="land-layer-name">Economy</div>
+        <div class="land-layer-status st-needs">To Build</div>
+        <div class="land-layer-note">No farm income · Ashland market</div>
+      </div>
+      <div class="land-layer management">
+        <div class="land-layer-name">Energy</div>
+        <div class="land-layer-status st-needs">To Build</div>
+        <div class="land-layer-note">Grid power · gravity-fed potential</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ RING 5: ENTERPRISES ═══ -->
+  <div class="ring-label">Your Enterprise Stack</div>
+  <div class="enterprise-ring">
+
+    <!-- Enterprise 1: Market Garden -->
+    <div class="ent-card">
+      <div class="ent-accent" style="background: linear-gradient(90deg, var(--sage-700), var(--sage-400));"></div>
+      <div class="ent-header">
+        <div>
+          <div class="ent-name">No-Dig Market Garden</div>
+          <div class="ent-category">Intensive Vegetables</div>
+        </div>
+        <span class="ent-tag anchor">Anchor</span>
+      </div>
+      <div class="ent-desc">High-intensity production on permanent beds. First revenue in 8 weeks. The enterprise that feeds your CSA and builds the soil biology everything else depends on.</div>
+      <div class="ent-financials">
+        <div class="ent-fin-cell"><div class="ent-fin-label">Startup</div><div class="ent-fin-value money">$3.2–5.5K</div></div>
+        <div class="ent-fin-cell"><div class="ent-fin-label">Year 1</div><div class="ent-fin-value money">$12–20K</div></div>
+        <div class="ent-fin-cell"><div class="ent-fin-label">Year 3</div><div class="ent-fin-value money">$28–45K</div></div>
+      </div>
+      <div class="ent-capitals">
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-800)"></span>Living</div>
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-700)"></span>Financial</div>
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-600)"></span>Experiential</div>
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-500)"></span>Intellectual</div>
+      </div>
+      <div class="ent-fit">Your SSW slope creates a 2-3 week thermal advantage. The spring-fed gravity system eliminates pumping costs. Your detail-oriented mind maps directly to succession planning.</div>
+    </div>
+
+    <!-- Enterprise 2: CSA -->
+    <div class="ent-card">
+      <div class="ent-accent" style="background: linear-gradient(90deg, var(--amber-600), var(--amber-400));"></div>
+      <div class="ent-header">
+        <div>
+          <div class="ent-name">Community Supported Agriculture</div>
+          <div class="ent-category">Direct Relationship</div>
+        </div>
+        <span class="ent-tag foundation">Foundation</span>
+      </div>
+      <div class="ent-desc">Members pay before the season. Working capital in February, guaranteed income through October. 30 families invested in your success — not just your produce.</div>
+      <div class="ent-financials">
+        <div class="ent-fin-cell"><div class="ent-fin-label">Startup</div><div class="ent-fin-value money">$400–800</div></div>
+        <div class="ent-fin-cell"><div class="ent-fin-label">Year 1</div><div class="ent-fin-value money">$12–18K</div></div>
+        <div class="ent-fin-cell"><div class="ent-fin-label">Year 3</div><div class="ent-fin-value money">$24–40K</div></div>
+      </div>
+      <div class="ent-capitals">
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-800)"></span>Social</div>
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-700)"></span>Financial</div>
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-700)"></span>Cultural</div>
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-600)"></span>Spiritual</div>
+      </div>
+      <div class="ent-fit">Your partner's college network is 30 potential founding members before you print a flyer. Teaching is part of the purpose — a CSA is a teaching relationship disguised as a food subscription.</div>
+    </div>
+
+    <!-- Enterprise 3: Pastured Layers -->
+    <div class="ent-card">
+      <div class="ent-accent" style="background: linear-gradient(90deg, var(--sky), #5A9DB5);"></div>
+      <div class="ent-header">
+        <div>
+          <div class="ent-name">Pastured Laying Hens</div>
+          <div class="ent-category">Livestock · Soil Builder</div>
+        </div>
+        <span class="ent-tag partner">Partner</span>
+      </div>
+      <div class="ent-desc">200 hens in a mobile egg-mobile. They don't just produce eggs — they break compaction, eat pests, fertilize pasture, and produce the compost that feeds your garden beds.</div>
+      <div class="ent-financials">
+        <div class="ent-fin-cell"><div class="ent-fin-label">Startup</div><div class="ent-fin-value money">$4.5–7K</div></div>
+        <div class="ent-fin-cell"><div class="ent-fin-label">Year 1</div><div class="ent-fin-value money">$10–16K</div></div>
+        <div class="ent-fin-cell"><div class="ent-fin-label">Year 3</div><div class="ent-fin-value money">$14–22K</div></div>
+      </div>
+      <div class="ent-capitals">
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-800)"></span>Living</div>
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-700)"></span>Social</div>
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-600)"></span>Financial</div>
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-500)"></span>Spiritual</div>
+      </div>
+      <div class="ent-fit">Your former colleagues already asked "when can we buy eggs?" — that's Social capital converting to Financial before you own a single hen. Eggs are the ultimate weekly relationship touchpoint.</div>
+    </div>
+
+    <!-- Enterprise 4: Silvopasture -->
+    <div class="ent-card">
+      <div class="ent-accent" style="background: linear-gradient(90deg, var(--gold), #B8922E);"></div>
+      <div class="ent-header">
+        <div>
+          <div class="ent-name">Oak Silvopasture Corridor</div>
+          <div class="ent-category">Agroforestry</div>
+        </div>
+        <span class="ent-tag longgame">Long Game</span>
+      </div>
+      <div class="ent-desc">Extending the three existing oaks into a silvopasture corridor. Chestnut, persimmon, apple with managed understory. Won't produce income for 3–5 years, but transforms the landscape and creates the shade infrastructure for a hotter future.</div>
+      <div class="ent-financials">
+        <div class="ent-fin-cell"><div class="ent-fin-label">Startup</div><div class="ent-fin-value money">$2.5–5K</div></div>
+        <div class="ent-fin-cell"><div class="ent-fin-label">Year 1</div><div class="ent-fin-value">$0</div></div>
+        <div class="ent-fin-cell"><div class="ent-fin-label">Year 5+</div><div class="ent-fin-value money">$5–15K</div></div>
+      </div>
+      <div class="ent-capitals">
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-900)"></span>Living</div>
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-700)"></span>Spiritual</div>
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-600)"></span>Material</div>
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-500)"></span>Cultural</div>
+      </div>
+      <div class="ent-fit">You said you want 5 families starting operations because they visited yours. Silvopasture is the enterprise that people photograph. Your 10-year resource base commitment — "measurably healthier soil" — is what this delivers at depth.</div>
+    </div>
+
+    <!-- Enterprise 5: Education (full width) -->
+    <div class="ent-card wide">
+      <div class="ent-accent" style="background: linear-gradient(90deg, var(--lilac), #8A78A0);"></div>
+      <div class="ent-header">
+        <div>
+          <div class="ent-name">On-Farm Education & Workshops</div>
+          <div class="ent-category">Knowledge Economy</div>
+        </div>
+        <span class="ent-tag multiplier">Multiplier</span>
+      </div>
+      <div class="ent-desc">Teaching what you're learning as you learn it. Your engineering background gives you a credibility most beginning farmers lack — you don't just know what works, you know why. Every other enterprise becomes a teaching topic. By year 3, this is your highest revenue-per-hour enterprise.</div>
+      <div class="ent-financials">
+        <div class="ent-fin-cell"><div class="ent-fin-label">Startup</div><div class="ent-fin-value money">$300–800</div></div>
+        <div class="ent-fin-cell"><div class="ent-fin-label">Year 1</div><div class="ent-fin-value money">$3–8K</div></div>
+        <div class="ent-fin-cell"><div class="ent-fin-label">Year 3</div><div class="ent-fin-value money">$12–30K</div></div>
+      </div>
+      <div class="ent-capitals">
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-800)"></span>Intellectual</div>
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-700)"></span>Social</div>
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-700)"></span>Cultural</div>
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-600)"></span>Financial</div>
+        <div class="ent-cap-dot"><span class="dot" style="background:var(--sage-600)"></span>Spiritual</div>
+      </div>
+      <div class="ent-fit">This is where your Ikigai converges most completely. Teaching is part of the purpose, you said. Your systems engineering background means you can explain water, soil biology, and enterprise economics in ways other farmers can't. Your partner's college network is a built-in audience.</div>
+    </div>
+  </div>
+
+  <!-- ═══ RING 6: NODAL INTERVENTIONS ═══ -->
+  <div class="ring-label">Where to Begin · This Season</div>
+  <div class="nodal-ring">
+
+    <div class="nodal-card">
+      <div class="nodal-num">1</div>
+      <div class="nodal-header">
+        <span class="nodal-action">Capture the Spring</span>
+        <span class="nodal-timing">This month · $800–1,200 · One weekend</span>
+      </div>
+      <div class="nodal-why">Install a gravity-fed collection and distribution system from the northeast spring. The single highest-leverage intervention on the property — once water flows by gravity, every other enterprise becomes cheaper, easier, and more drought-resilient.</div>
+      <div class="cascade">
+        <span class="cascade-node">💧 Spring capture</span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-node">🌱 Free irrigation</span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-node">💰 Zero pumping cost</span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-node">🐔 Water to all paddocks</span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-node">🌳 Tree establishment</span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-node">⚡ Energy independence</span>
+      </div>
+      <div class="nodal-setup">Sets up: garden irrigation, paddock water for hens, tree establishment water for silvopasture. Your water engineering background means you can design this better than anyone you'd hire.</div>
+    </div>
+
+    <div class="nodal-card">
+      <div class="nodal-num">2</div>
+      <div class="nodal-header">
+        <span class="nodal-action">Build 12 Beds & Pre-Sell 15 CSA Shares</span>
+        <span class="nodal-timing">Next 4 weeks · $1,800–2,500 · 30 hours</span>
+      </div>
+      <div class="nodal-why">Establish beds and recruit your first members simultaneously. The CSA payments fund the rest of the garden buildout. The beds and the members arrive at the same time.</div>
+      <div class="cascade">
+        <span class="cascade-node">🛏️ 12 beds built</span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-node">👥 15 members commit</span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-node">💰 $6K+ pre-season</span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-node">🌱 First harvest 8 weeks</span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-node">📣 15 families talking</span>
+      </div>
+      <div class="nodal-setup">Sets up: revenue by late spring, proof of concept for year 2 expansion, soil biology building from day one, and 15 families watching your land transform.</div>
+    </div>
+
+    <div class="nodal-card">
+      <div class="nodal-num">3</div>
+      <div class="nodal-header">
+        <span class="nodal-action">Host One Open Farm Day</span>
+        <span class="nodal-timing">Late spring · $50–100 · One Saturday</span>
+      </div>
+      <div class="nodal-why">Before anything is impressive — invite people to see the beginning. Show them the spring, the beds, the plan. This is the cheapest, highest-return action in the stack because it converts invisible intention into visible community momentum.</div>
+      <div class="cascade">
+        <span class="cascade-node">🚪 Open day</span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-node">👥 30 visitors</span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-node">📧 30 on email list</span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-node">🥚 Future egg customers</span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-node">📚 Workshop attendees</span>
+        <span class="cascade-arrow">→</span>
+        <span class="cascade-node">🌍 Story spreads</span>
+      </div>
+      <div class="nodal-setup">Sets up: customer base for eggs before hens arrive, workshop audience before you design a curriculum, community investment in your success. Tests your comfort with hosting — the skill that underlies your highest-margin enterprise.</div>
+    </div>
+
+  </div>
+
+  <!-- ═══ CLOSING ═══ -->
+  <div class="closing">
+    <p class="closing-text">
+      Sarah — you said everything you care about starts with the soil. This map shows that everything also starts with you: your eye for water, your need for tangible progress, your instinct that teaching is part of the purpose. The land has been waiting for someone who sees it as a living system. The spring is already flowing. The oaks are already rooted. The neighbors are already asking.
+    </p>
+    <p class="closing-sig">
+      This map is a beginning, not a blueprint.<br>
+      The land will teach you things no tool can anticipate.<br>
+      Trust the conversation between you and your place.
+    </p>
+    <div class="closing-huma">Generated by HUMA</div>
+  </div>
+
+</div>
+
+</body>
+</html>

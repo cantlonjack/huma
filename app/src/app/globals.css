@@ -1,0 +1,356 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* ── Sand ── */
+  --color-sand-50: #FAF8F3;
+  --color-sand-100: #F6F1E9;
+  --color-sand-200: #EDE6D8;
+  --color-sand-300: #DDD4C0;
+  --color-sand-400: #C4B89E;
+
+  /* ── Sage ── */
+  --color-sage-50: #EBF3EC;
+  --color-sage-100: #E0EDE1;
+  --color-sage-200: #C4D9C6;
+  --color-sage-300: #A8C4AA;
+  --color-sage-400: #8BAF8E;
+  --color-sage-500: #5C7A62;
+  --color-sage-600: #4A6E50;
+  --color-sage-700: #3A5A40;
+  --color-sage-800: #2A4A30;
+  --color-sage-900: #1E3622;
+
+  /* ── Amber ── */
+  --color-amber-100: #FFF4EC;
+  --color-amber-200: #F5D4B3;
+  --color-amber-300: #F0B88A;
+  --color-amber-400: #E8935A;
+  --color-amber-500: #C87A3A;
+  --color-amber-600: #B5621E;
+  --color-amber-700: #8B4513;
+
+  /* ── Earth (Ink) ── */
+  --color-earth-200: #C4BAA8;
+  --color-earth-300: #A89E90;
+  --color-earth-400: #8C8274;
+  --color-earth-500: #6B6358;
+  --color-earth-600: #554D42;
+  --color-earth-700: #3D3830;
+  --color-earth-800: #2C2620;
+  --color-earth-900: #1A1714;
+
+  /* ── Accent Colors ── */
+  --color-sky: #2E6B8A;
+  --color-sky-light: #D6EAF2;
+  --color-rose: #8B3A3A;
+  --color-rose-light: #F0DEDE;
+  --color-gold: #8A6D1E;
+  --color-gold-light: #F5EED4;
+  --color-lilac: #6B5A7A;
+  --color-lilac-light: #EDE8F2;
+
+  /* ── Typography ── */
+  --font-serif: var(--font-cormorant, "Cormorant Garamond"), Georgia, serif;
+  --font-sans: var(--font-source-sans, "Source Sans 3"), system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background: var(--color-sand-50);
+  color: var(--color-earth-800);
+  font-family: var(--font-sans);
+}
+
+/* ─── Typography Scale ─── */
+/* xs: 0.65rem | sm: 0.75rem | base: 0.85rem | md: 0.95rem | lg: 1.15rem | xl: 1.5rem | 2xl: 2.2rem */
+
+/* ─── Skip Navigation ─── */
+.skip-nav {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 200;
+  padding: 8px 16px;
+  background: var(--color-sage-700);
+  color: white;
+  border-radius: 0 0 8px 8px;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: top 0.2s;
+}
+.skip-nav:focus {
+  top: 0;
+}
+
+/* ─── Focus Visible Ring ─── */
+:focus-visible {
+  outline: 2px solid var(--color-sage-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-sage-500);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-sage-500);
+  outline-offset: 0;
+}
+
+/* ─── Essence Breathing Glow ─── */
+
+@keyframes essence-breathe {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
+  50% { transform: translate(-50%, -50%) scale(1.08); opacity: 0.6; }
+}
+
+/* ─── Shape Animations ─── */
+
+@keyframes shape-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.025); }
+}
+
+.shape-breathe {
+  animation: shape-breathe 5s ease-in-out infinite;
+}
+
+/* ─── Enterprise Cards ─── */
+
+.enterprise-card {
+  border: 1px solid var(--color-sand-200);
+  background: var(--color-sand-50);
+  border-radius: 12px;
+  padding: 1.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.enterprise-card h3 {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-sage-700);
+  margin: 0 0 0.25rem 0;
+}
+
+.enterprise-card .enterprise-subtitle {
+  font-style: italic;
+  color: var(--color-earth-600);
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+/* Financial data table */
+.financials-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+}
+
+.financials-table td {
+  padding: 0.375rem 0;
+  border-bottom: 1px solid var(--color-sand-200);
+}
+
+.financials-table td:first-child {
+  color: var(--color-earth-600);
+  width: 55%;
+}
+
+.financials-table td:last-child {
+  color: var(--color-earth-900);
+  font-weight: 500;
+  text-align: right;
+}
+
+/* Capital bars */
+.capital-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.375rem;
+  font-size: 0.8125rem;
+}
+
+.capital-bar-label {
+  width: 100px;
+  flex-shrink: 0;
+  color: var(--color-earth-600);
+  font-family: var(--font-sans);
+}
+
+.capital-bar-track {
+  flex: 1;
+  height: 12px;
+  background: var(--color-sand-200);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.capital-bar-fill {
+  height: 100%;
+  background: var(--color-sage-400);
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+.capital-bar-score {
+  width: 28px;
+  text-align: right;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--color-earth-500);
+}
+
+/* ─── Fade-in Animation ─── */
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease;
+}
+
+/* ─── Toast ─── */
+
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-earth-800);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  z-index: 100;
+  animation: toast-in 0.3s ease, toast-out 0.3s ease 1.7s forwards;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* ─── Print Styles ─── */
+
+@media print {
+  body {
+    background: white;
+    color: black;
+    font-size: 11pt;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-break {
+    page-break-before: always;
+  }
+
+  /* Enterprise cards */
+  .enterprise-card {
+    border: 1px solid #ccc;
+    background: white;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+
+  .enterprise-card h3 {
+    color: #2a211b;
+  }
+
+  /* Capital bars in print */
+  .capital-bar-fill {
+    background: #666;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .capital-bar-track {
+    background: #e0e0e0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Section breaks */
+  .map-section-essence,
+  .map-section-context,
+  .map-section-landscape,
+  .map-section-enterprises,
+  .map-section-capital,
+  .map-section-nodal,
+  .map-section-closing {
+    page-break-before: auto;
+  }
+
+  .map-section-enterprises {
+    page-break-before: always;
+  }
+
+  /* Canvas components print */
+  .canvas-container {
+    padding: 20px;
+  }
+
+  .canvas-container [class*="bg-gradient"],
+  .canvas-container [class*="bg-sage"],
+  .canvas-container [class*="bg-amber"],
+  .canvas-container [class*="bg-sky"],
+  .canvas-container [class*="bg-sand"] {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Prevent page breaks inside cards */
+  .canvas-container [class*="rounded-lg"] {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Shape chart print */
+  .shape-breathe {
+    animation: none;
+  }
+
+  svg {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Clean table borders */
+  table {
+    border-collapse: collapse;
+  }
+
+  td, th {
+    border-bottom: 1px solid #ccc;
+  }
+
+  /* Page margins */
+  @page {
+    margin: 0.75in;
+    size: letter;
+  }
+
+  /* Footer */
+  .map-footer {
+    page-break-before: avoid;
+  }
+}
