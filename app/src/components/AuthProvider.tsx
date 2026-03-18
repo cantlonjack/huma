@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase";
 import type { User, Session } from "@supabase/supabase-js";
 
 interface AuthContextType {
@@ -30,7 +30,13 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isSupabaseConfigured()) {
+      setLoading(false);
+      return;
+    }
+
     const supabase = createClient();
+    if (!supabase) { setLoading(false); return; }
 
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
@@ -50,6 +56,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
   const signInWithMagicLink = async (email: string) => {
     const supabase = createClient();
+    if (!supabase) return { error: "Authentication is not configured" };
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -61,7 +68,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
   const signOut = async () => {
     const supabase = createClient();
-    await supabase.auth.signOut();
+    if (supabase) await supabase.auth.signOut();
   };
 
   return (
