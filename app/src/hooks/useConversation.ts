@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { type Message, type Phase, type ConversationContext } from "@/engine/types";
+import { type Message, type Phase, type ConversationContext, type ProgressiveCanvasData } from "@/engine/types";
 import { buildOpeningMessage } from "@/engine/phases";
 import { type SavedConversation, saveConversation } from "@/lib/persistence";
 import { cleanForDisplay as cleanMarkers, parseMarkers as extractMarkers } from "@/lib/markers";
@@ -31,6 +31,13 @@ export function useConversation({ operatorName, operatorLocation, onComplete }: 
   const [contextSnapshot, setContextSnapshot] = useState<Partial<ConversationContext>>({});
   const [contextToast, setContextToast] = useState<string | null>(null);
   const contextRef = useRef<Partial<ConversationContext>>({});
+
+  // Canvas data: ref for accumulation during streaming, state for triggering re-renders
+  const canvasDataRef = useRef<Partial<ProgressiveCanvasData>>({});
+  const [canvasDataSnapshot, setCanvasDataSnapshot] = useState<Partial<ProgressiveCanvasData>>({});
+  const [completedPhases, setCompletedPhases] = useState<Phase[]>([]);
+  // Track which messages preceded a phase transition (messageId → phase label)
+  const [phaseTransitions, setPhaseTransitions] = useState<Record<string, string>>({});
 
   const accumulateContext = useCallback((capturedContexts: { type: string; value: string }[]) => {
     for (const { type: contextType, value: contextValue } of capturedContexts) {
@@ -90,6 +97,52 @@ export function useConversation({ operatorName, operatorLocation, onComplete }: 
     }
   }, []);
 
+  const accumulateCanvasData = useCallback((entries: { type: string; json: unknown }[]) => {
+    for (const { type: dataType, json } of entries) {
+      const data = json as Record<string, unknown>;
+      if (dataType === "ikigai" && data.phrase) {
+        canvasDataRef.current = {
+          ...canvasDataRef.current,
+          essence: {
+            name: operatorName,
+            location: operatorLocation,
+            phrase: data.phrase as string,
+          },
+        };
+      } else if (dataType === "holistic") {
+        canvasDataRef.current = {
+          ...canvasDataRef.current,
+          ...(data.qolStatements ? { qolNodes: data.qolStatements as string[] } : {}),
+          ...(data.productionForms ? { productionNodes: data.productionForms as string[] } : {}),
+          ...(data.futureResourceBase ? { resourceNodes: data.futureResourceBase as string[] } : {}),
+        };
+      } else if (dataType === "landscape" && data.capitalScores) {
+        const scores = data.capitalScores as Record<string, number>;
+        canvasDataRef.current = {
+          ...canvasDataRef.current,
+          capitalProfile: Object.entries(scores).map(([form, score]) => ({ form, score })),
+        };
+      } else if (dataType === "enterprises" && data.enterprises) {
+        canvasDataRef.current = {
+          ...canvasDataRef.current,
+          enterprises: data.enterprises as Array<{ name: string; role: string; year1Revenue: string }>,
+        };
+      } else if (dataType === "nodal" && data.interventions) {
+        canvasDataRef.current = {
+          ...canvasDataRef.current,
+          interventions: data.interventions as Array<{ action: string; cascadeSteps: string[] }>,
+        };
+      } else if (dataType === "operational" && data.weeklyRhythm) {
+        canvasDataRef.current = {
+          ...canvasDataRef.current,
+          weeklyRhythm: data.weeklyRhythm as ProgressiveCanvasData["weeklyRhythm"],
+        };
+      }
+    }
+    // Flush ref to state snapshot — triggers single re-render
+    setCanvasDataSnapshot({ ...canvasDataRef.current });
+  }, [operatorName, operatorLocation]);
+
   const startConversation = useCallback((name: string, location: string) => {
     contextRef.current = {
       ...contextRef.current,
@@ -144,7 +197,13 @@ export function useConversation({ operatorName, operatorLocation, onComplete }: 
           }),
         });
 
-        if (!response.ok) throw new Error(`API error: ${response.status}`);
+        if (!response.ok) {
+          const status = response.status;
+          if (status === 429) {
+            throw new Error("rate-limited");
+          }
+          throw new Error(`API error: ${status}`);
+        }
 
         const reader = response.body?.getReader();
         if (!reader) throw new Error("No response body");
@@ -152,16 +211,34 @@ export function useConversation({ operatorName, operatorLocation, onComplete }: 
         const decoder = new TextDecoder();
         let fullText = "";
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const chunk = decoder.decode(value, { stream: true });
-          fullText += chunk;
-          setStreamingContent(cleanMarkers(fullText));
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            fullText += chunk;
+            setStreamingContent(cleanMarkers(fullText));
+          }
+        } catch {
+          if (fullText.length > 0) {
+            const { clean } = extractMarkers(fullText);
+            const partialMsg: Message = {
+              id: `assistant-${Date.now()}`,
+              role: "assistant",
+              content: clean,
+            };
+            setMessages((prev) => [...prev, partialMsg]);
+            setStreamingContent("");
+          }
+          throw new Error("connection-lost");
         }
 
-        const { clean, phase: detectedPhase, isComplete, capturedContexts } = extractMarkers(fullText);
+        const { clean, phase: detectedPhase, isComplete, capturedContexts, canvasDataEntries } = extractMarkers(fullText);
         accumulateContext(capturedContexts);
+
+        if (canvasDataEntries.length > 0) {
+          accumulateCanvasData(canvasDataEntries);
+        }
 
         const assistantMsg: Message = {
           id: `assistant-${Date.now()}`,
@@ -177,9 +254,35 @@ export function useConversation({ operatorName, operatorLocation, onComplete }: 
           setCurrentPhase(detectedPhase);
           setContextSnapshot({ ...contextRef.current });
           trackEvent("phase_transition", { phase: detectedPhase });
+
+          // The PREVIOUS phase just completed — add to completedPhases
+          setCompletedPhases((prev) => {
+            if (!prev.includes(currentPhase)) {
+              return [...prev, currentPhase];
+            }
+            return prev;
+          });
+
+          // Record which message preceded this phase transition
+          setPhaseTransitions((prev) => ({
+            ...prev,
+            [assistantMsg.id]: detectedPhase,
+          }));
+
+          // Fallback: if no canvas data for ikigai, use operator name/location
+          if (currentPhase === "ikigai" && canvasDataEntries.length === 0) {
+            canvasDataRef.current = {
+              ...canvasDataRef.current,
+              essence: {
+                name: operatorName,
+                location: operatorLocation,
+                phrase: "",
+              },
+            };
+            setCanvasDataSnapshot({ ...canvasDataRef.current });
+          }
         }
 
-        // Show context capture toast
         if (capturedContexts.length > 0) {
           const lastCaptured = capturedContexts[capturedContexts.length - 1];
           const toastMsg = CONTEXT_TOAST_MESSAGES[lastCaptured.type];
@@ -190,7 +293,6 @@ export function useConversation({ operatorName, operatorLocation, onComplete }: 
           setContextSnapshot({ ...contextRef.current });
         }
 
-        // Persist conversation for resume
         saveConversation({
           messages: [...updatedMessages, assistantMsg],
           phase: newPhase,
@@ -201,20 +303,37 @@ export function useConversation({ operatorName, operatorLocation, onComplete }: 
         });
 
         if (isComplete) {
+          setCompletedPhases((prev) => {
+            if (!prev.includes("operational-design")) {
+              return [...prev, "operational-design"];
+            }
+            return prev;
+          });
           onComplete();
         }
       } catch (error) {
         console.error("Failed to send message:", error);
+        const msg = error instanceof Error ? error.message : "";
+        let errorContent: string;
+        if (msg === "rate-limited") {
+          errorContent = "Too many requests. Give it a moment, then try again.";
+        } else if (msg === "connection-lost") {
+          errorContent = "Connection was interrupted. Your conversation is saved. Try sending your message again.";
+        } else {
+          errorContent = "I seem to have lost my train of thought. Could you try again?";
+        }
         setLastError({
-          content: "I seem to have lost my train of thought. Could you try again?",
+          content: errorContent,
           retryWith: content,
         });
-        setMessages(messages);
+        if (msg !== "connection-lost") {
+          setMessages(messages);
+        }
       } finally {
         setIsLoading(false);
       }
     },
-    [messages, currentPhase, accumulateContext, operatorName, operatorLocation, onComplete]
+    [messages, currentPhase, accumulateContext, accumulateCanvasData, operatorName, operatorLocation, onComplete]
   );
 
   const handleRetry = useCallback(() => {
@@ -232,6 +351,9 @@ export function useConversation({ operatorName, operatorLocation, onComplete }: 
     contextSnapshot,
     contextToast,
     contextRef,
+    canvasDataSnapshot,
+    completedPhases,
+    phaseTransitions,
     startConversation,
     resumeConversation,
     sendMessage,

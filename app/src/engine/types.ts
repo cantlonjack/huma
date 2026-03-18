@@ -74,3 +74,17 @@ export interface ConversationContext {
   messageCount: number;
   phaseMessageCount: number;
 }
+
+export interface ProgressiveCanvasData {
+  essence?: { name: string; location: string; phrase: string };
+  qolNodes?: string[];
+  productionNodes?: string[];
+  resourceNodes?: string[];
+  capitalProfile?: Array<{ form: string; score: number }>;
+  enterprises?: Array<{ name: string; role: string; year1Revenue: string }>;
+  interventions?: Array<{ action: string; cascadeSteps: string[] }>;
+  weeklyRhythm?: Array<{
+    day: string;
+    blocks: Array<{ enterprise?: string; color?: string }>;
+  }>;
+}

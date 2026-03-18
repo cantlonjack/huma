@@ -29,12 +29,18 @@ export default function MapPreview({ context }: MapPreviewProps) {
 
   const completedCount = sections.filter(s => s.content).length;
 
-  // Detect newly completed sections for animation
+  // Detect newly completed sections for animation + auto-expand on first capture
   useEffect(() => {
     const currentKeys = new Set(sections.filter(s => s.content).map(s => s.key));
     for (const key of currentKeys) {
       if (!prevKeysRef.current.has(key)) {
         setNewlyCompletedKey(key);
+        // Auto-expand on first section capture
+        if (prevKeysRef.current.size === 0) {
+          setIsExpanded(true);
+          // Auto-collapse after 4 seconds so it doesn't block the conversation
+          setTimeout(() => setIsExpanded(false), 4000);
+        }
         const timer = setTimeout(() => setNewlyCompletedKey(null), 1500);
         prevKeysRef.current = currentKeys;
         return () => clearTimeout(timer);
@@ -113,11 +119,11 @@ export default function MapPreview({ context }: MapPreviewProps) {
         )}
       </div>
 
-      {/* Mobile: floating indicator */}
+      {/* Mobile: floating indicator — positioned above the input bar */}
       <div className="lg:hidden no-print">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="fixed bottom-20 right-4 z-20 bg-sand-100/90 backdrop-blur border border-sand-200 rounded-full px-3 py-2 text-xs text-earth-600 shadow-sm"
+          className="fixed bottom-[4.5rem] right-4 z-20 bg-sand-100/90 backdrop-blur border border-sand-200 rounded-full px-3 py-2 text-xs text-earth-600 shadow-sm"
           aria-expanded={isExpanded}
           aria-label={`Map preview: ${completedCount} of 6 sections complete`}
         >
@@ -133,7 +139,7 @@ export default function MapPreview({ context }: MapPreviewProps) {
         </button>
 
         {isExpanded && (
-          <div className="fixed inset-x-4 bottom-24 z-20 bg-sand-50/95 backdrop-blur border border-sand-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+          <div className="fixed inset-x-4 top-16 bottom-[7rem] z-25 bg-sand-50/95 backdrop-blur border border-sand-200 rounded-lg shadow-lg overflow-y-auto">
             <div className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-serif text-sm text-earth-700 font-medium">

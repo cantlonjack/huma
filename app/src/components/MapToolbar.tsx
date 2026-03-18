@@ -27,7 +27,7 @@ export default function MapToolbar({
       >
         HUMA
       </a>
-      <div className="flex gap-2 sm:gap-3 items-center flex-wrap justify-end">
+      <div className="flex gap-1.5 sm:gap-3 items-center justify-end overflow-x-auto">
         {canvasData && (
           <div className="flex bg-sand-100 rounded-full p-0.5 border border-sand-200">
             <button

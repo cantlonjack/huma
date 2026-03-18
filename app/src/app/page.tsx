@@ -109,6 +109,10 @@ export default function Home() {
     );
   }
 
+  // Derive completion from underlying appState (not effectiveState, which has been narrowed)
+  const isConversationComplete = appState === "generating" || !!mapGen.mapMarkdown;
+  const mapUrl = mapGen.mapMarkdown ? `/map/sample` : undefined;
+
   // ─── Conversation (default) ───
   return (
     <ConversationView
@@ -122,6 +126,14 @@ export default function Home() {
       onSend={conversation.sendMessage}
       onRetry={conversation.handleRetry}
       onExit={() => setAppState("landing")}
+      canvasData={conversation.canvasDataSnapshot}
+      completedPhases={conversation.completedPhases}
+      phaseTransitions={conversation.phaseTransitions}
+      operatorName={operatorName}
+      operatorLocation={operatorLocation}
+      isComplete={isConversationComplete}
+      mapUrl={mapUrl}
+      isGeneratingMap={mapGen.isGenerating}
     />
   );
 }

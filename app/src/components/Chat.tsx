@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { type Message, type Phase } from "@/engine/types";
+import { type Message, type Phase, PHASES } from "@/engine/types";
 
 const INPUT_PLACEHOLDERS: Record<Phase, string> = {
   ikigai: "Share what comes to mind\u2026",
@@ -21,6 +21,7 @@ interface ChatProps {
   onSend: (content: string) => void;
   errorBar?: { content: string; retryWith: string } | null;
   onRetry?: () => void;
+  phaseTransitions?: Record<string, string>;
 }
 
 export default function Chat({
@@ -31,6 +32,7 @@ export default function Chat({
   onSend,
   errorBar,
   onRetry,
+  phaseTransitions = {},
 }: ChatProps) {
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -42,7 +44,6 @@ export default function Chat({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streamingContent]);
 
-  // Restore focus to textarea after loading completes
   useEffect(() => {
     if (!isLoading) {
       textareaRef.current?.focus();
@@ -92,45 +93,49 @@ export default function Chat({
       {/* Messages */}
       <div
         ref={scrollContainerRef}
-        className="relative flex-1 overflow-y-auto px-6 md:px-16 lg:px-24 py-8"
+        className="relative flex-1 overflow-y-auto px-5 md:px-8 py-8"
       >
-        {/* Scroll fade gradient at top */}
         {isScrolledDown && (
           <div className="sticky top-0 left-0 right-0 h-8 bg-gradient-to-b from-sand-50 to-transparent pointer-events-none z-10" />
         )}
 
-        <div className="max-w-2xl mx-auto space-y-8">
+        <div className="max-w-none space-y-6">
           {messages.map((msg) => (
-            <MessageBlock key={msg.id} message={msg} />
+            <div key={msg.id}>
+              <MessageBlock message={msg} />
+              {phaseTransitions[msg.id] && (
+                <PhaseDivider phaseId={phaseTransitions[msg.id]} />
+              )}
+            </div>
           ))}
 
           {/* Streaming response */}
           {isLoading && streamingContent && (
             <div aria-live="polite">
-              <div className="font-serif text-lg leading-relaxed text-earth-800 whitespace-pre-wrap">
-                {streamingContent}
-                <span
-                  className="inline-block w-0.5 h-5 bg-sage-400 animate-pulse ml-0.5 align-text-bottom"
-                  aria-hidden="true"
-                />
+              <div
+                className="rounded-xl p-4 bg-sand-100"
+                style={{ maxWidth: "85%" }}
+              >
+                <div className="font-serif text-[1.05rem] leading-[1.8] text-earth-700 whitespace-pre-wrap">
+                  {streamingContent}
+                  <span
+                    className="inline-block w-0.5 h-5 bg-sage-400 animate-pulse ml-0.5 align-text-bottom"
+                    aria-hidden="true"
+                  />
+                </div>
               </div>
             </div>
           )}
 
-          {/* Loading indicator when waiting for first token */}
+          {/* Pulsing sage circle typing indicator */}
           {isLoading && !streamingContent && (
-            <div className="flex items-center gap-2 text-earth-500" role="status">
+            <div className="flex items-center" role="status">
               <span className="sr-only">HUMA is thinking...</span>
-              <span
-                className="inline-block w-1.5 h-1.5 rounded-full bg-sage-400 animate-pulse"
-                aria-hidden="true"
-              />
-              <span
-                className="inline-block w-1.5 h-1.5 rounded-full bg-sage-400 animate-pulse [animation-delay:150ms]"
-                aria-hidden="true"
-              />
-              <span
-                className="inline-block w-1.5 h-1.5 rounded-full bg-sage-400 animate-pulse [animation-delay:300ms]"
+              <div
+                className="w-3 h-3 rounded-full animate-[typing-pulse_1.5s_ease-in-out_infinite]"
+                style={{
+                  background: "radial-gradient(circle, var(--color-sage-400), var(--color-sage-300))",
+                }}
                 aria-hidden="true"
               />
             </div>
@@ -142,8 +147,8 @@ export default function Chat({
 
       {/* Error bar */}
       {errorBar && (
-        <div role="alert" className="bg-sand-100 border-t border-sand-300 px-6 md:px-16 lg:px-24 py-3 no-print">
-          <div className="max-w-2xl mx-auto flex items-center justify-between">
+        <div role="alert" className="bg-sand-100 border-t border-sand-300 px-5 md:px-8 py-3 no-print">
+          <div className="flex items-center justify-between">
             <p className="text-sm text-earth-700">
               {errorBar.content}
             </p>
@@ -158,10 +163,10 @@ export default function Chat({
       )}
 
       {/* Input */}
-      <div className="border-t border-sand-200 bg-sand-50 px-6 md:px-16 lg:px-24 py-4 no-print">
+      <div className="border-t border-sand-200 bg-sand-50 px-5 md:px-8 py-4 no-print">
         <form
           onSubmit={handleSubmit}
-          className="max-w-2xl mx-auto flex items-end gap-3"
+          className="flex items-end gap-3"
         >
           <textarea
             ref={textareaRef}
@@ -190,15 +195,45 @@ export default function Chat({
 function MessageBlock({ message }: { message: Message }) {
   if (message.role === "assistant") {
     return (
-      <div className="font-serif text-lg leading-[1.75] text-earth-800 whitespace-pre-wrap">
-        {message.content}
+      <div
+        className="rounded-xl p-4 bg-sand-100"
+        style={{ maxWidth: "85%" }}
+      >
+        <div className="font-serif text-[1.05rem] leading-[1.8] text-earth-700 whitespace-pre-wrap">
+          {message.content}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="pl-5 border-l-2 border-sage-300/50 text-earth-700 leading-relaxed whitespace-pre-wrap">
+    <div
+      className="border-l-2 border-sage-300 pl-3 text-earth-600 leading-relaxed whitespace-pre-wrap"
+      style={{ maxWidth: "85%", marginLeft: "auto" }}
+    >
       {message.content}
+    </div>
+  );
+}
+
+function PhaseDivider({ phaseId }: { phaseId: string }) {
+  const phaseInfo = PHASES.find((p) => p.id === phaseId);
+  if (!phaseInfo) return null;
+
+  return (
+    <div className="flex items-center my-8 animate-[fadeIn_0.6s_ease]">
+      <div className="flex-1 h-px bg-sage-200" />
+      <span
+        className="mx-4 px-3 py-1 rounded-full bg-sage-50 text-sage-500 uppercase"
+        style={{
+          fontSize: "0.65rem",
+          letterSpacing: "0.15em",
+          fontFamily: "var(--font-sans)",
+        }}
+      >
+        {phaseInfo.label}
+      </span>
+      <div className="flex-1 h-px bg-sage-200" />
     </div>
   );
 }

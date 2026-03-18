@@ -9,6 +9,7 @@ import { trackEvent } from "@/lib/analytics";
 import MapDocument from "@/components/MapDocument";
 import LivingCanvas from "@/components/canvas/LivingCanvas";
 import MapToolbar from "@/components/MapToolbar";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const SAMPLE_SHAPE_SCORES = [4, 3, 5, 4, 4, 3, 4, 3];
 
@@ -66,13 +67,31 @@ export default function MapView({
         </button>
       </MapToolbar>
       {mapView === "canvas" && mapCanvasData ? (
-        <LivingCanvas data={mapCanvasData} />
+        <ErrorBoundary
+          context="canvas"
+          fallback={
+            <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+              <p className="font-serif text-2xl text-earth-800 mb-3">Canvas couldn&apos;t render</p>
+              <p className="text-earth-600 mb-6">Your map document is still available.</p>
+              <button
+                onClick={() => setMapView("document")}
+                className="px-6 py-3 bg-amber-600 text-white font-medium rounded-full hover:bg-amber-700 transition-all"
+              >
+                View Document
+              </button>
+            </div>
+          }
+        >
+          <LivingCanvas data={mapCanvasData} />
+        </ErrorBoundary>
       ) : (
-        <MapDocument
-          markdown={mapMarkdown}
-          shapeScores={shapeScores}
-          operatorName={operatorName}
-        />
+        <ErrorBoundary context="document">
+          <MapDocument
+            markdown={mapMarkdown}
+            shapeScores={shapeScores}
+            operatorName={operatorName}
+          />
+        </ErrorBoundary>
       )}
       {showToast && (
         <div className="toast">Link copied to clipboard</div>

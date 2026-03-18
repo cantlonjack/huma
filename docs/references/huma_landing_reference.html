@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HUMA — See your whole life as one connected system</title>
+<meta name="description" content="HUMA maps your whole situation — money, energy, relationships, purpose — and shows you the specific moves that change everything. Not another app. A new way of seeing.">
+<meta property="og:title" content="HUMA — Everything is connected. Now you can see how.">
+<meta property="og:description" content="Map your whole life. See the hidden connections. Get the specific moves for your situation.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sand-50:#FAF8F3;--sand-100:#F6F1E9;--sand-200:#EDE6D8;--sand-300:#DDD4C0;
+  --sage-900:#1E3622;--sage-800:#2A4A30;--sage-700:#3A5A40;--sage-600:#4A6E50;
+  --sage-500:#5C7A62;--sage-400:#8BAF8E;--sage-300:#A8C4AA;--sage-200:#C4D9C6;
+  --sage-100:#E0EDE1;--sage-50:#EBF3EC;
+  --amber-700:#8B4513;--amber-600:#B5621E;--amber-500:#C87A3A;--amber-400:#E8935A;--amber-100:#FFF4EC;
+  --sky-600:#2E6B8A;--sky-100:#E8F2F7;
+  --rose-600:#A04040;--rose-100:#F5EAEA;
+  --ink-900:#1A1714;--ink-800:#2C2620;--ink-700:#3D3830;--ink-600:#554D42;
+  --ink-500:#6B6358;--ink-400:#8C8274;--ink-300:#A89E90;--ink-200:#C4BAA8;--ink-100:#DDD6C8;
+  --f-display:'Cormorant Garamond','Georgia',serif;
+  --f-body:'Source Sans 3','Helvetica Neue',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:17px;-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+body{background:var(--sand-50);color:var(--ink-900);font-family:var(--f-body);overflow-x:hidden}
+
+/* Grain */
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.022;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat:repeat;background-size:200px}
+
+/* Reveal */
+.rv{opacity:0;transform:translateY(24px);transition:opacity .85s cubic-bezier(.22,1,.36,1),transform .85s cubic-bezier(.22,1,.36,1)}
+.rv.vis{opacity:1;transform:none}
+.rv-d1{transition-delay:.1s}.rv-d2{transition-delay:.2s}.rv-d3{transition-delay:.3s}
+.rv-d4{transition-delay:.4s}.rv-d5{transition-delay:.5s}
+
+/* Section utility */
+.section-inner{max-width:1080px;margin:0 auto;padding:0 24px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+
+/* ═══ HERO ═══ */
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;
+  padding:80px 24px;position:relative;overflow:hidden}
+.hero-shape{position:absolute;top:50%;left:50%;transform:translate(-50%,-52%);width:560px;height:560px;
+  pointer-events:none;opacity:0;animation:shapeIn 2.2s .3s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes shapeIn{from{opacity:0;transform:translate(-50%,-52%) scale(.85)}to{opacity:1;transform:translate(-50%,-52%) scale(1)}}
+.hero-shape svg{width:100%;height:100%;animation:breathe 7s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.03) rotate(.4deg)}}
+.hero-content{position:relative;z-index:2;max-width:700px}
+.wm{font-family:var(--f-display);font-size:.85rem;font-weight:500;letter-spacing:.4em;text-transform:uppercase;
+  color:var(--sage-500);margin-bottom:44px;opacity:0;animation:fadeUp 1s .5s cubic-bezier(.22,1,.36,1) forwards}
+.hero h1{font-family:var(--f-display);font-size:clamp(2.6rem,5.5vw,4rem);font-weight:400;line-height:1.08;
+  letter-spacing:-.02em;margin-bottom:28px;opacity:0;animation:fadeUp 1s .7s cubic-bezier(.22,1,.36,1) forwards}
+.hero h1 em{font-style:italic;color:var(--sage-700)}
+.hero-sub{font-family:var(--f-body);font-size:1.15rem;font-weight:300;line-height:1.7;color:var(--ink-500);
+  max-width:500px;margin:0 auto 48px;opacity:0;animation:fadeUp 1s .9s cubic-bezier(.22,1,.36,1) forwards}
+.cta-wrap{opacity:0;animation:fadeUp 1s 1.1s cubic-bezier(.22,1,.36,1) forwards}
+.cta{display:inline-flex;align-items:center;gap:10px;padding:18px 44px;background:var(--amber-600);color:#fff;
+  border:none;border-radius:100px;font-family:var(--f-body);font-size:1.05rem;font-weight:500;cursor:pointer;
+  text-decoration:none;transition:all .35s cubic-bezier(.22,1,.36,1);box-shadow:0 4px 20px rgba(181,98,30,.15)}
+.cta:hover{background:var(--amber-500);transform:translateY(-2px);box-shadow:0 8px 32px rgba(181,98,30,.25)}
+.cta-arrow{font-size:1.15rem;transition:transform .35s}.cta:hover .cta-arrow{transform:translateX(4px)}
+.hero-secondary{display:block;margin-top:20px;font-size:.8rem;color:var(--ink-300);text-decoration:none;transition:color .25s}
+.hero-secondary:hover{color:var(--sage-600)}
+.scroll-cue{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;
+  align-items:center;gap:6px;opacity:0;animation:fadeUp 1s 2s cubic-bezier(.22,1,.36,1) forwards}
+.scroll-cue span{font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-200)}
+.scroll-cue-line{width:1px;height:28px;background:linear-gradient(to bottom,var(--ink-200),transparent);
+  animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.5;height:28px}50%{opacity:1;height:36px}}
+
+/* ═══ PROBLEM ═══ */
+.problem{padding:120px 0;border-top:1px solid var(--sand-300)}
+.problem-inner{max-width:640px;margin:0 auto;padding:0 24px;text-align:center}
+.problem h2{font-family:var(--f-display);font-size:clamp(1.8rem,3.5vw,2.5rem);font-weight:400;line-height:1.2;
+  margin-bottom:32px}
+.problem h2 em{font-style:italic;color:var(--sage-700)}
+.problem-text{font-family:var(--f-body);font-size:1rem;font-weight:300;line-height:1.8;color:var(--ink-500);margin-bottom:20px}
+.problem-text strong{color:var(--ink-700);font-weight:500}
+.problem-kicker{font-family:var(--f-display);font-size:1.35rem;font-weight:400;font-style:italic;
+  color:var(--sage-700);margin-top:36px;line-height:1.5}
+
+/* ═══ DEMO ═══ */
+.demo{padding:100px 0 120px;border-top:1px solid var(--sand-300);overflow:hidden}
+.demo-label{font-size:.62rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--ink-300);text-align:center;margin-bottom:16px}
+.demo h2{font-family:var(--f-display);font-size:clamp(1.6rem,3vw,2.2rem);font-weight:400;
+  text-align:center;margin-bottom:12px;line-height:1.25}
+.demo h2 em{font-style:italic;color:var(--sage-700)}
+.demo-sub{font-size:.92rem;font-weight:300;color:var(--ink-400);text-align:center;max-width:440px;
+  margin:0 auto 48px;line-height:1.6}
+
+/* The animated demo container */
+.demo-stage{position:relative;max-width:720px;margin:0 auto;background:#fff;border-radius:20px;
+  border:1px solid var(--sand-300);box-shadow:0 8px 40px rgba(26,23,20,.06);overflow:hidden}
+.demo-topbar{display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid var(--sand-200);gap:10px}
+.demo-topbar-dot{width:7px;height:7px;border-radius:50%;background:var(--sand-300)}
+.demo-topbar-title{font-family:var(--f-display);font-size:.85rem;color:var(--sage-500);margin-left:6px;letter-spacing:.05em}
+.demo-body{display:grid;grid-template-columns:1fr 1fr;min-height:380px}
+
+/* Left: conversation side */
+.demo-conv{padding:24px 20px;border-right:1px solid var(--sand-200);display:flex;flex-direction:column;gap:16px;
+  background:var(--sand-50)}
+.demo-msg{border-radius:14px;padding:12px 16px;font-size:.82rem;line-height:1.65;max-width:92%;
+  opacity:0;transform:translateY(8px);transition:all .5s cubic-bezier(.22,1,.36,1)}
+.demo-msg.vis{opacity:1;transform:none}
+.demo-msg.user{background:var(--sand-200);color:var(--ink-700);align-self:flex-end;border-bottom-right-radius:4px}
+.demo-msg.huma{background:#fff;color:var(--ink-600);align-self:flex-start;border-bottom-left-radius:4px;
+  border:1px solid var(--sand-200)}
+.demo-msg.huma strong{color:var(--sage-700);font-weight:500}
+.demo-msg.huma .insight-tag{display:inline-flex;align-items:center;gap:4px;font-size:.68rem;font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--sage-600);margin-bottom:6px}
+.demo-msg.huma .action-tag{display:inline-flex;align-items:center;gap:4px;font-size:.68rem;font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--amber-600);margin-bottom:6px}
+
+/* Right: shape side */
+.demo-shape{padding:24px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--sand-50);position:relative}
+.demo-shape svg{width:200px;height:200px;transition:all 1.2s cubic-bezier(.22,1,.36,1)}
+
+/* Dimension bars */
+.demo-dims{width:100%;margin-top:16px;display:flex;flex-direction:column;gap:6px}
+.demo-dim{display:flex;align-items:center;gap:8px}
+.demo-dim-name{font-size:.7rem;color:var(--ink-400);width:52px;text-align:right;flex-shrink:0}
+.demo-dim-track{flex:1;height:4px;background:rgba(26,23,20,.06);border-radius:2px;overflow:hidden}
+.demo-dim-fill{height:100%;border-radius:2px;transition:width 1.2s cubic-bezier(.22,1,.36,1),background .6s}
+.demo-dim-val{font-size:.65rem;color:var(--ink-300);width:20px;text-align:right;font-variant-numeric:tabular-nums;
+  transition:color .4s}
+.demo-dim-val.low{color:var(--rose-600);font-weight:600}
+
+/* Cascade animation */
+.demo-cascade{width:100%;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:6px;
+  flex-wrap:wrap;opacity:0;transition:opacity .6s .2s}
+.demo-cascade.vis{opacity:1}
+.casc-chip{font-size:.68rem;padding:4px 10px;border-radius:100px;opacity:0;transform:translateX(-6px);
+  transition:all .4s cubic-bezier(.22,1,.36,1)}
+.casc-chip.vis{opacity:1;transform:none}
+.casc-chip.sage{background:var(--sage-50);color:var(--sage-700);border:1px solid var(--sage-200)}
+.casc-chip.amber{background:var(--amber-100);color:var(--amber-600);border:1px solid #F0DCC8}
+.casc-chip.sky{background:var(--sky-100);color:var(--sky-600);border:1px solid #C8DEE8}
+.casc-arr{font-size:.65rem;color:var(--ink-200);opacity:0;transition:opacity .3s}.casc-arr.vis{opacity:1}
+
+/* Demo progress dots */
+.demo-progress{display:flex;justify-content:center;gap:8px;margin-top:20px}
+.demo-pdot{width:6px;height:6px;border-radius:50%;background:var(--sand-300);transition:all .3s}
+.demo-pdot.active{background:var(--sage-400);transform:scale(1.3)}
+
+/* ═══ HOW ═══ */
+.how{padding:100px 0 120px;border-top:1px solid var(--sand-300)}
+.how-label{font-size:.62rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--ink-300);text-align:center;margin-bottom:56px}
+.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:48px;max-width:900px;margin:0 auto;padding:0 24px}
+.how-card{text-align:left;padding-top:24px;position:relative}
+.how-card::before{content:'';position:absolute;top:0;left:0;width:32px;height:2px;border-radius:1px}
+.how-card:nth-child(1)::before{background:var(--sage-400)}
+.how-card:nth-child(2)::before{background:var(--amber-400)}
+.how-card:nth-child(3)::before{background:var(--sky-600)}
+.how-num{font-family:var(--f-display);font-size:.85rem;color:var(--ink-200);margin-bottom:12px;letter-spacing:.05em}
+.how-title{font-family:var(--f-display);font-size:1.55rem;font-weight:500;color:var(--ink-900);
+  margin-bottom:8px;line-height:1.15}
+.how-title em{font-style:italic;color:var(--sage-700)}
+.how-pain{font-size:.82rem;color:var(--ink-400);font-style:italic;margin-bottom:10px;line-height:1.5}
+.how-solve{font-size:.88rem;font-weight:300;color:var(--ink-500);line-height:1.7}
+
+/* ═══ CONTRAST ═══ */
+.contrast{padding:100px 0;border-top:1px solid var(--sand-300)}
+.contrast-label{font-size:.62rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--ink-300);text-align:center;margin-bottom:48px}
+.contrast-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;max-width:760px;margin:0 auto;padding:0 24px;
+  border-radius:20px;overflow:hidden;border:1px solid var(--sand-300)}
+.contrast-col{padding:36px 32px}
+.contrast-col.before{background:var(--sand-100)}
+.contrast-col.after{background:#fff}
+.contrast-col-title{font-family:var(--f-display);font-size:1.1rem;font-weight:500;margin-bottom:24px;
+  display:flex;align-items:center;gap:8px}
+.contrast-col.before .contrast-col-title{color:var(--ink-400)}
+.contrast-col.after .contrast-col-title{color:var(--sage-700)}
+.contrast-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:18px}
+.contrast-icon{font-size:.75rem;flex-shrink:0;margin-top:3px}
+.contrast-col.before .contrast-icon{color:var(--ink-300)}
+.contrast-col.after .contrast-icon{color:var(--sage-500)}
+.contrast-text{font-size:.88rem;font-weight:300;line-height:1.6}
+.contrast-col.before .contrast-text{color:var(--ink-400)}
+.contrast-col.after .contrast-text{color:var(--ink-600)}
+.contrast-col.after .contrast-text strong{color:var(--sage-700);font-weight:500}
+
+/* ═══ CANVAS PREVIEW ═══ */
+.canvas-sec{padding:100px 0 120px;border-top:1px solid var(--sand-300);text-align:center}
+.canvas-sec h2{font-family:var(--f-display);font-size:clamp(1.6rem,3vw,2.2rem);font-weight:400;
+  margin-bottom:12px;line-height:1.25}
+.canvas-sec h2 em{font-style:italic;color:var(--sage-700)}
+.canvas-sec-sub{font-size:.92rem;font-weight:300;color:var(--ink-500);max-width:420px;margin:0 auto 40px;line-height:1.6}
+.canvas-frame{max-width:680px;margin:0 auto;border-radius:16px;overflow:hidden;border:1px solid var(--sand-300);
+  box-shadow:0 12px 48px rgba(26,23,20,.08);position:relative;cursor:pointer;transition:all .35s}
+.canvas-frame:hover{transform:translateY(-3px);box-shadow:0 16px 56px rgba(26,23,20,.12)}
+.canvas-frame img,.canvas-frame svg{width:100%;display:block}
+.canvas-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 60%,rgba(250,248,243,.95));
+  display:flex;align-items:flex-end;justify-content:center;padding-bottom:28px}
+.canvas-overlay-btn{font-family:var(--f-body);font-size:.85rem;font-weight:500;color:var(--sage-700);
+  background:rgba(255,255,255,.9);border:1.5px solid var(--sage-300);border-radius:100px;
+  padding:10px 24px;backdrop-filter:blur(8px);transition:all .3s}
+.canvas-frame:hover .canvas-overlay-btn{background:var(--sage-50);border-color:var(--sage-500)}
+
+/* ═══ SIGNAL ═══ */
+.signal{padding:80px 24px;border-top:1px solid var(--sand-300);text-align:center}
+.signal-inner{max-width:600px;margin:0 auto}
+.signal-tags{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:20px}
+.signal-tag{font-size:.68rem;color:var(--ink-400);padding:5px 13px;border-radius:100px;
+  border:1px solid var(--sand-300);background:var(--sand-100);letter-spacing:.02em}
+.signal-note{font-size:.78rem;font-weight:300;color:var(--ink-300);line-height:1.7;max-width:440px;margin:0 auto}
+
+/* ═══ VISION ═══ */
+.vision{padding:120px 24px;border-top:1px solid var(--sand-300);text-align:center;position:relative}
+.vision::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:400px;height:400px;
+  border-radius:50%;background:radial-gradient(circle,var(--sage-100) 0%,transparent 70%);opacity:.5;pointer-events:none}
+.vision-content{position:relative;z-index:1;max-width:560px;margin:0 auto}
+.vision-text{font-family:var(--f-display);font-size:clamp(1.3rem,2.8vw,1.7rem);font-weight:300;font-style:italic;
+  color:var(--ink-600);line-height:1.65;margin-bottom:48px}
+.vision-cta{display:inline-flex;align-items:center;gap:10px;padding:16px 36px;background:transparent;
+  color:var(--sage-700);border:1.5px solid var(--sage-300);border-radius:100px;font-family:var(--f-body);
+  font-size:.95rem;font-weight:500;cursor:pointer;text-decoration:none;transition:all .35s cubic-bezier(.22,1,.36,1)}
+.vision-cta:hover{background:var(--sage-50);border-color:var(--sage-500);transform:translateY(-2px);
+  box-shadow:0 4px 16px rgba(58,90,64,.1)}
+
+/* ═══ FOOTER ═══ */
+.footer{padding:48px 24px;text-align:center;border-top:1px solid var(--sand-300)}
+.footer-mark{font-family:var(--f-display);font-size:.72rem;font-weight:500;letter-spacing:.35em;
+  text-transform:uppercase;color:var(--sage-400);margin-bottom:6px}
+.footer-tag{font-size:.72rem;color:var(--ink-300);font-weight:300}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:720px){
+  .how-grid{grid-template-columns:1fr;gap:36px;max-width:400px}
+  .contrast-grid{grid-template-columns:1fr;border-radius:16px}
+  .contrast-col.before{border-bottom:1px solid var(--sand-300)}
+  .demo-body{grid-template-columns:1fr;min-height:auto}
+  .demo-conv{border-right:none;border-bottom:1px solid var(--sand-200)}
+  .demo-shape{padding:20px}
+  .hero-shape{width:400px;height:400px}
+  .hero{padding:60px 20px 80px}
+  .scroll-cue{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero">
+  <div class="hero-shape">
+    <svg viewBox="0 0 520 520" fill="none">
+      <defs>
+        <radialGradient id="sg" cx="50%" cy="50%"><stop offset="0%" stop-color="#8BAF8E" stop-opacity=".18"/><stop offset="40%" stop-color="#A8C4AA" stop-opacity=".1"/><stop offset="100%" stop-color="#C4D9C6" stop-opacity="0"/></radialGradient>
+        <radialGradient id="cg" cx="50%" cy="50%"><stop offset="0%" stop-color="#3A5A40" stop-opacity=".08"/><stop offset="100%" stop-color="#3A5A40" stop-opacity="0"/></radialGradient>
+      </defs>
+      <circle cx="260" cy="260" r="240" stroke="#C4D9C6" stroke-width=".5" opacity=".3"/>
+      <circle cx="260" cy="260" r="180" stroke="#C4D9C6" stroke-width=".5" opacity=".25"/>
+      <circle cx="260" cy="260" r="120" stroke="#A8C4AA" stroke-width=".5" opacity=".3"/>
+      <circle cx="260" cy="260" r="60" stroke="#8BAF8E" stroke-width=".5" opacity=".35"/>
+      <line x1="260" y1="20" x2="260" y2="500" stroke="#C4D9C6" stroke-width=".5" opacity=".2"/>
+      <line x1="20" y1="260" x2="500" y2="260" stroke="#C4D9C6" stroke-width=".5" opacity=".2"/>
+      <line x1="90" y1="90" x2="430" y2="430" stroke="#C4D9C6" stroke-width=".5" opacity=".15"/>
+      <line x1="430" y1="90" x2="90" y2="430" stroke="#C4D9C6" stroke-width=".5" opacity=".15"/>
+      <path d="M260,72 C310,88 378,128 404,186 C428,240 420,310 390,362 C356,418 298,448 244,440 C188,432 138,394 110,340 C80,282 78,218 104,162 C132,104 196,70 260,72 Z" fill="url(#sg)" stroke="#8BAF8E" stroke-width="1" opacity=".7">
+        <animate attributeName="d" dur="8s" repeatCount="indefinite" values="M260,72 C310,88 378,128 404,186 C428,240 420,310 390,362 C356,418 298,448 244,440 C188,432 138,394 110,340 C80,282 78,218 104,162 C132,104 196,70 260,72 Z;M260,68 C316,84 384,122 408,182 C434,246 424,316 394,366 C358,422 294,452 240,446 C184,438 132,398 106,344 C76,286 74,214 100,158 C128,98 200,66 260,68 Z;M260,72 C310,88 378,128 404,186 C428,240 420,310 390,362 C356,418 298,448 244,440 C188,432 138,394 110,340 C80,282 78,218 104,162 C132,104 196,70 260,72 Z"/>
+      </path>
+      <circle cx="260" cy="72" r="4" fill="#3A5A40" opacity=".5"/><circle cx="404" cy="186" r="4" fill="#5C7A62" opacity=".5"/>
+      <circle cx="420" cy="310" r="4" fill="#B5621E" opacity=".5"/><circle cx="298" cy="448" r="4" fill="#2E6B8A" opacity=".5"/>
+      <circle cx="110" cy="340" r="4" fill="#8A6D1E" opacity=".5"/><circle cx="80" cy="218" r="4" fill="#A04040" opacity=".5"/>
+      <circle cx="132" cy="104" r="4" fill="#3A5A40" opacity=".5"/><circle cx="244" cy="440" r="4" fill="#8BAF8E" opacity=".5"/>
+      <circle cx="260" cy="260" r="80" fill="url(#cg)"/>
+    </svg>
+  </div>
+  <div class="hero-content">
+    <div class="wm">HUMA</div>
+    <h1>Everything in your life<br>is <em>connected.</em><br>Now you can <em>see how.</em></h1>
+    <p class="hero-sub">HUMA maps your whole situation — money, energy, relationships, purpose, all of it — and shows you the specific moves that change everything.</p>
+    <div class="cta-wrap">
+      <a href="/begin" class="cta">Begin <span class="cta-arrow">→</span></a>
+      <a href="/map/sample" class="hero-secondary">See a sample map</a>
+    </div>
+  </div>
+  <div class="scroll-cue"><span>Scroll</span><div class="scroll-cue-line"></div></div>
+</section>
+
+<!-- ═══════════ PROBLEM ═══════════ -->
+<section class="problem">
+  <div class="problem-inner">
+    <h2 class="rv">You already know<br><em>something is off.</em></h2>
+    <p class="problem-text rv rv-d1">You track your sleep in one app. Your budget in another. Your goals in a journal. Your relationships… in your head.</p>
+    <p class="problem-text rv rv-d2">You can <strong>feel</strong> they're connected. When money is tight, you don't sleep. When you don't sleep, you're distant. When you're distant, everything suffers.</p>
+    <p class="problem-text rv rv-d3">But nothing shows you the pattern. So you fix one thing at a time and wonder why it never holds.</p>
+    <p class="problem-kicker rv rv-d4">What if you could see the whole picture — and know exactly where to start?</p>
+  </div>
+</section>
+
+<!-- ═══════════ DEMO ═══════════ -->
+<section class="demo">
+  <div class="section-inner">
+    <div class="demo-label rv">See it in action</div>
+    <h2 class="rv rv-d1">One check-in. The whole <em>picture.</em></h2>
+    <p class="demo-sub rv rv-d2">Watch how HUMA turns what you're feeling into a map of what's actually happening — and what to do about it.</p>
+
+    <div class="demo-stage rv rv-d3" id="demoStage">
+      <div class="demo-topbar">
+        <div class="demo-topbar-dot"></div><div class="demo-topbar-dot"></div><div class="demo-topbar-dot"></div>
+        <div class="demo-topbar-title">HUMA</div>
+      </div>
+      <div class="demo-body">
+        <!-- Conversation -->
+        <div class="demo-conv" id="demoConv">
+          <div class="demo-msg user" id="dm0">I can't sleep. Money keeps me up at night. I feel like I'm failing at everything and I'm distant from the people I love.</div>
+          <div class="demo-msg huma" id="dm1"><div class="insight-tag">✦ Connection found</div>Your <strong>money stress</strong> isn't separate from your sleep or your relationship. They're the same system under pressure. Right now, financial uncertainty is draining your Body and pulling you away from People.</div>
+          <div class="demo-msg huma" id="dm2"><div class="action-tag">⚡ Try this tonight</div>Write down every recurring expense. Star the ones that bring genuine joy. <strong>Don't make decisions yet.</strong> Just naming it will give your nervous system something concrete to hold onto instead of a fog.</div>
+        </div>
+        <!-- Shape + dims -->
+        <div class="demo-shape">
+          <svg viewBox="0 0 200 200" fill="none" id="demoSvg">
+            <defs>
+              <radialGradient id="dg" cx="50%" cy="50%"><stop offset="0%" stop-color="#8BAF8E" stop-opacity=".25"/><stop offset="100%" stop-color="#3A5A40" stop-opacity=".05"/></radialGradient>
+            </defs>
+            <circle cx="100" cy="100" r="76" stroke="#C4D9C6" stroke-width=".5" opacity=".3" stroke-dasharray="3 4"/>
+            <circle cx="100" cy="100" r="50" stroke="#C4D9C6" stroke-width=".5" opacity=".25" stroke-dasharray="3 4"/>
+            <circle cx="100" cy="100" r="25" stroke="#A8C4AA" stroke-width=".5" opacity=".3" stroke-dasharray="3 4"/>
+            <path id="demoBlob" d="M100,100 L100,100 L100,100 L100,100 L100,100 L100,100 L100,100 L100,100 Z"
+              fill="url(#dg)" stroke="#5C7A62" stroke-width="1.2" stroke-linejoin="round"
+              style="transition:d 1.4s cubic-bezier(.22,1,.36,1)"/>
+            <text x="100" y="97" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="18" fill="#3A5A40" id="demoScore" opacity="0" style="transition:opacity .8s">48</text>
+            <text x="100" y="110" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="7" fill="#A89E90" letter-spacing="1.5" id="demoLabel" opacity="0" style="transition:opacity .8s">COHERENCE</text>
+          </svg>
+          <div class="demo-dims" id="demoDims"></div>
+          <div class="demo-cascade" id="demoCascade">
+            <span class="casc-chip amber" id="cc0">💰 Money clarity</span>
+            <span class="casc-arr" id="ca0">→</span>
+            <span class="casc-chip sage" id="cc1">😴 Better sleep</span>
+            <span class="casc-arr" id="ca1">→</span>
+            <span class="casc-chip sky" id="cc2">💞 Present again</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="demo-progress" id="demoProgress">
+      <div class="demo-pdot active" id="dp0"></div>
+      <div class="demo-pdot" id="dp1"></div>
+      <div class="demo-pdot" id="dp2"></div>
+      <div class="demo-pdot" id="dp3"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ HOW ═══════════ -->
+<section class="how">
+  <div class="how-label rv">Three modes, one system</div>
+  <div class="how-grid">
+    <div class="how-card rv rv-d1">
+      <div class="how-num">01</div>
+      <div class="how-title"><em>Design</em></div>
+      <div class="how-pain">You know what you want but not how to get there.</div>
+      <div class="how-solve">A conversation maps who you are, what you're reaching for, and what your situation affords. You receive a living canvas — your whole context, with real numbers and a clear starting point.</div>
+    </div>
+    <div class="how-card rv rv-d2">
+      <div class="how-num">02</div>
+      <div class="how-title"><em>Operate</em></div>
+      <div class="how-pain">Plans fall apart because life doesn't hold still.</div>
+      <div class="how-solve">Daily and weekly guidance that validates your life against your own vision. When something drifts, HUMA diagnoses the system — not you. 30 seconds each morning. 10 minutes on Sunday.</div>
+    </div>
+    <div class="how-card rv rv-d3">
+      <div class="how-num">03</div>
+      <div class="how-title"><em>Evolve</em></div>
+      <div class="how-pain">Every tool resets. Nothing remembers what you've learned.</div>
+      <div class="how-solve">Seasonal reviews update your map as you grow. What you discover enriches the system for everyone who comes after. The more lives lived through it, the wiser it gets.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ CONTRAST ═══════════ -->
+<section class="contrast">
+  <div class="contrast-label rv">The difference</div>
+  <div class="contrast-grid rv rv-d1">
+    <div class="contrast-col before">
+      <div class="contrast-col-title"><span style="font-size:.9rem">○</span> Without HUMA</div>
+      <div class="contrast-item"><span class="contrast-icon">—</span><div class="contrast-text">Five apps that don't talk to each other</div></div>
+      <div class="contrast-item"><span class="contrast-icon">—</span><div class="contrast-text">Generic advice for generic people</div></div>
+      <div class="contrast-item"><span class="contrast-icon">—</span><div class="contrast-text">Fix one thing, another breaks</div></div>
+      <div class="contrast-item"><span class="contrast-icon">—</span><div class="contrast-text">Every setback feels personal</div></div>
+      <div class="contrast-item"><span class="contrast-icon">—</span><div class="contrast-text">You can feel the connections but can't see them</div></div>
+    </div>
+    <div class="contrast-col after">
+      <div class="contrast-col-title"><span style="font-size:.9rem">●</span> With HUMA</div>
+      <div class="contrast-item"><span class="contrast-icon">→</span><div class="contrast-text"><strong>One living map</strong> that sees everything</div></div>
+      <div class="contrast-item"><span class="contrast-icon">→</span><div class="contrast-text"><strong>Specific moves</strong> for your exact situation</div></div>
+      <div class="contrast-item"><span class="contrast-icon">→</span><div class="contrast-text"><strong>One action</strong> that ripples across everything</div></div>
+      <div class="contrast-item"><span class="contrast-icon">→</span><div class="contrast-text">Setbacks are <strong>signals to read</strong>, not failures</div></div>
+      <div class="contrast-item"><span class="contrast-icon">→</span><div class="contrast-text">The connections are <strong>visible, mapped, and actionable</strong></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ CANVAS PREVIEW ═══════════ -->
+<section class="canvas-sec">
+  <div class="section-inner">
+    <h2 class="rv">This is what a <em>life</em> looks like<br>when you can finally <em>see it</em></h2>
+    <p class="canvas-sec-sub rv rv-d1">A real map generated by HUMA. Every circle, every connection, every number — drawn from one conversation.</p>
+    <a href="/map/sample" class="canvas-frame rv rv-d2">
+      <svg viewBox="0 0 680 400" fill="none">
+        <rect width="680" height="400" rx="0" fill="#FAF8F3"/>
+        <!-- Simplified canvas: spatial, not dashboard -->
+        <circle cx="340" cy="165" r="130" fill="none" stroke="#C4D9C6" stroke-width=".5" opacity=".2" stroke-dasharray="3 4"/>
+        <circle cx="340" cy="165" r="80" fill="none" stroke="#A8C4AA" stroke-width=".5" opacity=".3" stroke-dasharray="3 4"/>
+        <circle cx="340" cy="165" r="35" fill="none" stroke="#8BAF8E" stroke-width=".5" opacity=".35" stroke-dasharray="3 4"/>
+        <!-- Essence -->
+        <circle cx="340" cy="165" r="28" fill="#EBF3EC" stroke="#8BAF8E" stroke-width="1"/>
+        <text x="340" y="162" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="10" fill="#3A5A40" font-weight="500">Sarah Chen</text>
+        <text x="340" y="174" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="7" fill="#8C8274">Rogue Valley, OR</text>
+        <!-- QoL nodes scattered organically -->
+        <rect x="246" y="95" width="88" height="19" rx="9" fill="#EBF3EC" stroke="#C4D9C6" stroke-width=".75"/>
+        <text x="290" y="107" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="7" fill="#3A5A40">Evenings free by 4</text>
+        <rect x="410" y="112" width="82" height="19" rx="9" fill="#EBF3EC" stroke="#C4D9C6" stroke-width=".75"/>
+        <text x="451" y="124" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="7" fill="#3A5A40">Creative mornings</text>
+        <rect x="190" y="152" width="78" height="19" rx="9" fill="#EBF3EC" stroke="#C4D9C6" stroke-width=".75"/>
+        <text x="229" y="164" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="7" fill="#3A5A40">Debt-free by '28</text>
+        <!-- Production nodes -->
+        <rect x="285" y="58" width="72" height="18" rx="9" fill="#FFF4EC" stroke="#F0DCC8" stroke-width=".75"/>
+        <text x="321" y="70" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="7" fill="#B5621E">Food growing</text>
+        <rect x="436" y="78" width="62" height="18" rx="9" fill="#FFF4EC" stroke="#F0DCC8" stroke-width=".75"/>
+        <text x="467" y="90" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="7" fill="#B5621E">Teaching</text>
+        <rect x="170" y="112" width="60" height="18" rx="9" fill="#FFF4EC" stroke="#F0DCC8" stroke-width=".75"/>
+        <text x="200" y="124" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="7" fill="#B5621E">Healing</text>
+        <!-- Connection lines (organic, not grid) -->
+        <line x1="290" y1="114" x2="312" y2="145" stroke="#A8C4AA" stroke-width=".5" opacity=".4"/>
+        <line x1="410" y1="121" x2="368" y2="150" stroke="#A8C4AA" stroke-width=".5" opacity=".3"/>
+        <line x1="268" y1="161" x2="312" y2="162" stroke="#A8C4AA" stroke-width=".5" opacity=".3"/>
+        <line x1="321" y1="76" x2="330" y2="137" stroke="#F0DCC8" stroke-width=".5" opacity=".3"/>
+        <!-- Capital circles (varied sizes = varied strengths) -->
+        <circle cx="200" cy="270" r="18" fill="#EBF3EC" stroke="#8BAF8E" stroke-width=".75" opacity=".7"/>
+        <text x="200" y="273" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="6.5" fill="#5C7A62">Social</text>
+        <circle cx="250" cy="262" r="22" fill="#EBF3EC" stroke="#8BAF8E" stroke-width=".75" opacity=".7"/>
+        <text x="250" y="265" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="7" fill="#5C7A62">Living</text>
+        <circle cx="306" cy="268" r="12" fill="#FFF4EC" stroke="#F0DCC8" stroke-width=".75" opacity=".7"/>
+        <text x="306" y="271" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="5.5" fill="#B5621E">Fin.</text>
+        <circle cx="350" cy="260" r="16" fill="#E8F2F7" stroke="#C8DEE8" stroke-width=".75" opacity=".7"/>
+        <text x="350" y="263" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="6" fill="#2E6B8A">Intell.</text>
+        <circle cx="400" cy="268" r="20" fill="#EBF3EC" stroke="#A8C4AA" stroke-width=".75" opacity=".7"/>
+        <text x="400" y="271" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="6.5" fill="#5C7A62">Exper.</text>
+        <circle cx="454" cy="264" r="14" fill="#EBF3EC" stroke="#C4D9C6" stroke-width=".75" opacity=".6"/>
+        <text x="454" y="267" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="6" fill="#5C7A62">Spirit.</text>
+        <circle cx="496" cy="270" r="11" fill="#FFF4EC" stroke="#F0DCC8" stroke-width=".75" opacity=".6"/>
+        <text x="496" y="273" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="5.5" fill="#B5621E">Cult.</text>
+        <!-- Enterprise cards -->
+        <rect x="40" y="310" width="145" height="62" rx="8" fill="white" stroke="#DDD4C0" stroke-width=".75"/>
+        <rect x="40" y="310" width="3" height="62" rx="1.5" fill="#3A5A40"/>
+        <text x="52" y="326" font-family="Source Sans 3,sans-serif" font-size="8" fill="#1A1714" font-weight="500">No-Dig Market Garden</text>
+        <text x="52" y="338" font-family="Source Sans 3,sans-serif" font-size="6.5" fill="#8C8274">Foundation · 0.25 acres · 18hrs/wk peak</text>
+        <rect x="52" y="349" width="38" height="13" rx="6" fill="#EBF3EC"/>
+        <text x="71" y="358" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="6.5" fill="#3A5A40">$24-38k</text>
+
+        <rect x="200" y="310" width="145" height="62" rx="8" fill="white" stroke="#DDD4C0" stroke-width=".75"/>
+        <rect x="200" y="310" width="3" height="62" rx="1.5" fill="#B5621E"/>
+        <text x="212" y="326" font-family="Source Sans 3,sans-serif" font-size="8" fill="#1A1714" font-weight="500">Pastured Layers</text>
+        <text x="212" y="338" font-family="Source Sans 3,sans-serif" font-size="6.5" fill="#8C8274">Partner · 200 hens · 6hrs/wk</text>
+        <rect x="212" y="349" width="38" height="13" rx="6" fill="#EBF3EC"/>
+        <text x="231" y="358" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="6.5" fill="#3A5A40">$12-18k</text>
+
+        <rect x="360" y="310" width="145" height="62" rx="8" fill="white" stroke="#DDD4C0" stroke-width=".75"/>
+        <rect x="360" y="310" width="3" height="62" rx="1.5" fill="#2E6B8A"/>
+        <text x="372" y="326" font-family="Source Sans 3,sans-serif" font-size="8" fill="#1A1714" font-weight="500">On-Farm Education</text>
+        <text x="372" y="338" font-family="Source Sans 3,sans-serif" font-size="6.5" fill="#8C8274">Multiplier · Workshops · 4hrs/wk</text>
+        <rect x="372" y="349" width="38" height="13" rx="6" fill="#EBF3EC"/>
+        <text x="391" y="358" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="6.5" fill="#3A5A40">$8-15k</text>
+
+        <rect x="520" y="310" width="125" height="62" rx="8" fill="white" stroke="#DDD4C0" stroke-width=".75"/>
+        <rect x="520" y="310" width="3" height="62" rx="1.5" fill="#8A6D1E"/>
+        <text x="532" y="326" font-family="Source Sans 3,sans-serif" font-size="8" fill="#1A1714" font-weight="500">Silvopasture</text>
+        <text x="532" y="338" font-family="Source Sans 3,sans-serif" font-size="6.5" fill="#8C8274">Long-game · 2 acres · 3hrs/wk</text>
+        <rect x="532" y="349" width="38" height="13" rx="6" fill="#EBF3EC"/>
+        <text x="551" y="358" text-anchor="middle" font-family="Source Sans 3,sans-serif" font-size="6.5" fill="#3A5A40">$4-8k</text>
+      </svg>
+      <div class="canvas-overlay">
+        <div class="canvas-overlay-btn">Explore Sarah's full canvas →</div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════ SIGNAL ═══════════ -->
+<section class="signal">
+  <div class="signal-inner rv">
+    <div class="signal-tags">
+      <span class="signal-tag">Holistic Management</span>
+      <span class="signal-tag">Living Systems</span>
+      <span class="signal-tag">8 Forms of Capital</span>
+      <span class="signal-tag">Pattern Language</span>
+      <span class="signal-tag">Regenerative Design</span>
+      <span class="signal-tag">Knowledge Architecture</span>
+    </div>
+    <p class="signal-note">Built on 30 years of research across regenerative agriculture, living systems theory, developmental psychology, and knowledge architecture. Not another wellness app. A design tool for living systems.</p>
+  </div>
+</section>
+
+<!-- ═══════════ VISION ═══════════ -->
+<section class="vision">
+  <div class="vision-content rv">
+    <p class="vision-text">Imagine if everyone just knew the best way to go about anything, based on their context. And by actually living that life, they in turn helped everyone else.</p>
+    <a href="/begin" class="vision-cta">Start your map <span class="cta-arrow">→</span></a>
+  </div>
+</section>
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer class="footer">
+  <div class="footer-mark">HUMA</div>
+  <div class="footer-tag">A new medium for human knowledge</div>
+</footer>
+
+<script>
+// ── Scroll reveal ──
+const rvEls = document.querySelectorAll('.rv');
+const rvObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
+}, { threshold: .12, rootMargin: '0px 0px -30px 0px' });
+rvEls.forEach(el => rvObs.observe(el));
+
+// ── Hero parallax ──
+const hs = document.querySelector('.hero-shape');
+let tick = false;
+window.addEventListener('scroll', () => {
+  if (!tick) { requestAnimationFrame(() => {
+    const y = window.scrollY;
+    hs.style.opacity = Math.max(0, 1 - y/600);
+    hs.style.transform = `translate(-50%,calc(-52% + ${y*.15}px)) scale(${1 - y*.0002})`;
+    tick = false;
+  }); tick = true; }
+});
+
+// ── Animated demo ──
+const DIMS = [
+  { n:'Body',   c:'#3A5A40', v0:50, v1:38 },
+  { n:'People', c:'#5C7A62', v0:50, v1:42 },
+  { n:'Money',  c:'#B5621E', v0:50, v1:28 },
+  { n:'Home',   c:'#2E6B8A', v0:50, v1:62 },
+  { n:'Growth', c:'#8A6D1E', v0:50, v1:55 },
+  { n:'Joy',    c:'#A04040', v0:50, v1:32 },
+  { n:'Purpose',c:'#3A5A40', v0:50, v1:60 },
+  { n:'Identity',c:'#8BAF8E',v0:50, v1:65 },
+];
+
+// Build dim bars
+const dimEl = document.getElementById('demoDims');
+dimEl.innerHTML = DIMS.map((d,i) =>
+  `<div class="demo-dim"><div class="demo-dim-name">${d.n}</div><div class="demo-dim-track"><div class="demo-dim-fill" id="df${i}" style="width:0%;background:${d.c}"></div></div><div class="demo-dim-val" id="dv${i}">—</div></div>`
+).join('');
+
+const BLOB_EMPTY = 'M100,100 L100,100 L100,100 L100,100 L100,100 L100,100 L100,100 L100,100 Z';
+const BLOB_FULL = 'M100,38 L130,52 L148,80 L142,112 L124,136 L94,142 L66,128 L54,96 L58,66 L78,46 Z';
+
+let demoStep = -1;
+let demoInterval;
+
+function runDemo(step) {
+  const msgs = [document.getElementById('dm0'), document.getElementById('dm1'), document.getElementById('dm2')];
+  const dots = [document.getElementById('dp0'), document.getElementById('dp1'), document.getElementById('dp2'), document.getElementById('dp3')];
+  dots.forEach(d => d.classList.remove('active'));
+  if (dots[step]) dots[step].classList.add('active');
+
+  if (step === 0) {
+    // Reset everything
+    msgs.forEach(m => m.classList.remove('vis'));
+    document.getElementById('demoBlob').setAttribute('d', BLOB_EMPTY);
+    document.getElementById('demoScore').setAttribute('opacity', '0');
+    document.getElementById('demoLabel').setAttribute('opacity', '0');
+    DIMS.forEach((d,i) => {
+      document.getElementById('df'+i).style.width = '0%';
+      document.getElementById('dv'+i).textContent = '—';
+      document.getElementById('dv'+i).classList.remove('low');
+    });
+    document.getElementById('demoCascade').classList.remove('vis');
+    ['cc0','cc1','cc2','ca0','ca1'].forEach(id => document.getElementById(id).classList.remove('vis'));
+    // Show user message
+    setTimeout(() => msgs[0].classList.add('vis'), 200);
+  }
+
+  if (step === 1) {
+    // Shape forms + dims animate
+    document.getElementById('demoBlob').setAttribute('d', BLOB_FULL);
+    document.getElementById('demoScore').setAttribute('opacity', '1');
+    document.getElementById('demoLabel').setAttribute('opacity', '1');
+    DIMS.forEach((d,i) => {
+      setTimeout(() => {
+        document.getElementById('df'+i).style.width = d.v1 + '%';
+        document.getElementById('dv'+i).textContent = d.v1;
+        if (d.v1 < 40) document.getElementById('dv'+i).classList.add('low');
+      }, i * 80);
+    });
+  }
+
+  if (step === 2) {
+    // Insight message
+    msgs[1].classList.add('vis');
+  }
+
+  if (step === 3) {
+    // Action + cascade
+    msgs[2].classList.add('vis');
+    document.getElementById('demoCascade').classList.add('vis');
+    setTimeout(() => document.getElementById('cc0').classList.add('vis'), 200);
+    setTimeout(() => document.getElementById('ca0').classList.add('vis'), 400);
+    setTimeout(() => document.getElementById('cc1').classList.add('vis'), 600);
+    setTimeout(() => document.getElementById('ca1').classList.add('vis'), 800);
+    setTimeout(() => document.getElementById('cc2').classList.add('vis'), 1000);
+  }
+}
+
+function advanceDemo() {
+  demoStep = (demoStep + 1) % 4;
+  if (demoStep === 0 && demoInterval) {
+    // Full reset pause
+    runDemo(0);
+  } else {
+    runDemo(demoStep);
+  }
+}
+
+// Start demo when scrolled into view
+const demoObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting && !demoInterval) {
+      demoStep = -1;
+      advanceDemo();
+      demoInterval = setInterval(advanceDemo, 3500);
+    }
+    if (!e.isIntersecting && demoInterval) {
+      clearInterval(demoInterval);
+      demoInterval = null;
+    }
+  });
+}, { threshold: .3 });
+demoObs.observe(document.getElementById('demoStage'));
+</script>
+
+</body>
+</html>

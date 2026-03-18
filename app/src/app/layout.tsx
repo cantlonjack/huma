@@ -21,9 +21,14 @@ const sourceSans = Source_Sans_3({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://huma.earth"),
-  title: "HUMA — Your Regenerative Enterprise Map",
+  title: "HUMA — See your whole life as one connected system",
   description:
-    "See your land and your life as a connected whole. A living systems design tool for regenerative operators.",
+    "HUMA maps your whole situation — money, energy, relationships, purpose — and shows you the specific moves that change everything. Not another app. A new way of seeing.",
+  openGraph: {
+    title: "HUMA — Everything is connected. Now you can see how.",
+    description:
+      "Map your whole life. See the hidden connections. Get the specific moves for your situation.",
+  },
 };
 
 export default function RootLayout({

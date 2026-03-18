@@ -11,39 +11,39 @@ export default function PhaseIndicator({ currentPhase }: PhaseIndicatorProps) {
   const current = PHASES[currentIndex];
 
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex items-center gap-1.5">
-        {PHASES.map((phase, i) => (
-          <div
-            key={phase.id}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              i < currentIndex
-                ? "w-2 bg-sage-400"
-                : i === currentIndex
-                  ? "w-4 bg-amber-400"
-                  : "w-2 bg-sand-300"
-            }`}
-            aria-label={`${phase.label}: ${
-              i < currentIndex ? "completed" : i === currentIndex ? "current" : "upcoming"
-            }`}
-          />
-        ))}
+    <div className="flex flex-col items-center pt-4 pb-3 border-b border-sand-200">
+      <div className="flex items-center gap-3">
+        {PHASES.map((phase, i) => {
+          const isComplete = i < currentIndex;
+          const isCurrent = i === currentIndex;
+          return (
+            <div
+              key={phase.id}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                isComplete
+                  ? "bg-sage-500"
+                  : isCurrent
+                    ? "bg-sage-400 animate-[phase-pulse_2s_ease-in-out_infinite]"
+                    : "border border-sage-300"
+              }`}
+              aria-label={`${phase.label}: ${
+                isComplete ? "completed" : isCurrent ? "current" : "upcoming"
+              }`}
+            />
+          );
+        })}
       </div>
       {current && (
-        <>
-          {/* Mobile: compact index */}
-          <span className="text-sm text-earth-600 sm:hidden">
-            {currentIndex + 1}/6
-          </span>
-          {/* Desktop: full label + subtitle */}
-          <span className="text-sm text-earth-600 hidden sm:inline">
-            {current.label}
-            <span className="text-earth-500">
-              {" "}
-              &middot; {current.subtitle}
-            </span>
-          </span>
-        </>
+        <span
+          className="mt-2 text-sage-400 uppercase"
+          style={{
+            fontFamily: "var(--font-sans)",
+            fontSize: "0.6rem",
+            letterSpacing: "0.18em",
+          }}
+        >
+          {current.label}
+        </span>
       )}
     </div>
   );
