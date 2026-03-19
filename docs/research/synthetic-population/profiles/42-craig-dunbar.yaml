@@ -1,0 +1,27 @@
+name: "Craig Dunbar"
+age: 57
+location: "Stirlingshire, central Scotland, United Kingdom"
+archetype: recovering
+context: land-operator
+
+dimensions:
+  identity: 3
+  purpose: 2
+  body: 2
+  home: 4
+  growth: 2
+  money: 2
+  people: 3
+  joy: 1
+
+communication_style: guarded
+response_to_stress: withdraw
+openness_to_change: 0.4
+follow_through_rate: 0.4
+life_disruption_probability: 0.3
+
+backstory: |
+  Scottish hill farmer who took over his father's sheep operation twenty years ago and has watched the economics deteriorate steadily ever since. Lamb prices down, input costs up, subsidy structure changing post-Brexit, and a marriage that ended five years ago when his wife said she couldn't watch him work himself to death for less money each year. He has 300 acres of rough grazing, 200 ewes, a stone farmhouse that's been in the family since 1890, and a depression he won't name but that shows in the way he starts sentences and doesn't finish them. His son works in Edinburgh in tech and visits at lambing. The farm loses money most years. Craig supplements with contract fencing and forestry work. The joy went out of it somewhere around 2018 and he can't remember exactly when or why. He keeps going because stopping would mean losing the land, and the land is all he has left of his father.
+
+sample_voice: |
+  The farm's... it's the same as it's been. Sheep. Subsidies don't cover what they used to. I do fencing work on the side. I'm not sure what you want me to say. It's what I do. It's what my father did. I suppose I'm here because my son sent me the link and said it might help me see things differently. I'm not sure I want to see things differently. But I'm here.

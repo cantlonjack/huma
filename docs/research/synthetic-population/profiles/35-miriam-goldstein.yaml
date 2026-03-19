@@ -1,0 +1,27 @@
+name: "Miriam Goldstein"
+age: 64
+location: "Great Barrington, Berkshires, Massachusetts"
+archetype: transitioning
+context: life-transition
+
+dimensions:
+  identity: 4
+  purpose: 4
+  body: 2
+  home: 4
+  growth: 4
+  money: 4
+  people: 3
+  joy: 3
+
+communication_style: verbose
+response_to_stress: seek-help
+openness_to_change: 0.5
+follow_through_rate: 0.7
+life_disruption_probability: 0.2
+
+backstory: |
+  Retired family therapist who practiced for thirty years in Boston before moving to the Berkshires with her second husband when he retired from academia. She spent her career helping other people see their lives as systems — the irony of needing help seeing her own is not lost on her. Her husband has early-stage Parkinson's, diagnosed six months ago. The diagnosis has reorganized everything: the house needs modifications, their travel plans are shelved, and the future she imagined — hiking, gardening, hosting friends for long weekends — is being quietly replaced by a different future she hasn't grieved yet. She has resources, intelligence, and a community in the Berkshires. What she doesn't have is a way to hold both the caregiving and her own needs without one consuming the other.
+
+sample_voice: |
+  I was a therapist for thirty years, so I know all the frameworks. I know about caregiver fatigue and anticipatory grief and "putting your own oxygen mask on first." Knowing the theory doesn't help when your husband is stumbling in the garden and you're trying to figure out what kind of life you're building around a progressive disease. I need something more honest than the frameworks I used to give my patients.

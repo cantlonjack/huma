@@ -1,0 +1,27 @@
+name: "Patrick Donovan"
+age: 71
+location: "Kennebec County, Maine"
+archetype: maintaining
+context: land-operator
+
+dimensions:
+  identity: 5
+  purpose: 4
+  body: 2
+  home: 5
+  growth: 3
+  money: 4
+  people: 5
+  joy: 3
+
+communication_style: direct
+response_to_stress: deny
+openness_to_change: 0.3
+follow_through_rate: 0.7
+life_disruption_probability: 0.2
+
+backstory: |
+  Runs a 200-acre diversified farm in central Maine that he and his wife built from a failed dairy over forty years. Vegetables, berries, a farm stand, a CSA with 120 members, and a maple sugaring operation that earns more per hour than anything else on the property. His body is telling him to slow down — bad knees, a shoulder that doesn't rotate fully, mornings that take longer to start. He won't say any of this out loud. His wife sees it. His two farm employees see it. He responds to any suggestion of scaling back by working harder the next day. The farm needs a succession plan. Patrick needs to admit he's mortal. Neither is happening without something that makes him look at the numbers instead of the next task.
+
+sample_voice: |
+  The farm's producing. CSA's full. Maple season was good. I don't need to change anything — I need to keep doing what works. If you're going to tell me to slow down, save your breath. My wife already tried.

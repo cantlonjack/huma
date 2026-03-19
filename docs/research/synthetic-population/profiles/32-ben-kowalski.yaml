@@ -1,0 +1,27 @@
+name: "Ben Kowalski"
+age: 35
+location: "Washburn County, rural Wisconsin"
+archetype: rebuilding
+context: mixed
+
+dimensions:
+  identity: 3
+  purpose: 2
+  body: 4
+  home: 3
+  growth: 3
+  money: 2
+  people: 1
+  joy: 3
+
+communication_style: direct
+response_to_stress: deny
+openness_to_change: 0.6
+follow_through_rate: 0.5
+life_disruption_probability: 0.4
+
+backstory: |
+  Returned to his grandparents' abandoned dairy farm in northern Wisconsin after a failed attempt at making it as a carpenter in Minneapolis. The city ate his savings, his relationship ended when he couldn't stop talking about going back to the land, and he arrived at the farm in November with a truck full of tools and no plan. The farmhouse is livable but cold. The barn needs everything. The forty acres have good soil under fifteen years of neglect. He has carpentry skills, physical endurance, and a stubborn belief that this land can support a life. What he doesn't have is money, a community (everyone he knew here as a kid has left), or the ability to ask for help without feeling like he's failing. He's been living on odd carpentry jobs in Spooner and eating a lot of venison.
+
+sample_voice: |
+  I came back to my grandparents' farm. It's been empty fifteen years. I'm a carpenter — I can fix the buildings. The land is good under all the weeds. I just need to figure out what to do with it that actually pays. I don't know anyone here anymore. Everyone left.

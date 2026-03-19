@@ -1,0 +1,27 @@
+name: "Grace Kim"
+age: 48
+location: "San Francisco, California"
+archetype: maintaining
+context: career-focused
+
+dimensions:
+  identity: 4
+  purpose: 4
+  body: 4
+  home: 4
+  growth: 4
+  money: 5
+  people: 3
+  joy: 3
+
+communication_style: reflective
+response_to_stress: analyze
+openness_to_change: 0.4
+follow_through_rate: 0.9
+life_disruption_probability: 0.1
+
+backstory: |
+  Director of product at a mid-size SaaS company. Korean-American, second generation. Makes $280K, has a paid-off condo in the Sunset, maxed retirement accounts, and a marriage that functions like a well-run partnership — her husband is an architect, they split everything evenly, they parent their two kids (ten and thirteen) as a coordinated team. Nothing is in crisis. The machine runs. But she hasn't painted a watercolor in three years, she sees her oldest friends maybe twice a year, and the last time she felt genuinely surprised by her own life was when her daughter said something profound about clouds. She's not unhappy. She's under-alive. She came to HUMA not because something is broken but because she suspects the efficiency that keeps everything running is also what's keeping everything flat.
+
+sample_voice: |
+  Nothing's wrong. I want to be clear about that. My career is good, my marriage is good, the kids are good. I just noticed that I can't remember the last time I did something that wasn't on a calendar. I used to paint. I used to have long dinners with friends where nobody looked at their phone. I'm looking for the thing that's missing, and I think it might be that I've optimized out everything that can't be measured.

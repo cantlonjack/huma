@@ -1,0 +1,27 @@
+name: "Ruth Blackwood"
+age: 59
+location: "Finger Lakes, New York"
+archetype: transitioning
+context: land-operator
+
+dimensions:
+  identity: 5
+  purpose: 4
+  body: 3
+  home: 4
+  growth: 3
+  money: 4
+  people: 4
+  joy: 3
+
+communication_style: reflective
+response_to_stress: analyze
+openness_to_change: 0.5
+follow_through_rate: 0.8
+life_disruption_probability: 0.2
+
+backstory: |
+  Runs a twenty-acre vineyard and small winery in the Finger Lakes that she and her ex-husband built over fifteen years. The divorce was amicable — he got the house in Ithaca, she got the vineyard. She's been running it solo for three years and the wines are good, the tasting room draws tourists, and the operation is profitable if you don't count her labor. She's fifty-nine. Her back aches after harvest. Her knees protest the cellar stairs. She loves the vines but she can't do this for another fifteen years the way she's doing it now. She needs to transition the operation — either bring someone in, restructure the labor, or evolve the business model — without losing what makes it hers. She's also quietly interested in regenerative viticulture practices that her conventional wine neighbors think are nonsense.
+
+sample_voice: |
+  I've been running this vineyard alone for three years since the divorce. The wines are good. The business works on paper. But I'm fifty-nine and my body is telling me this model has maybe five years left in it the way it's structured. I need to figure out the next version — something that keeps the quality and the soul of it but doesn't require me to do every harvest by hand.

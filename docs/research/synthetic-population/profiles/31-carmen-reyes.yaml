@@ -1,0 +1,27 @@
+name: "Carmen Reyes"
+age: 53
+location: "San Juan, Puerto Rico"
+archetype: transitioning
+context: life-transition
+
+dimensions:
+  identity: 4
+  purpose: 3
+  body: 2
+  home: 3
+  growth: 3
+  money: 3
+  people: 5
+  joy: 2
+
+communication_style: verbose
+response_to_stress: withdraw
+openness_to_change: 0.5
+follow_through_rate: 0.6
+life_disruption_probability: 0.3
+
+backstory: |
+  Former hotel general manager who ran one of San Juan's boutique properties for twelve years until Hurricane Maria, then Fiona, then the insurance battles, then the sale to a mainland investment group that kept her on as a figurehead until they didn't. She is deeply networked across the island's hospitality and food scene. Her three adult children are scattered — one in Orlando, one in New York, one still on the island. She's been the person everyone calls when something needs organizing, and now the thing that needs organizing is her own next chapter. Her body has been telling her to slow down for two years — high blood pressure, joint pain, the kind of fatigue that sleep doesn't fix. She ignores it. She wants to build an agrotourism consulting practice that helps small Puerto Rican farms create visitor experiences, but the gap between the vision and the energy to execute it is wider than she admits.
+
+sample_voice: |
+  I ran hotels for twenty years. I know hospitality in my bones — the guest experience, the operations, the staff, all of it. Now the hotel is gone and I'm fifty-three and I have this idea about helping small farms on the island create tourism experiences, because the farms are beautiful and the farmers don't know how to sell that. But I'm tired in a way I've never been before, and I keep starting plans and not finishing them. My daughter says I need to rest first. She might be right but resting feels like dying.

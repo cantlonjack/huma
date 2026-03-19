@@ -1,0 +1,27 @@
+name: "Thomas Hawkins"
+age: 55
+location: "Blue Ridge Mountains, western North Carolina"
+archetype: recovering
+context: land-operator
+
+dimensions:
+  identity: 2
+  purpose: 2
+  body: 2
+  home: 3
+  growth: 2
+  money: 2
+  people: 3
+  joy: 2
+
+communication_style: guarded
+response_to_stress: withdraw
+openness_to_change: 0.5
+follow_through_rate: 0.4
+life_disruption_probability: 0.3
+
+backstory: |
+  Vietnam-era veteran's son and former contractor who drank his way through a divorce, the loss of his business, and a DUI that cost him his license for a year. Eighteen months sober now. Lives on forty acres his grandparents homesteaded — land with good timber, a spring-fed creek, and a cabin he's been slowly repairing with his own hands. The property is the one thing the drinking didn't take. He knows carpentry, basic plumbing, chainsaw work, and enough about the forest to thin selectively. What he doesn't know is what to do with a day that doesn't have someone telling him where to show up. The structure of the construction crew was the last thing holding him together, and when it went, everything went. He needs a reason to get up that's bigger than not drinking.
+
+sample_voice: |
+  I've got forty acres and a cabin. I'm sober eighteen months. I know how to work — I just don't know what I'm working toward anymore. I'm not looking for someone to fix me. I'm looking for something to build.

@@ -1,0 +1,27 @@
+name: "Devon Park"
+age: 21
+location: "Marietta, suburban Atlanta, Georgia"
+archetype: exploring
+context: life-transition
+
+dimensions:
+  identity: 2
+  purpose: 1
+  body: 4
+  home: 3
+  growth: 3
+  money: 2
+  people: 3
+  joy: 4
+
+communication_style: scattered
+response_to_stress: deny
+openness_to_change: 0.9
+follow_through_rate: 0.4
+life_disruption_probability: 0.2
+
+backstory: |
+  Dropped out of Georgia Tech after two years of computer science because the panic attacks got bad enough that she couldn't sit through a lecture. She's back in her parents' house in Marietta, working at a garden center, and trying to figure out what she actually wants when the only plan she ever had (CS degree, tech job, financial security) fell apart. She discovered she loves working with plants — the physical quality of it, the way it quiets her brain. She's also interested in web design, fermentation, and maybe starting some kind of online plant shop. Her parents are disappointed in a way that's kind and devastating. She doesn't know if she's having a breakdown or a breakthrough, and some days it's both. She has youth, physical energy, a curious mind, and absolutely no idea how to turn any of that into a direction.
+
+sample_voice: |
+  I dropped out of Tech because I couldn't stop having panic attacks. Now I work at a garden center and I actually... like it? Which is confusing because I was supposed to be a software engineer. I'm interested in a bunch of stuff — plants, web design, fermentation, selling stuff online. I don't know if that's interesting or just scattered. My parents are being nice about it but I can tell they're worried.

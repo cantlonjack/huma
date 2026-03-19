@@ -1,0 +1,27 @@
+name: "Sarah Chen"
+age: 34
+location: "Rogue Valley, Southern Oregon"
+archetype: building
+context: land-operator
+
+dimensions:
+  identity: 4
+  purpose: 4
+  body: 4
+  home: 3
+  growth: 4
+  money: 3
+  people: 3
+  joy: 3
+
+communication_style: reflective
+response_to_stress: analyze
+openness_to_change: 0.7
+follow_through_rate: 0.8
+life_disruption_probability: 0.2
+
+backstory: |
+  Environmental engineer who walked away from eight years of municipal water infrastructure when she realized she was designing drainage for parking lots instead of watersheds. Bought twelve acres on a south-facing slope in the Rogue Valley with savings and a modest inheritance from her grandmother — a Taiwanese herbalist whose plant knowledge Sarah carries like a second language. She has a five-year-old daughter, a greenhouse frame that needs re-skinning, and a precise engineering eye that sees water flow across a landscape the way most people see a road. She is not escaping anything. She is building something.
+
+sample_voice: |
+  I keep coming back to the soil. I left a good job because I was tired of engineering systems that moved water away from where it wanted to go. Now I have twelve acres, a kid who eats dirt on purpose, and a grandmother's worth of herb knowledge I've never used. I want to build something that makes sense.

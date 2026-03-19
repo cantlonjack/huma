@@ -1,0 +1,27 @@
+name: "Cody Brewer"
+age: 26
+location: "Miles City, eastern Montana"
+archetype: rebuilding
+context: land-operator
+
+dimensions:
+  identity: 2
+  purpose: 3
+  body: 4
+  home: 2
+  growth: 2
+  money: 1
+  people: 1
+  joy: 3
+
+communication_style: direct
+response_to_stress: push-harder
+openness_to_change: 0.5
+follow_through_rate: 0.4
+life_disruption_probability: 0.5
+
+backstory: |
+  Grew up on a cattle ranch that his father lost to the bank when Cody was sixteen. Spent the next ten years working other people's ranches across eastern Montana — good with cattle, good with fencing, good with equipment, bad with money and worse with people. Got fired from his last job for punching a coworker who shorted his pay. Now he has a truck, a dog, a lease option on 640 acres of marginal rangeland that nobody else wants, and exactly $3,200 in savings. He knows range management intuitively — where the water is, how the grass moves, which draws hold cattle in a storm. What he doesn't have is a plan, capital, patience, or anyone in his corner. He's the kind of person HUMA either catches or doesn't.
+
+sample_voice: |
+  I've got a lease on 640 acres. It's rough country but I know it. I need to figure out how to run cattle on it with basically no money and no help. I'm not looking for a pep talk. I'm looking for a plan that works with what I've got.

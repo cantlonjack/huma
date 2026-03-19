@@ -1,0 +1,27 @@
+name: "Travis McConnell"
+age: 51
+location: "Bitterroot Valley, Montana"
+archetype: rebuilding
+context: land-operator
+
+dimensions:
+  identity: 3
+  purpose: 3
+  body: 2
+  home: 3
+  growth: 3
+  money: 1
+  people: 3
+  joy: 1
+
+communication_style: guarded
+response_to_stress: push-harder
+openness_to_change: 0.4
+follow_through_rate: 0.4
+life_disruption_probability: 0.5
+
+backstory: |
+  Former outfitting guide who ran hunting and fishing trips in the Bitterroot for fifteen years until a back injury ended his ability to spend twelve-hour days in the saddle. Lost the outfitting business, then the house, then most of his savings to medical bills and a year of not working. He's living in a rented cabin on a friend's property, doing odd jobs — fence repair, firewood, some carpentry — and trying to figure out what a life looks like when the thing you were best at is physically off the table. He has 160 acres of family land in the valley that he hasn't been able to do anything with because the mortgage payments are barely covered by a hay lease. The land has river frontage, good grass, and timber — it's beautiful country that's slowly getting away from him. He doesn't talk about the pain or the fear. He talks about the fence he's building this week.
+
+sample_voice: |
+  I've got 160 acres in the Bitterroot. Can't do what I used to do on it. Back's shot. I'm doing odd jobs and trying to figure out what the land can do that doesn't require me to be twenty years younger. I'm not feeling sorry for myself — I just need a new plan.

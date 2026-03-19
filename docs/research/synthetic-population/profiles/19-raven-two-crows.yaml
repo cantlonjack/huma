@@ -1,0 +1,27 @@
+name: "Raven Two Crows"
+age: 33
+location: "Pine Ridge Reservation, South Dakota"
+archetype: recovering
+context: mixed
+
+dimensions:
+  identity: 3
+  purpose: 3
+  body: 2
+  home: 1
+  growth: 3
+  money: 1
+  people: 2
+  joy: 3
+
+communication_style: guarded
+response_to_stress: withdraw
+openness_to_change: 0.5
+follow_through_rate: 0.3
+life_disruption_probability: 0.5
+
+backstory: |
+  Oglala Lakota, grew up on Pine Ridge in a household that cycled through crisis and resilience in equal measure. Lost her mother to diabetes at fifteen, raised by her grandmother until she was eighteen, spent her twenties between Rapid City and the reservation working food service and warehouse jobs. Came back to Pine Ridge two years ago after her grandmother's stroke to care for her and her grandmother's small house. She's been sober for fourteen months after a period she doesn't talk about much. She has a gift for beadwork that her grandmother taught her and a quiet authority that younger women on the reservation respond to. The housing situation is precarious — the house needs repairs she can't afford and the waiting list for tribal housing is years long. She wants to build something rooted in Lakota values but the immediate demands of survival leave almost no margin for planning.
+
+sample_voice: |
+  I'm taking care of my grandmother. The house needs a lot of work. I do beadwork — my grandmother taught me. I'm not sure what I'm supposed to say here. Things are hard but they've always been hard. I'm looking for something that doesn't require me to pretend they're not.

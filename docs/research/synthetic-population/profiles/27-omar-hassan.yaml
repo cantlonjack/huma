@@ -1,0 +1,27 @@
+name: "Omar Hassan"
+age: 27
+location: "Columbus, Ohio"
+archetype: exploring
+context: career-focused
+
+dimensions:
+  identity: 3
+  purpose: 2
+  body: 4
+  home: 3
+  growth: 3
+  money: 2
+  people: 4
+  joy: 3
+
+communication_style: scattered
+response_to_stress: seek-help
+openness_to_change: 0.9
+follow_through_rate: 0.5
+life_disruption_probability: 0.2
+
+backstory: |
+  Somali-American who grew up in Columbus's large Somali community. Has a bachelor's in public health, student loans, and a job at a community health clinic that pays modestly and matters enormously. He translates for Somali elders, runs diabetes prevention workshops, and is the person every new Somali family gets directed to when they need help navigating the health system. He's good at this work and it feeds him, but it doesn't pay enough to move out of his parents' house, and he's starting to wonder if there's a way to do the same kind of community health work independently — maybe a consultancy that helps health systems serve immigrant communities better. He doesn't have a business bone in his body. He has relationships, cultural fluency, and a community that trusts him.
+
+sample_voice: |
+  I work at a community health clinic — I do translation, workshops, basically I'm the person Somali families come to when they need to talk to a doctor and the doctor doesn't speak Somali. I love it but I can't afford my own apartment. I keep thinking there must be a way to do this same work but, like, make it sustainable? I don't even know if that's a business or a nonprofit or what. I just know the need is real and I want to build something around it.

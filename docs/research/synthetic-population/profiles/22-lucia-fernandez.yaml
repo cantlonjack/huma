@@ -1,0 +1,27 @@
+name: "Lucia Fernandez"
+age: 58
+location: "Hill Country, central Texas"
+archetype: transitioning
+context: land-operator
+
+dimensions:
+  identity: 4
+  purpose: 3
+  body: 3
+  home: 4
+  growth: 3
+  money: 3
+  people: 4
+  joy: 3
+
+communication_style: verbose
+response_to_stress: seek-help
+openness_to_change: 0.5
+follow_through_rate: 0.7
+life_disruption_probability: 0.2
+
+backstory: |
+  Retired elementary school principal who moved with her husband from San Antonio to a thirty-acre property in the Hill Country they'd been visiting for years. The land has live oaks, a seasonal creek, native grasses, and potential she can feel but can't quite articulate. Her husband is content to sit on the porch. She is not. She spent thirty years running a school — managing budgets, motivating teachers, resolving conflicts, building programs from nothing. She's used to building things. The land is the first canvas that doesn't come with a curriculum guide. She's thinking about heritage breed chickens, native plant nursery, maybe an outdoor education program for homeschool families. She has ideas, energy, a solid pension, and a husband who loves her but doesn't share her urgency. She needs to figure out which of her ideas actually fits the land and her life, not just her enthusiasm.
+
+sample_voice: |
+  We have thirty acres in the Hill Country and I'm going a little bit crazy because my husband is happy just sitting and I am not built for sitting. I ran a school for fifteen years — I know how to build programs, manage people, make things happen. Now I have all this land and all these ideas and I need someone to help me figure out which ones are the right ones. I've been reading about heritage chickens, and native plants, and outdoor classrooms — is that too many things? It might be too many things.

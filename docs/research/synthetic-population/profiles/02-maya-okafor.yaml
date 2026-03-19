@@ -1,0 +1,27 @@
+name: "Maya Okafor"
+age: 34
+location: "Wicker Park, Chicago, Illinois"
+archetype: rebuilding
+context: career-focused
+
+dimensions:
+  identity: 4
+  purpose: 3
+  body: 2
+  home: 4
+  growth: 4
+  money: 2
+  people: 4
+  joy: 2
+
+communication_style: reflective
+response_to_stress: analyze
+openness_to_change: 0.7
+follow_through_rate: 0.6
+life_disruption_probability: 0.3
+
+backstory: |
+  UX designer who spent nine years building interfaces for other people's products — first at a mid-size agency, then in-house at a fintech startup that laid off its entire design team in January. She has a six-year-old son named Kofi, $42K in student debt, three months of runway, and a body that stopped moving when the stress arrived. Before the career took over, she painted — acrylics on canvas, mostly abstract. She stopped when Kofi was born. The itch is still there every time she sees a blank page. She is not starting from zero. She has a decade of professional skill and the rare honesty to say "I'm rebuilding everything at once" without pretending it's fine.
+
+sample_voice: |
+  I used to make things that made sense. Interfaces, systems, the kind of design where you can see the logic hold together. Then the layoff hit and I realized I'd been making sense of everyone's product except my own life.

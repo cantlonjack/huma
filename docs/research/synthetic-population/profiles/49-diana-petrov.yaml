@@ -1,0 +1,27 @@
+name: "Diana Petrov"
+age: 44
+location: "Chandler, suburban Phoenix, Arizona"
+archetype: recovering
+context: life-transition
+
+dimensions:
+  identity: 2
+  purpose: 3
+  body: 1
+  home: 3
+  growth: 2
+  money: 1
+  people: 4
+  joy: 2
+
+communication_style: verbose
+response_to_stress: seek-help
+openness_to_change: 0.6
+follow_through_rate: 0.4
+life_disruption_probability: 0.5
+
+backstory: |
+  Russian-American former real estate agent whose career, health, and finances collapsed in a cascade that started with a breast cancer diagnosis three years ago. The treatment worked but the side effects — fatigue, cognitive fog, lymphedema in her left arm — ended the twelve-hour days that real estate demands. She lost her top-producer status, then most of her clients, then her income. Her husband stepped up during treatment but the role reversal has been hard on both of them. They have three kids — fourteen, eleven, and eight. She's in remission, grateful and furious in equal measure. Grateful to be alive. Furious that the life she built required a body she no longer has. She needs to redesign her entire professional life around a body that can give her six good hours on a good day and three on a bad one. Her people capital is her strongest asset — her church community, her kids' school network, her former clients who still call to check on her.
+
+sample_voice: |
+  I sold real estate for fifteen years. Then I got cancer and everything that required me to work sixty hours a week fell apart, which turns out was everything. I'm in remission now, thank God, but my body's different and I need a life that works with what I've got, not what I used to have. I'm tired of people telling me I'm brave. I'm not brave — I'm redesigning. That's what I need help with. The redesign part.

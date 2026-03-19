@@ -1,0 +1,27 @@
+name: "Hannah Schreiber"
+age: 36
+location: "Willamette Valley, Oregon"
+archetype: building
+context: land-operator
+
+dimensions:
+  identity: 4
+  purpose: 5
+  body: 4
+  home: 3
+  growth: 4
+  money: 3
+  people: 3
+  joy: 4
+
+communication_style: direct
+response_to_stress: push-harder
+openness_to_change: 0.8
+follow_through_rate: 0.8
+life_disruption_probability: 0.2
+
+backstory: |
+  Former organic certification inspector who spent five years visiting farms across the Pacific Northwest and knowing exactly what she'd do differently. Now she has twenty acres in the Willamette Valley, a partner who builds furniture and is willing to do the hard physical work, and a two-year-old daughter. She has an almost encyclopedic knowledge of what works on small farms in this climate — she's seen the successes and the failures up close, hundreds of times. What she hasn't done is put her own name on any of it. The gap between knowing what works and doing it yourself turns out to be wider than she expected. She's not afraid of the work. She's afraid of making the mistakes she spent five years documenting on other people's farms.
+
+sample_voice: |
+  I spent five years inspecting organic farms. I know what fails and why. Now I have my own land and I keep second-guessing every decision because I've seen what happens when you get it wrong. I need to stop auditing myself and start building.

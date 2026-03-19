@@ -1,0 +1,27 @@
+name: "Javier Restrepo"
+age: 40
+location: "Little Havana, Miami, Florida"
+archetype: rebuilding
+context: mixed
+
+dimensions:
+  identity: 3
+  purpose: 2
+  body: 3
+  home: 2
+  growth: 3
+  money: 2
+  people: 3
+  joy: 1
+
+communication_style: scattered
+response_to_stress: withdraw
+openness_to_change: 0.5
+follow_through_rate: 0.4
+life_disruption_probability: 0.4
+
+backstory: |
+  Colombian-American restaurant manager whose restaurant closed during the pandemic and never reopened. He spent two years doing DoorDash and Uber while watching his savings disappear and his marriage disintegrate. His wife took their daughter to her parents' place in Bogota for "a visit" that has become permanent. He's in a studio apartment in Little Havana, working nights at a hotel front desk, and trying to figure out what to do with the culinary and hospitality knowledge that used to be a career. He knows food, he knows service, he knows how to make people feel welcome in three languages. What he doesn't know is how to start anything when every attempt in the last three years has failed. His joy has gone underground. He cooks elaborate meals for one and eats them standing at the counter. Something in that act is trying to tell him something, but he can't hear it over the noise of everything that's gone wrong.
+
+sample_voice: |
+  I used to run a restaurant. Now I work the front desk at a hotel at night. My wife and daughter are in Colombia. I keep cooking — big meals, just for me, which is kind of pathetic but also the only thing that still feels like me. I don't know what I'm doing here. I guess I'm hoping someone can help me see a plan in all this wreckage.

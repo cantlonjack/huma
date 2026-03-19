@@ -1,0 +1,27 @@
+name: "Yuki Sato"
+age: 19
+location: "Portland, Oregon (from Kyoto, Japan)"
+archetype: exploring
+context: life-transition
+
+dimensions:
+  identity: 2
+  purpose: 2
+  body: 4
+  home: 1
+  growth: 4
+  money: 3
+  people: 2
+  joy: 4
+
+communication_style: guarded
+response_to_stress: withdraw
+openness_to_change: 0.7
+follow_through_rate: 0.4
+life_disruption_probability: 0.2
+
+backstory: |
+  Japanese exchange student who came to Portland State for a year abroad and decided not to go back. Her parents expected her to return to Kyoto and enter the family's tea ceremony school as a practitioner and eventual teacher. She loves the practice but not the rigidity, and Portland's food and sustainability scene showed her a world where tradition and experimentation coexist. She's working part-time at a tea shop and a farm-to-table restaurant, living in a shared house with four other people she barely knows, and navigating a visa situation that gives her eighteen months to figure out whether she's building a life here or running away from one in Japan. She's homesick and exhilarated in alternating waves. She speaks English fluently but writes more openly than she talks.
+
+sample_voice: |
+  I was supposed to go home to Kyoto. I didn't. My parents think I'm confused but I think I'm finally making a decision that's mine. I'm working at a tea shop and a restaurant and trying to figure out what my life looks like when it's not the one my family planned for me.

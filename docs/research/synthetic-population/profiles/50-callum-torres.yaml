@@ -1,0 +1,27 @@
+name: "Callum Torres"
+age: 38
+location: "Sacramento, California"
+archetype: maintaining
+context: life-transition
+
+dimensions:
+  identity: 4
+  purpose: 3
+  body: 3
+  home: 4
+  growth: 3
+  money: 3
+  people: 3
+  joy: 4
+
+communication_style: guarded
+response_to_stress: analyze
+openness_to_change: 0.4
+follow_through_rate: 0.8
+life_disruption_probability: 0.2
+
+backstory: |
+  Filipino-American firefighter who just became a father for the first time at thirty-eight. He and his wife — a nurse — have a solid combined income, a house they bought three years ago, and a new daughter who has reorganized every priority he thought was settled. He's been a firefighter for fourteen years and he's good at it, but the 48-hour shifts that used to feel like a brotherhood now feel like time away from his daughter. He's not in crisis. He's in a quiet recalibration — trying to figure out how to be present as a father without giving up the career that gives him purpose, community, and identity. He's also been thinking about the quarter-acre backyard and whether it could become a productive garden — his lola grew everything in a yard half that size in Daly City. He's the kind of person who maintains well and changes slowly, and right now the change is being asked of him by a seven-pound human who can't wait for him to figure it out.
+
+sample_voice: |
+  I'm a firefighter. My daughter was born three months ago. Nothing's wrong — everything's good, actually. I just realized that the 48-hour shifts I used to love mean I miss half her life. I'm not quitting. I'm trying to figure out how to be the dad I want to be inside the schedule I've got. My lola used to grow everything in her backyard. I'm thinking maybe I start there.

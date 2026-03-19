@@ -1,0 +1,27 @@
+name: "Terrence Washington"
+age: 46
+location: "Jackson, Mississippi"
+archetype: recovering
+context: career-focused
+
+dimensions:
+  identity: 2
+  purpose: 3
+  body: 1
+  home: 2
+  growth: 3
+  money: 1
+  people: 2
+  joy: 2
+
+communication_style: guarded
+response_to_stress: push-harder
+openness_to_change: 0.4
+follow_through_rate: 0.3
+life_disruption_probability: 0.5
+
+backstory: |
+  Former high school football coach who lost his job after a heart attack at forty-four that he tried to work through until he collapsed at practice. The school district let him go on disability but didn't hold the position. He's living in his mother's house in Jackson, managing Type 2 diabetes and hypertension, and trying to figure out what he is if he's not Coach Washington. His identity was so fused with the job that losing it felt like losing himself. His ex-wife has custody of their two daughters in Memphis. He sees them one weekend a month. The financial situation is dire — disability payments cover the basics, barely. His mother is seventy-two and worried about him. He responds to all of this by doing more — mowing lawns, helping neighbors, anything that feels like work — even though his body can't sustain it. He needs to rebuild from the ground up, but the ground is unfamiliar.
+
+sample_voice: |
+  I'm a coach. Was a coach. Had a heart attack, lost the job. Living with my mom. I'm managing the health stuff — I'm fine. I just need to figure out what's next. I can work. I'm not broken. I just need a direction.

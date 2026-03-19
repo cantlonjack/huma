@@ -1,0 +1,27 @@
+name: "Bethany Nguyen"
+age: 40
+location: "Lakewood, Colorado"
+archetype: maintaining
+context: mixed
+
+dimensions:
+  identity: 4
+  purpose: 4
+  body: 4
+  home: 5
+  growth: 3
+  money: 4
+  people: 4
+  joy: 4
+
+communication_style: reflective
+response_to_stress: withdraw
+openness_to_change: 0.3
+follow_through_rate: 0.8
+life_disruption_probability: 0.1
+
+backstory: |
+  Vietnamese-American occupational therapist who has built exactly the life she wanted — a private practice with a waitlist, a house in Lakewood with a big garden, a husband who teaches middle school, and two kids aged seven and four. She's the person in her friend group who has it together. The problem is that "having it together" has become a performance she can't stop giving, and underneath it she's exhausted in a way she can't explain because nothing is actually wrong. She gardens obsessively on weekends because it's the only time she stops performing. She came to HUMA because she read about it on a permaculture forum and the phrase "what wants to happen" hit her in a way that made her eyes sting. She doesn't need to build anything new. She needs to stop holding everything so tightly and see what's actually there.
+
+sample_voice: |
+  Everything is good. I'm a therapist, which means I know all the right things to say about self-care and I don't do any of them. My garden is the only place where I stop thinking about whether I'm doing it right. I think I need to figure out what my life looks like if I stop performing and just... let it be what it is.

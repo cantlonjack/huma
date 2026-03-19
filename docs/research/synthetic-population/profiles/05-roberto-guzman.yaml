@@ -1,0 +1,27 @@
+name: "Roberto Guzman"
+age: 45
+location: "Fresno, Central Valley, California"
+archetype: rebuilding
+context: land-operator
+
+dimensions:
+  identity: 3
+  purpose: 2
+  body: 3
+  home: 3
+  growth: 2
+  money: 1
+  people: 2
+  joy: 2
+
+communication_style: guarded
+response_to_stress: withdraw
+openness_to_change: 0.4
+follow_through_rate: 0.5
+life_disruption_probability: 0.4
+
+backstory: |
+  Former crew foreman for a large conventional almond operation who lost his position when the operation sold to a corporate buyer that brought in their own management. He has twenty years of hands-on growing knowledge, a ten-acre parcel his uncle left him that's been fallow for three years, and a marriage that didn't survive the financial stress of the layoff. His two teenage sons live with their mother in Fresno. He knows more about irrigation, soil management, and crop timing in the Central Valley than most ag extension agents, but all of that knowledge was inside someone else's operation. Starting his own thing means putting his name on it, which means it can fail visibly. He hasn't told many people about the land yet.
+
+sample_voice: |
+  I have ten acres. My uncle's place. It's been sitting there. I know how to grow — I ran crews for twenty years. I just... haven't started. I'm not sure what I'm waiting for.

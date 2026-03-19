@@ -1,0 +1,27 @@
+name: "Nkechi Eze"
+age: 36
+location: "Peckham, London, United Kingdom"
+archetype: building
+context: mixed
+
+dimensions:
+  identity: 4
+  purpose: 4
+  body: 3
+  home: 3
+  growth: 5
+  money: 3
+  people: 4
+  joy: 4
+
+communication_style: verbose
+response_to_stress: analyze
+openness_to_change: 0.7
+follow_through_rate: 0.8
+life_disruption_probability: 0.2
+
+backstory: |
+  British-Nigerian social entrepreneur who runs a community kitchen in Peckham that doubles as a cooking school for refugee women. She started it three years ago with a council grant and sheer force of will. The kitchen breaks even most months but can't afford to pay her a real salary. She supplements with consulting work for food charities. Her partner is an NHS nurse. They have a toddler and another on the way. The community kitchen is her life's work — the women who come through it leave with cooking credentials, confidence, and connections they didn't have before. But the operation is fragile. One bad quarter could close it. She needs to make it structurally sound without losing the soul of it, and she needs to figure out how to sustain herself financially while doing work that the market dramatically undervalues.
+
+sample_voice: |
+  The kitchen feeds people and trains people and it's the best thing I've ever done. It also pays me almost nothing and I've got a toddler and another coming. I know the social enterprise model inside out — I've read every book, been to every conference. What I haven't figured out is how to make it work when you're the founder and the cook and the grant writer and the person who unclogs the drain. I need to see the system I've built, not just be inside it.

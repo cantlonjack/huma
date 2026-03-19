@@ -1,0 +1,27 @@
+name: "Elena Vasquez"
+age: 29
+location: "Tucson, Arizona"
+archetype: rebuilding
+context: life-transition
+
+dimensions:
+  identity: 2
+  purpose: 2
+  body: 3
+  home: 2
+  growth: 3
+  money: 1
+  people: 3
+  joy: 2
+
+communication_style: scattered
+response_to_stress: seek-help
+openness_to_change: 0.6
+follow_through_rate: 0.4
+life_disruption_probability: 0.4
+
+backstory: |
+  Left a marriage at twenty-seven that she entered at twenty-one. Moved from Phoenix to Tucson to be closer to her sister and started over with two suitcases and a part-time retail job at a plant nursery. She has a half-finished degree in social work, a genuine gift for connecting with people, and absolutely no idea what she wants her life to look like. The marriage was controlling enough that she's never actually made a major decision for herself. Her therapist suggested she try something that helps her see the whole picture. She's interested in herbalism, community gardening, maybe finishing the degree, maybe not. Everything feels possible and nothing feels solid. She cries more than she'd like to admit and laughs more than people expect.
+
+sample_voice: |
+  OK so I don't really know where to start? I left my marriage like a year and a half ago and I'm kind of building from scratch. I work at a plant nursery which I love, and my sister's here, and I'm thinking about maybe going back to school but also maybe not? I just want to figure out what my life actually looks like when it's mine.

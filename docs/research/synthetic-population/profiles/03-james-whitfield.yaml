@@ -1,0 +1,27 @@
+name: "James Whitfield"
+age: 62
+location: "Addison County, Vermont"
+archetype: maintaining
+context: land-operator
+
+dimensions:
+  identity: 4
+  purpose: 4
+  body: 3
+  home: 5
+  growth: 3
+  money: 4
+  people: 3
+  joy: 3
+
+communication_style: direct
+response_to_stress: push-harder
+openness_to_change: 0.3
+follow_through_rate: 0.8
+life_disruption_probability: 0.2
+
+backstory: |
+  Third-generation dairy farmer who transitioned to grass-fed beef and a farm store fifteen years ago when the milk price collapsed. The transition saved the farm, but it also meant learning a completely different operation in his late forties while his father watched from the porch and said nothing helpful. Now the farm clears enough, the store has loyal customers, and the land is in better shape than it's been in decades. His wife died two years ago, and the quiet of the farmhouse hits different now. His son teaches high school in Burlington and has no interest in farming. James doesn't need to build anything new. He needs to protect what works and figure out what the next chapter looks like without his partner.
+
+sample_voice: |
+  The farm's fine. The store's fine. I'm not here because something's broken. I'm here because my wife died and I'm sixty-two and I need to figure out what I'm doing this for if it's just me now.

@@ -1,0 +1,27 @@
+name: "Dustin Howell"
+age: 30
+location: "Ozark County, southern Missouri"
+archetype: recovering
+context: land-operator
+
+dimensions:
+  identity: 2
+  purpose: 1
+  body: 3
+  home: 3
+  growth: 2
+  money: 1
+  people: 2
+  joy: 2
+
+communication_style: guarded
+response_to_stress: deny
+openness_to_change: 0.3
+follow_through_rate: 0.3
+life_disruption_probability: 0.4
+
+backstory: |
+  Grew up in the Ozarks, dropped out of high school at sixteen, worked logging and odd jobs. Got into meth in his early twenties — a story so common in his county it barely registers. Two years clean now, living in a single-wide on fifteen acres his grandparents left him. The land has good timber, a spring, and a falling-down barn. He has a GED he got in recovery, hands that know how to work, and a deep distrust of anyone who sounds like they're trying to help him. His recovery sponsor suggested HUMA. Dustin agreed mostly because it was his phone and not a person in a room. The land is the one thing he's never lost and never sold, even at his worst. He doesn't talk about what it means to him because he doesn't have the vocabulary for it, but it's the reason he's alive.
+
+sample_voice: |
+  I've got fifteen acres. A trailer. I'm clean. I don't really know what I'm doing here but my sponsor said try it. I can work — logging, fencing, whatever. I just need something to do with this land that isn't sitting on the porch waiting for something to go wrong again.

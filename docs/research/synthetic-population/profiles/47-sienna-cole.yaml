@@ -1,0 +1,27 @@
+name: "Sienna Cole"
+age: 32
+location: "Nashville, Tennessee"
+archetype: rebuilding
+context: career-focused
+
+dimensions:
+  identity: 3
+  purpose: 2
+  body: 2
+  home: 3
+  growth: 4
+  money: 2
+  people: 3
+  joy: 1
+
+communication_style: reflective
+response_to_stress: withdraw
+openness_to_change: 0.6
+follow_through_rate: 0.5
+life_disruption_probability: 0.4
+
+backstory: |
+  Former Nashville songwriter who had enough publishing credits to feel legitimate and not enough to pay the bills. Spent her twenties writing songs for other artists, waiting tables, and believing the breakthrough was one demo away. At thirty, her publishing deal wasn't renewed. She pivoted to social media management for country music artists, which pays the rent but feels like watching other people live the creative life she wanted. She's in a small apartment in East Nashville, single, and grieving a version of herself that she's not sure was ever real or just the story she told herself for ten years. She's not sure if she's done with songwriting or just done with the industry. The distinction matters and she hasn't figured it out yet. Her joy has gone almost completely silent.
+
+sample_voice: |
+  I was a songwriter. I'm not sure I still am. I do social media for artists now, which is fine, it pays. But every time I write a caption about someone else's album release I feel this thing in my chest that I think is grief. I need to figure out if I'm grieving the career or the art, because those are different losses that need different responses.

@@ -1,0 +1,27 @@
+name: "Jordan Reeves"
+age: 25
+location: "Denver, Colorado"
+archetype: exploring
+context: career-focused
+
+dimensions:
+  identity: 3
+  purpose: 1
+  body: 5
+  home: 2
+  growth: 4
+  money: 3
+  people: 3
+  joy: 4
+
+communication_style: scattered
+response_to_stress: deny
+openness_to_change: 0.9
+follow_through_rate: 0.5
+life_disruption_probability: 0.2
+
+backstory: |
+  Non-binary former collegiate rock climber who graduated with a degree in kinesiology and immediately realized they had no interest in becoming a physical therapist or personal trainer, which is basically what the degree is for. They're working at a climbing gym, teaching classes, setting routes, and building a following on social media with climbing content that's more thoughtful than the usual send-bro culture — videos about movement, fear, body trust, the meditative quality of being on a wall. They have ten thousand followers and no revenue model. They live in a van they converted themselves, which started as an adventure and is becoming a housing constraint. They're attracted to outdoor education, wilderness therapy, movement coaching, or something that doesn't exist yet. The options feel infinite and the bank account doesn't.
+
+sample_voice: |
+  I climb. I teach climbing. I make videos about it. I live in a van, which sounds cool until it's February in Denver and your water tank is frozen. I have this degree in kinesiology that I'm not using and a social media following that doesn't pay rent. I feel like the thing I'm supposed to build is right at the edge of my vision but I can't quite see it. Something about movement and teaching and being outside? I don't know. Help me see it.

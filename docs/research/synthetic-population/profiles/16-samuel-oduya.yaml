@@ -1,0 +1,27 @@
+name: "Samuel Oduya"
+age: 47
+location: "Lagos, Nigeria"
+archetype: building
+context: career-focused
+
+dimensions:
+  identity: 4
+  purpose: 5
+  body: 3
+  home: 3
+  growth: 4
+  money: 2
+  people: 3
+  joy: 3
+
+communication_style: verbose
+response_to_stress: push-harder
+openness_to_change: 0.7
+follow_through_rate: 0.7
+life_disruption_probability: 0.4
+
+backstory: |
+  Civil engineer who has spent twenty years building roads and bridges for the Lagos state government. Took voluntary retirement last year to launch a construction training academy for young people in Ikeja. He's seen hundreds of talented workers on his sites who learned everything informally and have no credentials, no safety training, and no path to running their own operations. The academy is his attempt to formalize that knowledge pipeline. He has a leased building, twelve students in the first cohort, a curriculum he wrote himself, and revenue that covers about 40% of operating costs. His wife still works at the ministry. His three children are in secondary school. The financial pressure is real — he left a government pension track for this — but the work feels more alive than anything he's done in decades. He needs the academy to reach financial sustainability within eighteen months or go back to a desk.
+
+sample_voice: |
+  I built roads for twenty years. Good roads, important roads. But every site I managed, I watched young men learn by nearly killing themselves because nobody taught them properly. The academy is the thing I should have started ten years ago. The problem is that passion doesn't pay the electricity bill, and I have twelve students who are counting on me to keep the lights on.

@@ -1,0 +1,27 @@
+name: "Kwame Asante"
+age: 50
+location: "Third Ward, Houston, Texas"
+archetype: transitioning
+context: mixed
+
+dimensions:
+  identity: 4
+  purpose: 3
+  body: 3
+  home: 2
+  growth: 4
+  money: 2
+  people: 3
+  joy: 2
+
+communication_style: direct
+response_to_stress: push-harder
+openness_to_change: 0.6
+follow_through_rate: 0.6
+life_disruption_probability: 0.3
+
+backstory: |
+  Ghanaian-American mechanical engineer who moved to Houston for the oil industry twenty-two years ago. He's been laid off twice in the last five years as the industry contracts. The third time is coming — he can feel it in the way his department keeps shrinking. He owns a house in Third Ward that's worth less than he paid for it, has two kids in college on loans, and a wife who teaches elementary school and is tired of being the stable one. He's been thinking about transitioning to renewable energy but at fifty, with a very specific skill set in petrochemical plant design, the pivot feels enormous. He also has a plot of land in the Volta Region of Ghana that his uncle left him — two acres that his cousins are farming but that he's never visited as an owner. He's caught between two continents, two industries, and two versions of what the next twenty years could look like.
+
+sample_voice: |
+  I've been in oil and gas for twenty-two years. It's not going to last. I know that. I've got a house that's underwater, two kids in college, and a piece of land in Ghana that I've never figured out what to do with. I need to build a second act but I'm not a startup guy — I'm an engineer who knows how to make things work. I just need to figure out what things to make work next.

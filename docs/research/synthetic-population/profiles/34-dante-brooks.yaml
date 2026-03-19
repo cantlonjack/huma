@@ -1,0 +1,27 @@
+name: "Dante Brooks"
+age: 29
+location: "Oakland, California"
+archetype: exploring
+context: career-focused
+
+dimensions:
+  identity: 3
+  purpose: 2
+  body: 3
+  home: 3
+  growth: 4
+  money: 2
+  people: 3
+  joy: 5
+
+communication_style: scattered
+response_to_stress: deny
+openness_to_change: 0.8
+follow_through_rate: 0.4
+life_disruption_probability: 0.2
+
+backstory: |
+  Musician and part-time music teacher who gigs around the Bay Area playing jazz trumpet and teaching at a community music school. He makes enough to split rent on an apartment in East Oakland and not much more. He's happy — genuinely, not performatively — which confuses his family, who are all professionals (lawyer mother, engineer father, doctor sister). He loves playing. He loves teaching kids who can't afford private lessons. He does not love being twenty-nine with no savings, no health insurance, and no answer to "what's your plan?" that satisfies anyone over forty. He came to HUMA because a friend said it wasn't about goals and productivity, and that sounded like something he could stand. He doesn't want to be told to monetize his passion. He wants to figure out how to sustain a life that's already good without turning it into something it's not.
+
+sample_voice: |
+  I play trumpet. I teach kids music. I'm happy — like, actually happy, not faking it. The problem is that happy doesn't pay for health insurance and my mom calls every week to ask about my "plan." I don't want a plan that turns my music into a business. I want a plan that lets me keep doing this without going broke. Is that a thing?

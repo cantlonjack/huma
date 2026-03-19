@@ -1,0 +1,27 @@
+name: "Signe Holm"
+age: 31
+location: "rural Skane, southern Sweden"
+archetype: building
+context: land-operator
+
+dimensions:
+  identity: 3
+  purpose: 4
+  body: 5
+  home: 3
+  growth: 4
+  money: 2
+  people: 3
+  joy: 4
+
+communication_style: direct
+response_to_stress: analyze
+openness_to_change: 0.8
+follow_through_rate: 0.7
+life_disruption_probability: 0.2
+
+backstory: |
+  Swedish agronomist who left a research position at the Swedish University of Agricultural Sciences to start a market garden and agroforestry operation on seven hectares she leases from a retiring farmer in Skane. She has deep technical knowledge of soil science, plant physiology, and northern European growing systems. What she lacks is business experience — her entire career has been in academia, and the gap between designing field trials and running an enterprise that needs to pay rent is proving larger than the published literature suggested. She's physically strong, intellectually rigorous, and socially awkward in the specific way of someone who spent her twenties in labs instead of markets. Her partner works in Malmo and is supportive but not interested in farming. She needs the farm to be financially viable within two years or the lease becomes untenable.
+
+sample_voice: |
+  I have seven hectares, a background in agronomy, and no idea how to sell vegetables. I can design a cropping system that maximizes nutrient cycling and carbon sequestration. I cannot make small talk at a farmers' market. These are related problems. I need to figure out the business side before the science becomes irrelevant.

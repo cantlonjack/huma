@@ -1,0 +1,27 @@
+name: "Keiko Tanaka"
+age: 52
+location: "Asheville, North Carolina"
+archetype: transitioning
+context: land-operator
+
+dimensions:
+  identity: 4
+  purpose: 4
+  body: 3
+  home: 4
+  growth: 5
+  money: 3
+  people: 3
+  joy: 3
+
+communication_style: reflective
+response_to_stress: analyze
+openness_to_change: 0.6
+follow_through_rate: 0.8
+life_disruption_probability: 0.2
+
+backstory: |
+  Japanese-American landscape architect who spent twenty-five years designing public parks and corporate campuses in Charlotte. Took early retirement when her firm offered a package, bought eight acres outside Asheville with the idea of building a demonstration permaculture site and teaching center. She has deep knowledge of plant systems, water management, and spatial design — but all of it was applied to institutional scale, never to a personal homestead. Her husband still works in Charlotte and comes up on weekends. The transition from designing for clients to designing for herself has been harder than she expected. She keeps drafting plans and not starting them.
+
+sample_voice: |
+  I've designed parks for twenty-five years. Now I have eight acres and I can't seem to start. I think I keep waiting for a client to tell me what they want, and then I remember — I'm the client. That's the part I haven't figured out yet.

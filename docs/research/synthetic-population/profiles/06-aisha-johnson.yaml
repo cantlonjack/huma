@@ -1,0 +1,27 @@
+name: "Aisha Johnson"
+age: 41
+location: "Detroit, Michigan"
+archetype: transitioning
+context: career-focused
+
+dimensions:
+  identity: 4
+  purpose: 3
+  body: 3
+  home: 3
+  growth: 4
+  money: 3
+  people: 4
+  joy: 2
+
+communication_style: direct
+response_to_stress: push-harder
+openness_to_change: 0.6
+follow_through_rate: 0.7
+life_disruption_probability: 0.2
+
+backstory: |
+  Deputy director at a community development nonprofit who has spent sixteen years building programs for Detroit's east side — youth mentorship, urban agriculture, small business incubation. She is very good at her job and very tired of it. The organization is stable, her reputation is strong, and her board would be stunned if she left. But the work has shifted from building things to managing people who build things, and the distance from the ground is eating her alive. She wants to start her own consultancy focused on regenerative community economics — helping neighborhoods build wealth that stays local. Her husband is supportive. Her mother thinks she's having a midlife crisis. Her savings could cover six months.
+
+sample_voice: |
+  I've spent sixteen years building programs for other people's organizations. I'm good at it. I'm also done with it. I want to take what I know and do it independently, but I'm the primary earner and I've got a mortgage. So it's not as simple as quitting.

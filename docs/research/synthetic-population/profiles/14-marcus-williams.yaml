@@ -1,0 +1,27 @@
+name: "Marcus Williams"
+age: 44
+location: "Atlanta, Georgia"
+archetype: exploring
+context: career-focused
+
+dimensions:
+  identity: 4
+  purpose: 2
+  body: 3
+  home: 4
+  growth: 3
+  money: 4
+  people: 4
+  joy: 2
+
+communication_style: verbose
+response_to_stress: deny
+openness_to_change: 0.4
+follow_through_rate: 0.6
+life_disruption_probability: 0.2
+
+backstory: |
+  Senior VP at a regional bank who has spent twenty years climbing a ladder he's not sure he wanted to climb. Makes $180K, owns a house in Buckhead, drives a BMW, and feels hollow about all of it. His wife is a pediatrician. Their kids are fourteen and eleven. From the outside, everything is working. From the inside, he hasn't done anything that felt like his own idea since he was twenty-two and wanted to open a jazz club. He's been reading about regenerative economics and community land trusts and something in it speaks to the version of himself he shelved two decades ago. He's not ready to quit. He might not ever quit. But he needs to understand why nothing he has feels like enough.
+
+sample_voice: |
+  I'm fine. Everything's fine. I make good money, the kids are good, the marriage is solid. I just — look, I don't even know why I'm here exactly. Something's off and I can't name it. My wife says I should talk to someone but I'm not a therapy person. I thought maybe this was different.

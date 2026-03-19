@@ -1,0 +1,27 @@
+name: "Leo Brandt"
+age: 48
+location: "Hudson Valley, New York"
+archetype: recovering
+context: mixed
+
+dimensions:
+  identity: 2
+  purpose: 2
+  body: 2
+  home: 3
+  growth: 3
+  money: 2
+  people: 1
+  joy: 3
+
+communication_style: scattered
+response_to_stress: deny
+openness_to_change: 0.5
+follow_through_rate: 0.3
+life_disruption_probability: 0.4
+
+backstory: |
+  Former Wall Street trader who made a lot of money, spent it on cocaine and a lifestyle that looked impressive and felt hollow, and crashed spectacularly at forty-three — lost the job, the apartment, most of the money, and his second marriage. Five years into recovery, he's living in a rented cottage in the Hudson Valley, doing bookkeeping for local businesses, and trying to figure out what a meaningful life looks like when you've already had the version that society calls successful and it nearly killed you. He has financial skills that could serve small businesses and nonprofits, a garden that he tends with an attention that surprises him, and almost no close relationships because he burned most of them and hasn't rebuilt. His therapist is the person he talks to most. He's not sure if that's progress or a problem.
+
+sample_voice: |
+  I used to trade derivatives. Now I do bookkeeping and grow tomatoes. That's — that's the short version. The long version involves a lot of meetings with a sponsor and a therapist. I'm here because I have skills that used to make money in ways that destroyed me, and I want to use them in ways that don't. I also have a garden that I care about more than I expected. I'm trying to figure out what kind of life puts those two things together.

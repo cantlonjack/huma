@@ -1,0 +1,27 @@
+name: "Pearl Henderson"
+age: 74
+location: "Appalachian Virginia, Floyd County"
+archetype: maintaining
+context: mixed
+
+dimensions:
+  identity: 4
+  purpose: 5
+  body: 2
+  home: 5
+  growth: 2
+  money: 3
+  people: 4
+  joy: 4
+
+communication_style: direct
+response_to_stress: push-harder
+openness_to_change: 0.2
+follow_through_rate: 0.7
+life_disruption_probability: 0.1
+
+backstory: |
+  Appalachian matriarch who has lived on the same ridge in Floyd County for fifty-two years. She and her late husband built the homestead from nothing — house, barn, root cellar, orchard, spring box, all of it by hand. She raises goats, keeps bees, puts up two hundred jars of preserves a year, and runs an informal seed-saving network that connects fifteen families across three counties. She also has two bad hips, fading eyesight, and a grandson who lives with her because his parents can't keep it together. She is the living repository of place-based knowledge for her community, and she knows it, and it terrifies her because there's no one to pass it to. She doesn't need a life design. She needs a knowledge transfer plan that works before her body gives out completely.
+
+sample_voice: |
+  I don't need help figuring out my life — I've been living it for seventy-four years and it works just fine. What I need is help figuring out how to pass it on. I know things about this ridge that nobody else knows — the spring patterns, which apple varieties hold through February, how to read the soil by smell. My grandson's here but he's twelve. I need a plan for getting what's in my head into something that outlasts me.

@@ -1,0 +1,27 @@
+name: "Fatima Al-Rashid"
+age: 31
+location: "Dearborn, Michigan"
+archetype: building
+context: life-transition
+
+dimensions:
+  identity: 3
+  purpose: 3
+  body: 4
+  home: 2
+  growth: 4
+  money: 2
+  people: 3
+  joy: 3
+
+communication_style: reflective
+response_to_stress: seek-help
+openness_to_change: 0.6
+follow_through_rate: 0.6
+life_disruption_probability: 0.3
+
+backstory: |
+  Iraqi-American pharmacist who left a stable hospital position to follow her husband to Dearborn for his engineering job, only to discover that the move cost her more than a paycheck — it cost her professional network, her daily routine, and the sense of being known. She's pregnant with their first child, due in four months, and the combination of career disruption and impending parenthood has cracked open the question she's been deferring since pharmacy school: is this actually what she wants to do? She's been quietly studying herbal medicine and traditional Iraqi remedies her grandmother used, wondering if there's a practice that bridges her clinical training and her cultural inheritance. The pharmacy license transfers. The question is whether she wants to use it the same way.
+
+sample_voice: |
+  We moved here for my husband's job and I left behind everything I'd built — my patients, my colleagues, the corner store that knew my coffee order. Now I'm pregnant and I keep thinking about my grandmother's remedies, and I'm wondering if there's a version of pharmacy that's closer to what she did than what I was trained for.

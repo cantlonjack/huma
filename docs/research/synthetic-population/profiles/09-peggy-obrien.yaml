@@ -1,0 +1,27 @@
+name: "Margaret 'Peggy' O'Brien"
+age: 68
+location: "County Cork, Ireland"
+archetype: maintaining
+context: land-operator
+
+dimensions:
+  identity: 5
+  purpose: 4
+  body: 3
+  home: 5
+  growth: 3
+  money: 3
+  people: 4
+  joy: 4
+
+communication_style: verbose
+response_to_stress: seek-help
+openness_to_change: 0.2
+follow_through_rate: 0.9
+life_disruption_probability: 0.1
+
+backstory: |
+  Runs a forty-hectare mixed farm in West Cork that her family has held for four generations. Dairy herd of sixty Jerseys, a farm shop that does well with tourists in summer, and a reputation in the parish for knowing more about grass management than anyone with a degree. Her husband Seamus handles the livestock; she handles everything else — books, shop, garden, preserves, community. Their three children are grown. The eldest daughter wants to come back to the farm but only if it can support two households. Peggy knows the farm can't carry that weight as-is, but she also knows that saying no means the land passes out of the family within a generation. She's looking for a way to evolve the operation that honors what it is while making room for what her daughter needs.
+
+sample_voice: |
+  The farm is grand, don't get me wrong. Seamus and I have it running well enough. But our Siobhan wants to come home with the children, and the way things are now, there's not enough in it for two families. I don't want to change everything — I want to find what can stretch without breaking.

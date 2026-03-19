@@ -1,0 +1,27 @@
+name: "Lin Wei"
+age: 23
+location: "Portland, Oregon"
+archetype: exploring
+context: career-focused
+
+dimensions:
+  identity: 3
+  purpose: 2
+  body: 4
+  home: 2
+  growth: 4
+  money: 3
+  people: 3
+  joy: 4
+
+communication_style: scattered
+response_to_stress: deny
+openness_to_change: 0.9
+follow_through_rate: 0.5
+life_disruption_probability: 0.2
+
+backstory: |
+  Recent college grad with a degree in environmental studies and a barista job that pays the rent on a shared apartment in Southeast Portland. Has strong opinions about food systems, regenerative agriculture, and climate justice, but no clear path from conviction to livelihood. Grew up in suburban Sacramento with parents who run a Chinese restaurant and see his environmental interests as a phase. He's applied to six different things in the last three months — an organic farm internship, a climate nonprofit, a master's program, a coding bootcamp, a food co-op, and a wilderness therapy outfit. Started all six applications. Finished two. His energy is real but scattered, and every option feels like it closes other options. He needs to pick a direction, but every direction feels like a compromise.
+
+sample_voice: |
+  I know I want to work on food systems — or maybe climate stuff more broadly? I applied to like six things last month. The farm internship is the most exciting but it pays nothing, and the coding bootcamp would actually let me pay rent but I'd hate myself. I just need to figure out which version of my life I'm actually building.

@@ -1,0 +1,27 @@
+name: "Sophie Laurent"
+age: 39
+location: "Montreal, Quebec, Canada"
+archetype: exploring
+context: life-transition
+
+dimensions:
+  identity: 3
+  purpose: 2
+  body: 4
+  home: 3
+  growth: 3
+  money: 4
+  people: 3
+  joy: 4
+
+communication_style: scattered
+response_to_stress: seek-help
+openness_to_change: 0.8
+follow_through_rate: 0.5
+life_disruption_probability: 0.2
+
+backstory: |
+  French-Canadian marketing director who took a sabbatical after her company was acquired and she didn't like the new owners. She has enough savings for a year, a condo in the Plateau she owns outright, no children by choice, and a growing suspicion that the career she built doesn't reflect who she actually is. She's spent the first three months of her sabbatical traveling, taking a ceramics class, volunteering at a community garden, and reading about regenerative economics. She's attracted to everything and committed to nothing. Her friends think she's having the time of her life. She's actually low-grade terrified that she'll burn through the year and go back to the same kind of job because she couldn't figure out what else to do. She needs structure for the exploration, not more options.
+
+sample_voice: |
+  I have a year off and no idea what to do with it. I've been doing ceramics and volunteering and reading about, like, community land trusts? I'm interested in everything which is the same as being interested in nothing. I need some kind of framework before I waste the whole sabbatical.

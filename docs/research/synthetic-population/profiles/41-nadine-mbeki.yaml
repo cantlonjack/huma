@@ -1,0 +1,27 @@
+name: "Nadine Mbeki"
+age: 37
+location: "Cape Town, South Africa"
+archetype: building
+context: career-focused
+
+dimensions:
+  identity: 3
+  purpose: 4
+  body: 4
+  home: 2
+  growth: 5
+  money: 3
+  people: 3
+  joy: 4
+
+communication_style: reflective
+response_to_stress: push-harder
+openness_to_change: 0.8
+follow_through_rate: 0.7
+life_disruption_probability: 0.3
+
+backstory: |
+  South African environmental lawyer who has spent ten years fighting mining companies in court and winning often enough to have a reputation but not often enough to feel like the system is changing. She left her law firm six months ago to start a nonprofit that helps rural communities negotiate resource rights before the mining companies arrive — prevention instead of litigation. She's brilliant, relentless, and running on adrenaline she mistakes for energy. She rents a flat in Woodstock, has a partner who works in documentary film, no children, and a mother in KwaZulu-Natal who thinks the law firm was safer. Her new organization has grant funding for one year. She needs to build the operational structure, the community relationships, and the revenue model in that window while managing the transition from being a litigator (reactive, adversarial, individual) to being an organizer (proactive, collaborative, systemic). They're almost opposite skill sets and she hasn't fully recognized that yet.
+
+sample_voice: |
+  I spent ten years suing mining companies after the damage was done. Now I'm trying to get to communities before the companies do. It's completely different work and I keep reaching for the litigation playbook, which doesn't apply. I have a year of funding and I need to build something that outlasts the grant. I'm good at fighting. I need to learn how to build.

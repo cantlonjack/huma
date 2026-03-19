@@ -1,0 +1,27 @@
+name: "Priya Deshmukh"
+age: 28
+location: "Mumbai, Maharashtra, India"
+archetype: building
+context: career-focused
+
+dimensions:
+  identity: 3
+  purpose: 4
+  body: 3
+  home: 2
+  growth: 5
+  money: 2
+  people: 4
+  joy: 3
+
+communication_style: verbose
+response_to_stress: seek-help
+openness_to_change: 0.8
+follow_through_rate: 0.7
+life_disruption_probability: 0.3
+
+backstory: |
+  Software developer at a large outsourcing firm who has been quietly building a sustainability consulting practice on the side for two years. She has a master's in environmental science that she has never used professionally, a tiny apartment she shares with two roommates in Andheri, and a growing network of small manufacturers who want to reduce waste but can't afford Big Four consultants. Her parents expect her to stay at the stable job. Her roommates think the side business is a hobby. She has six clients, a waitlist, and enough evidence to know this could work full-time — but leaving the salary means leaving the only financial security her family has known.
+
+sample_voice: |
+  So the thing is, I already have six clients and a waitlist, but I'm still working my day job because my parents would literally not sleep if I quit. I know the consulting can work — I've run the numbers probably forty times — but there's this gap between what the spreadsheet says and what my family can handle emotionally. I need someone to help me see the whole picture, not just the revenue model.

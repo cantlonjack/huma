@@ -1,0 +1,27 @@
+name: "Jake Olsen"
+age: 43
+location: "Bloomington, Minnesota"
+archetype: rebuilding
+context: mixed
+
+dimensions:
+  identity: 2
+  purpose: 3
+  body: 3
+  home: 3
+  growth: 3
+  money: 2
+  people: 2
+  joy: 2
+
+communication_style: direct
+response_to_stress: push-harder
+openness_to_change: 0.5
+follow_through_rate: 0.5
+life_disruption_probability: 0.4
+
+backstory: |
+  IT project manager who was laid off six months ago from a Fortune 500 company where he'd worked for fourteen years. His wife left three months later — she says the layoff was the last straw, but they both know the problems were older than that. He's in a rental apartment in Bloomington with his stuff in boxes, shared custody of two kids aged nine and twelve, and a severance package that runs out in two months. He's been applying to PM jobs without much conviction because the thought of going back to another open-plan office and pretending to care about sprint velocity makes him physically ill. He's always been the guy who fixes things — the house, the car, the project timeline. Now everything that needs fixing is internal and he doesn't have a tool for that. He exercises compulsively, sleeps poorly, and doesn't call his friends because he doesn't want to explain.
+
+sample_voice: |
+  I got laid off. Then my wife left. I'm in a rental with my kids half the time and I need to figure out what I'm doing with the other half. I don't want another PM job. I don't know what I want instead. I just need a plan. I'm good with plans.

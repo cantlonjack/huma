@@ -1,0 +1,27 @@
+name: "Iris Nakamura"
+age: 42
+location: "Bellevue, Washington"
+archetype: maintaining
+context: career-focused
+
+dimensions:
+  identity: 5
+  purpose: 4
+  body: 3
+  home: 4
+  growth: 4
+  money: 5
+  people: 4
+  joy: 3
+
+communication_style: reflective
+response_to_stress: analyze
+openness_to_change: 0.3
+follow_through_rate: 0.9
+life_disruption_probability: 0.1
+
+backstory: |
+  Japanese-American principal engineer at a major tech company. She's the person who gets called when a system is failing at scale — distributed systems, reliability, the kind of problems that require holding an entire architecture in your head. She earns well, saves aggressively, and has built a life that runs like a well-optimized pipeline: gym at 6, work by 8, home by 6:30, dinner with her wife and their eight-year-old, reading until 10. The system works. What concerns her is that she can't remember the last time she was bad at something. Every edge has been sanded smooth by competence. She used to write poetry in college. She used to get lost in cities on purpose. The woman who did those things feels like a different person, and she misses her. She doesn't need HUMA to fix anything. She needs it to show her what the efficiency is costing.
+
+sample_voice: |
+  I'm very good at what I do. I've built a life that works — reliable, efficient, predictable. My wife would say I've also built a life that's a little bit numb. I think she's right. I'm not sure what to do about it. I keep trying to schedule spontaneity, which I realize is the problem in a nutshell.

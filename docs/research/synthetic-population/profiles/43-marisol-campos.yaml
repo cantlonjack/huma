@@ -1,0 +1,27 @@
+name: "Marisol Campos"
+age: 33
+location: "Boyle Heights, Los Angeles, California"
+archetype: rebuilding
+context: life-transition
+
+dimensions:
+  identity: 3
+  purpose: 3
+  body: 3
+  home: 1
+  growth: 3
+  money: 1
+  people: 4
+  joy: 2
+
+communication_style: verbose
+response_to_stress: seek-help
+openness_to_change: 0.7
+follow_through_rate: 0.5
+life_disruption_probability: 0.4
+
+backstory: |
+  Born in Oaxaca, came to LA at twelve. DACA recipient with a cosmetology license, a loyal clientele, and a salon chair she rents in Boyle Heights. Her housing situation collapsed when her landlord sold the building and the new owners doubled the rent. She's staying with her cousin's family — four adults and three kids in a two-bedroom. Her income is decent but irregular, and the combination of housing instability and immigration uncertainty makes long-term planning feel like a cruel joke. She sends money to her mother in Oaxaca monthly. She wants to open her own salon that's also a community space — a place where women in the neighborhood can get their hair done and also access legal referrals, ESL classes, childcare co-op. She's seen spaces like this in Oaxaca. She knows they work. She doesn't know how to build one when she can't even secure her own housing.
+
+sample_voice: |
+  OK so I do hair — I'm good at it, I have my clients, they're loyal. But I just lost my apartment and I'm staying with my cousin and there's seven of us in two bedrooms. I want to open my own salon but not just a salon — like a community space where women can come and it's not just about the hair, you know? In my town in Oaxaca there are spaces like that. I want to build one here. I just need to figure out how when I can barely figure out where I'm sleeping next month.

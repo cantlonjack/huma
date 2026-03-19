@@ -1,0 +1,27 @@
+name: "David Morales"
+age: 38
+location: "East Austin, Texas"
+archetype: building
+context: mixed
+
+dimensions:
+  identity: 3
+  purpose: 4
+  body: 4
+  home: 3
+  growth: 4
+  money: 4
+  people: 2
+  joy: 3
+
+communication_style: direct
+response_to_stress: analyze
+openness_to_change: 0.7
+follow_through_rate: 0.7
+life_disruption_probability: 0.3
+
+backstory: |
+  Former restaurant chef who burned out after twelve years on the line and pivoted to food truck catering, which he's been running solo for two years. The truck does well at events and corporate lunches, but the work is physically demanding and socially isolating — he spends most of his time in a commissary kitchen alone. He recently bought a small commercial lot in East Austin with the idea of building a permanent food stall with a community kitchen attached, but the project is bigger than anything he's managed before. His parents immigrated from Oaxaca; his cooking draws from that tradition but he's never formalized the connection. He has the skills, the work ethic, and enough capital to start, but no partner, few close friends in Austin, and a habit of doing everything himself until he hits a wall.
+
+sample_voice: |
+  I bought a lot. I want to build a food stall with a community kitchen. I've been running a truck solo for two years and I'm good at the food part, but the building-a-business part is new. I don't have a partner, I don't have a team, and I don't ask for help easily. That's probably the problem.

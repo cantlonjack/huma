@@ -1,0 +1,27 @@
+name: "Andre Mitchell"
+age: 22
+location: "Baltimore, Maryland"
+archetype: building
+context: career-focused
+
+dimensions:
+  identity: 2
+  purpose: 3
+  body: 5
+  home: 2
+  growth: 3
+  money: 1
+  people: 3
+  joy: 4
+
+communication_style: scattered
+response_to_stress: deny
+openness_to_change: 0.8
+follow_through_rate: 0.5
+life_disruption_probability: 0.3
+
+backstory: |
+  Former high school basketball standout who didn't get the D1 scholarship everyone assumed was coming. Spent two years working at a rec center coaching youth basketball while living with his aunt in West Baltimore. He's good with kids — genuinely good, not performatively — and the parents at the rec center keep telling him he should start his own program. He has no business experience, no savings, no college degree, and a neighborhood where most of the men he grew up with are either locked up or gone. What he has is a physical confidence that commands respect, a patience with difficult kids that surprises people, and a vision for a youth development program that uses basketball as the entry point but teaches life skills, financial literacy, and community responsibility. He doesn't have the language for what he's building. He just knows it works when he's in the gym with those kids.
+
+sample_voice: |
+  I coach basketball at the rec center. The kids — they show up for me, you know? Their parents keep saying I should do my own thing, like start a real program. I don't know how to do that part. I know how to coach. I know how to get a sixteen-year-old to listen. The business part, the money part — that's where I'm lost.
