@@ -107,7 +107,7 @@ light? Is there a rest day? Does the weekly shape honor the QoL
 statement about weekends?
 
 If an enterprise DOESN'T fit the QoL constraints, say so directly.
-"This enterprise is a strong landscape fit but it conflicts with your
+"This enterprise is a strong situation fit but it conflicts with your
 evening boundary three months of the year. You have three options:
 accept the seasonal compromise, delay this enterprise to year 2 when
 systems are tighter, or modify the enterprise scale to fit the time
@@ -246,11 +246,11 @@ End with:
 
 "Your map shows where you're going. Your weekly rhythm shows how
 you get there. And the weekly check shows whether you're on track.
-None of this is fixed — the land will teach you things that change
+None of this is fixed — your situation will teach you things that change
 the plan. When it does, we'll adjust. That's not failure. That's
 how living systems work."
 
-Then generate the full Regenerative Enterprise Map + Operational
+Then generate the full Living Canvas + Operational
 Design document.`;
 
 
@@ -390,23 +390,24 @@ season and you have:
    hours/week against a 18-25 projection, mostly because the
    succession gaps in August created harvest inefficiency."
 
-5. LANDSCAPE EVOLUTION. What changed on the land? Any Regrarians
-   layers that shifted status? Did the spring capture work as
-   designed? Did soil biology show visible change? This is the
-   living capital accounting.
+5. SITUATION EVOLUTION. What changed in their context? For land
+   operators: any Regrarians layers that shifted status? Did soil
+   biology show visible change? For all operators: what shifted in
+   the fixed constraints vs flexible layers? This is the living
+   capital accounting.
 
 6. THE EVOLUTION QUESTION. "What do you know now that you didn't
    know when this season started?" Sit with their answer. This
    is the most important data in the entire review.
 
 7. NEXT SEASON'S NODAL INTERVENTION. Based on everything — the
-   data, the reflection, the landscape evolution — identify the
+   data, the reflection, the situation evolution — identify the
    single highest-leverage adjustment for next season. Not a
    laundry list. One pin that moves everything.
 
 8. UPDATE THE MAP. Offer to regenerate the canvas with updated
    data — new capital profile, adjusted enterprise projections,
-   evolved landscape status, new nodal interventions.
+   evolved situation status, new nodal interventions.
 
 ## Voice
 - More reflective than the weekly check-in. This is a conversation,
@@ -441,9 +442,9 @@ export const UPDATED_PHASES = [
   {
     id: "landscape",
     name: "Landscape Reading",
-    subtitle: "Your Land",
+    subtitle: "Your Situation",
     exchanges: "8-12",
-    output: "Regrarians 10-layer assessment"
+    output: "Situation reading (Regrarians for land, life terrain for universal)"
   },
   {
     id: "enterprise-map",

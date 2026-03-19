@@ -5,6 +5,7 @@ import {
   buildDocumentPrompt,
   buildOpeningMessage,
   PHASE_PROMPTS,
+  UNIVERSAL_SITUATION_READING,
 } from "@/engine/phases";
 import { buildCanvasDataPrompt } from "@/engine/canvas-prompt";
 import { type Phase, type ConversationContext } from "@/engine/types";
@@ -82,6 +83,9 @@ function accumulateContext(
           synthesis: contextValue,
         },
       };
+    } else if (contextType.startsWith("field-type:")) {
+      const fieldType = contextType.split(":")[1] as "land" | "universal" | "hybrid";
+      ctx = { ...ctx, fieldType };
     }
   }
   return ctx;
@@ -321,7 +325,7 @@ describe("Document generation prompt building", () => {
     const prompt = buildDocumentPrompt(SAMPLE_SYNTHESES);
     expect(prompt).toContain("YOUR ESSENCE");
     expect(prompt).toContain("YOUR HOLISTIC CONTEXT");
-    expect(prompt).toContain("YOUR LANDSCAPE");
+    expect(prompt).toContain("YOUR SITUATION");
     expect(prompt).toContain("ENTERPRISE");
     expect(prompt).toContain("CAPITAL PROFILE");
     expect(prompt).toContain("NODAL INTERVENTIONS");
@@ -438,11 +442,11 @@ describe("Full prompt building with context", () => {
     expect(prompt).toContain("SOILS");
   });
 
-  it("enterprise-map phase includes Perkins-style one-pager format", () => {
+  it("enterprise-map phase includes enterprise card format with role tags", () => {
     const prompt = buildFullPrompt("enterprise-map", {});
-    expect(prompt).toContain("PERKINS-STYLE");
-    expect(prompt).toContain("Startup investment");
-    expect(prompt).toContain("Revenue timeline");
+    expect(prompt).toContain("Enterprise Card Format");
+    expect(prompt).toContain("Role Tag");
+    expect(prompt).toContain("Time investment");
   });
 
   it("system prompt changes based on phase", () => {
@@ -542,5 +546,176 @@ describe("Full prompt building with context", () => {
     const msg = buildOpeningMessage("Marcus");
     expect(msg).toContain("Marcus");
     expect(msg.length).toBeGreaterThan(100);
+  });
+});
+
+describe("Field-type detection and universal routing", () => {
+  it("parseMarkers extracts [[CONTEXT:field-type:universal]]", () => {
+    const stream =
+      "Bridge text [[CONTEXT:field-type:universal]][[CONTEXT:holistic-synthesis]]Career-focused, no land.[[PHASE:landscape]]";
+    const result = parseMarkers(stream);
+    expect(result.phase).toBe("landscape");
+    const fieldTypeCtx = result.capturedContexts.find((c) =>
+      c.type.startsWith("field-type:")
+    );
+    expect(fieldTypeCtx).toBeDefined();
+    expect(fieldTypeCtx!.type).toBe("field-type:universal");
+  });
+
+  it("parseMarkers extracts [[CONTEXT:field-type:land]]", () => {
+    const stream =
+      "Bridge text [[CONTEXT:field-type:land]][[PHASE:landscape]]";
+    const result = parseMarkers(stream);
+    const fieldTypeCtx = result.capturedContexts.find((c) =>
+      c.type.startsWith("field-type:")
+    );
+    expect(fieldTypeCtx).toBeDefined();
+    expect(fieldTypeCtx!.type).toBe("field-type:land");
+  });
+
+  it("parseMarkers extracts [[CONTEXT:field-type:hybrid]]", () => {
+    const stream =
+      "Bridge text [[CONTEXT:field-type:hybrid]][[PHASE:landscape]]";
+    const result = parseMarkers(stream);
+    const fieldTypeCtx = result.capturedContexts.find((c) =>
+      c.type.startsWith("field-type:")
+    );
+    expect(fieldTypeCtx).toBeDefined();
+    expect(fieldTypeCtx!.type).toBe("field-type:hybrid");
+  });
+
+  it("accumulateContext stores fieldType from field-type context marker", () => {
+    const result = parseMarkers("[[CONTEXT:field-type:universal]]");
+    const ctx = accumulateContext({}, result.capturedContexts);
+    expect(ctx.fieldType).toBe("universal");
+  });
+
+  it("buildFullPrompt uses UNIVERSAL_SITUATION_READING for universal fieldType", () => {
+    const prompt = buildFullPrompt("landscape", { fieldType: "universal" });
+    expect(prompt).toContain("8-Dimension Life Context");
+    expect(prompt).toContain("IDENTITY");
+    expect(prompt).toContain("PURPOSE");
+    expect(prompt).toContain("BODY");
+    expect(prompt).toContain("MONEY");
+    expect(prompt).toContain("PEOPLE");
+    expect(prompt).toContain("JOY");
+    // Should NOT contain Regrarians agricultural vocabulary
+    expect(prompt).not.toContain("Regrarians Sequence");
+    expect(prompt).not.toContain("SOILS");
+    expect(prompt).not.toContain("FENCING");
+    expect(prompt).not.toContain("FORESTRY");
+  });
+
+  it("buildFullPrompt uses Regrarians sequence for land fieldType", () => {
+    const prompt = buildFullPrompt("landscape", { fieldType: "land" });
+    expect(prompt).toContain("Regrarians");
+    expect(prompt).toContain("LOCATION & CLIMATE");
+    expect(prompt).toContain("WATER");
+    expect(prompt).toContain("SOILS");
+    expect(prompt).toContain("FENCING");
+    // Should NOT contain 8-Dimension vocabulary
+    expect(prompt).not.toContain("8-Dimension Life Context");
+  });
+
+  it("buildFullPrompt uses hybrid prompt for hybrid fieldType", () => {
+    const prompt = buildFullPrompt("landscape", { fieldType: "hybrid" });
+    // Should contain both Regrarians AND extended life dimensions
+    expect(prompt).toContain("Regrarians");
+    expect(prompt).toContain("Extended: Life Dimensions Beyond Land");
+    expect(prompt).toContain("WORK & CAREER");
+    expect(prompt).toContain("FINANCES");
+  });
+
+  it("buildFullPrompt defaults to Regrarians when no fieldType set", () => {
+    const prompt = buildFullPrompt("landscape", {});
+    expect(prompt).toContain("Regrarians");
+    expect(prompt).not.toContain("8-Dimension Life Context");
+  });
+
+  it("Phase 2 prompt says 'ways you create value' not 'forms of production from land'", () => {
+    const phase2Prompt = PHASE_PROMPTS["holistic-context"];
+    expect(phase2Prompt).toContain("WAYS YOU CREATE VALUE OR CONTRIBUTE");
+    expect(phase2Prompt).not.toContain("forms of production from land");
+  });
+
+  it("Phase 2 prompt includes universal examples alongside land examples", () => {
+    const phase2Prompt = PHASE_PROMPTS["holistic-context"];
+    // Universal examples
+    expect(phase2Prompt).toContain("freelance work");
+    expect(phase2Prompt).toContain("creative practice");
+    expect(phase2Prompt).toContain("caregiving");
+    expect(phase2Prompt).toContain("community organizing");
+  });
+
+  it("Phase 2 prompt includes field-type assessment instructions", () => {
+    const phase2Prompt = PHASE_PROMPTS["holistic-context"];
+    expect(phase2Prompt).toContain("Field-Type Assessment");
+    expect(phase2Prompt).toContain("[[CONTEXT:field-type:land]]");
+    expect(phase2Prompt).toContain("[[CONTEXT:field-type:universal]]");
+    expect(phase2Prompt).toContain("[[CONTEXT:field-type:hybrid]]");
+  });
+
+  it("UNIVERSAL_SITUATION_READING contains no agricultural operational vocabulary", () => {
+    const reading = UNIVERSAL_SITUATION_READING;
+    // Agricultural operational terms that should NOT appear in universal reading
+    // (Note: "Regrarians" appears once as an analogy for the AI's benefit, which is fine)
+    expect(reading).not.toContain("SOILS");
+    expect(reading).not.toContain("FENCING");
+    expect(reading).not.toContain("FORESTRY");
+    expect(reading).not.toContain("livestock");
+    expect(reading).not.toContain("crop");
+    expect(reading).not.toContain("acre");
+    expect(reading).not.toContain("pasture");
+    expect(reading).not.toContain("rotational grazing");
+    // Should contain life dimensions
+    expect(reading).toContain("IDENTITY");
+    expect(reading).toContain("PURPOSE");
+    expect(reading).toContain("BODY");
+    expect(reading).toContain("HOME");
+    expect(reading).toContain("GROWTH");
+    expect(reading).toContain("MONEY");
+    expect(reading).toContain("PEOPLE");
+    expect(reading).toContain("JOY");
+  });
+
+  it("full universal flow: Phase 2 → field-type detection → Phase 3 routing", () => {
+    // Simulate Phase 2 → 3 transition with field-type:universal
+    const stream =
+      "Let me understand your situation more deeply. " +
+      "[[CONTEXT:field-type:universal]]" +
+      "[[CONTEXT:holistic-synthesis]]Career in UX, seeking balance, no land context." +
+      "[[PHASE:landscape]]";
+    const result = parseMarkers(stream);
+
+    // Field-type extracted
+    let ctx: Partial<ConversationContext> = { operatorName: "Maya" };
+    ctx = accumulateContext(ctx, result.capturedContexts);
+    expect(ctx.fieldType).toBe("universal");
+    expect(ctx.holisticContext?.synthesis).toContain("UX");
+
+    // Phase 3 prompt uses universal reading
+    const phase3Prompt = buildFullPrompt("landscape", ctx);
+    expect(phase3Prompt).toContain("8-Dimension Life Context");
+    expect(phase3Prompt).not.toContain("Regrarians Sequence");
+    expect(phase3Prompt).toContain("Maya");
+    expect(phase3Prompt).toContain("Career in UX");
+  });
+
+  it("full land flow: Phase 2 → field-type detection → Phase 3 routing", () => {
+    const stream =
+      "Now let's walk your land. " +
+      "[[CONTEXT:field-type:land]]" +
+      "[[CONTEXT:holistic-synthesis]]5 acres, wants to farm, build soil." +
+      "[[PHASE:landscape]]";
+    const result = parseMarkers(stream);
+
+    let ctx: Partial<ConversationContext> = { operatorName: "Jake" };
+    ctx = accumulateContext(ctx, result.capturedContexts);
+    expect(ctx.fieldType).toBe("land");
+
+    const phase3Prompt = buildFullPrompt("landscape", ctx);
+    expect(phase3Prompt).toContain("Regrarians");
+    expect(phase3Prompt).toContain("LOCATION & CLIMATE");
+    expect(phase3Prompt).not.toContain("8-Dimension Life Context");
   });
 });

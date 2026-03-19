@@ -1,13 +1,23 @@
 import { type Phase } from "@/engine/types";
 
+const VALID_PHASES = new Set<string>([
+  "ikigai",
+  "holistic-context",
+  "landscape",
+  "enterprise-map",
+  "nodal-interventions",
+  "operational-design",
+  "complete",
+]);
+
 /**
  * Strip [[PHASE:...]], [[CONTEXT:...]], and [[CANVAS_DATA:...]] markers from text for display.
  * Also strips incomplete/partial markers that arrive mid-stream.
  */
 export function cleanForDisplay(text: string): string {
   return text
-    .replace(/\[\[PHASE:[\w-]+\]\]\s*/g, "")
-    .replace(/\[\[CONTEXT:[\w-]+\]\][^\[]*(?=\[\[|$)/g, "")
+    .replace(/\[\[PHASE:[\w-]+\]\] */g, "")
+    .replace(/\[\[CONTEXT:[\w-]+(?::[\w-]+)?\]\][^\[]*(?=\[\[|$)/g, "")
     .replace(/\[\[CANVAS_DATA:[\w-]+\]\][^\[]*(?=\[\[|$)/g, "")
     .replace(/\[\[(?:PHASE|CONTEXT|CANVAS_DATA)(?::[\w-]*)?\]?$/g, "")
     .replace(/\[\[[\w:-]*$/g, "")
@@ -34,15 +44,19 @@ export function parseMarkers(text: string): {
   const phaseMatch = text.match(/\[\[PHASE:([\w-]+)\]\]/);
   if (phaseMatch) {
     const phaseId = phaseMatch[1];
-    if (phaseId === "complete") {
-      isComplete = true;
-    } else {
-      phase = phaseId as Phase;
+    if (VALID_PHASES.has(phaseId)) {
+      if (phaseId === "complete") {
+        isComplete = true;
+      } else {
+        phase = phaseId as Phase;
+      }
     }
+    // Non-canonical phase IDs (typos, case errors) are silently ignored
   }
 
+  // Supports both [[CONTEXT:type]]value and [[CONTEXT:type:value]] formats
   const contextMatches = text.matchAll(
-    /\[\[CONTEXT:([\w-]+)\]\]\s*([\s\S]*?)(?=\[\[|$)/g
+    /\[\[CONTEXT:([\w-]+(?::[\w-]+)?)\]\]\s*([\s\S]*?)(?=\[\[|$)/g
   );
   for (const match of contextMatches) {
     capturedContexts.push({ type: match[1], value: match[2].trim() });
@@ -62,8 +76,8 @@ export function parseMarkers(text: string): {
   }
 
   const clean = text
-    .replace(/\[\[PHASE:[\w-]+\]\]\s*/g, "")
-    .replace(/\[\[CONTEXT:[\w-]+\]\][^\[]*(?=\[\[|$)/g, "")
+    .replace(/\[\[PHASE:[\w-]+\]\] */g, "")
+    .replace(/\[\[CONTEXT:[\w-]+(?::[\w-]+)?\]\][^\[]*(?=\[\[|$)/g, "")
     .replace(/\[\[CANVAS_DATA:[\w-]+\]\][^\[]*(?=\[\[|$)/g, "")
     .trimEnd();
 

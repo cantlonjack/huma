@@ -6,7 +6,7 @@ import { type Message, type Phase, PHASES } from "@/engine/types";
 const INPUT_PLACEHOLDERS: Record<Phase, string> = {
   ikigai: "Share what comes to mind\u2026",
   "holistic-context": "Describe the life you are moving toward\u2026",
-  landscape: "Tell me about your land\u2026",
+  landscape: "Tell me about your situation\u2026",
   "enterprise-map": "What resonates with you?",
   "nodal-interventions": "What feels most alive in this picture?",
   "operational-design": "How does this rhythm feel for your week?",

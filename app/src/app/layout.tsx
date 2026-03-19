@@ -21,13 +21,21 @@ const sourceSans = Source_Sans_3({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://huma.earth"),
-  title: "HUMA — See your whole life as one connected system",
+  title: "HUMA — Everything in your life is connected. Now you can see how.",
   description:
-    "HUMA maps your whole situation — money, energy, relationships, purpose — and shows you the specific moves that change everything. Not another app. A new way of seeing.",
+    "HUMA maps your whole situation — money, energy, relationships, purpose, all of it — and shows you the specific moves that change everything.",
   openGraph: {
-    title: "HUMA — Everything is connected. Now you can see how.",
+    title: "HUMA — Everything in your life is connected. Now you can see how.",
     description:
-      "Map your whole life. See the hidden connections. Get the specific moves for your situation.",
+      "HUMA maps your whole situation — money, energy, relationships, purpose, all of it — and shows you the specific moves that change everything.",
+    images: ["/api/og"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "HUMA — Everything in your life is connected. Now you can see how.",
+    description:
+      "HUMA maps your whole situation — money, energy, relationships, purpose, all of it — and shows you the specific moves that change everything.",
+    images: ["/api/og"],
   },
 };
 

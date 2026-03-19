@@ -1239,6 +1239,505 @@ export const ENTERPRISE_TEMPLATES: EnterpriseTemplate[] = [
     ]
   },
 
+  // ═════════════════════════════════════════════════════════════
+  // UNIVERSAL ENTERPRISES (non-agricultural)
+  //
+  // These follow the same interface as agricultural templates
+  // but with adapted framing. For non-revenue enterprises,
+  // "revenue" fields represent financial return (salary, savings,
+  // cost avoidance) and "landscape" fields represent life context.
+  //
+  // Sources are general labor/industry data, not farm-specific.
+  // ═════════════════════════════════════════════════════════════
+
+  // ─────────────────────────────────────────────
+  // 15. PRIMARY EMPLOYMENT
+  // ─────────────────────────────────────────────
+  {
+    id: "primary-employment",
+    name: "Primary Employment",
+    category: "Career — Employment",
+    description: "Structured full-time or part-time employment providing baseline financial stability and often benefits (health insurance, retirement matching, paid leave). The financial bedrock that funds everything else — but only if you keep it from consuming everything else.",
+    scaleAssumption: "30–50 hrs/week, single employer",
+
+    financials: {
+      startupCapital: {
+        low: 200,
+        high: 2000,
+        notes: "Job search costs: professional clothing ($100-500), resume/portfolio preparation ($0-300), commute setup ($100-800), relocation if necessary ($0-5000+). Most people underestimate the cost of getting a job."
+      },
+      laborHoursPerWeek: {
+        inSeason: "40-50 hours (including commute, prep, and recovery time — not just clock hours)",
+        offSeason: "Same — employment doesn't have an off-season, which is the point and the trap"
+      },
+      timeToFirstRevenue: "2-8 weeks from accepting offer to first paycheck",
+      year1Revenue: { low: 35000, high: 75000 },
+      year3Revenue: { low: 42000, high: 95000 },
+      grossMargin: "85-95% net of commute, clothing, and meals — high margin but fixed ceiling",
+      breakeven: "First paycheck — immediate positive cash flow is the core advantage",
+      seasonalRhythm: "Continuous. Some roles have crunch periods (accounting in Q1, retail in Q4). Benefits typically vest on annual cycles."
+    },
+
+    capitalProfile: {
+      financial: { score: 4, note: "Predictable income, benefits, retirement matching — the stability others build on" },
+      material: { score: 2, note: "Company provides tools/space, but you own none of it" },
+      living: { score: 1, note: "Sedentary roles actively degrade body capital without deliberate counterbalance" },
+      social: { score: 3, note: "Workplace relationships are real but often don't survive a job change" },
+      intellectual: { score: 3, note: "Depends heavily on the role — some jobs teach, some jobs extract" },
+      experiential: { score: 3, note: "Structured skill building through repetition and mentorship" },
+      spiritual: { score: 2, note: "Alignment varies wildly — a meaningful role builds this, a misaligned one erodes it" },
+      cultural: { score: 2, note: "Contributes to organizational culture but rarely to broader community culture" }
+    },
+
+    landscapeRequirements: {
+      climate: "N/A — role-dependent. Remote work eliminates geographic constraints for some fields.",
+      water: "N/A",
+      access: "Reliable transportation to workplace, or stable internet for remote roles.",
+      soils: "N/A",
+      infrastructure: "Appropriate workspace, professional wardrobe or equipment as required by role.",
+      minAcreage: "N/A"
+    },
+
+    synergies: [
+      "Freelance Practice — employment provides stability while building independent client base",
+      "Learning Program — employer tuition reimbursement funds skill acquisition",
+      "Financial Restructuring — steady paycheck enables systematic debt reduction",
+      "Health Practice — benefits often include gym subsidies or wellness programs",
+      "Creative Practice — financial security frees creative work from monetization pressure"
+    ],
+    prerequisites: [
+      "Marketable skill set or willingness to start at entry level and learn",
+      "Clear boundaries practice — the role will expand to fill all available time if you let it",
+      "Transportation or remote work setup"
+    ],
+    commonFailureModes: [
+      "Golden handcuffs — staying in a misaligned role because the salary is comfortable",
+      "Identity fusion — defining yourself entirely by your job title and employer",
+      "Allowing work to consume all other capitals because the paycheck feels productive",
+      "Never developing parallel income streams, leaving you vulnerable to layoffs",
+      "Confusing busyness with purpose — being fully employed but building nothing lasting"
+    ],
+
+    fitSignals: {
+      loves: ["structure", "collaboration", "clear expectations", "being part of something larger"],
+      skills: ["professional communication", "time management", "working within systems"],
+      worldNeeds: ["specialized expertise in a field", "organizational capacity", "team contribution"],
+      lifestyleTraits: ["values stability over autonomy", "benefits matter for family", "wants clear work-life separation"]
+    },
+
+    sources: [
+      "U.S. Bureau of Labor Statistics — Occupational Employment and Wage Statistics (2024)",
+      "Gallup State of the Global Workplace Report (2023)",
+      "SHRM Employee Benefits Survey (2024)"
+    ]
+  },
+
+  // ─────────────────────────────────────────────
+  // 16. FREELANCE PRACTICE
+  // ─────────────────────────────────────────────
+  {
+    id: "freelance-practice",
+    name: "Freelance Practice",
+    category: "Career — Independent",
+    description: "Independent professional practice selling expertise directly to clients. You own the client relationship, set the price, and choose the work — but you also own every failure, every dry spell, and every unpaid invoice. The upside is real. So is the isolation.",
+    scaleAssumption: "15–40 hrs/week, 3–8 active clients",
+
+    financials: {
+      startupCapital: {
+        low: 500,
+        high: 5000,
+        notes: "Professional website/portfolio ($200-1500), software/tools ($100-1000), business registration ($50-500), initial marketing ($100-1000), 3-month expense runway ($0-5000+). Most underinvest in the runway."
+      },
+      laborHoursPerWeek: {
+        inSeason: "25-40 hours (15-30 billable, 10+ hours on admin, marketing, invoicing, proposals)",
+        offSeason: "10-20 hours (marketing, skill development, pipeline building — there is no true off-season)"
+      },
+      timeToFirstRevenue: "2-12 weeks from launch to first paid project, highly variable",
+      year1Revenue: { low: 25000, high: 80000 },
+      year3Revenue: { low: 50000, high: 150000 },
+      grossMargin: "70-90% — high margin but you are the cost of goods sold",
+      breakeven: "Month 2-6 if you have existing network; month 6-12 if building from scratch",
+      seasonalRhythm: "Feast-famine cycles until pipeline is mature. Many fields slow in December and August. Q1 and Q4 are often strong for B2B."
+    },
+
+    capitalProfile: {
+      financial: { score: 4, note: "Higher ceiling than employment but less predictable — the floor can be zero" },
+      material: { score: 2, note: "You build tools and systems but they're personal, not transferable assets" },
+      living: { score: 2, note: "Flexibility helps but isolation and screen time often degrade body capital" },
+      social: { score: 3, note: "Client relationships are genuine but transactional — build community deliberately" },
+      intellectual: { score: 4, note: "Every engagement teaches. Diverse clients accelerate learning faster than any single employer" },
+      experiential: { score: 5, note: "Rapid, varied skill application across contexts — the most potent learning loop" },
+      spiritual: { score: 3, note: "Freedom to choose aligned work — but financial pressure can override values" },
+      cultural: { score: 2, note: "Limited unless you deliberately build in public or teach" }
+    },
+
+    landscapeRequirements: {
+      climate: "N/A — most freelance work is location-independent, though some fields require on-site presence.",
+      water: "N/A",
+      access: "Reliable high-speed internet. Professional communication setup. Portfolio or proof of work.",
+      soils: "N/A",
+      infrastructure: "Dedicated workspace (home office or co-working). Professional tools for your field. Accounting system.",
+      minAcreage: "N/A"
+    },
+
+    synergies: [
+      "Primary Employment — freelance alongside employment to build pipeline before leaping",
+      "Creative Practice — creative skills become billable when framed as professional services",
+      "Learning Program — each client engagement is a paid learning opportunity",
+      "Education — teaching workshops builds authority and generates leads"
+    ],
+    prerequisites: [
+      "Demonstrable expertise or portfolio in a specific domain — generalists starve",
+      "3-6 month expense runway before going full-time independent",
+      "At least 2-3 warm leads or existing relationships before launching",
+      "Comfort with inconsistent income and self-directed structure"
+    ],
+    commonFailureModes: [
+      "Feast-famine cycle — not marketing during busy periods, then scrambling when projects end",
+      "Underpricing — charging employee rates without accounting for taxes, benefits, admin, and downtime",
+      "Scope creep — saying yes to everything because you're afraid of losing the client",
+      "Isolation — working alone for months without peer feedback or community",
+      "Not firing bad clients — one toxic relationship can consume all your energy and time"
+    ],
+
+    fitSignals: {
+      loves: ["autonomy", "variety", "direct client relationships", "solving problems"],
+      skills: ["self-direction", "sales and marketing", "clear communication", "estimation and scoping"],
+      worldNeeds: ["specialized expertise not available locally", "flexible professional capacity"],
+      lifestyleTraits: ["comfortable with uncertainty", "self-motivated", "can set own boundaries", "doesn't need external structure"]
+    },
+
+    sources: [
+      "Freelancers Union & Upwork — Freelance Forward Survey (2023)",
+      "U.S. Bureau of Labor Statistics — Self-Employment data",
+      "Brennan Dunn — Double Your Freelancing research and surveys"
+    ]
+  },
+
+  // ─────────────────────────────────────────────
+  // 17. CREATIVE PRACTICE
+  // ─────────────────────────────────────────────
+  {
+    id: "creative-practice",
+    name: "Creative Practice",
+    category: "Creative — Practice",
+    description: "Sustained creative work — writing, art, music, craft, design, woodworking, whatever the medium — as a deliberate capital-building enterprise. May or may not generate income directly. The financial return is often zero for years, and that's fine if you're honest about it and the other capitals are real.",
+    scaleAssumption: "5–20 hrs/week dedicated creative time",
+
+    financials: {
+      startupCapital: {
+        low: 100,
+        high: 3000,
+        notes: "Materials and tools ($50-1500), workspace setup ($0-1000), learning resources ($50-500). Varies enormously by medium — writing needs almost nothing, ceramics needs a kiln."
+      },
+      laborHoursPerWeek: {
+        inSeason: "5-20 hours (practice, creation, revision — the work itself, not promotion)",
+        offSeason: "2-5 hours (creative rest is not laziness — it's composting)"
+      },
+      timeToFirstRevenue: "6 months to never — and 'never' is a valid answer if other capitals are building",
+      year1Revenue: { low: 0, high: 5000 },
+      year3Revenue: { low: 0, high: 25000 },
+      grossMargin: "Highly variable. Craft/physical goods: 30-60%. Digital/writing: 70-95%. Many practices run at a financial loss offset by experiential and spiritual returns.",
+      breakeven: "Many creative practices never break even financially and shouldn't be forced to",
+      seasonalRhythm: "Self-directed. Holiday markets for physical goods. Submission seasons for writing. But the real rhythm is internal — creative energy ebbs and flows."
+    },
+
+    capitalProfile: {
+      financial: { score: 1, note: "Usually low to zero direct financial return, especially early. Be honest about this." },
+      material: { score: 2, note: "Builds tools and workspace, sometimes a body of work with lasting value" },
+      living: { score: 2, note: "Sedentary for most creative work, though craft and performance are exceptions" },
+      social: { score: 3, note: "Creative communities are real and deep — if you show up and share" },
+      intellectual: { score: 4, note: "Creative problem-solving transfers to everything else in your life" },
+      experiential: { score: 5, note: "The practice itself IS the capital — mastery through sustained attention" },
+      spiritual: { score: 5, note: "Making things gives meaning. This is not optional — it's what makes the rest bearable." },
+      cultural: { score: 3, note: "Contributes to community culture when shared, but don't force sharing before the work is ready" }
+    },
+
+    landscapeRequirements: {
+      climate: "N/A — some creative work benefits from solitude and natural beauty, but it's not required.",
+      water: "N/A",
+      access: "Access to materials, community of practice (online or local), exhibition/sharing venues if desired.",
+      soils: "N/A",
+      infrastructure: "Dedicated creative space, even if small. Tools appropriate to the medium. Time protection — the hardest infrastructure to build.",
+      minAcreage: "N/A"
+    },
+
+    synergies: [
+      "Primary Employment — stable income removes monetization pressure from creative work",
+      "Freelance Practice — creative skills often translate to billable professional work",
+      "Education — teaching your craft deepens your own understanding and builds community",
+      "Health Practice — physical practice prevents the body degradation of sedentary creative work"
+    ],
+    prerequisites: [
+      "A practice you'll actually show up for — not the one that sounds impressive, the one that pulls you",
+      "Protected time in the weekly rhythm — creativity requires defended space",
+      "Financial stability from other sources so the work doesn't have to earn before it's ready"
+    ],
+    commonFailureModes: [
+      "Monetization pressure killing the joy — turning a practice into a hustle before the craft matures",
+      "Inconsistency — waiting for inspiration instead of building a practice habit",
+      "Comparison — measuring your inside against someone else's polished outside",
+      "Isolation — creating alone without feedback, community, or exhibition",
+      "Perfectionism — never finishing, never sharing, never getting the feedback that fuels growth"
+    ],
+
+    fitSignals: {
+      loves: ["making things", "beauty", "expression", "craft", "solitude with purpose"],
+      skills: ["sustained attention", "comfort with ambiguity", "self-critique without self-destruction"],
+      worldNeeds: ["beauty and meaning", "cultural contribution", "original perspective"],
+      lifestyleTraits: ["can protect creative time from obligations", "doesn't need external validation to continue", "comfortable with slow returns"]
+    },
+
+    sources: [
+      "Julia Cameron — The Artist's Way, long-term creative practice frameworks",
+      "Cal Newport — Deep Work and the economics of creative output",
+      "Bureau of Labor Statistics — Artists and Authors occupational data (2024)"
+    ]
+  },
+
+  // ─────────────────────────────────────────────
+  // 18. HEALTH PRACTICE
+  // ─────────────────────────────────────────────
+  {
+    id: "health-practice",
+    name: "Health Practice",
+    category: "Life System — Body",
+    description: "Structured health and fitness practice as a deliberate investment in body capital — the infrastructure everything else runs on. Not a hobby, not a luxury, not vanity. This is maintenance of the system that does all the other work. Neglect it and every other enterprise degrades.",
+    scaleAssumption: "3–7 hrs/week active practice, plus sleep and nutrition attention",
+
+    financials: {
+      startupCapital: {
+        low: 50,
+        high: 2000,
+        notes: "Decent walking shoes ($50). Gym membership ($20-80/month). Basic equipment ($100-800). Quality food premium ($50-200/month above baseline). The real cost is time, not money."
+      },
+      laborHoursPerWeek: {
+        inSeason: "3-7 hours direct practice (exercise, meal prep, recovery). Always in season.",
+        offSeason: "1-2 hours (maintenance movement during recovery weeks or travel)"
+      },
+      timeToFirstRevenue: "Immediate — the 'revenue' is reduced sick days, medical costs, and productivity gains across every other enterprise.",
+      year1Revenue: { low: 2000, high: 8000 },
+      year3Revenue: { low: 3000, high: 12000 },
+      grossMargin: "Frame as cost savings: $2,000-8,000/year in reduced medical expenses, sick days, and productivity gains. Hard to measure, very real.",
+      breakeven: "Month 1 — the return is capacity in every other enterprise. An unfit operator is a bottleneck in every system.",
+      seasonalRhythm: "Continuous with seasonal variation. Outdoor movement in good weather, indoor alternatives in winter. Adjust intensity around high-demand periods in other enterprises."
+    },
+
+    capitalProfile: {
+      financial: { score: 1, note: "Direct cost, no direct revenue — but poor health is the most expensive thing in your system" },
+      material: { score: 1, note: "Some equipment accumulation, but the body itself is the capital" },
+      living: { score: 5, note: "This IS the living capital enterprise — energy, resilience, longevity, daily capacity" },
+      social: { score: 2, note: "Group fitness and sport build community. Solo practice less so." },
+      intellectual: { score: 2, note: "Body literacy, nutrition knowledge, movement science understanding" },
+      experiential: { score: 4, note: "Deep knowledge of your own body and its responses — irreplaceable lived wisdom" },
+      spiritual: { score: 3, note: "Physical practice often becomes meditative. Runner's clarity. Gardener's calm." },
+      cultural: { score: 1, note: "Minimal direct cultural contribution unless you teach or lead community fitness" }
+    },
+
+    landscapeRequirements: {
+      climate: "Outdoor practice shifts with seasons. Extreme heat or cold require indoor alternatives.",
+      water: "Adequate hydration access during exercise.",
+      access: "Walking paths, gym, or home exercise space. Access to quality food sources.",
+      soils: "N/A",
+      infrastructure: "Exercise space (even a room corner). Basic equipment if desired. Kitchen for meal prep. Sleep environment optimization.",
+      minAcreage: "N/A — a body is the only acreage required"
+    },
+
+    synergies: [
+      "Primary Employment — physical capacity directly affects work performance and energy",
+      "Creative Practice — body movement prevents the degradation of sedentary creative work",
+      "Market Garden — farm work IS the exercise if designed well",
+      "Financial Restructuring — health improvements reduce the single largest expense risk in most budgets"
+    ],
+    prerequisites: [
+      "Medical clearance if starting from sedentary baseline with known health conditions",
+      "Honesty about current capacity — start where you are, not where your ego wants to be",
+      "Weekly rhythm with protected exercise slots — it gets cancelled first if not defended"
+    ],
+    commonFailureModes: [
+      "All-or-nothing thinking — missing one workout becomes missing all of them",
+      "Injury from overtraining or ego-driven intensity beyond current capacity",
+      "Using exercise as punishment for eating or as compensation for other life stress",
+      "Neglecting rest and recovery — training is the stimulus, rest is when adaptation happens",
+      "Letting the practice slide during busy periods in other enterprises, then losing momentum"
+    ],
+
+    fitSignals: {
+      loves: ["movement", "physical challenge", "being outdoors", "cooking", "feeling strong"],
+      skills: ["consistency over intensity", "listening to body signals", "meal planning"],
+      worldNeeds: ["personal resilience", "modeling health for family", "reducing healthcare burden"],
+      lifestyleTraits: ["willing to protect time for health", "can start small without feeling inadequate", "prefers sustainable habits over dramatic transformations"]
+    },
+
+    sources: [
+      "American College of Sports Medicine — Exercise Prescription Guidelines (2024)",
+      "Peter Attia — Outlive: The Science and Art of Longevity (2023)",
+      "CDC — Physical Activity Guidelines for Americans"
+    ]
+  },
+
+  // ─────────────────────────────────────────────
+  // 19. FINANCIAL RESTRUCTURING
+  // ─────────────────────────────────────────────
+  {
+    id: "financial-restructuring",
+    name: "Financial Restructuring",
+    category: "Life System — Money",
+    description: "Deliberate program to restructure your financial situation — debt reduction, emergency fund building, expense rationalization, income stream diversification. Not a budget spreadsheet. A design problem: how does money flow through your system, and where are the leaks, traps, and leverage points?",
+    scaleAssumption: "2–4 hrs/week active management, ongoing attention",
+
+    financials: {
+      startupCapital: {
+        low: 25,
+        high: 500,
+        notes: "Budgeting app or notebook ($0-50), financial software/tools ($0-200), professional consultation if needed ($100-300/session), possibly a financial planning course ($0-500). The irony: the people who need this most have the least to invest in it."
+      },
+      laborHoursPerWeek: {
+        inSeason: "2-4 hours (tracking, planning, negotiating, learning — intense during restructuring phase)",
+        offSeason: "0.5-1 hour (maintenance tracking and periodic review once systems are established)"
+      },
+      timeToFirstRevenue: "Immediate — the 'revenue' is reduced outflow. Most people find $200-500/month in waste within the first week of honest tracking.",
+      year1Revenue: { low: 2400, high: 12000 },
+      year3Revenue: { low: 5000, high: 30000 },
+      grossMargin: "N/A — frame as savings rate improvement: from typical 5-10% to 20-40% of income. The compound effect over 3 years is dramatic.",
+      breakeven: "Week 1 — honest tracking nearly always reveals immediate savings opportunities",
+      seasonalRhythm: "Intensive first 3 months of restructuring, then maintenance mode. Annual reviews around tax season. Major reassessment when income or expenses shift significantly."
+    },
+
+    capitalProfile: {
+      financial: { score: 5, note: "The whole point — transforming financial stress into financial clarity and runway" },
+      material: { score: 1, note: "Doesn't build material assets directly, but frees capital to invest in them" },
+      living: { score: 2, note: "Financial stress relief measurably improves sleep, blood pressure, and immune function" },
+      social: { score: 1, note: "Money conversations are taboo — but being honest about money deepens a few key relationships" },
+      intellectual: { score: 3, note: "Financial literacy transfers to every other enterprise — understanding flows, margins, leverage" },
+      experiential: { score: 3, note: "The lived experience of financial control is profoundly different from financial anxiety" },
+      spiritual: { score: 2, note: "Alignment between spending and values reveals itself during this process" },
+      cultural: { score: 1, note: "Modeling financial honesty is countercultural and quietly powerful" }
+    },
+
+    landscapeRequirements: {
+      climate: "N/A",
+      water: "N/A",
+      access: "Access to financial accounts and records. Spreadsheet or budgeting tool. Possibly access to a financial advisor or community.",
+      soils: "N/A",
+      infrastructure: "Computer or phone for tracking. Secure document storage. Calendar for weekly review sessions.",
+      minAcreage: "N/A"
+    },
+
+    synergies: [
+      "Primary Employment — steady income provides the raw material for restructuring",
+      "Health Practice — reduced financial stress directly improves physical health outcomes",
+      "Freelance Practice — financial clarity reveals the true minimum viable income for independence",
+      "Learning Program — may reveal that investment in skills has the highest ROI of any option"
+    ],
+    prerequisites: [
+      "Willingness to look honestly at current financial reality — the numbers, not the narrative",
+      "Income source (even small) — you can't restructure what doesn't exist",
+      "Emotional readiness — money shame is real and must be named before it can be addressed"
+    ],
+    commonFailureModes: [
+      "Deprivation mindset — cutting so aggressively that the plan is unsustainable and collapses within weeks",
+      "Analysis paralysis — perfecting the spreadsheet instead of making the first change",
+      "Shame spiral — discovering the real numbers triggers self-blame instead of system redesign",
+      "Ignoring the emotional dimension of money — treating it as pure math when it's deeply psychological",
+      "Optimizing expenses without addressing income — you can't cut your way to abundance"
+    ],
+
+    fitSignals: {
+      loves: ["systems thinking", "spreadsheets", "seeing progress", "solving puzzles"],
+      skills: ["honesty with self", "discipline without rigidity", "basic math and tracking"],
+      worldNeeds: ["personal financial stability", "modeling financial literacy for family", "reducing systemic financial anxiety"],
+      lifestyleTraits: ["ready to confront financial reality", "can defer gratification", "values clarity over comfort"]
+    },
+
+    sources: [
+      "Ramit Sethi — I Will Teach You to Be Rich (2nd ed., 2019)",
+      "Federal Reserve — Survey of Consumer Finances (2022)",
+      "Consumer Financial Protection Bureau — Financial Well-Being in America report"
+    ]
+  },
+
+  // ─────────────────────────────────────────────
+  // 20. LEARNING PROGRAM
+  // ─────────────────────────────────────────────
+  {
+    id: "learning-program",
+    name: "Learning Program",
+    category: "Growth — Structured",
+    description: "Deliberate skill acquisition program with clear milestones — could be formal education, self-directed study, apprenticeship, or professional development. The enterprise is the learning itself, treated with the same rigor as any other investment. The question isn't whether to learn, but what to learn and why — because unfocused learning is just expensive entertainment.",
+    scaleAssumption: "5–15 hrs/week dedicated study and practice",
+
+    financials: {
+      startupCapital: {
+        low: 50,
+        high: 10000,
+        notes: "Books and materials ($50-500). Online courses $0-2000. Community college semester $1500-5000. Professional bootcamp $5000-15000. The range is enormous — and expensive doesn't mean better."
+      },
+      laborHoursPerWeek: {
+        inSeason: "5-15 hours (study, practice, projects, mentorship sessions — the actual learning, not watching tutorials)",
+        offSeason: "2-5 hours (review, practice maintenance, applying what was learned in real contexts)"
+      },
+      timeToFirstRevenue: "3-18 months depending on the skill and market. Some skills pay immediately (coding bootcamp → first contract). Others take years (PhD → academic position).",
+      year1Revenue: { low: 0, high: 5000 },
+      year3Revenue: { low: 0, high: 30000 },
+      grossMargin: "N/A — this is an investment enterprise. Frame as ROI: what's the salary/income increase attributable to the new skill? Typical professional development ROI: 10-30% income increase within 2 years.",
+      breakeven: "Varies wildly. A $500 online course that leads to a $5000 raise breaks even immediately. A $100K degree that doesn't change your career trajectory never breaks even financially.",
+      seasonalRhythm: "Follows academic calendar for formal education. Self-directed programs should follow a semester-like rhythm: 10-12 week intensive blocks with breaks for integration."
+    },
+
+    capitalProfile: {
+      financial: { score: 2, note: "Usually a net cost in the short term — the financial return is deferred and uncertain" },
+      material: { score: 1, note: "Minimal — some tools and reference materials accumulated" },
+      living: { score: 1, note: "Sedentary. Study time competes with movement time. Counterbalance deliberately." },
+      social: { score: 3, note: "Learning communities and mentorship relationships are among the deepest you'll form" },
+      intellectual: { score: 5, note: "This IS the intellectual capital enterprise — systematic knowledge and capability building" },
+      experiential: { score: 4, note: "Applied learning (projects, practice, apprenticeship) builds irreplaceable experiential capital" },
+      spiritual: { score: 2, note: "The beginner's mind experience can be humbling and renewing — or ego-crushing" },
+      cultural: { score: 2, note: "Teaching others what you learn is the highest form of learning and a cultural contribution" }
+    },
+
+    landscapeRequirements: {
+      climate: "N/A",
+      water: "N/A",
+      access: "Access to learning resources: library, internet, mentors, practice environments. For hands-on skills, access to workshop or lab space.",
+      soils: "N/A",
+      infrastructure: "Quiet study space. Computer for most modern learning. Note-taking system. Calendar with protected study blocks.",
+      minAcreage: "N/A"
+    },
+
+    synergies: [
+      "Freelance Practice — new skills open new service offerings and higher rates",
+      "Primary Employment — employer may fund professional development; new skills earn promotions",
+      "Creative Practice — learning new techniques deepens creative range",
+      "Education — teaching what you're learning accelerates your own mastery"
+    ],
+    prerequisites: [
+      "Clear learning objective tied to a specific capital you want to build — 'learn to code' is too vague, 'build a web app for my farm's CSA by June' is a program",
+      "Protected weekly time in the rhythm — learning requires sustained attention, not scraps of time",
+      "Honest assessment of current level — start where you are, not where you wish you were"
+    ],
+    commonFailureModes: [
+      "Credential collecting without application — degrees and certificates that never change your actual work",
+      "Tutorial hell — endlessly consuming content without building anything real",
+      "Never shipping — learning in private forever, never testing skills against real-world feedback",
+      "Perfectionism — waiting to be 'ready' before applying knowledge, which means never applying it",
+      "Shiny object syndrome — starting new programs before completing current ones, finishing nothing"
+    ],
+
+    fitSignals: {
+      loves: ["learning", "reading", "understanding how things work", "mastery", "teaching others"],
+      skills: ["sustained focus", "note-taking", "self-assessment", "asking good questions"],
+      worldNeeds: ["specialized knowledge in a growing field", "skill gaps in local community"],
+      lifestyleTraits: ["comfortable being a beginner", "can tolerate frustration of not-yet-knowing", "values growth over comfort"]
+    },
+
+    sources: [
+      "Anders Ericsson — Peak: Secrets from the New Science of Expertise (2016)",
+      "Scott Young — Ultralearning: Accelerate Your Career (2019)",
+      "Bureau of Labor Statistics — Education and Training Outlook data (2024)"
+    ]
+  },
+
 ];
 
 
@@ -1273,30 +1772,62 @@ export function computeAggregateCapitalScores(selectedNames: string[]): number[]
   });
 }
 
-export function buildEnterpriseReferenceBlock(): string {
+// IDs of universal (non-agricultural) enterprise templates
+const UNIVERSAL_TEMPLATE_IDS = new Set([
+  "primary-employment",
+  "freelance-practice",
+  "creative-practice",
+  "health-practice",
+  "financial-restructuring",
+  "learning-program",
+]);
+
+function isUniversalTemplate(e: EnterpriseTemplate): boolean {
+  return UNIVERSAL_TEMPLATE_IDS.has(e.id);
+}
+
+export function buildEnterpriseReferenceBlock(
+  fieldType?: "land" | "universal" | "hybrid"
+): string {
+  const templates = ENTERPRISE_TEMPLATES.filter((e) => {
+    if (fieldType === "universal") return isUniversalTemplate(e);
+    if (fieldType === "land") return !isUniversalTemplate(e);
+    // "hybrid" or undefined — include all
+    return true;
+  });
+
+  const contextLabel =
+    fieldType === "universal"
+      ? "life design"
+      : fieldType === "land"
+        ? "land-based"
+        : "land-based and life design";
+
   let block = `\n\n## Enterprise Reference Data
 
-The following are baseline enterprise templates with real numbers from published sources. Use these as STARTING POINTS when recommending enterprises. ALWAYS adjust for the operator's specific:
-- Climate zone and growing season
-- Market access and local pricing
-- Existing capitals and infrastructure
+The following are baseline ${contextLabel} enterprise templates with real numbers from published sources. Use these as STARTING POINTS when recommending enterprises. ALWAYS adjust for the operator's specific:
+- Existing capitals, skills, and infrastructure
+- Market access, geographic context, and local pricing
 - Labor availability and physical capacity
-- Regulatory environment (state cottage food laws, processing regulations, etc.)
+- Regulatory environment and professional requirements
 
-Do NOT copy these templates verbatim. Synthesize them with the operator's Ikigai, Holistic Context, and Landscape Reading to produce recommendations that are genuinely specific to their situation.
+Do NOT copy these templates verbatim. Synthesize them with the operator's Ikigai, Holistic Context, and Situation Reading to produce recommendations that are genuinely specific to their situation.
 
-When presenting numbers, give ranges and be honest about uncertainty. "Based on operations in similar climates, pastured broilers typically gross $8,000-20,000 in the first season at your scale" is better than false precision.\n\n`;
+When presenting numbers, give ranges and be honest about uncertainty.\n\n`;
 
-  for (const e of ENTERPRISE_TEMPLATES) {
+  for (const e of templates) {
+    const universal = isUniversalTemplate(e);
     block += `### ${e.name} (${e.category})\n`;
     block += `${e.description}\n`;
     block += `Scale: ${e.scaleAssumption}\n`;
     block += `Startup: $${e.financials.startupCapital.low.toLocaleString()}-${e.financials.startupCapital.high.toLocaleString()} (${e.financials.startupCapital.notes})\n`;
-    block += `Labor: ${e.financials.laborHoursPerWeek.inSeason} in-season, ${e.financials.laborHoursPerWeek.offSeason} off-season\n`;
+    block += `Time: ${e.financials.laborHoursPerWeek.inSeason}${universal ? "" : ` in-season, ${e.financials.laborHoursPerWeek.offSeason} off-season`}\n`;
     block += `First Revenue: ${e.financials.timeToFirstRevenue}\n`;
     block += `Year 1: $${e.financials.year1Revenue.low.toLocaleString()}-${e.financials.year1Revenue.high.toLocaleString()} | Year 3: $${e.financials.year3Revenue.low.toLocaleString()}-${e.financials.year3Revenue.high.toLocaleString()}\n`;
     block += `Margin: ${e.financials.grossMargin}\n`;
-    block += `Min acreage: ${e.landscapeRequirements.minAcreage}\n`;
+    if (!universal) {
+      block += `Min acreage: ${e.landscapeRequirements.minAcreage}\n`;
+    }
     block += `Key synergies: ${e.synergies.slice(0, 3).join("; ")}\n`;
     block += `Fit signals: loves ${e.fitSignals.loves.slice(0, 4).join(", ")}; skills ${e.fitSignals.skills.slice(0, 3).join(", ")}\n`;
     block += `Top capitals: ${Object.entries(e.capitalProfile).filter(([_, v]) => v.score >= 4).map(([k, v]) => `${k} (${v.score}/5)`).join(", ")}\n`;

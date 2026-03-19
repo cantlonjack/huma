@@ -4,9 +4,12 @@ export const runtime = "edge";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const name = url.searchParams.get("name") || "an Operator";
+  const name = url.searchParams.get("name");
   const location = url.searchParams.get("location") || "";
   const enterprises = url.searchParams.get("enterprises") || "";
+
+  // Homepage OG image (no params)
+  const isHomepage = !name;
 
   const subtitleParts = [];
   if (location) subtitleParts.push(location);
@@ -43,7 +46,7 @@ export async function GET(request: Request) {
         <div
           style={{
             display: "flex",
-            fontSize: 48,
+            fontSize: isHomepage ? 44 : 48,
             fontWeight: 400,
             color: "#1A1714",
             textAlign: "center",
@@ -52,23 +55,41 @@ export async function GET(request: Request) {
             marginBottom: 16,
           }}
         >
-          Regenerative Enterprise Map
+          {isHomepage
+            ? "Everything in your life is connected. Now you can see how."
+            : "Living Canvas"}
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            fontSize: 32,
-            fontWeight: 300,
-            fontStyle: "italic",
-            color: "#3A5A40",
-            marginBottom: 12,
-          }}
-        >
-          for {name}
-        </div>
+        {isHomepage ? (
+          <div
+            style={{
+              display: "flex",
+              fontSize: 22,
+              fontWeight: 300,
+              color: "#8C8274",
+              textAlign: "center",
+              maxWidth: 700,
+              marginBottom: 12,
+            }}
+          >
+            Map your whole situation. See the specific moves that change everything.
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              fontSize: 32,
+              fontWeight: 300,
+              fontStyle: "italic",
+              color: "#3A5A40",
+              marginBottom: 12,
+            }}
+          >
+            for {name || "an Operator"}
+          </div>
+        )}
 
-        {subtitle ? (
+        {!isHomepage && subtitle ? (
           <div
             style={{
               display: "flex",

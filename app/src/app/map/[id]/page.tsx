@@ -12,7 +12,7 @@ export async function generateMetadata({ searchParams }: MapPageProps): Promise<
   const location = sp.location || "";
   const enterpriseCount = sp.enterprises || "";
 
-  const titleParts = [`Regenerative Enterprise Map for ${name}`];
+  const titleParts = [`Living Canvas for ${name}`];
   const descParts: string[] = [];
   if (location) descParts.push(location);
   if (enterpriseCount) descParts.push(`${enterpriseCount} enterprises`);
@@ -32,7 +32,7 @@ export async function generateMetadata({ searchParams }: MapPageProps): Promise<
       description: descParts.join(" · "),
       type: "article",
       siteName: "HUMA",
-      images: [{ url: ogImage, width: 1200, height: 630, alt: `Regenerative Enterprise Map for ${name}` }],
+      images: [{ url: ogImage, width: 1200, height: 630, alt: `Living Canvas for ${name}` }],
     },
     twitter: {
       card: "summary_large_image",

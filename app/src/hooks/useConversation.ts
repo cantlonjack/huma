@@ -93,6 +93,12 @@ export function useConversation({ operatorName, operatorLocation, onComplete }: 
             synthesis: contextValue,
           },
         };
+      } else if (contextType.startsWith("field-type:")) {
+        const fieldType = contextType.split(":")[1] as "land" | "universal" | "hybrid";
+        contextRef.current = {
+          ...contextRef.current,
+          fieldType,
+        };
       }
     }
   }, []);

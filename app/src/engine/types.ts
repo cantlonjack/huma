@@ -16,7 +16,7 @@ export interface PhaseInfo {
 export const PHASES: PhaseInfo[] = [
   { id: "ikigai", label: "Ikigai", subtitle: "Purpose Discovery" },
   { id: "holistic-context", label: "Holistic Context", subtitle: "The Whole Situation" },
-  { id: "landscape", label: "Landscape", subtitle: "Reading Your Land" },
+  { id: "landscape", label: "Landscape", subtitle: "Reading Your Situation" },
   { id: "enterprise-map", label: "Enterprises", subtitle: "Pattern Matching" },
   { id: "nodal-interventions", label: "Nodal Interventions", subtitle: "Maximum Cascade" },
   { id: "operational-design", label: "Operational Design", subtitle: "Your Weekly Rhythm" },
@@ -70,6 +70,7 @@ export interface ConversationContext {
     seasonalCadence: string;
     synthesis: string;
   };
+  fieldType: "land" | "universal" | "hybrid";
   currentPhase: Phase;
   messageCount: number;
   phaseMessageCount: number;

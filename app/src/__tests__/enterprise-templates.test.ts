@@ -4,8 +4,8 @@ import { ENTERPRISE_TEMPLATES, buildEnterpriseReferenceBlock } from "@/engine/en
 const CAPITALS = ["financial", "material", "living", "social", "intellectual", "experiential", "spiritual", "cultural"] as const;
 
 describe("Enterprise Templates", () => {
-  it("has 14 templates", () => {
-    expect(ENTERPRISE_TEMPLATES).toHaveLength(14);
+  it("has 20 templates", () => {
+    expect(ENTERPRISE_TEMPLATES).toHaveLength(20);
   });
 
   it("has unique IDs", () => {

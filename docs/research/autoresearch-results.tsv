@@ -1,0 +1,8 @@
+iteration	commit	metric	delta	status	description
+0	baseline	14/14 (100%)	—	baseline	Phase marker format consistency: all canonical markers present in instructions, all 10 synthetic transitions parse correctly
+1	pending	303/303 (100%)	+2 tests	keep	Runtime phase validation: VALID_PHASES set rejects non-canonical phase IDs (typos, case errors); greedy \s* → space-only in clean regex preserves paragraph breaks
+2	pending	303/303 (100%)	+0 tests	keep	Marker ordering: instruction now explicitly says CONTEXT first, CANVAS_DATA second, PHASE last; example updated to match
+3	pending	303/303 (100%)	+2 tests	keep	Explicit phase-to-marker mapping table: each transition now shows exactly which CONTEXT + CANVAS_DATA + PHASE to emit; replaces flat list
+4	pending	303/303 (100%)	+0 tests	keep	Canvas data format reference: consolidated JSON format examples into compact reference section, removed redundancy
+5	pending	303/303 (100%)	+2 tests	keep	buildFullPrompt coverage: verified all 6 phases include transition instructions with PHASE + CONTEXT + CANVAS_DATA markers
+6-10	—	—	—	skip	Baseline was 100%; iterations 1-5 hardened parser + instructions; no further changes needed — stopping per 5-consecutive-no-improvement rule

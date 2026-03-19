@@ -1,10 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
-// Sample Regenerative Enterprise Map
+// Sample Living Canvas
 // A realistic example showing what HUMA produces.
 // This is a static constant — no API calls, no generation.
 // ═══════════════════════════════════════════════════════════════
 
-export const SAMPLE_MAP_MARKDOWN = `# Your Regenerative Enterprise Map
+export const SAMPLE_MAP_MARKDOWN = `# Your Living Canvas
 
 **Sarah Chen** · Southern Oregon, Rogue Valley · 12 acres
 *Generated March 2026*

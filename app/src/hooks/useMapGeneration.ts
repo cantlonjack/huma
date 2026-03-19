@@ -61,7 +61,7 @@ export function useMapGeneration({ contextRef, operatorName, operatorLocation }:
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            messages: [{ role: "user", content: "Generate my Regenerative Enterprise Map." }],
+            messages: [{ role: "user", content: "Generate my Living Canvas." }],
             generateDocument: true,
             syntheses,
           }),
