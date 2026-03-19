@@ -63,6 +63,18 @@ This is where the map gets updated. New nodal interventions. Adjusted enterprise
 
 **This is also where the pattern library grows.** Every seasonal review generates operational wisdom that can be anonymized, structured, and contributed to the commons. "CSA operations above 25 members in Zone 7 climates need dedicated packing infrastructure or evening QoL statements consistently fail" — that's a pattern, learned from practice, validated across operators.
 
+### The Counter-Factual Question
+
+The most powerful feature Operate Mode can eventually offer: "What happens if...?"
+
+When the field dynamics model is mature, HUMA can take the operator's current field, modify the dimensions they're considering changing, run the model forward, and show predicted trajectories with conditions.
+
+"If you quit your job: Money drops to 1, Body stress follows within 2 weeks (coupling: -0.3), BUT Purpose and Joy increase. Net field energy is positive IF Money stabilizes by month 3. The leverage point is client acquisition speed, not financial cushion."
+
+This is not prediction. It's modeling — the same kind of modeling that Google Maps does with traffic data. It requires population data (from simulation and real operators), the coupling model, and the operator's specific field. All three compound with use.
+
+The counter-factual engine must respect the ethical framework: it shows trajectories and conditions, never prescriptions. It says "here's what the model shows" not "you should do this." The operator makes the decision.
+
 ---
 
 ## The Holistic Management Connection

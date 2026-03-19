@@ -90,6 +90,16 @@ A pattern is not advice. It is not a template. It is not a how-to guide. A patte
 | **Nodes** | Points of maximum leverage where a single action cascades through the whole system. HUMA doesn't give you a list of things to do. It finds the one thing that moves everything. |
 | **Transformers** | Context-sensitive processes that convert patterns from one domain to another. The mechanism by which a shoemaker's batching insight becomes a farmer's packing system becomes a teacher's lesson plan. The cross-domain bridge. |
 
+### From primitives to capabilities
+
+The five primitives don't just describe the language — they enable specific capabilities that no other system can produce:
+
+**Pattern Compilation.** Patterns are not documentation to be read — they are programs to be compiled. Given an operator's Field (context, constraints, behavioral profile), HUMA compiles a Pattern into a specific adapted action plan. The same pattern compiled against different Fields produces different — and appropriate — outputs. This is the Adrià insight (recipe as program) made operational. The compiler resolves domain selection, field constraints, prerequisite checks, conflict detection, node identification, and capital prediction in a single pass.
+
+**Transformer Application.** Transformers are not metaphorical — they are discoverable structural mechanisms. When Production Batching transfers from agriculture to creative work, the Transformer preserves setup-cost amortization and flow-state development while modifying the batch-size constraint (perishability → cognitive endurance) and infrastructure type (physical → digital). Discovering Transformers is discovering the generative grammar of RPPL — the rules that enable novel pattern creation, not just storage of existing patterns.
+
+**Field Dynamics.** Fields are not static snapshots — they are dynamic systems with coupling strengths, directional effects, time delays, and phase transitions between dimensions. When one dimension shifts, others follow with measurable strength and speed. These dynamics enable prediction: given an intervention, HUMA can model the cascade forward and show the operator their probable trajectory. This is what makes HUMA a navigation system, not a map printer.
+
 ### The five properties of the medium
 
 | Property | What it means |
@@ -113,6 +123,16 @@ HUMA gives users three ways to interact with the medium. Together, they form a c
 | **EVOLVE** | Periodic review that updates the map. Your lived experience crystallizes into patterns that enrich the medium for everyone. The Evolution Question: "What do you know now that you didn't know last season?" | Seasonal review (30 min quarterly). Update the canvas. Contribute validated patterns. See how your trajectory compares to others in similar contexts. **This is the moat.** |
 
 > *Design Mode is the hook. Operate Mode is the product. Evolve Mode is the moat.*
+
+### The Fourth Outcome: Graduation
+
+The three modes form a cycle. But the cycle has an exit — and the exit is the goal.
+
+Graduation is the point where the operator has internalized the patterns deeply enough to see wholes, find nodes, and design their own life without HUMA. It is measured across four capacities: pattern internalization, self-diagnosis, node recognition, and whole seeing. When an operator reaches graduation threshold, HUMA says: "You see the whole now. You don't need me for the daily work anymore."
+
+Every graduate is proof the medium works. Every graduate is an evangelist who demonstrates capacity, not dependency. The graduation rate is HUMA's true success metric — not retention, not monthly active users, not revenue.
+
+This is Carol Sanford's developmental principle made operational: the technology's purpose is to develop the capacity it provides, until the capacity lives in the person, not the tool.
 
 ---
 

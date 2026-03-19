@@ -1032,6 +1032,103 @@ MATCH patterns
 
 *The query language is aspirational. The MVP implements this as AI-mediated search: the AI reads the pattern library and identifies relevant patterns based on the operator's context. Formal query language comes with the protocol specification.*
 
+### Pattern Discovery Pipeline
+
+New patterns are discovered through three channels:
+
+1. **Researcher skill** — Claude mines source traditions, translates patterns
+   across domains, and identifies structural gaps (see huma-researcher skill)
+2. **Operator practice** — Operators living through HUMA surface patterns
+   through seasonal reviews (future — requires Evolve Mode)
+3. **Community contribution** — External contributors submit patterns
+   through the contributor protocol (future — requires open RPPL spec)
+4. **Population simulation** — Synthetic operators run through HUMA's full
+   Design → Operate → Evolve arc, producing emergent patterns, cascade
+   validation data, dimension coupling models, and RPPL grammar rules
+   (see huma-researcher skill, Program 4: SIMULATE)
+
+All patterns must pass the completeness checklist (16/20 minimum) and
+stress testing before entering the library. Research logs are maintained
+in docs/research/.
+
+### Pattern Compilation
+
+Patterns are executable, not just readable. The compiler takes (pattern + operator field) and produces an adapted action plan.
+
+Compilation resolves six operations:
+1. **Domain Selection** — which adaptation applies given the operator's context
+2. **Field Constraints** — how the operator's dimensions, behavioral profile, and energy capacity modify the pattern's parameters
+3. **Prerequisite Check** — whether the field satisfies pattern requirements; if not, recommend prerequisite patterns
+4. **Conflict Check** — whether active patterns interfere; surface tensions explicitly
+5. **Node Identification** — where in the operator's situation this pattern has maximum leverage
+6. **Capital Prediction** — what capitals this pattern will build and cost in this specific field
+
+The compiler is implemented as a structured prompt that receives pattern YAML + operator field data and produces the adapted plan. Compiler quality is measurable and improvable via the researcher's TUNE program.
+
+### Field Dynamics Model
+
+After sufficient population simulation data (target: 50 operators × 12 weeks = 600 operator-weeks), a dimensional coupling model can be estimated:
+
+```
+D_i(t+1) = D_i(t)
+  + Σ_j [coupling(i,j) × ΔD_j(t)]      # cross-dimension effects
+  + pattern_impact(active_patterns, i)    # pattern effects
+  + disruption(i, t)                      # random life events
+  - decay(i)                              # natural decay without maintenance
+```
+
+Key parameters to discover:
+* `coupling(i,j)` matrix — 8×8 directional coupling strengths
+* `decay(i)` rates — how fast each dimension declines without active patterns
+* `phase_transition` thresholds — nonlinear breakpoints (e.g., money < 1.5 triggers system-wide crisis acceleration)
+* `flourishing` thresholds — when 3+ dimensions above 4, positive cascades amplify
+
+The model starts crude and refines with more data. Initial estimates come from simulation; real operator data validates and adjusts.
+
+### Transformer Schema
+
+Transformers are discoverable structural mechanisms for cross-domain pattern transfer. Schema:
+
+```yaml
+transformer:
+  id: string                    # Format: "rppl:transformer:{name}:{version}"
+  name: string
+  source_pattern: string        # Pattern ID
+  domain_pair: [string, string] # The two domains bridged
+
+  preserves:                    # What the principle maintains across domains
+    - string
+
+  modifies:                     # What changes between domains
+    - aspect: string
+      domain_a: string          # How it expresses in domain A
+      domain_b: string          # How it expresses in domain B
+
+  breaks_when:                  # Where the analogy fails
+    - string
+
+  provenance:
+    discovered_by: string       # researcher | operator | contributor
+    discovery_method: string    # cross-domain-translation | simulation | practice
+    date: string
+```
+
+### Living Pattern Evolution
+
+Pattern lifecycle stages:
+
+| Stage | Trigger | What Changes |
+|---|---|---|
+| Birth | Discovery via researcher or contribution | Pattern enters library at "seed" confidence |
+| Application | Operator applies pattern | Application count increments, context recorded |
+| Mutation | Operator adapts pattern to their field | Adaptation recorded as variant |
+| Selection | Successful adaptations reinforced | Success rate by context updates, visibility weighted |
+| Speciation | Variant diverges significantly | New pattern created, referencing parent |
+| Evolution | Aggregated data from applications | Steps, prerequisites, failure modes update |
+| Death | Success rate < 30% after 50+ applications | Pattern deprecated with full evolutionary history |
+
+Implementation: the validation section of the pattern schema already supports applications count, success_rate, and contexts array. Evolution requires a pattern_history field and variant tracking.
+
 ---
 
 ## 11 — Protocol Layer: Validation System

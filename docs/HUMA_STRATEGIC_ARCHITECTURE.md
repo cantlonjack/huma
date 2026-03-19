@@ -52,6 +52,22 @@ You start measuring something. The measurement becomes the target. The target di
 
 **The defense:** Measure capability, not activity. The Sanford test — is the operator more capable of seeing wholes, finding nodes, and designing for coherence than they were before? — is the only metric that matters. Track "graduation rate": how many operators, after 6 months, are making decisions they couldn't have made before — even without opening the app.
 
+### The Graduation Metric
+
+HUMA's north star metric is not MAU, not revenue, not retention. It is graduation rate — the percentage of operators who develop the capacity to design their own lives without HUMA.
+
+This is a deliberate inversion of standard SaaS metrics. A product that optimizes for retention creates dependency. A product that optimizes for graduation creates capacity. The business model must account for this: revenue comes from Operate Mode subscriptions, but success is measured by how quickly operators no longer need Operate Mode.
+
+The defense against Metric Capture is encoding the graduation metric at the architectural level. If the board ever asks "how do we reduce churn?" the answer is already built: "Churn from graduation is success. Churn from dissatisfaction is failure. We measure both separately."
+
+Four graduation capacities, scored 0-100:
+1. Pattern Internalization (0-25) — executing patterns without prompting
+2. Self-Diagnosis (0-25) — identifying systemic causes independently
+3. Node Recognition (0-25) — finding leverage points in novel situations
+4. Whole Seeing (0-25) — thinking in systems unprompted
+
+Graduation threshold: 75/100.
+
 ### Mechanism 5: Narrative Capture
 
 The story you tell about what you're building starts to constrain what you actually build. You stop building what operators need and start building what fits the story.
@@ -168,6 +184,28 @@ People tell AI things they don't tell other humans. Not because AI is safer. Bec
 HUMA's weekly review taps into this directly. An operator can't tell their partner that Joy is at 2 and has been declining for months. They can't tell their business partner that Purpose feels hollow. But they can type a number into HUMA.
 
 **Design implication:** Operate Mode should feel private, calm, and slightly sacred. Not a productivity dashboard. A quiet room where someone can be honest with themselves. The breathing glow. Minimal text. Maximum space. The confession booth effect is why the retention loop works. It's not habit — it's need.
+
+### The Simulation Bootstrap
+
+HUMA's network effect requires operators generating wisdom through practice.
+But the chicken-and-egg problem is real: the system needs patterns to be
+useful, and it needs usage to generate patterns.
+
+The solution: synthetic population simulation. Before real operators exist,
+50 synthetic lives are simulated through the full Design → Operate → Evolve
+arc, producing emergent patterns, cascade validation data, and RPPL grammar
+rules. This bootstraps the pattern library with practice-derived knowledge,
+not just theory-derived seed patterns.
+
+When real operators arrive, the system is already intelligent — not from
+books, but from simulated practice at population scale. Real operator data
+then validates, refines, and extends what the simulation discovered.
+
+### The Counter-Factual Moat
+
+Once the field dynamics model is mature (coupling strengths estimated, phase transitions mapped), HUMA can offer something no competitor can replicate: rigorous counter-factual analysis. "What happens if I quit my job?" answered not with generic advice but with model-driven predictions grounded in population data.
+
+This capability requires: (1) the dimensional coupling model from simulation data, (2) population-scale comparison data, (3) the operator's specific field data. All three are HUMA-specific assets that compound with use. The counter-factual engine is both the most powerful product feature and the deepest competitive moat.
 
 ---
 
