@@ -375,4 +375,47 @@ When the operator prints or exports to PDF:
 
 ---
 
+## 11 — Product Surface Components
+
+*These components are defined in `HUMA_PRODUCT_SURFACE.md` §11. Specs here for implementation reference.*
+
+### Tab Bar
+- Three labels: **Your Map** | **Your Day** | **Your Journey**
+- Active: sage-700, 2px underline
+- Inactive: ink-500
+- Desktop: top-right of header
+- Mobile: bottom bar (3 icons + labels)
+
+### Warmth Visuals (Canvas Elements)
+- **Faint:** 25% opacity, 1px sage-200 border, text at ink-400
+- **Emerging:** 55% opacity, 1px sage-300 border, text at ink-600
+- **Solid:** 100% opacity, sage-100 fill, sage-400 border, text at ink-800
+- **Shifting:** 80% opacity, amber-100 fill, amber-400 border
+- **Faded:** 15% opacity, dashed sage-200 border, text at ink-300
+
+### One-Thing Card
+- Sand-50 background, rounded-lg (12px)
+- sage-600 left border (4px) if connected to an active practice
+- ink-800 text for the action
+- ink-500 text for "this connects to"
+- Done button: sage-600 background, white text
+- Not today: outline, ink-500 text
+
+### Coherence Score
+- Displayed as a number only (no label by default)
+- ink-900, text-2xl, tabular-nums (Source Sans 3)
+- Small delta indicator: "+3" in sage-600 or "-2" in rose-500
+- Tooltip on tap: "Your coherence — how connected your life feels right now"
+
+### Shape (Share Card)
+- Dark background: ink-900 (#1A1714)
+- Shape fill: sage-400 at 25% opacity (current), sage-300 at 15% (previous)
+- Shape stroke: sage-400 (current), sage-300 (previous)
+- Axis labels: sand-300, text-xs
+- Name: sand-200, Cormorant Garamond
+- "HUMA" footer: sage-500, text-xs, letter-spacing 0.4em
+- Sizes: 1080x1080 (Instagram), 1200x630 (Twitter/OG)
+
+---
+
 *HUMA · Design System Specification · March 2026*

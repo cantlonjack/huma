@@ -10,7 +10,7 @@ The application makes money. The protocol makes history.
 
 **Beachhead market:** Regenerative agriculture operators and homesteaders. The architecture is universal. The first users are specific.
 
-**Current state:** MVP deployed at huma-two.vercel.app. Design Mode conversation (6 phases) functional. Living Canvas output at /map/[id]. Needs: split-screen progressive canvas build, spatial interactive canvas, landing page rebuild, voice/design consistency.
+**Current state:** MVP deployed at huma-two.vercel.app. Design Mode conversation (6 phases) functional. Living Canvas output at /map/[id]. Next: progressive depth entry (2-minute "What's on your mind?"), daily pulse, one-thing card, warmth system, spatial canvas with Palmer layout, shape-as-share-artifact.
 
 ---
 
@@ -57,15 +57,31 @@ There are 12 foundational documents. Each one answers a different question. **Co
 
 ## The Product in Brief
 
-### Three Modes
+### Progressive Depth (How People Enter)
 
-**DESIGN MODE (the hook):** A 6-phase conversation producing a Living Canvas. Free tier. Shareable. Done once, revisited seasonally.
+The entry is NOT the 40-minute conversation. It's a 2-minute check-in.
 
-**OPERATE MODE (the product):** Morning briefing (30 sec daily) + Weekly review (10 min Sunday). Validates life against the operator's own stated vision. $29/month. The retention loop.
+1. **Layer 1: "What's on your mind?"** (Day 1, 2 min) — One question. Connection insight + one-thing + invitation to return.
+2. **Layer 2: Daily Pulse** (Days 2-14, 30 sec) — 2-3 dimension check-in. Pattern detection by day 4.
+3. **Layer 3: One-Thing Card** (Day 5+) — One high-leverage action per day. Done / Not today.
+4. **Layer 4: Map Conversation** (Week 2-3, 15-20 min) — The 6-phase Design conversation, earned and shortened by existing context.
+5. **Layer 5: Full Depth** (Ongoing) — Full daily schedule, deep weekly review, seasonal review. Always available, never forced.
 
-**EVOLVE MODE (the moat):** Seasonal review (30 min quarterly). Canvas update. Pattern contribution to the commons. $99/month professional tier. The flywheel.
+### Three Tabs (What They See)
 
-### The 6-Phase Conversation
+**YOUR MAP** — The spatial canvas. Center-outward. Warmth system (faint → emerging → solid) shows what's tested vs. aspiration. The shape (capital radar) as a subtle background.
+
+**YOUR DAY** — Default: one-thing card. One action, hard stop reminder, Done/Not today. "See full day" and "Plan my week" available for depth. Weekly insight card on Sundays (30 sec default, "Go deeper" available).
+
+**YOUR JOURNEY** — Shape timeline. "What shifted" narrative. Seasonal review invitation quarterly.
+
+### Pricing
+
+**Free forever:** 2-minute entry, daily pulse, weekly insight (one-card), map conversation (once), shape sharing, "people like you" signals.
+
+**$29/month:** Daily one-thing card with compiled methods, full daily schedule, weekly planner, deep weekly review, practice recommendations, seasonal review, shape timeline, canvas versioning.
+
+### The 6-Phase Conversation (Layer 4)
 
 1. **Ikigai** — Who are you? Warm, curious. Ends with Essence synthesis.
 2. **Holistic Context** — What are you reaching for? QoL decomposition into operational chains. Gently challenging.
@@ -77,11 +93,11 @@ There are 12 foundational documents. Each one answers a different question. **Co
 ### The Key Innovation: QoL Decomposition
 
 ```
-QoL Statement ("Evenings free for my daughter")
-  → Enabling Conditions (all work done by 3pm)
-    → Weekly Commitments (Tue/Thu: pack days done by 2pm)
-      → Daily Behaviors (today's schedule with hard stop)
-        → Validation (how many evenings free? ___/7)
+"What matters" statement ("Evenings free for my daughter")
+  → What makes it work (all work done by 3pm)
+    → Weekly commitments (Tue/Thu: pack days done by 2pm)
+      → Daily behaviors (today's schedule with hard stop)
+        → Validation (daily pulse + weekly insight)
           → Adjustment (systemic, never personal)
 ```
 
@@ -89,15 +105,18 @@ When validation fails, HUMA ALWAYS looks at the system, NEVER at the person.
 
 ### The Living Canvas
 
-Center-outward spatial layout. NOT a linear document. NOT a dashboard.
+Center-outward spatial layout (Palmer clustering). NOT a linear document. NOT a dashboard. Warmth indicates testing status — faint is untested, solid is validated.
 
-1. Center: Essence Core (name, place, phrase, breathing glow)
-2. QoL nodes (sage pills) radiating from center
-3. Production/Resource nodes (amber/sky pills)
-4. Capital Profile (radar chart, 8 axes, organic curves)
-5. Enterprise Cards (accent bars, micro-ledger, capital dots)
-6. Nodal Interventions (cascade chains with animated flows)
-7. Weekly Rhythm (7-column grid, enterprise-colored blocks)
+1. Center: Who You Are (name, place, phrase, breathing glow)
+2. Ring 1: What Matters (quality of life commitments, sage pills)
+3. Ring 2: What Makes It Work (enabling actions, clustered by commitment)
+4. Ring 3: Your Practices (enterprises, methods, routines, frameworks)
+5. Perimeter: Where I'm Going (future resource base)
+6. Background: The Shape (capital radar, semi-transparent overlay)
+
+### The Share Artifact: Your Shape
+
+Not the canvas. **The shape.** Capital radar at two points in time. Dark background (earth-900), sage shapes. Sized for Instagram (1080x1080) and Twitter (1200x630). Every shared shape is distribution.
 
 ### RPPL Primitives
 
@@ -131,7 +150,11 @@ Read `/docs/HUMA_VOICE_BIBLE.md` for the full specification. These are the non-n
 - NEVER USE: optimize, productivity, hack, goals, accountability, mindset, journey, empower, unlock, self-care, wellness, boundaries, actionable, impactful, transformative
 
 **Response lengths:**
-- Weekly review insight: 3 sentences maximum
+- 2-minute entry response: Connection + one-thing + invitation. 3 short paragraphs maximum.
+- Daily pulse insight: 1-2 sentences maximum
+- One-thing card: Action + "this connects to" + Done/Not today. One card.
+- Weekly insight card: 1 observation + coherence number. 3 sentences maximum.
+- Deep weekly review insight: 3 sentences maximum (observation, diagnosis, action)
 - Morning briefing: 2 sentences maximum
 - Seasonal review: 2 paragraphs maximum
 - One question per message. Never two.
@@ -300,7 +323,7 @@ Does this feature help someone see a connection in their life they couldn't see 
 - Show connections between dimensions, not isolated insights
 - Use the operator's own language when reflecting back
 - Leave space after insights (silence is a feature)
-- Make the shared canvas beautiful enough to screenshot and share
+- Make the shared shape beautiful enough to screenshot and share
 - Develop the operator's capacity to see and decide for themselves
 
 ---

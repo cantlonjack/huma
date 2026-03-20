@@ -167,13 +167,11 @@ The constraint forces the AI to be precise, which makes it feel intelligent rath
 
 The first session is exciting (novelty of self-discovery). The second session is where people churn (the novelty is gone).
 
-**The defense:** Make the second session a different and compelling experience. The first time someone returns after their initial conversation, don't show them their static map. Show them what changed.
+**The defense (updated for progressive depth model):** With the 2-minute entry, the first session is NOT the 40-minute conversation — it's a short, potent interaction. The second session is the daily pulse: 30 seconds, 2-3 dimensions, tap and done. The bar is low enough that returning feels effortless.
 
-"It's been 5 days since your map was created. You said evenings free was your top QoL statement. How many evenings were actually free this week?"
+The critical insight: the "second session" problem is solved by making the first session small. When the first session is 2 minutes, the second session (30-second pulse) is a natural continuation, not a re-commitment. The trust builds through accumulated small moments, not through a single big experience.
 
-One question. One number. Then: "Your shape this week looks like this. Here's what I noticed."
-
-The second session takes 60 seconds, delivers one insight, and ends with anticipation: "Check back Sunday for your first weekly review." The transition from "cool map" to "I use this every week" is the most critical moment in the user journey.
+The transition from "I tried HUMA" to "I use HUMA" happens gradually over days 2-7, not in a single return visit. By the time the map conversation invitation arrives (week 2-3), the operator has already formed a daily habit. See `HUMA_PRODUCT_SURFACE.md` §03 for the full progressive depth model.
 
 ---
 
@@ -215,9 +213,9 @@ The standard network effect (more users → better patterns → better recommend
 
 The network effect that drives early growth: **making one person's success visible to their immediate community.**
 
-When Sarah creates her Living Canvas and shares it — and her neighbor sees the specific enterprises, the real revenue numbers, the weekly rhythm — that neighbor doesn't think "what a cool app." They think "Sarah has a plan and I don't. I need what she has."
+When Sarah shares her shape — the capital radar at two points in time, showing visible growth — her neighbor doesn't think "what a cool app." They think "Sarah can see something I can't. I want that."
 
-**Build the canvas to be shown to bankers, partners, neighbors, and mentors.** The shared artifact must be rich enough to function as a credibility artifact — evidence of systematic thinking with real numbers, realistic timelines, and a clear operational plan. That's the real audience for the shareable artifact.
+The primary share artifact is **the shape**, not the canvas. The shape is simple, beautiful, unique to every person, and immediately compelling. The canvas URL is still shareable (and functions as a credibility artifact with real numbers and operational plans), but the shape is what stops the scroll. See `HUMA_PRODUCT_SURFACE.md` §07.
 
 ---
 
@@ -225,11 +223,13 @@ When Sarah creates her Living Canvas and shares it — and her neighbor sees the
 
 The strongest predictor of whether someone becomes a user: how fast they reach the moment where the product knows something about them they didn't know about themselves.
 
-Currently that moment is 15-20 minutes into the conversation. Target: under 90 seconds.
+Target: under 2 minutes.
 
-**Approach:** Start with a structured 5-question intake. "Rate these 1-5, gut feeling only" — Body, People, Money, Home, Growth, Joy, Purpose, Identity. The shape appears instantly. Then HUMA says: "Your Money and Body are both at 2, and they're pulling People down with them. That's not three problems — it's one pattern."
+**Approach (updated for progressive depth):** The 2-minute entry. "What's on your mind right now?" One text field. The operator types something real. HUMA responds with three things: the connection (names a link between things they thought were separate), the one thing (a concrete action for today), and the invitation to return.
 
-That's the hook. The conversation deepens from there. But the shape — the visual proof that your life is a connected system — appears in the first minute.
+"Your money stress and your sleep aren't separate problems. They're the same system under pressure." — That's the coherence recognition moment, delivered in the first interaction. No 5-question intake. No shape visualization yet. Just the insight that makes them think "how did it know that?"
+
+The shape comes later — after the map conversation (week 2-3). But the magic moment happens on day one. See `HUMA_PRODUCT_SURFACE.md` §03 Layer 1.
 
 ---
 

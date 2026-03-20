@@ -235,10 +235,14 @@ The transition between tones should be gradual, not abrupt. Phase 2 doesn't sudd
 
 | Context | Hard Maximum | Target |
 |---------|-------------|--------|
+| 2-minute entry response | 3 short paragraphs | Connection + one-thing + invitation. The hook. |
+| Daily pulse insight | 2 sentences | One pattern noticed. Specific, not generic. |
+| One-thing card copy | 1 action + 1 connection | "Batch your harvest." "This connects to: evenings free." |
+| Weekly insight card | 3 sentences | One connection noticed + coherence number. |
+| Deep weekly review insight | 3 sentences | Observation, diagnosis, action. |
+| Morning briefing | 2 sentences | Today's weather-aware guidance. |
 | Onboarding messages (Phases 1-6) | No hard limit | 2-4 paragraphs. One question per message. |
 | Phase synthesis (AI portrait at phase transition) | 150 words | A short, dense paragraph. |
-| Weekly review insight | 3 sentences | Observation, diagnosis, action. |
-| Morning briefing | 2 sentences | Today's weather-aware guidance. |
 | Seasonal review reflection | 2 paragraphs | Where you were, where you are, the question for next season. |
 | Error/don't know | 2 sentences | What I don't know + who might. |
 
