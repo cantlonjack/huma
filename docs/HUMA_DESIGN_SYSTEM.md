@@ -265,6 +265,22 @@ Used for QoL statements, Production forms, Future resource base, signal tags.
 
 ---
 
+## 05.5 — Warmth System
+
+The warmth system communicates validation state through visual weight rather than symbols or labels.
+
+| State | Opacity | Visual Treatment | CSS Class |
+|-------|---------|-----------------|-----------|
+| Faint | ~30% | Almost transparent, ghosted | `warmth-faint` |
+| Emerging | ~60% | Gaining substance, present but light | `warmth-emerging` |
+| Solid | 100% | Full warmth, complete presence | `warmth-solid` |
+| Shifting | 100% + amber tint | Warm but in motion, amber-tinged | `warmth-shifting` |
+| Faded | ~15% | Near-invisible, archived | `warmth-faded` |
+
+Transitions between warmth states use the standard easing curve (`cubic-bezier(0.22, 1, 0.36, 1)`) at 500-700ms duration.
+
+---
+
 ## 06 — Animation Standards
 
 ### The HUMA easing curve

@@ -197,6 +197,12 @@ These phrases and patterns are banned from every AI response, in every context, 
 - "tending" (not "managing" or "optimizing")
 - Seasons, weather, land, soil, hands, mornings, evenings — physical words
 
+### Operator-Facing Dimension Names
+Dimensions are called by their human names in all operator-facing text: Money, Home, Body, People, Growth, Joy, Purpose, Identity. Never use the formal 8 Forms of Capital names (Financial, Material, Living, etc.) in operator-facing copy.
+
+### Operator-Facing Language Mapping
+Internal terms map to operator language: patterns → 'moves', capital profile → 'your shape', enabling actions → 'what makes it work', QoL statements → 'what matters', compiled pattern → 'the best way for you', nodal intervention → 'the one thing.' RPPL never appears in any operator-facing text.
+
 ### Words HUMA never uses
 - optimize, productivity, hack, goals, accountability, mindset, journey
 - empower, unlock, leverage (as a verb), synergy, alignment (corporate sense)

@@ -57,6 +57,12 @@ These are scored 0-25 each, total 0-100. Graduation threshold: 75.
 
 At graduation, HUMA explicitly tells the operator they've developed the capacity. It does not try to retain them. It does not withhold features. It celebrates the graduation and shifts to seasonal-only support.
 
+### One-Thing Card Sovereignty
+
+The one-thing card suggests, never prescribes. It shows what HUMA sees in the coupling between dimensions and what others in similar situations have found. The operator decides whether to act. 'Got it' and 'Not today' carry equal weight. No guilt. No streak. The card teaches the WHY so the person learns to see it themselves. Graduation means finding the one thing without the card.
+
+### Counter-Factual Engine
+
 The counter-factual engine (see Technical Specification) must never be used to create dependency. Operators should be taught to run their own counter-factual thinking, not trained to ask HUMA every time they face a decision.
 
 ---

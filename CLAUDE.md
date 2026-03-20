@@ -4,46 +4,39 @@
 
 HUMA is a living medium where the best way to do anything flows to the people who need it, shaped to their specific situation, and every life lived through it makes it smarter for everyone else.
 
-The product has two layers. The **application layer** is a for-profit product with three modes: Design (paint your reality and vision → receive a Living Canvas), Operate (daily/weekly guidance validated against your vision), and Evolve (seasonal reviews that update the map and contribute patterns to the commons). The **protocol layer** is RPPL: Reality Pattern Programming Language — an open standard for structured, contextual, validated, connected, living knowledge.
+The product has two layers. The **application layer** is a for-profit product with three modes: Design (Shape Builder + Map Conversation → Living Canvas), Operate (daily one-thing card + weekly shape morph validated against your vision), and Evolve (seasonal reviews that update the map and contribute patterns to the commons). The **protocol layer** is RPPL: Reality Pattern Protocol Layer — an open standard for structured, contextual, validated, connected, living knowledge. RPPL is internal/developer-facing only; users see "HUMA."
 
 The application makes money. The protocol makes history.
 
 **Beachhead market:** Regenerative agriculture operators and homesteaders. The architecture is universal. The first users are specific.
 
-**Current state:** MVP deployed at huma-two.vercel.app. Design Mode conversation (6 phases) functional. Living Canvas output at /map/[id]. Next: progressive depth entry (2-minute "What's on your mind?"), daily pulse, one-thing card, warmth system, spatial canvas with Palmer layout, shape-as-share-artifact.
+**Current state:** MVP deployed at huma-two.vercel.app. Design Mode conversation (6 phases) functional. Living Canvas output at /map/[id]. Next: Shape Builder entry (90 sec, 8 visual cards), daily shape pulse, one-thing card (sovereignty framing), warmth system, spatial canvas with Palmer layout, shape-as-share-artifact.
 
 ---
 
 ## Document Architecture
 
-There are 12 foundational documents. Each one answers a different question. **Consult the right document before making decisions in its domain.** Don't guess — read.
+There are 9 foundational documents + 1 portable context reference. Each answers a different question. **Consult the right document before making decisions in its domain.** Don't guess — read. Historical documents are archived in `docs/archive/`.
 
-### The Vision Layer (WHY)
+### Core Documents (read in this order for full context)
 
-| Document | Path | Consult When... |
-|----------|------|-----------------|
-| **Foundational Truth** | `/docs/HUMA_FOUNDATIONAL_TRUTH.md` | You need to understand what HUMA is, why it exists, or what the medium means. The north star. |
-| **Intellectual Lineage** | `/docs/HUMA_INTELLECTUAL_LINEAGE.md` | You need to understand where an idea comes from — the 8 source traditions and how they converge. |
-| **Strategic Architecture** | `/docs/HUMA_STRATEGIC_ARCHITECTURE.md` | You're making a decision that could affect HUMA's long-term trajectory — pricing, data handling, feature scope, growth mechanics, or anything related to capture/dependency. The 20 principles and 5 mechanisms of capture. |
+| # | Document | Path | Consult When... |
+|---|----------|------|-----------------|
+| 1 | **Vision & Strategy** | `/docs/HUMA_VISION_AND_STRATEGY.md` | What HUMA is, why it exists, strategic principles, sovereignty, pattern economy, capture resistance. **Read FIRST for any work.** |
+| 2 | **Product Surface** | `/docs/HUMA_PRODUCT_SURFACE.md` | **THE product surface specification.** What the operator sees, touches, and feels. Shape Builder, three tabs, progressive depth, warmth system, all specs. **Read this FIRST for any UI, component, page, or experience work.** |
+| 3 | **Technical Specification** | `/docs/HUMA_TECHNICAL_SPECIFICATION.md` | You're writing code. Data model, API routes, AI engine, database schema, component tree, build sequence. |
+| 4 | **Ethical Framework** | `/docs/HUMA_ETHICAL_FRAMEWORK.md` | You're handling operator data, building distress responses, designing feedback, or any feature touching sensitive information. Dependency test, data principles, one-thing card sovereignty. |
+| 5 | **Pattern Library** | `/docs/HUMA_PATTERN_LIBRARY.md` | You're working on patterns, the pattern schema, or any feature that surfaces patterns to operators. RPPL v0.1 schema + 12 seed patterns. |
+| 6 | **Voice Bible** | `/docs/HUMA_VOICE_BIBLE.md` | You're writing or modifying any AI prompt, any user-facing copy, or any notification text. Banned phrases, vocabulary, tone arc, dimension names. **Read this before touching any system prompt.** |
+| 7 | **Design System** | `/docs/HUMA_DESIGN_SYSTEM.md` | You're writing any CSS, choosing any color, sizing any element, or creating any animation. Palette, typography, spacing, warmth system, animation standards. **Read this before touching any styling.** |
+| 8 | **User Journey** | `/docs/HUMA_USER_JOURNEY.md` | You're building any user-facing feature. Maps stages from Shape Builder through graduation with emotional targets, data flows, churn points. |
+| 9 | **Intellectual Lineage** | `/docs/HUMA_INTELLECTUAL_LINEAGE.md` | You need deep context on WHY decisions were made. The 9 source traditions and how they converge. |
 
-### The Product Layer (WHAT)
+### Quick Reference
 
-| Document | Path | Consult When... |
-|----------|------|-----------------|
-| **Product Surface** | `/docs/HUMA_PRODUCT_SURFACE.md` | **THE product surface specification.** What the operator sees, touches, and feels. Supersedes HUMA_PRODUCT_UPGRADE.md. **Read this FIRST for any UI, component, page, or experience work.** |
-| **User Journey** | `/docs/HUMA_USER_JOURNEY.md` | You're building any user-facing feature. Maps 9 stages from discovery through graduation with emotional targets, data flows, churn points, and critical transitions. |
-| **Product Upgrade** | `/docs/HUMA_PRODUCT_UPGRADE.md` | **SUPERSEDED by HUMA_PRODUCT_SURFACE.md** — kept for historical reference only. Do not build from this document. |
-| **Design Clarification** | `/docs/HUMA_DESIGN_CLARIFICATION.md` | You need context on the three modes (Design/Operate/Evolve), the QoL decomposition, or the MapQuest→Google Maps analogy. The original design session record. |
-
-### The Execution Layer (HOW)
-
-| Document | Path | Consult When... |
-|----------|------|-----------------|
-| **Technical Specification** | `/docs/HUMA_TECHNICAL_SPECIFICATION.md` | You're writing code. Data model, API routes, AI engine architecture, phase transition mechanics, database schema, component tree, build sequence. |
-| **Voice & Language Bible** | `/docs/HUMA_VOICE_BIBLE.md` | You're writing or modifying any AI prompt, any user-facing copy, or any notification text. Banned phrases, paired examples, vocabulary, tone arc, edge cases. **Read this before touching any system prompt.** |
-| **Design System** | `/docs/HUMA_DESIGN_SYSTEM.md` | You're writing any CSS, choosing any color, sizing any element, or creating any animation. Complete palette, typography scale, spacing system, component specs, animation standards, dark mode. **Read this before touching any styling.** |
-| **Pattern Library** | `/docs/HUMA_PATTERN_LIBRARY.md` | You're working on the AI's recommendations, the pattern schema, or any feature that surfaces patterns to operators. RPPL v0.1 schema + 12 seed patterns fully specified. |
-| **Ethical Framework** | `/docs/HUMA_ETHICAL_FRAMEWORK.md` | You're handling operator data, building distress responses, designing feedback mechanisms, or any feature touching sensitive personal information. The dependency test, data principles, and edge case protocols. |
+| Document | Path | What It Is |
+|----------|------|------------|
+| **Complete Context** | `/docs/HUMA_COMPLETE_CONTEXT.md` | Portable onboarding summary. For new sessions. **Not a source of truth** — the 9 docs above are. |
 
 ### Design References (HTML)
 
@@ -59,27 +52,54 @@ There are 12 foundational documents. Each one answers a different question. **Co
 
 ### Progressive Depth (How People Enter)
 
-The entry is NOT the 40-minute conversation. It's a 2-minute check-in.
+The entry is NOT the 40-minute conversation. It's a 90-second Shape Builder.
 
-1. **Layer 1: "What's on your mind?"** (Day 1, 2 min) — One question. Connection insight + one-thing + invitation to return.
-2. **Layer 2: Daily Pulse** (Days 2-14, 30 sec) — 2-3 dimension check-in. Pattern detection by day 4.
-3. **Layer 3: One-Thing Card** (Day 5+) — One high-leverage action per day. Done / Not today.
+1. **Layer 1: Shape Builder** (Day 1, 60-90 sec) — 8 visual cards, one per dimension. Tap to rate. Structural insight + invitation to return.
+2. **Layer 2: Daily Shape Pulse** (Days 2-14, 15-30 sec) — Tap to adjust vertices that changed. Pattern detection by day 3-4.
+3. **Layer 3: One-Thing Card** (Day 5+) — One high-leverage suggestion per day. Socratic framing — shows coupling, operator decides. Got it / Not today (equal weight).
 4. **Layer 4: Map Conversation** (Week 2-3, 15-20 min) — The 6-phase Design conversation, earned and shortened by existing context.
-5. **Layer 5: Full Depth** (Ongoing) — Full daily schedule, deep weekly review, seasonal review. Always available, never forced.
+5. **Layer 5: Full Depth** (Ongoing) — Three-tab experience. Full daily schedule, deep weekly review, seasonal review. Always available, never forced.
+
+### Context Model (Sovereignty-Aligned)
+
+Context comes from four operator-controlled sources only:
+1. **Shape** — 8-dimension self-assessment (Shape Builder + Daily Pulse)
+2. **Conversation** — What the operator wants, values, reaches for (Map Conversation, earned at week 2-3)
+3. **Pulse** — Daily micro-updates, temporal patterns emerge by day 3-4
+4. **Community Wisdom** — Anonymized aggregate patterns from all operators
+
+No external data harvesting. No bank connections. No calendar sync. No health app integration. The operator tells HUMA what matters.
 
 ### Three Tabs (What They See)
 
-**YOUR MAP** — The spatial canvas. Center-outward. Warmth system (faint → emerging → solid) shows what's tested vs. aspiration. The shape (capital radar) as a subtle background.
+User-facing: "Your Map / Your Day / Your Journey." Internal/code: Design / Operate / Evolve.
 
-**YOUR DAY** — Default: one-thing card. One action, hard stop reminder, Done/Not today. "See full day" and "Plan my week" available for depth. Weekly insight card on Sundays (30 sec default, "Go deeper" available).
+**YOUR MAP** — The spatial canvas. Center-outward Palmer clustering. Warmth system (faint → emerging → solid → shifting → faded) shows testing status. The shape (capital radar) as a subtle background.
+
+**YOUR DAY** — Default: one-thing card (sovereignty framing — suggests, never prescribes). "See full day" and "Plan my week" available for depth. Weekly shape morph on Sundays (30-60 sec default, "Go deeper" for 5-8 min review).
 
 **YOUR JOURNEY** — Shape timeline. "What shifted" narrative. Seasonal review invitation quarterly.
 
+### Dimension Mapping
+
+| Internal (8 Forms of Capital) | User-Facing |
+|-------------------------------|-------------|
+| Financial | Money |
+| Material | Home |
+| Living/Natural | Body |
+| Social | People |
+| Intellectual | Growth |
+| Experiential | Joy |
+| Spiritual | Purpose |
+| Cultural | Identity |
+
+Time and Wisdom reserved as future fields.
+
 ### Pricing
 
-**Free forever:** 2-minute entry, daily pulse, weekly insight (one-card), map conversation (once), shape sharing, "people like you" signals.
+**Free forever:** Shape Builder, daily pulse, weekly insight (one-card: shape morph + coherence delta), map conversation (once), shape sharing, "people like you" signals.
 
-**$29/month:** Daily one-thing card with compiled methods, full daily schedule, weekly planner, deep weekly review, practice recommendations, seasonal review, shape timeline, canvas versioning.
+**$29/month Operate:** Daily one-thing card with compiled methods, full daily schedule, weekly planner, deep weekly review (5-8 min), practice recommendations, seasonal review, shape timeline, canvas versioning.
 
 ### The 6-Phase Conversation (Layer 4)
 
@@ -118,15 +138,17 @@ Center-outward spatial layout (Palmer clustering). NOT a linear document. NOT a 
 
 Not the canvas. **The shape.** Capital radar at two points in time. Dark background (earth-900), sage shapes. Sized for Instagram (1080x1080) and Twitter (1200x630). Every shared shape is distribution.
 
-### RPPL Primitives
+### RPPL Primitives (Reality Pattern Protocol Layer)
 
-| Primitive | What It Is |
-|-----------|------------|
-| **Essences** | Irreducible identity. Not data but a living singularity the system respects. |
-| **Patterns** | Structured, context-sensitive, validated units of practical wisdom. |
-| **Fields** | Total context within which patterns express. Same pattern + different field = different expression. |
-| **Nodes** | Points of maximum leverage. One action that cascades through the whole system. |
-| **Transformers** | Cross-domain bridges. Convert patterns between contexts while preserving principles. |
+RPPL is the open technical protocol. Internal/developer-facing only — users see "HUMA." In educational contexts: "pattern literacy." In philosophical contexts: "perceptual grammar."
+
+| Primitive | What It Is | The Capacity |
+|-----------|------------|--------------|
+| **Essences** | Irreducible identity. Not data but a living singularity the system respects. | See what something IS |
+| **Patterns** | Structured, context-sensitive, validated units of practical wisdom. | See recurring structures |
+| **Fields** | Total context within which patterns express. Same pattern + different field = different expression. | See total context |
+| **Nodes** | Points of maximum leverage. One action that cascades through the whole system. | See leverage |
+| **Transformers** | Cross-domain bridges. Convert patterns between contexts while preserving principles. | See across domains |
 
 ---
 
@@ -150,7 +172,7 @@ Read `/docs/HUMA_VOICE_BIBLE.md` for the full specification. These are the non-n
 - NEVER USE: optimize, productivity, hack, goals, accountability, mindset, journey, empower, unlock, self-care, wellness, boundaries, actionable, impactful, transformative
 
 **Response lengths:**
-- 2-minute entry response: Connection + one-thing + invitation. 3 short paragraphs maximum.
+- Shape Builder insight: Structural insight + one connection + invitation to return. 3 short paragraphs maximum.
 - Daily pulse insight: 1-2 sentences maximum
 - One-thing card: Action + "this connects to" + Done/Not today. One card.
 - Weekly insight card: 1 observation + coherence number. 3 sentences maximum.
@@ -193,6 +215,8 @@ Read `/docs/HUMA_DESIGN_SYSTEM.md` for the full specification. These are the non
 Read `/docs/HUMA_ETHICAL_FRAMEWORK.md` for the full specification.
 
 **The Dependency Test:** Does this feature develop the operator's capacity, or create dependency? If dependency, redesign.
+
+**The One-Thing Card:** Suggests, never prescribes. Shows coupling and leverage so the operator learns to see it themselves. "Got it" and "Not today" carry equal weight. No guilt. No streak. Graduation = finding the one thing without the card.
 
 **When validation fails:** Look at the system, never at the person. "What changed?" not "Try harder."
 

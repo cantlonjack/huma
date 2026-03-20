@@ -11,13 +11,13 @@
 ## 01 — The Journey at a Glance
 
 ```
-DISCOVER → ARRIVE → FIRST TOUCH → DAILY PULSE → PATTERN RECOGNITION
+DISCOVER → ARRIVE → SHAPE BUILDER → DAILY PULSE → PATTERN RECOGNITION
     ↓                                                      ↓
- (days)                                              MAP CONVERSATION
+ (days)                                        ONE-THING CARD (day 5+)
                                                            ↓
-                                                     CANVAS MOMENT
+                                                     MAP CONVERSATION
                                                            ↓
-                                                    DAILY PRACTICE
+                                                  THREE TABS (full depth)
                                                            ↓
                                                   SEASONAL EVOLUTION
                                                            ↓
@@ -27,9 +27,9 @@ DISCOVER → ARRIVE → FIRST TOUCH → DAILY PULSE → PATTERN RECOGNITION
 The journey has nine stages. Each stage has a critical transition — a moment where the operator either continues or churns. Design effort should be concentrated at these transitions.
 
 **The three critical transitions (where most people are won or lost):**
-- First Touch → Daily Pulse (do they come back day 2?)
+- Shape Builder → Daily Pulse (do they come back day 2?)
 - Daily Pulse → Map Conversation (do they accept the invitation at week 2?)
-- Canvas Moment → Daily Practice (do they engage with the one-thing card?)
+- Map Conversation → Three Tabs (do they engage with the one-thing card?)
 
 ---
 
@@ -61,8 +61,8 @@ The operator clicks through to the landing page. The landing page must convert c
 
 **Data flow:** None. No account creation. No email capture. No cookies consent wall. Zero friction between curiosity and action.
 
-**Critical transition → First Touch:**
-They click "What's on your mind?" and arrive at /begin. This is NOT a 40-minute commitment. It's a 2-minute question. The threshold is as low as possible.
+**Critical transition → Shape Builder:**
+They click "See your shape" and arrive at /begin. This is NOT a 40-minute commitment. It's a 90-second visual assessment — the Shape Builder. The threshold is as low as possible.
 
 **What can go wrong:**
 - Two competing CTAs dilute the action
@@ -72,26 +72,26 @@ They click "What's on your mind?" and arrive at /begin. This is NOT a 40-minute 
 
 ---
 
-## 04 — Stage 3: First Touch (The 2-Minute Entry)
+## 04 — Stage 3: First Touch (Shape Builder)
 
-**Duration:** 2 minutes.
+**Duration:** 90 seconds.
 
-**What they experience:** One question: "What's on your mind right now?" One text field. Nothing else. No account creation. No explanation of what HUMA is.
+**What they experience:** The Shape Builder — a visual, 8-card assessment. Each card represents one dimension (Money, Home, Body, People, Growth, Joy, Purpose, Identity). The operator taps a level for each. No typing. No account creation. No explanation of what HUMA is.
 
-They type something real. HUMA responds in 15 seconds with three things:
-- **The Connection:** Names a link between things they thought were separate
+On completion, HUMA shows their shape (capital radar) immediately and responds with three things:
+- **The Connection:** Names a link between dimensions they thought were separate
 - **The One Thing:** A concrete, doable action for today
 - **The Invitation:** "Want to keep going? Come back tomorrow — I'll check in."
 
-**Emotional target:** Surprised recognition. "How did it know that?" The coherence recognition moment — happening in 2 minutes, not 40.
+**Emotional target:** Surprised recognition. "How did it know that?" The coherence recognition moment — happening in 90 seconds, not 40 minutes. The visual shape makes it tangible.
 
-**Data captured:** Their initial statement. Under the surface, HUMA identifies dimensions, coupling effects, and candidate patterns. None of this is shown. The operator just feels understood.
+**Data captured:** Their 8-dimension self-assessment. Under the surface, HUMA identifies dimension coupling, shape asymmetries, and candidate patterns. None of this is shown explicitly. The operator sees their shape and feels understood.
 
 **Critical transition → Daily Pulse:**
 They leave. They will either come back tomorrow — or they won't. The invitation is warm, not pushy. Within 24 hours, a gentle nudge: "Quick check-in? 30 seconds."
 
 **What can go wrong:**
-- The response feels generic (doesn't name THEIR specific connections)
+- The shape response feels generic (doesn't name THEIR specific connections)
 - The one-thing is too vague or too ambitious
 - The page asks for account creation before delivering value
 - The invitation feels like a marketing hook rather than genuine care
@@ -210,11 +210,11 @@ The operator now has the canvas AND the daily one-thing card. Do they engage wit
 
 ## 09 — Stage 8: Daily Practice (Ongoing)
 
-**Duration:** 30 seconds daily + 30 seconds weekly.
+**Duration:** 30 seconds daily + 30-60 seconds weekly.
 
 **What they experience:** The one-thing card each day. One action. Hard stop reminder. Done / Not today. No guilt.
 
-Sunday: one insight card. "Your sleep improved 2 nights after you did the expense list. Money clarity → better sleep." Coherence score. "Sounds right" / "That's not it." Optional: "Go deeper" for full validation review.
+Sunday: weekly shape morph (30-60 sec default). The operator sees their shape shift over the week — which dimensions moved, which held. One insight card. Coherence score. "Sounds right" / "That's not it." Optional: "Go deeper" for 5-8 minutes of full validation review.
 
 The canvas warms over time. Elements that hold up become solid. Elements that don't become faint or shift. The operator watches their map become more real.
 
@@ -267,7 +267,7 @@ At each stage, there are natural moments where the operator is most likely to sh
 
 | Stage | What They Share | Why | Where |
 |-------|----------------|-----|-------|
-| First Touch | A screenshot of HUMA's response | "This thing read my mind in 2 minutes" | Text to friend, social media |
+| Shape Builder | A screenshot of their shape | "This thing mapped my life in 90 seconds" | Text to friend, social media |
 | Canvas Moment | The shape or canvas URL | Pride in seeing the whole picture | Text to partner/friend, social media |
 | Week 4-6 | A weekly insight screenshot | "This thing sees connections I missed" | Social media, group chat |
 | Seasonal Review | The shape comparison | Visual proof of growth over time | Social media, newsletter, blog |
@@ -281,10 +281,10 @@ At each stage, there are natural moments where the operator is most likely to sh
 
 | Transition | Churn Risk | Defense |
 |------------|-----------|---------|
-| Landing → First Touch | High (70%+ bounce expected) | The problem section must name THEIR pain. One-question entry = zero commitment. |
-| First Touch → Day 2 Pulse | Very high | The 2-minute response must land. The invitation to return must feel natural. 24-hour nudge. |
+| Landing → Shape Builder | High (70%+ bounce expected) | The problem section must name THEIR pain. 90-second visual entry = zero commitment. |
+| Shape Builder → Day 2 Pulse | Very high | The shape + connection insight must land. The invitation to return must feel natural. 24-hour nudge. |
 | Daily Pulse → Map Conversation | High | Pattern recognition by day 5 builds trust. The invitation at week 2 is earned, not pushed. |
-| Canvas Moment → Daily Practice | Medium | The one-thing card bridges canvas insight to daily action. Canvas warmth creates feedback loop. |
+| Map Conversation → Three Tabs | Medium | The one-thing card bridges canvas insight to daily action. Canvas warmth creates feedback loop. |
 | Month 2-3 → Seasonal Review | Medium | Seasonal review creates a "fresh start" moment. Shape comparison creates visual payoff. |
 | Free → Paid | Medium | Paid tier (one-thing card + compiled methods + deep review) must deliver obvious daily value beyond the free insight. |
 
@@ -294,7 +294,7 @@ At each stage, there are natural moments where the operator is most likely to sh
 
 | Touchpoint | Free | Paid ($29/mo) |
 |------------|------|--------------|
-| 2-minute entry | Full | Full |
+| Shape Builder (90 sec) | Full | Full |
 | Daily pulse | Full | Full |
 | Weekly insight (one card) | Full | Full |
 | Map conversation | Full (once) | Full |

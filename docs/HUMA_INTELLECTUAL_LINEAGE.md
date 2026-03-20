@@ -2,7 +2,7 @@
 ## Intellectual Lineage & Foundational Sources
 ### A Research Document
 
-*How nine transformative intellectual traditions and one emergent operational principle converged to create the Regenerative Pattern Programming Language and the HUMA Living Systems Design Tool*
+*How nine transformative intellectual traditions and one emergent operational principle converged to create the Reality Pattern Protocol Layer and the HUMA Living Systems Design Tool*
 
 March 2026 · Confidential · Foundational Reading
 
@@ -290,7 +290,7 @@ Together, Huevo and Genesis proposed something radical: a structured knowledge l
 
 ### How It Lives in HUMA
 
-**→** The Huevo insight — cooking as programming — is the direct conceptual ancestor of RPPL: Regenerative Pattern Programming Language. Life dimensions are data. Patterns are functions. Pattern stacks are programs. HUMA is the compiler. The operator is the cook.
+**→** The Huevo insight — cooking as programming — is the direct conceptual ancestor of RPPL: Reality Pattern Protocol Layer. Life dimensions are data. Patterns are functions. Pattern stacks are programs. HUMA is the compiler. The operator is the cook.
 
 **→** The Genesis insight — AI to navigate a knowledge library and reveal creative paths — is the direct ancestor of HUMA's AI layer: intelligence that maps an operator's current state, identifies the most promising unexplored paths through the Pattern Library, and shows what happens if they take each one.
 
@@ -334,7 +334,7 @@ The hierarchy is not strictly sequential in practice — people pursue multiple 
 
 ## SOURCE 9 OF 9 — THE SYNTHESIS: RPPL
 
-**⚡ Regenerative Pattern Programming Language · Original synthesis — the convergence of all eight preceding sources · The Architecture of HUMA**
+**⚡ Reality Pattern Protocol Layer · Original synthesis — the convergence of all eight preceding sources · The Architecture of HUMA**
 
 **Contributes: ORIGINAL IP**
 
@@ -346,7 +346,7 @@ The hierarchy is not strictly sequential in practice — people pursue multiple 
 
 RPPL is not derived from a single source. It is the synthesis of all eight preceding intellectual traditions into a novel framework for managing living systems complexity through pattern-based design.
 
-The name itself encodes the lineage: **Regenerative** (Sanford + Roland + Savory + Perkins), **Pattern** (Alexander + Palmer + Doherty), **Programming** (Huevo/Bullipedia), **Language** (a structured, composable, executable system of meaning).
+The name itself encodes the lineage: **Reality** (the operator's actual situation, not aspirational abstractions), **Pattern** (Alexander + Palmer + Doherty), **Protocol** (structured, composable, interoperable — inspired by Huevo/Bullipedia), **Layer** (sits beneath the application, open and portable).
 
 RPPL treats a regenerative operation as a living system to be designed (not optimised), with each intervention drawn from a library of validated patterns (not invented ad hoc), applied to a defined holistic context (the Essence Layer portrait), and evaluated by its cascade effects across all 8 capitals.
 

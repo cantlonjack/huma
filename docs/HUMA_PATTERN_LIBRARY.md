@@ -6,6 +6,8 @@
 
 March 2026 · Foundational Architecture
 
+> **Note:** RPPL (Reality Pattern Protocol Layer) is the internal/developer-facing name. Users see 'HUMA' and interact with patterns as 'moves.' See HUMA_PRODUCT_SURFACE.md §13 for the full language mapping.
+
 ---
 
 ## 01 — What a Pattern Is

@@ -20,6 +20,8 @@ It is organized in three layers, from most concrete to most abstract:
 
 A technical co-founder should read sections 01–05 and be ready to start building. Sections 06–14 are the architecture they're building TOWARD — decisions made now must not foreclose these possibilities later.
 
+**Tab naming convention:** User-facing tab names are "Your Map / Your Day / Your Journey." Engineering uses Design / Operate / Evolve. This document uses the engineering names throughout.
+
 ---
 
 ## 01 — System Architecture Overview
@@ -259,6 +261,19 @@ type CapitalForm =
   | 'financial' | 'material' | 'living' | 'social'
   | 'intellectual' | 'experiential' | 'spiritual' | 'cultural';
 
+// ─── Dimension Name Mapping ───
+// Internal (8 Forms of Capital) → User-Facing
+//   Financial    → Money
+//   Material     → Home
+//   Living       → Body
+//   Social       → People
+//   Intellectual → Growth
+//   Experiential → Joy
+//   Spiritual    → Purpose
+//   Cultural     → Identity
+//
+// Note: Time and Wisdom are reserved as future fields in the data model.
+
 // ─── Nodal Intervention ───
 interface NodalIntervention {
   action: string;
@@ -428,6 +443,17 @@ CREATE INDEX idx_patterns_domain ON patterns(domain);
 CREATE INDEX idx_patterns_validation ON patterns(validation_score DESC);
 ```
 
+### Context Sources (Scoping Note)
+
+All operator context comes from four sources only:
+
+1. **Shape** — The 8-card visual assessment (capital profile + essence sketch)
+2. **Pulse** — Daily dimension check-ins (2-3 dimensions, 30 seconds)
+3. **Conversation** — The 6-phase Design conversation and weekly reviews
+4. **Community Wisdom** — Anonymized patterns from operators in similar contexts
+
+External data connections (bank accounts, calendars, health apps, screen time, location services) are **not in scope.** The system works from what the operator tells it, not from surveillance of their digital footprint.
+
 ---
 
 ## 04 — Beachhead MVP: AI Engine Architecture
@@ -596,9 +622,9 @@ class LocalModelProvider implements AIProvider {
                        "See your life as a connected whole"
                        Single CTA → /begin
 
-/begin ─────────────── Pre-conversation screen
-                       Name input + optional location
-                       → /conversation
+/begin ─────────────── Shape Builder (90-second, 8-card visual assessment)
+                       Builds initial capital profile + essence sketch
+                       → /conversation (if operator chooses to go deeper)
 
 /conversation ──────── The 6-phase AI conversation
                        Chat interface (left) + canvas preview (right, desktop)
@@ -673,9 +699,15 @@ src/
 
 Design Mode is the beachhead MVP extended with two additional capabilities:
 
-### Visual/Conversational Hybrid Onboarding
+### Entry: Shape Builder
 
-The pure conversation works but can be intimidating. The full Design Mode offers a hybrid:
+The primary entry point is the Shape Builder at `/begin` — a 90-second, 8-card visual assessment that produces an initial capital profile and essence sketch. This replaces the earlier text-based "What's on your mind?" entry. The Shape Builder is the operator's first experience with HUMA and must feel immediate, visual, and low-commitment.
+
+The full 6-phase conversation (below) is Layer 4 in the progressive depth model — earned by engagement over days/weeks, not required on day one.
+
+### Visual/Conversational Hybrid Onboarding (Layer 4)
+
+The full Design conversation works but can be intimidating. The full Design Mode offers a hybrid:
 
 ```
 Phase 1 (Ikigai):
@@ -700,10 +732,9 @@ Phase 2 (Holistic Context):
   - Operator validates or adjusts
 
 Phase 3 (Field/Landscape):
-  - Location input triggers data pre-fill (climate, geography)
   - Layer-by-layer guided assessment
   - Each layer: conversational OR quick-select options
-  - AI synthesizes with integrated data
+  - AI synthesizes operator-provided context
 
 Phase 4-6: Same as MVP but with richer visual presentation
 ```
@@ -745,13 +776,18 @@ GET /api/briefing
   Process:
     1. Load user's active map and weekly rhythm
     2. Determine today's day template
-    3. Check weather API for location (if available)
-    4. Check any flags from last weekly review
-    5. Generate 30-second briefing via AI
+    3. Check any flags from last weekly review
+    4. Generate 30-second briefing via AI
   Output: { briefing: string, tasks: Task[], hardStop: string }
 ```
 
 The briefing is a push notification or a card shown when the user opens the app. 30 seconds of reading. Not a dashboard — a message from a trusted farmhand.
+
+### One-Thing Card
+
+The default "Your Day" experience is the one-thing card: one high-leverage action per day, with Done / Not today buttons.
+
+**Sovereignty framing:** The one-thing card is a suggestion, not a prescription. It uses a Socratic approach — surfacing what the operator's own system is pointing toward, not dictating tasks. The operator always decides. If they tap "Not today," the system respects that without friction, guilt, or follow-up. The card connects the suggested action back to a QoL commitment so the operator sees *why* this matters in their terms.
 
 ### Weekly Review
 
@@ -923,92 +959,9 @@ Meta tags on /map/[id]:
 
 ### Pattern Schema (RPPL v0.1)
 
-```yaml
-# Every pattern in the RPPL library conforms to this schema.
-# This is the unit of knowledge that flows through the medium.
+The pattern schema defines the structure every pattern must conform to. The TypeScript interfaces for patterns are defined in Section 03 (`PatternContribution` in Section 08). The full YAML schema and field definitions live in the Pattern Library document.
 
-rppl_version: "0.1"
-pattern:
-  id: "rppl:batching:production-workflow:v1"
-  name: "Production Batching"
-  version: 1
-
-  # What situation this pattern addresses
-  situation:
-    description: "Repetitive production tasks spread across multiple days,
-                  creating context-switching overhead and inconsistent output"
-    domains: ["manufacturing", "agriculture", "food-service", "education"]
-    signals:
-      - "Same task done partially on multiple days"
-      - "Significant setup/teardown time per session"
-      - "Quality varies between sessions"
-
-  # What to do
-  action:
-    description: "Consolidate all instances of a repetitive task into
-                  dedicated batch sessions. Design batch size to fill
-                  the natural energy arc of a work session."
-    steps:
-      - "Inventory all instances of the task across your week"
-      - "Identify the natural batch size (enough to justify setup,
-         not so much it exceeds one session's energy)"
-      - "Assign dedicated time blocks for batch sessions"
-      - "Redesign physical space to support flow (all inputs staged)"
-    adaptations:
-      agriculture:
-        note: "Cluster same-harvest crops in adjacent beds to batch
-               harvest + wash + pack in a single flow"
-      education:
-        note: "Batch all grading for one assignment type in one session
-               rather than grading across assignments daily"
-
-  # Why it works
-  principle: "Context-switching has a cognitive and physical cost that
-              compounds with frequency. Batching amortizes setup cost
-              across more units and allows flow state to develop."
-
-  # Connections to other patterns
-  connections:
-    synergies:
-      - "rppl:time-blocking:weekly-rhythm:v2"
-      - "rppl:workspace-design:flow-station:v1"
-    prerequisites:
-      - "rppl:task-inventory:weekly-audit:v1"
-    conflicts:
-      - "rppl:responsive-scheduling:on-demand:v1"
-
-  # Holonic nesting
-  holonics:
-    part_of:
-      - "rppl:operational-efficiency:workflow-design:v1"
-    contains:
-      - "rppl:setup-reduction:staging:v1"
-      - "rppl:energy-management:session-sizing:v1"
-
-  # Validation
-  validation:
-    total_applications: 847
-    success_rate: 0.82
-    contexts_validated:
-      - { domain: "agriculture", sub: "CSA packing", n: 234, rate: 0.89 }
-      - { domain: "manufacturing", sub: "small batch", n: 156, rate: 0.84 }
-      - { domain: "education", sub: "grading", n: 89, rate: 0.76 }
-    avg_improvement: "28% time reduction, 15% quality improvement"
-    confidence: "proven"
-
-  # Attribution
-  attribution:
-    original_contributor:
-      id: "user:at-shoemaker-1847"
-      name: "Franz Müller"
-      context: "Bespoke shoemaking, Salzburg"
-      date: "2027-03-15"
-    significant_adaptations:
-      - contributor: "user:sarah-chen-rogue"
-        adaptation: "Bed-layout clustering for harvest batching"
-        date: "2027-08-22"
-        validation_boost: 0.04
-```
+> **See HUMA_PATTERN_LIBRARY.md for the 12 seed patterns and full pattern specifications.** The Pattern Library owns all pattern content; this section covers only protocol-level schema design and query mechanics.
 
 ### Pattern Query Language
 
@@ -1300,7 +1253,7 @@ The AI engine must never:
 - [ ] Project setup (Next.js, Tailwind, Supabase)
 - [ ] Database schema (users, conversations, messages, maps)
 - [ ] AI engine: prompt builder + response parser
-- [ ] Pre-conversation name/location screen
+- [ ] Shape Builder (8-card visual assessment at /begin)
 - [ ] 6-phase conversation flow with real Claude API
 - [ ] Basic chat UI with phase indicator
 
@@ -1321,6 +1274,7 @@ The AI engine must never:
 - [ ] First pattern contributions (manual curation)
 
 ### Month 2–3: Operate Mode (v1.5)
+- [ ] One-thing card (sovereignty framing: suggestion not prescription)
 - [ ] Weekly review flow
 - [ ] QoL validation tracking
 - [ ] Pattern recognition across weeks
