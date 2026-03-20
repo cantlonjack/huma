@@ -16,7 +16,7 @@ The application makes money. The protocol makes history.
 
 ## Document Architecture
 
-There are 11 foundational documents. Each one answers a different question. **Consult the right document before making decisions in its domain.** Don't guess — read.
+There are 12 foundational documents. Each one answers a different question. **Consult the right document before making decisions in its domain.** Don't guess — read.
 
 ### The Vision Layer (WHY)
 
@@ -30,8 +30,9 @@ There are 11 foundational documents. Each one answers a different question. **Co
 
 | Document | Path | Consult When... |
 |----------|------|-----------------|
+| **Product Surface** | `/docs/HUMA_PRODUCT_SURFACE.md` | **THE product surface specification.** What the operator sees, touches, and feels. Supersedes HUMA_PRODUCT_UPGRADE.md. **Read this FIRST for any UI, component, page, or experience work.** |
 | **User Journey** | `/docs/HUMA_USER_JOURNEY.md` | You're building any user-facing feature. Maps 9 stages from discovery through graduation with emotional targets, data flows, churn points, and critical transitions. |
-| **Product Upgrade** | `/docs/HUMA_PRODUCT_UPGRADE.md` | You're working on the conversation experience, the Living Canvas, or any interactive behavior. The 4-phase plan to transform HUMA from text generator to design tool. |
+| **Product Upgrade** | `/docs/HUMA_PRODUCT_UPGRADE.md` | **SUPERSEDED by HUMA_PRODUCT_SURFACE.md** — kept for historical reference only. Do not build from this document. |
 | **Design Clarification** | `/docs/HUMA_DESIGN_CLARIFICATION.md` | You need context on the three modes (Design/Operate/Evolve), the QoL decomposition, or the MapQuest→Google Maps analogy. The original design session record. |
 
 ### The Execution Layer (HOW)

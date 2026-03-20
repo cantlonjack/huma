@@ -25,9 +25,13 @@ Google Maps gives you turn-by-turn guidance that knows where you are RIGHT NOW, 
 
 HUMA is Google Maps for regenerative life design.
 
+And Google Maps doesn't start with a 40-minute route planning session. It starts with: *where are you going?* One question. One answer. Turn-by-turn guidance begins immediately. HUMA follows the same principle — the 2-minute entry ("What's on your mind?") delivers value immediately. The full map conversation is earned through progressive engagement, not demanded upfront. See `HUMA_PRODUCT_SURFACE.md` for the complete progressive depth model.
+
 ---
 
 ## The Three Modes
+
+> **Note (March 2026):** The three modes map to three tabs (**Your Map** / **Your Day** / **Your Journey**), but the ENTRY to the product is NOT the Design conversation. The entry is the 2-minute check-in ("What's on your mind?"). The full map conversation is earned through 1-2 weeks of daily engagement. See `HUMA_PRODUCT_SURFACE.md` for the progressive depth model.
 
 ### Mode 1: Design (the initial conversation — done once, revisited seasonally)
 

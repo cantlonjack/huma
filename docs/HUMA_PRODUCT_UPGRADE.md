@@ -1,3 +1,10 @@
+> **SUPERSEDED** — This document has been superseded by
+> `HUMA_PRODUCT_SURFACE.md`. The architectural concepts here
+> (spatial canvas, progressive build, interactive behaviors) remain
+> valid but the product surface, entry experience, and tab structure
+> have been fundamentally redesigned for mass adoption. Build from
+> the Product Surface spec, not this document.
+
 # HUMA Product UI/UX Upgrade
 ## From Text Generator to Living Design Tool
 
