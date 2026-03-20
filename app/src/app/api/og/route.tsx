@@ -2,14 +2,195 @@ import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 
+// Sample map data for static rendering (no DB call needed)
+const SAMPLE_MAPS: Record<string, { name: string; location: string; phrase: string; enterprises: string[] }> = {
+  sample: {
+    name: "Sarah Chen",
+    location: "Southern Oregon, Rogue Valley",
+    phrase: "A builder who works through living systems",
+    enterprises: ["No-Dig Market Garden", "Farm Education", "Preserved Foods", "Native Plant Nursery"],
+  },
+};
+
+async function fetchMapData(id: string) {
+  // Check static samples first
+  if (SAMPLE_MAPS[id]) return SAMPLE_MAPS[id];
+
+  // Try Supabase REST API directly (edge-compatible)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseKey) return null;
+
+  try {
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/maps?id=eq.${encodeURIComponent(id)}&select=name,location,canvas_data`,
+      {
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+        },
+      }
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    if (!rows || rows.length === 0) return null;
+
+    const row = rows[0];
+    const canvas = typeof row.canvas_data === "string" ? JSON.parse(row.canvas_data) : row.canvas_data;
+
+    return {
+      name: row.name || canvas?.essence?.name || "an Operator",
+      location: row.location || canvas?.essence?.land || "",
+      phrase: canvas?.essence?.phrase || "",
+      enterprises: (canvas?.enterprises || []).slice(0, 4).map((e: { name: string }) => e.name),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
+  const id = url.searchParams.get("id");
   const name = url.searchParams.get("name");
   const location = url.searchParams.get("location") || "";
   const enterprises = url.searchParams.get("enterprises") || "";
 
-  // Homepage OG image (no params)
-  const isHomepage = !name;
+  // Per-map OG image
+  if (id) {
+    const mapData = await fetchMapData(id);
+
+    if (mapData) {
+      return new ImageResponse(
+        (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "linear-gradient(180deg, #FAF8F3 0%, #EDE6D8 100%)",
+              fontFamily: "Georgia, serif",
+              padding: "48px 64px",
+            }}
+          >
+            {/* HUMA wordmark */}
+            <div
+              style={{
+                display: "flex",
+                fontSize: 16,
+                fontWeight: 500,
+                letterSpacing: "0.35em",
+                color: "#3A5A40",
+                marginBottom: 32,
+              }}
+            >
+              HUMA
+            </div>
+
+            {/* Operator name */}
+            <div
+              style={{
+                display: "flex",
+                fontSize: 52,
+                fontWeight: 400,
+                color: "#1A1714",
+                textAlign: "center",
+                lineHeight: 1.15,
+                marginBottom: 12,
+              }}
+            >
+              {mapData.name}
+            </div>
+
+            {/* Location */}
+            {mapData.location && (
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: 20,
+                  fontWeight: 300,
+                  color: "#8C8274",
+                  marginBottom: 16,
+                }}
+              >
+                {mapData.location}
+              </div>
+            )}
+
+            {/* Essence phrase */}
+            {mapData.phrase && (
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: 22,
+                  fontWeight: 300,
+                  fontStyle: "italic",
+                  color: "#3A5A40",
+                  textAlign: "center",
+                  maxWidth: 800,
+                  marginBottom: 36,
+                }}
+              >
+                {`"${mapData.phrase}"`}
+              </div>
+            )}
+
+            {/* Enterprise pills */}
+            {mapData.enterprises.length > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  flexWrap: "wrap",
+                  justifyContent: "center",
+                  marginBottom: 40,
+                }}
+              >
+                {mapData.enterprises.map((ent: string) => (
+                  <div
+                    key={ent}
+                    style={{
+                      display: "flex",
+                      padding: "8px 20px",
+                      borderRadius: 100,
+                      border: "1px solid #C4D9C6",
+                      background: "#EBF3EC",
+                      fontSize: 15,
+                      fontWeight: 500,
+                      color: "#3A5A40",
+                    }}
+                  >
+                    {ent}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Footer */}
+            <div
+              style={{
+                display: "flex",
+                fontSize: 14,
+                color: "#8C8274",
+                letterSpacing: "0.08em",
+              }}
+            >
+              Living Canvas — HUMA
+            </div>
+          </div>
+        ),
+        { width: 1200, height: 630 }
+      );
+    }
+
+    // Fallback: id provided but no data found — render generic
+  }
+
+  // Legacy/generic OG image (no id, uses name/location/enterprises params)
+  const isHomepage = !name && !id;
 
   const subtitleParts = [];
   if (location) subtitleParts.push(location);

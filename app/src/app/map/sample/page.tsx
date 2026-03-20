@@ -8,12 +8,12 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Sample Living Canvas — HUMA",
     description: "See what HUMA produces: complete Living Canvases for a land operator and an urban life designer.",
-    images: [{ url: "/api/og?name=Sample%20Maps&location=Land%20%2B%20Life&enterprises=4", width: 1200, height: 630 }],
+    images: [{ url: "/api/og?id=sample", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Sample Living Canvas — HUMA",
-    images: ["/api/og?name=Sample%20Maps&location=Land%20%2B%20Life&enterprises=4"],
+    images: ["/api/og?id=sample"],
   },
 };
 

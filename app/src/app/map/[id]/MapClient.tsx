@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import MapDocument from "@/components/MapDocument";
 import LivingCanvas from "@/components/canvas/LivingCanvas";
 import type { CanvasData } from "@/engine/canvas-types";
-import { copyCurrentUrl } from "@/lib/clipboard";
 import MapToolbar from "@/components/MapToolbar";
+import ShareButton from "@/components/ShareButton";
 
 interface MapClientProps {
   id: string;
@@ -17,7 +17,6 @@ export default function MapClient({ id }: MapClientProps) {
   const [markdown, setMarkdown] = useState<string | null>(null);
   const [canvasData, setCanvasData] = useState<CanvasData | null>(null);
   const [error, setError] = useState(false);
-  const [showToast, setShowToast] = useState(false);
   const [view, setView] = useState<ViewMode>("canvas");
 
   useEffect(() => {
@@ -71,14 +70,6 @@ export default function MapClient({ id }: MapClientProps) {
     return () => { cancelled = true; };
   }, [id]);
 
-  const handleShare = async () => {
-    const ok = await copyCurrentUrl();
-    if (ok) {
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 2000);
-    }
-  };
-
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center px-6">
@@ -120,12 +111,7 @@ export default function MapClient({ id }: MapClientProps) {
         onViewChange={setView}
         onPrint={() => window.print()}
       >
-        <button
-          onClick={handleShare}
-          className="px-4 sm:px-5 py-2 text-sm border border-sand-300 rounded-full text-earth-500 hover:border-sage-400 hover:text-sage-700 transition-all whitespace-nowrap"
-        >
-          Share
-        </button>
+        <ShareButton canvasData={canvasData} />
         <a
           href="/"
           className="px-4 sm:px-5 py-2 text-sm bg-amber-600 text-white rounded-full hover:bg-amber-700 transition-all font-medium whitespace-nowrap"
@@ -141,11 +127,6 @@ export default function MapClient({ id }: MapClientProps) {
         <MapDocument markdown={markdown} />
       )}
 
-      {showToast && (
-        <div className="toast">
-          Link copied to clipboard
-        </div>
-      )}
     </div>
   );
 }

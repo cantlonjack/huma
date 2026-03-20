@@ -88,9 +88,18 @@ export interface SeasonalPhase {
   protectAtAllCosts: string;
 }
 
+export interface QoLNode {
+  statement: string;
+  enablingConditions?: string[];
+  weeklyCommitments?: string[];
+  validationQuestion?: string;
+  target?: string;
+  failureResponse?: string;
+}
+
 export interface CanvasData {
   essence: { name: string; land: string; phrase: string };
-  qolNodes: string[];
+  qolNodes: (string | QoLNode)[];
   productionNodes: string[];
   resourceNodes: string[];
   capitalProfile: CapitalScore[];

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { ValidationCheck } from "@/engine/canvas-types";
+import type { ValidationCheck, QoLNode } from "@/engine/canvas-types";
 import QoLCheckForm from "./QoLCheckForm";
 import ReviewInsight from "./ReviewInsight";
 
@@ -12,7 +12,7 @@ interface WeeklyReviewFlowProps {
   operatorName: string;
   location: string;
   validationChecks: ValidationCheck[];
-  qolNodes: string[];
+  qolNodes: (string | QoLNode)[];
 }
 
 export default function WeeklyReviewFlow({

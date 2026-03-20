@@ -260,13 +260,14 @@ textarea:focus-visible {
   bottom: 2rem;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--color-earth-800);
+  background: var(--color-sage-600);
   color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 999px;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
   font-size: 0.875rem;
+  font-family: var(--font-sans);
   z-index: 100;
-  animation: toast-in 0.3s ease, toast-out 0.3s ease 1.7s forwards;
+  animation: toast-in 300ms cubic-bezier(0.22, 1, 0.36, 1), toast-out 300ms cubic-bezier(0.22, 1, 0.36, 1) 1.7s forwards;
 }
 
 @keyframes toast-in {
@@ -275,8 +276,63 @@ textarea:focus-visible {
 }
 
 @keyframes toast-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
+  from { opacity: 1; transform: translateX(-50%) translateY(0); }
+  to { opacity: 0; transform: translateX(-50%) translateY(4px); }
+}
+
+/* ─── Share Dropdown ─── */
+
+@keyframes share-dropdown-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes share-card-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ─── Spatial Canvas Animations ─── */
+
+@keyframes spatial-essence-enter {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes spatial-essence-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.03); opacity: 1; }
+}
+
+@keyframes spatial-pill-enter {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.spatial-essence-enter {
+  animation: spatial-essence-enter 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.spatial-essence-breathe {
+  animation: spatial-essence-breathe 6s ease-in-out infinite;
+}
+
+.spatial-pill-enter {
+  opacity: 0;
+  animation: spatial-pill-enter 600ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spatial-essence-enter,
+  .spatial-pill-enter {
+    animation-duration: 0ms;
+    opacity: 1;
+  }
+
+  .spatial-essence-breathe {
+    animation: none;
+    opacity: 0.9;
+  }
 }
 
 /* ─── Print Styles ─── */

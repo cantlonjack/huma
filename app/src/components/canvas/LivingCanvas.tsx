@@ -1,12 +1,8 @@
 "use client";
 
 import type { CanvasData } from "@/engine/canvas-types";
-import EssenceCore from "./EssenceCore";
+import SpatialCanvas from "./SpatialCanvas";
 import RingLabel from "./RingLabel";
-import QoLRing from "./QoLRing";
-import ProductionRing from "./ProductionRing";
-import ResourceRing from "./ResourceRing";
-import CapitalConstellation from "./CapitalConstellation";
 import FieldLayers from "./FieldLayers";
 import EnterpriseCards from "./EnterpriseCards";
 import NodalActions from "./NodalActions";
@@ -20,60 +16,43 @@ interface LivingCanvasProps {
 
 export default function LivingCanvas({ data }: LivingCanvasProps) {
   return (
-    <div className="canvas-container max-w-[840px] mx-auto px-6 py-8">
-      {/* Essence Core */}
-      <EssenceCore
-        name={data.essence.name}
-        land={data.essence.land}
-        phrase={data.essence.phrase}
-      />
+    <div className="canvas-container">
+      {/* ── Spatial Zone (SVG, center-outward) ── */}
+      <SpatialCanvas data={data} />
 
-      {/* Ring 1: Quality of Life */}
-      <RingLabel label="Quality of Life" />
-      <QoLRing nodes={data.qolNodes} />
+      {/* ── Detail Zone (HTML, scrolling) ── */}
+      <div className="max-w-[840px] mx-auto px-6 py-8">
+        {/* Landscape Layers */}
+        <RingLabel label="Landscape Reading" />
+        <FieldLayers layers={data.fieldLayers} />
 
-      {/* Ring 2: Forms of Production */}
-      <RingLabel label="Forms of Production" />
-      <ProductionRing nodes={data.productionNodes} />
+        {/* Enterprise Cards */}
+        <RingLabel label="Enterprise Stack" />
+        <EnterpriseCards enterprises={data.enterprises} />
 
-      {/* Ring 3: Future Resource Base */}
-      <RingLabel label="Future Resource Base" />
-      <ResourceRing nodes={data.resourceNodes} />
+        {/* Nodal Interventions */}
+        <RingLabel label="Nodal Interventions" />
+        <NodalActions interventions={data.nodalInterventions} />
 
-      {/* Capital Constellation */}
-      <RingLabel label="Capital Profile" />
-      <CapitalConstellation profile={data.capitalProfile} />
+        {/* Weekly Rhythm (optional — from Phase 6) */}
+        {data.weeklyRhythm && (
+          <>
+            <RingLabel label="Weekly Rhythm" />
+            <WeeklyRhythm rhythm={data.weeklyRhythm} />
+          </>
+        )}
 
-      {/* Landscape Layers */}
-      <RingLabel label="Landscape Reading" />
-      <FieldLayers layers={data.fieldLayers} />
+        {/* Validation Protocol (optional — from Phase 6) */}
+        {data.validationChecks && data.validationChecks.length > 0 && (
+          <>
+            <RingLabel label="Validation Protocol" />
+            <ValidationProtocol checks={data.validationChecks} />
+          </>
+        )}
 
-      {/* Enterprise Cards */}
-      <RingLabel label="Enterprise Stack" />
-      <EnterpriseCards enterprises={data.enterprises} />
-
-      {/* Nodal Interventions */}
-      <RingLabel label="Nodal Interventions" />
-      <NodalActions interventions={data.nodalInterventions} />
-
-      {/* Weekly Rhythm (optional — from Phase 6) */}
-      {data.weeklyRhythm && (
-        <>
-          <RingLabel label="Weekly Rhythm" />
-          <WeeklyRhythm rhythm={data.weeklyRhythm} />
-        </>
-      )}
-
-      {/* Validation Protocol (optional — from Phase 6) */}
-      {data.validationChecks && data.validationChecks.length > 0 && (
-        <>
-          <RingLabel label="Validation Protocol" />
-          <ValidationProtocol checks={data.validationChecks} />
-        </>
-      )}
-
-      {/* Closing */}
-      <CanvasClosing closing={data.closing} epigraph={data.epigraph} />
+        {/* Closing */}
+        <CanvasClosing closing={data.closing} epigraph={data.epigraph} />
+      </div>
     </div>
   );
 }

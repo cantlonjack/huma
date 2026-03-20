@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import ShapeChart from "@/components/ShapeChart";
+import CapitalRadar from "@/components/canvas/CapitalRadar";
 
 interface MapDocumentProps {
   markdown: string;
@@ -12,48 +13,47 @@ interface MapDocumentProps {
 }
 
 /**
- * Parse a capital profile table row like "| Financial | 3/5 | steady cash flow |"
- * Returns { capital, score, note } or null.
+ * Extract table rows as arrays of cell text from React children.
+ * Walks the React element tree to find tr > td/th patterns.
  */
-function parseCapitalRow(text: string): { capital: string; score: number; note: string } | null {
-  // Match patterns like "Financial | 3/5 | note" or "Financial | ●●●○○ | note"
-  const parts = text.split("|").map(s => s.trim()).filter(Boolean);
-  if (parts.length < 2) return null;
+function extractTableRows(node: React.ReactNode): string[][] {
+  const rows: string[][] = [];
 
-  const capital = parts[0];
-  const scoreText = parts[1];
-  const note = parts[2] || "";
+  function walkForRows(n: React.ReactNode): void {
+    if (!n) return;
+    if (Array.isArray(n)) { n.forEach(walkForRows); return; }
+    if (typeof n === "object" && "props" in n) {
+      const el = n as React.ReactElement<{ children?: React.ReactNode }>;
+      const type = (el as { type?: string | Function }).type;
+      const typeName = typeof type === "string" ? type : typeof type === "function" ? type.name || "" : "";
 
-  // Try numeric score like "3/5" or "4 /5"
-  const numMatch = scoreText.match(/(\d)\s*\/\s*5/);
-  if (numMatch) {
-    return { capital, score: parseInt(numMatch[1]), note };
+      // If this is a tr, extract its cells
+      if (typeName === "tr" || (typeof type === "function" && String(type).includes("tr"))) {
+        const cells: string[] = [];
+        function walkForCells(c: React.ReactNode): void {
+          if (!c) return;
+          if (Array.isArray(c)) { c.forEach(walkForCells); return; }
+          if (typeof c === "object" && "props" in c) {
+            const cel = c as React.ReactElement<{ children?: React.ReactNode }>;
+            const ct = (cel as { type?: string | Function }).type;
+            const cn = typeof ct === "string" ? ct : typeof ct === "function" ? ct.name || "" : "";
+            if (cn === "td" || cn === "th") {
+              cells.push(extractText(cel.props.children));
+            } else {
+              walkForCells(cel.props.children);
+            }
+          }
+        }
+        walkForCells(el.props.children);
+        if (cells.length > 0) rows.push(cells);
+        return;
+      }
+      walkForRows(el.props.children);
+    }
   }
 
-  // Try dot/circle pattern
-  const filled = (scoreText.match(/●/g) || []).length;
-  if (filled > 0) {
-    return { capital, score: filled, note };
-  }
-
-  return null;
-}
-
-function CapitalCircle({ capital, score, note }: { capital: string; score: number; note: string }) {
-  // Map 1-5 to radius 10-26 (matching canvas view's sized circles)
-  const r = 10 + (score - 1) * 4;
-  const opacity = 0.4 + (score - 1) * 0.15;
-  return (
-    <div className="flex flex-col items-center gap-1" title={note}>
-      <svg width={56} height={56} viewBox="0 0 56 56">
-        <circle cx={28} cy={28} r={r} fill="var(--color-sage-600)" opacity={opacity} />
-      </svg>
-      <span className="font-sans text-[0.65rem] font-medium uppercase tracking-[0.04em] text-earth-400">
-        {capital}
-      </span>
-      <span className="font-sans text-[0.55rem] text-earth-400">{score}/5</span>
-    </div>
-  );
+  walkForRows(node);
+  return rows;
 }
 
 /**
@@ -186,22 +186,34 @@ export default function MapDocument({ markdown, shapeScores, operatorName }: Map
     table: ({ children }) => {
       // Check if this is the capital profile table
       if (isCapitalTable(children)) {
-        // Parse the table rows into capital bars
-        const rows: { capital: string; score: number; note: string }[] = [];
-        const text = extractText(children);
-        const lines = text.split(/\n/).filter(l => l.includes("|"));
-        for (const line of lines) {
-          const parsed = parseCapitalRow(line);
-          if (parsed && parsed.capital.toLowerCase() !== "capital") {
-            rows.push(parsed);
+        // Extract rows from the React element tree
+        const tableRows = extractTableRows(children);
+        // Skip header row, parse data rows
+        const capitalScores: import("@/engine/canvas-types").CapitalScore[] = [];
+        for (const cells of tableRows) {
+          if (cells.length < 2) continue;
+          const capital = cells[0].trim();
+          if (capital.toLowerCase() === "capital") continue; // skip header
+          const scoreText = cells[1].trim();
+          const note = cells[2]?.trim() || "";
+          const numMatch = scoreText.match(/(\d)\s*\/\s*5/);
+          const score = numMatch ? parseInt(numMatch[1]) : 0;
+          if (score > 0) {
+            capitalScores.push({
+              form: capital.toLowerCase() as import("@/engine/canvas-types").CapitalForm,
+              score,
+              note,
+            });
           }
         }
-        if (rows.length > 0) {
+        if (capitalScores.length > 0) {
           return (
-            <div className="my-6 p-4 bg-sage-50 rounded-lg flex justify-center flex-wrap gap-3">
-              {rows.map((r) => (
-                <CapitalCircle key={r.capital} {...r} />
-              ))}
+            <div className="my-6 flex justify-center">
+              <CapitalRadar
+                profile={capitalScores}
+                size={300}
+                animated
+              />
             </div>
           );
         }

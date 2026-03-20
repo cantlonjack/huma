@@ -7,6 +7,7 @@ import { SAMPLE_MAP_MARKDOWN, SAMPLE_CANVAS_DATA } from "@/lib/sample-map";
 import { MAYA_MAP_MARKDOWN, MAYA_CANVAS_DATA } from "@/lib/sample-map-maya";
 import { trackEvent } from "@/lib/analytics";
 import MapToolbar from "@/components/MapToolbar";
+import ShareButton from "@/components/ShareButton";
 
 type ViewMode = "canvas" | "document";
 type SampleProfile = "sarah" | "maya";
@@ -69,6 +70,7 @@ export default function SampleMapClient() {
           {current.subtitle}
         </span>
 
+        <ShareButton canvasData={current.canvas} />
         <a
           href="/"
           className="px-4 sm:px-5 py-2 text-sm bg-amber-600 text-white rounded-full hover:bg-amber-700 transition-all font-medium whitespace-nowrap"

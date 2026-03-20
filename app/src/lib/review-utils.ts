@@ -1,4 +1,5 @@
 import type { CanvasData, ValidationCheck } from "@/engine/canvas-types";
+import { getQoLStatement } from "@/lib/canvas-layout";
 
 interface QoLResponse {
   qolStatement: string;
@@ -20,7 +21,7 @@ export function buildReviewContext(canvasData: CanvasData | null, operatorName: 
   if (canvasData.essence?.phrase) sections.push(`Essence: ${canvasData.essence.phrase}`);
 
   if (canvasData.qolNodes?.length) {
-    sections.push(`\nQuality of Life statements:\n${canvasData.qolNodes.map((q) => `- ${q}`).join("\n")}`);
+    sections.push(`\nQuality of Life statements:\n${canvasData.qolNodes.map((q) => `- ${getQoLStatement(q)}`).join("\n")}`);
   }
 
   if (canvasData.enterprises?.length) {
