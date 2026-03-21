@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef } from "react";
+import { motion } from "framer-motion";
 import { type ShapeData, DIMENSION_ORDER, DIMENSION_LABELS, type DimensionKey } from "@/types/shape";
 
 interface ShapeRadarProps {
@@ -12,13 +14,14 @@ interface ShapeRadarProps {
   interactive?: boolean;
   highlighted?: DimensionKey[];
   lever?: DimensionKey;
+  onVertexTap?: (dimension: DimensionKey, svgX: number, svgY: number) => void;
   className?: string;
 }
 
-const R = 90; // Max radius in viewBox units
-const CENTER = 100;
+export const R = 90; // Max radius in viewBox units
+export const CENTER = 100;
 
-function polarXY(index: number, radius: number, total: number = 8): [number, number] {
+export function polarXY(index: number, radius: number, total: number = 8): [number, number] {
   const angle = ((index * 360) / total - 90) * (Math.PI / 180);
   return [
     CENTER + radius * Math.cos(angle),
@@ -26,7 +29,7 @@ function polarXY(index: number, radius: number, total: number = 8): [number, num
   ];
 }
 
-function valueToRadius(value: number | undefined): number {
+export function valueToRadius(value: number | undefined): number {
   if (value === undefined || value === 0) return R * 0.15; // minimum visible
   return R * (0.2 + (value / 5) * 0.8); // 20%-100% of radius
 }
@@ -35,8 +38,11 @@ function valueToRadius(value: number | undefined): number {
  * Build an organic shape path using quadratic bezier curves.
  * Control points are offset slightly inward to give the shape
  * a living, non-angular feel.
+ *
+ * Always produces exactly 8 Q commands so framer-motion can
+ * interpolate smoothly between any two shape states.
  */
-function buildShapePath(
+export function buildShapePath(
   dimensions: Partial<ShapeData["dimensions"]>,
   dimOrder: readonly DimensionKey[]
 ): string {
@@ -62,6 +68,8 @@ function buildShapePath(
   return d;
 }
 
+const HUMA_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+
 export default function ShapeRadar({
   shape,
   size,
@@ -70,15 +78,27 @@ export default function ShapeRadar({
   labels = false,
   highlighted = [],
   lever,
+  onVertexTap,
   className = "",
 }: ShapeRadarProps) {
+  const svgRef = useRef<SVGSVGElement>(null);
   const shapePath = buildShapePath(shape, DIMENSION_ORDER);
   const comparePath = compareShape
     ? buildShapePath(compareShape, DIMENSION_ORDER)
     : null;
 
+  const isInteractive = !!onVertexTap;
+
+  function handleVertexClick(dim: DimensionKey, index: number) {
+    if (!onVertexTap) return;
+    const r = valueToRadius(shape[dim]);
+    const [svgX, svgY] = polarXY(index, r);
+    onVertexTap(dim, svgX, svgY);
+  }
+
   return (
     <svg
+      ref={svgRef}
       viewBox="0 0 200 200"
       {...(size ? { width: size, height: size } : {})}
       className={className}
@@ -119,9 +139,11 @@ export default function ShapeRadar({
         />
       )}
 
-      {/* Main shape */}
-      <path
+      {/* Main shape — animated path for smooth morphing */}
+      <motion.path
         d={shapePath}
+        animate={{ d: shapePath }}
+        transition={{ duration: 0.4, ease: HUMA_EASE }}
         fill="var(--color-sage-400, #8BAF8E)"
         fillOpacity="0.2"
         stroke="var(--color-sage-500, #5C7A62)"
@@ -130,20 +152,37 @@ export default function ShapeRadar({
         strokeLinejoin="round"
       />
 
-      {/* Vertex dots */}
+      {/* Vertex dots — tappable when interactive */}
       {DIMENSION_ORDER.map((key, i) => {
         if (shape[key] === undefined) return null;
         const r = valueToRadius(shape[key]);
         const [x, y] = polarXY(i, r);
         return (
-          <circle
-            key={key}
-            cx={x}
-            cy={y}
-            r="2.5"
-            fill="var(--color-sage-600, #4A6E50)"
-            opacity="0.7"
-          />
+          <g key={key}>
+            {/* Visible dot */}
+            <motion.circle
+              cx={x}
+              cy={y}
+              animate={{ cx: x, cy: y }}
+              transition={{ duration: 0.4, ease: HUMA_EASE }}
+              r="2.5"
+              fill="var(--color-sage-600, #4A6E50)"
+              opacity="0.7"
+            />
+            {/* Invisible hit area for tapping */}
+            {isInteractive && (
+              <circle
+                cx={x}
+                cy={y}
+                r="12"
+                fill="transparent"
+                style={{ cursor: "pointer" }}
+                onClick={() => handleVertexClick(key, i)}
+                role="button"
+                aria-label={`Adjust ${DIMENSION_LABELS[key]}: currently ${shape[key]}`}
+              />
+            )}
+          </g>
         );
       })}
 
@@ -169,6 +208,8 @@ export default function ShapeRadar({
             fontSize="8"
             fontFamily="var(--font-sans)"
             fontWeight={isHighlighted || isLever ? "700" : "500"}
+            style={isInteractive ? { cursor: "pointer" } : undefined}
+            onClick={isInteractive ? () => handleVertexClick(key, i) : undefined}
           >
             {DIMENSION_LABELS[key]}
             {isLever && (
