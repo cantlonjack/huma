@@ -7,63 +7,66 @@ export default function IdentityIllustration({ size = 200 }: Props) {
     <svg
       width={size}
       height={size}
-      viewBox="0 0 200 200"
+      viewBox="0 0 240 240"
       fill="none"
       aria-hidden="true"
     >
-      {/* Overlapping organic forms converging — fragments becoming whole */}
+      {/* Mosaic fragments converging toward center — sage with earth accents */}
+      {/* Upper-left fragment */}
       <path
-        d="M75 105 C70 85, 80 70, 95 68 C105 66, 112 72, 110 82"
-        stroke="var(--color-sage-400, #8BAF8E)"
-        strokeWidth="2"
+        d="M82 88 C76 74, 84 60, 98 58 C108 56, 116 64, 112 76 C108 86, 92 94, 82 88"
+        stroke="#5C7A62"
+        strokeWidth="2.5"
         strokeLinecap="round"
-        fill="var(--color-sage-400, #8BAF8E)"
+        fill="#8BAF8E"
         fillOpacity="0.1"
-        opacity="0.6"
+        opacity="0.65"
       />
+      {/* Upper-right fragment */}
       <path
-        d="M125 105 C130 85, 120 70, 105 68 C95 66, 88 72, 90 82"
-        stroke="var(--color-amber-400, #E8935A)"
-        strokeWidth="2"
+        d="M158 88 C164 74, 156 60, 142 58 C132 56, 124 64, 128 76 C132 86, 148 94, 158 88"
+        stroke="#8BAF8E"
+        strokeWidth="2.2"
         strokeLinecap="round"
-        fill="var(--color-amber-400, #E8935A)"
-        fillOpacity="0.1"
-        opacity="0.5"
-      />
-      <path
-        d="M85 125 C78 115, 82 100, 95 95 C105 92, 115 95, 118 105"
-        stroke="var(--color-earth-400, #8C8274)"
-        strokeWidth="2"
-        strokeLinecap="round"
-        fill="var(--color-earth-400, #8C8274)"
+        fill="#A8C4AA"
         fillOpacity="0.08"
+        opacity="0.55"
+      />
+      {/* Lower fragment */}
+      <path
+        d="M100 148 C90 140, 92 124, 106 118 C118 112, 132 118, 136 130 C140 142, 128 152, 116 150 C108 148, 102 150, 100 148"
+        stroke="#8C8274"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        fill="#8C8274"
+        fillOpacity="0.06"
         opacity="0.5"
       />
-      {/* Center convergence point */}
+      {/* Center convergence — where the fragments meet */}
       <circle
-        cx="100"
-        cy="95"
-        r="8"
-        fill="var(--color-sage-400, #8BAF8E)"
-        opacity="0.2"
+        cx="120"
+        cy="102"
+        r="10"
+        fill="#8BAF8E"
+        opacity="0.15"
       />
       <circle
-        cx="100"
-        cy="95"
-        r="3"
-        fill="var(--color-sage-500, #5C7A62)"
+        cx="120"
+        cy="102"
+        r="4"
+        fill="#5C7A62"
         opacity="0.35"
       />
-      {/* Outer whisper — the whole holding */}
+      {/* Holding circle — dashed, the whole */}
       <circle
-        cx="100"
-        cy="98"
-        r="35"
-        stroke="var(--color-sage-300, #A8C4AA)"
-        strokeWidth="1"
+        cx="120"
+        cy="105"
+        r="48"
+        stroke="#A8C4AA"
+        strokeWidth="1.2"
         fill="none"
         opacity="0.15"
-        strokeDasharray="4 6"
+        strokeDasharray="5 7"
       />
     </svg>
   );

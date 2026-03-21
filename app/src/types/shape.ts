@@ -73,7 +73,7 @@ export const SHAPE_CARDS: ShapeCard[] = [
   {
     dimension: 'people',
     question: 'The people in your life right now?',
-    pills: ['isolated', 'draining', 'mixed', 'supportive', 'deeply connected'],
+    pills: ['alone', 'strained', 'mixed', 'supported', 'held'],
   },
   {
     dimension: 'money',
@@ -83,26 +83,26 @@ export const SHAPE_CARDS: ShapeCard[] = [
   {
     dimension: 'home',
     question: 'Your physical space \u2014 does it hold you?',
-    pills: ['unsafe', 'cramped', 'functional', 'comfortable', 'sanctuary'],
+    pills: ['trapped', 'cramped', 'fine', 'comfortable', 'sanctuary'],
   },
   {
     dimension: 'growth',
     question: 'Are you learning and growing right now?',
-    pills: ['stagnant', 'stuck', 'slowly', 'expanding', 'on fire'],
+    pills: ['stuck', 'restless', 'learning', 'building', 'accelerating'],
   },
   {
     dimension: 'joy',
     question: 'How close is joy right now?',
-    pills: ['distant', 'rare', 'glimpses', 'frequent', 'everywhere'],
+    pills: ['numb', 'rare', 'sometimes', 'often', 'everywhere'],
   },
   {
     dimension: 'purpose',
     question: 'Do you know what you\u2019re building toward?',
-    pills: ['lost', 'searching', 'glimpses', 'mostly clear', 'certain'],
+    pills: ['lost', 'searching', 'glimpses', 'forming', 'clear'],
   },
   {
     dimension: 'identity',
     question: 'Do you feel like yourself?',
-    pills: ['fractured', 'scattered', 'mostly', 'yes', 'completely'],
+    pills: ['fractured', 'scattered', 'assembling', 'settling', 'whole'],
   },
 ];

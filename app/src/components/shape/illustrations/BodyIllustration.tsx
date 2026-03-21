@@ -7,52 +7,64 @@ export default function BodyIllustration({ size = 200 }: Props) {
     <svg
       width={size}
       height={size}
-      viewBox="0 0 200 200"
+      viewBox="0 0 240 240"
       fill="none"
       aria-hidden="true"
     >
-      {/* Vertical organic stroke — spine/stem, weighted at bottom, opens at top */}
+      {/* Main stem — organic, varied stroke-width, hand-drawn feel */}
       <path
-        d="M100 175 C96 150, 88 130, 92 110 C96 90, 94 70, 100 50 C106 30, 120 20, 130 18"
-        stroke="var(--color-sage-500, #5C7A62)"
-        strokeWidth="3"
+        d="M120 195 C118 178, 114 162, 116 145 C118 128, 115 112, 118 95 C121 78, 125 62, 132 48 C138 36, 146 28, 155 24"
+        stroke="#5C7A62"
+        strokeWidth="3.2"
         strokeLinecap="round"
         fill="none"
-        opacity="0.8"
+        opacity="0.75"
       />
+      {/* Second stem — mirrors first, slightly thinner */}
       <path
-        d="M100 175 C104 150, 112 130, 108 110 C104 90, 106 70, 100 50 C94 30, 80 20, 70 18"
-        stroke="var(--color-sage-500, #5C7A62)"
-        strokeWidth="3"
+        d="M120 195 C122 176, 126 160, 124 142 C122 125, 125 108, 122 92 C119 76, 114 60, 106 46 C100 36, 90 28, 80 26"
+        stroke="#5C7A62"
+        strokeWidth="2.4"
         strokeLinecap="round"
         fill="none"
-        opacity="0.8"
+        opacity="0.65"
       />
-      {/* Secondary glow — softer, wider */}
+      {/* Leaf suggestion — small unfurling from right stem */}
       <path
-        d="M100 170 C90 140, 82 110, 90 80 C98 50, 110 30, 125 22"
-        stroke="var(--color-sage-300, #A8C4AA)"
-        strokeWidth="6"
+        d="M128 88 C134 82, 142 80, 148 84 C144 88, 136 90, 128 88"
+        stroke="#8BAF8E"
+        strokeWidth="2"
+        strokeLinecap="round"
+        fill="#8BAF8E"
+        fillOpacity="0.12"
+        opacity="0.6"
+      />
+      {/* Small leaf from left stem */}
+      <path
+        d="M114 106 C108 100, 98 98, 92 102 C98 106, 106 108, 114 106"
+        stroke="#A8C4AA"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        fill="#A8C4AA"
+        fillOpacity="0.1"
+        opacity="0.5"
+      />
+      {/* Root suggestion at base — earth tones */}
+      <path
+        d="M120 195 C112 200, 104 204, 96 202"
+        stroke="#8C8274"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        fill="none"
+        opacity="0.35"
+      />
+      <path
+        d="M120 195 C128 202, 138 206, 146 203"
+        stroke="#8C8274"
+        strokeWidth="2"
         strokeLinecap="round"
         fill="none"
         opacity="0.3"
-      />
-      <path
-        d="M100 170 C110 140, 118 110, 110 80 C102 50, 90 30, 75 22"
-        stroke="var(--color-sage-300, #A8C4AA)"
-        strokeWidth="6"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.3"
-      />
-      {/* Root weight at bottom */}
-      <ellipse
-        cx="100"
-        cy="178"
-        rx="12"
-        ry="5"
-        fill="var(--color-sage-500, #5C7A62)"
-        opacity="0.2"
       />
     </svg>
   );

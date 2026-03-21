@@ -7,43 +7,44 @@ export default function GrowthIllustration({ size = 200 }: Props) {
     <svg
       width={size}
       height={size}
-      viewBox="0 0 200 200"
+      viewBox="0 0 240 240"
       fill="none"
       aria-hidden="true"
     >
-      {/* Fiddlehead fern spiral — tight center opening outward */}
+      {/* Fiddlehead fern — tight spiral unfurling outward, sage-to-sky gradient feel */}
       <path
-        d="M100 130 C100 120, 105 112, 110 108 C118 102, 120 92, 115 85 C108 78, 98 80, 94 88 C88 98, 92 108, 102 112 C115 118, 128 110, 130 96 C132 80, 120 68, 105 66 C88 64, 76 76, 74 92 C72 112, 84 128, 105 132 C130 136, 148 120, 148 98"
-        stroke="var(--color-sage-500, #5C7A62)"
-        strokeWidth="2.5"
+        d="M120 155 C120 142, 126 132, 134 126 C144 118, 146 106, 138 98 C130 90, 118 92, 114 102 C110 114, 116 124, 128 128 C144 134, 158 124, 160 108 C162 90, 148 76, 130 74 C110 72, 98 84, 96 102 C94 124, 108 142, 132 148 C160 154, 178 138, 178 112"
+        stroke="#5C7A62"
+        strokeWidth="2.8"
         strokeLinecap="round"
         fill="none"
-        opacity="0.75"
+        opacity="0.7"
       />
-      {/* Secondary wisps */}
+      {/* Extension whisp upward — where growth reaches */}
       <path
-        d="M148 98 C150 82, 140 65, 120 58"
-        stroke="var(--color-sage-300, #A8C4AA)"
+        d="M178 112 C180 94, 168 76, 150 66"
+        stroke="#2E6B8A"
         strokeWidth="2"
         strokeLinecap="round"
         fill="none"
         opacity="0.4"
       />
+      {/* Inner whisp */}
       <path
-        d="M74 92 C68 78, 72 62, 85 55"
-        stroke="var(--color-sage-300, #A8C4AA)"
-        strokeWidth="1.5"
+        d="M96 102 C88 86, 92 68, 108 60"
+        stroke="#A8C4AA"
+        strokeWidth="1.8"
         strokeLinecap="round"
         fill="none"
-        opacity="0.3"
+        opacity="0.35"
       />
-      {/* Center dot — the seed */}
+      {/* Seed point */}
       <circle
-        cx="100"
-        cy="130"
-        r="3"
-        fill="var(--color-sage-500, #5C7A62)"
-        opacity="0.5"
+        cx="120"
+        cy="155"
+        r="3.5"
+        fill="#5C7A62"
+        opacity="0.4"
       />
     </svg>
   );

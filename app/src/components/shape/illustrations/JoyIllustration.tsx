@@ -3,61 +3,53 @@ interface Props {
 }
 
 export default function JoyIllustration({ size = 200 }: Props) {
+  // Organic rays — each hand-positioned with slight asymmetry
+  const rays = [
+    { d: "M120 82 C122 68, 118 54, 120 42", sw: 2.8, op: 0.5 },
+    { d: "M142 90 C154 80, 164 72, 174 66", sw: 2.4, op: 0.45 },
+    { d: "M148 112 C162 114, 176 110, 188 108", sw: 2.6, op: 0.4 },
+    { d: "M142 134 C154 144, 162 156, 168 168", sw: 2.2, op: 0.35 },
+    { d: "M120 142 C118 158, 122 172, 120 184", sw: 2.8, op: 0.45 },
+    { d: "M98 134 C86 144, 78 154, 72 166", sw: 2.2, op: 0.35 },
+    { d: "M92 112 C78 114, 64 110, 52 108", sw: 2.4, op: 0.4 },
+    { d: "M98 90 C86 80, 76 72, 66 66", sw: 2.6, op: 0.45 },
+  ];
+
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 200 200"
+      viewBox="0 0 240 240"
       fill="none"
       aria-hidden="true"
     >
-      {/* Center warm glow */}
+      {/* Warm center glow */}
       <circle
-        cx="100"
-        cy="100"
-        r="16"
-        fill="var(--color-amber-400, #E8935A)"
-        opacity="0.4"
+        cx="120"
+        cy="112"
+        r="18"
+        fill="#E8935A"
+        opacity="0.35"
       />
       <circle
-        cx="100"
-        cy="100"
-        r="28"
-        fill="var(--color-amber-400, #E8935A)"
-        opacity="0.15"
+        cx="120"
+        cy="112"
+        r="32"
+        fill="#E8935A"
+        opacity="0.12"
       />
-      {/* Soft rays emanating outward — organic, not geometric */}
-      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => {
-        const rad = (angle * Math.PI) / 180;
-        const x1 = 100 + Math.cos(rad) * 24;
-        const y1 = 100 + Math.sin(rad) * 24;
-        const x2 = 100 + Math.cos(rad) * (48 + (i % 3) * 10);
-        const y2 = 100 + Math.sin(rad) * (48 + (i % 3) * 10);
-        // Offset midpoint for organic curve
-        const mx = (x1 + x2) / 2 + Math.sin(rad) * (i % 2 === 0 ? 4 : -4);
-        const my = (y1 + y2) / 2 + Math.cos(rad) * (i % 2 === 0 ? -4 : 4);
-        return (
-          <path
-            key={angle}
-            d={`M${x1} ${y1} Q${mx} ${my} ${x2} ${y2}`}
-            stroke="var(--color-amber-200, #F5D4B3)"
-            strokeWidth={2.5 - (i % 3) * 0.5}
-            strokeLinecap="round"
-            fill="none"
-            opacity={0.35 + (i % 2) * 0.1}
-          />
-        );
-      })}
-      {/* Outermost subtle halo */}
-      <circle
-        cx="100"
-        cy="100"
-        r="50"
-        stroke="var(--color-sage-300, #A8C4AA)"
-        strokeWidth="1"
-        fill="none"
-        opacity="0.15"
-      />
+      {/* Radiating rays — organic curves, amber-to-sage */}
+      {rays.map((ray, i) => (
+        <path
+          key={i}
+          d={ray.d}
+          stroke={i % 2 === 0 ? "#E8935A" : "#8BAF8E"}
+          strokeWidth={ray.sw}
+          strokeLinecap="round"
+          fill="none"
+          opacity={ray.op}
+        />
+      ))}
     </svg>
   );
 }

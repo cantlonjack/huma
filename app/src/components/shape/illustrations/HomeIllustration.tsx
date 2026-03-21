@@ -7,42 +7,54 @@ export default function HomeIllustration({ size = 200 }: Props) {
     <svg
       width={size}
       height={size}
-      viewBox="0 0 200 200"
+      viewBox="0 0 240 240"
       fill="none"
       aria-hidden="true"
     >
-      {/* Grounded shape — wide base, tapering upward, like roots and shelter */}
+      {/* Nested arch — shelter form, warm earth tones */}
       <path
-        d="M50 160 C55 140, 65 120, 80 105 C90 95, 95 80, 100 60 C105 80, 110 95, 120 105 C135 120, 145 140, 150 160"
-        stroke="var(--color-earth-600, #554D42)"
-        strokeWidth="2.5"
+        d="M60 175 C62 148, 72 120, 88 100 C100 86, 112 78, 120 72 C128 78, 140 86, 152 100 C168 120, 178 148, 180 175"
+        stroke="#554D42"
+        strokeWidth="3"
         strokeLinecap="round"
         fill="none"
-        opacity="0.7"
+        opacity="0.65"
       />
-      {/* Fill wash */}
+      {/* Inner arch — the held space */}
       <path
-        d="M55 158 C60 140, 68 122, 82 108 C92 98, 96 82, 100 65 C104 82, 108 98, 118 108 C132 122, 140 140, 145 158 Z"
-        fill="var(--color-earth-600, #554D42)"
-        opacity="0.08"
+        d="M82 170 C84 150, 90 130, 102 116 C110 106, 118 100, 120 96 C122 100, 130 106, 138 116 C150 130, 156 150, 158 170"
+        stroke="#8C8274"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        fill="#8C8274"
+        fillOpacity="0.06"
+        opacity="0.55"
       />
-      {/* Accent — sage growth on the shelter */}
+      {/* Growth at the peak — sage accent */}
       <path
-        d="M90 100 C92 88, 96 78, 100 65 C104 78, 108 88, 110 100"
-        stroke="var(--color-sage-400, #8BAF8E)"
+        d="M116 78 C118 68, 120 58, 122 48"
+        stroke="#8BAF8E"
         strokeWidth="2"
         strokeLinecap="round"
         fill="none"
-        opacity="0.5"
+        opacity="0.45"
       />
-      {/* Base ground line */}
       <path
-        d="M35 162 C65 158, 135 158, 165 162"
-        stroke="var(--color-earth-600, #554D42)"
+        d="M122 48 C126 56, 130 62, 128 70"
+        stroke="#A8C4AA"
         strokeWidth="1.5"
         strokeLinecap="round"
         fill="none"
-        opacity="0.3"
+        opacity="0.35"
+      />
+      {/* Ground line */}
+      <path
+        d="M44 178 C80 174, 160 174, 196 178"
+        stroke="#554D42"
+        strokeWidth="2"
+        strokeLinecap="round"
+        fill="none"
+        opacity="0.25"
       />
     </svg>
   );

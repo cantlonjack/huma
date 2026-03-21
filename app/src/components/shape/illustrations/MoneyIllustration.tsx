@@ -7,42 +7,42 @@ export default function MoneyIllustration({ size = 200 }: Props) {
     <svg
       width={size}
       height={size}
-      viewBox="0 0 200 200"
+      viewBox="0 0 240 240"
       fill="none"
       aria-hidden="true"
     >
-      {/* Flowing curve — river/stream, thin to wide */}
+      {/* Main flowing line — water finding its path, amber tones */}
       <path
-        d="M30 120 C50 110, 70 130, 100 105 C130 80, 150 95, 175 85"
-        stroke="var(--color-amber-500, #C87A3A)"
+        d="M32 140 C52 132, 68 148, 90 130 C112 112, 128 124, 150 108 C170 94, 182 102, 208 88"
+        stroke="#C87A3A"
         strokeWidth="3.5"
         strokeLinecap="round"
         fill="none"
-        opacity="0.75"
+        opacity="0.7"
       />
-      {/* Secondary flow — wider, softer */}
+      {/* Secondary current — softer, wider */}
       <path
-        d="M25 128 C50 118, 75 140, 100 115 C125 90, 155 100, 180 92"
-        stroke="var(--color-amber-300, #F0B88A)"
-        strokeWidth="8"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.25"
-      />
-      {/* Upper accent ripple */}
-      <path
-        d="M45 108 C65 100, 80 112, 95 100"
-        stroke="var(--color-amber-500, #C87A3A)"
-        strokeWidth="1.5"
+        d="M28 150 C50 142, 72 158, 94 140 C116 122, 134 134, 156 118 C176 104, 190 110, 212 98"
+        stroke="#E8935A"
+        strokeWidth="2"
         strokeLinecap="round"
         fill="none"
         opacity="0.35"
       />
-      {/* Wider base wash */}
+      {/* Upper ripple — thin, delicate */}
       <path
-        d="M20 135 C55 125, 85 148, 105 122 C125 96, 160 108, 185 98"
-        stroke="var(--color-amber-300, #F0B88A)"
-        strokeWidth="14"
+        d="M52 126 C68 120, 82 130, 96 122"
+        stroke="#C87A3A"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        fill="none"
+        opacity="0.4"
+      />
+      {/* Wash underneath — the depth */}
+      <path
+        d="M36 155 C60 148, 80 166, 100 148 C120 130, 140 142, 164 126 C182 114, 196 118, 214 106"
+        stroke="#E8935A"
+        strokeWidth="8"
         strokeLinecap="round"
         fill="none"
         opacity="0.12"
