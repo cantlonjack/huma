@@ -10,6 +10,8 @@ interface ShapeRadarProps {
   warmth?: Partial<Record<DimensionKey, number>>;
   labels?: boolean;
   interactive?: boolean;
+  highlighted?: DimensionKey[];
+  lever?: DimensionKey;
   className?: string;
 }
 
@@ -66,6 +68,8 @@ export default function ShapeRadar({
   compareShape,
   breathing = false,
   labels = false,
+  highlighted = [],
+  lever,
   className = "",
 }: ShapeRadarProps) {
   const shapePath = buildShapePath(shape, DIMENSION_ORDER);
@@ -150,18 +154,31 @@ export default function ShapeRadar({
         if (x > CENTER + 10) anchor = "start";
         else if (x < CENTER - 10) anchor = "end";
 
+        const isHighlighted = highlighted.includes(key);
+        const isLever = key === lever;
+
         return (
           <text
             key={key}
             x={x}
             y={y + (y < CENTER - 30 ? -2 : y > CENTER + 30 ? 8 : 4)}
             textAnchor={anchor}
-            fill="var(--color-earth-600, #554D42)"
+            fill={isHighlighted || isLever
+              ? "var(--color-sage-700, #3A5A40)"
+              : "var(--color-earth-600, #554D42)"}
             fontSize="8"
             fontFamily="var(--font-sans)"
-            fontWeight="500"
+            fontWeight={isHighlighted || isLever ? "700" : "500"}
           >
             {DIMENSION_LABELS[key]}
+            {isLever && (
+              <animate
+                attributeName="opacity"
+                values="1;0.5;1"
+                dur="3s"
+                repeatCount="indefinite"
+              />
+            )}
           </text>
         );
       })}

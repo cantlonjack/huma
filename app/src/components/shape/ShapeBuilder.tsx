@@ -7,6 +7,7 @@ import {
   type DimensionKey,
   type ShapeData,
 } from "@/types/shape";
+import type { ShapeInsight } from "@/engine/shape-insight";
 import ShapeRadar from "./ShapeRadar";
 import BodyIllustration from "./illustrations/BodyIllustration";
 import PeopleIllustration from "./illustrations/PeopleIllustration";
@@ -57,12 +58,42 @@ export default function ShapeBuilder({ onComplete, onClose }: ShapeBuilderProps)
   const [transitioning, setTransitioning] = useState(false);
   const [tooltip, setTooltip] = useState<string | null>(null);
   const [revealSize, setRevealSize] = useState(280);
+  const [insight, setInsight] = useState<ShapeInsight | null>(null);
+  const [insightLoading, setInsightLoading] = useState(false);
+  const [insightError, setInsightError] = useState(false);
   const tooltipTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const insightFetched = useRef(false);
   const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     setRevealSize(window.innerWidth < 640 ? 280 : 350);
   }, []);
+
+  // Fetch insight when shape is revealed
+  useEffect(() => {
+    if (!revealed || insightFetched.current) return;
+    insightFetched.current = true;
+
+    async function fetchInsight() {
+      setInsightLoading(true);
+      try {
+        const res = await fetch("/api/shape-insight", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ scores }),
+        });
+        if (!res.ok) throw new Error("API error");
+        const data: ShapeInsight = await res.json();
+        setInsight(data);
+      } catch {
+        setInsightError(true);
+      } finally {
+        setInsightLoading(false);
+      }
+    }
+
+    fetchInsight();
+  }, [revealed, scores]);
 
   const card = SHAPE_CARDS[currentIndex];
   const Illustration = card ? ILLUSTRATIONS[card.dimension] : null;
@@ -110,113 +141,192 @@ export default function ShapeBuilder({ onComplete, onClose }: ShapeBuilderProps)
 
   // === REVEAL SCREEN ===
   if (revealed) {
+    // Animation delay chain: shape 800ms → pause 500ms → headline → detail → oneThing → buttons
+    const insightBaseDelay = 1.3; // after shape is fully revealed
+
     return (
-      <div className="fixed inset-0 bg-sand-50 flex flex-col items-center justify-center px-6">
-        {/* HUMA wordmark */}
-        <motion.p
-          className="font-serif text-sage-500 tracking-[0.4em] text-sm font-medium uppercase mb-6"
-          initial={prefersReducedMotion ? undefined : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          HUMA
-        </motion.p>
+      <div className="fixed inset-0 bg-sand-50 flex flex-col items-center overflow-y-auto px-6 py-8">
+        <div className="flex flex-col items-center w-full max-w-md mx-auto">
+          {/* HUMA wordmark */}
+          <motion.p
+            className="font-serif text-sage-500 tracking-[0.4em] text-sm font-medium uppercase mb-6"
+            initial={prefersReducedMotion ? undefined : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            HUMA
+          </motion.p>
 
-        {/* Heading */}
-        <motion.h1
-          className="font-serif text-earth-700 text-xl md:text-2xl text-center mb-8"
-          initial={prefersReducedMotion ? undefined : { opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.8, ease: HUMA_EASE }}
-        >
-          Your life, right now.
-        </motion.h1>
+          {/* Heading */}
+          <motion.h1
+            className="font-serif text-earth-700 text-xl md:text-2xl text-center mb-8"
+            initial={prefersReducedMotion ? undefined : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.8, ease: HUMA_EASE }}
+          >
+            Your life, right now.
+          </motion.h1>
 
-        {/* Shape — animate from small to center */}
-        <motion.div
-          initial={prefersReducedMotion ? undefined : { scale: 0.25, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{
-            duration: prefersReducedMotion ? 0 : 0.9,
-            ease: HUMA_EASE,
-          }}
-        >
-          <ShapeRadar
-            shape={scores}
-            size={revealSize}
-            labels
-            breathing={!prefersReducedMotion}
-            className="mx-auto"
-          />
-        </motion.div>
+          {/* Shape — animate from small to center */}
+          <motion.div
+            initial={prefersReducedMotion ? undefined : { scale: 0.25, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{
+              duration: prefersReducedMotion ? 0 : 0.9,
+              ease: HUMA_EASE,
+            }}
+          >
+            <ShapeRadar
+              shape={scores}
+              size={revealSize}
+              labels
+              breathing={!prefersReducedMotion}
+              highlighted={insight?.dimensions.highlighted}
+              lever={insight?.dimensions.lever}
+              className="mx-auto"
+            />
+          </motion.div>
 
-        {/* Divider */}
-        <div className="w-full max-w-sm h-px bg-sand-200 my-6" />
+          {/* Divider */}
+          <div className="w-full h-px bg-sand-200 my-6" />
 
-        {/* Insight placeholder */}
-        <motion.div
-          className="text-center text-earth-500 text-sm font-sans flex items-center gap-2"
-          initial={prefersReducedMotion ? undefined : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2, duration: 0.5 }}
-        >
-          Reading your shape
-          {!prefersReducedMotion && (
-            <span className="inline-flex gap-1">
-              {[0, 1, 2].map((i) => (
-                <motion.span
-                  key={i}
-                  className="inline-block w-1.5 h-1.5 rounded-full bg-sage-400"
-                  animate={{ opacity: [0.3, 1, 0.3] }}
-                  transition={{
-                    duration: 1.2,
-                    repeat: Infinity,
-                    delay: i * 0.2,
-                  }}
+          {/* Insight area */}
+          <AnimatePresence mode="wait">
+            {insightLoading && !insight && !insightError && (
+              <motion.div
+                key="loading"
+                className="text-center flex items-center gap-2"
+                initial={prefersReducedMotion ? undefined : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ delay: insightBaseDelay, duration: 0.5 }}
+              >
+                <span className="text-earth-400 text-sm font-sans italic">
+                  Reading your shape
+                </span>
+                {!prefersReducedMotion && (
+                  <span className="inline-flex gap-1">
+                    {[0, 1, 2].map((i) => (
+                      <motion.span
+                        key={i}
+                        className="inline-block w-1.5 h-1.5 rounded-full bg-sage-400"
+                        animate={{ opacity: [0.3, 1, 0.3] }}
+                        transition={{
+                          duration: 1.2,
+                          repeat: Infinity,
+                          delay: i * 0.2,
+                        }}
+                      />
+                    ))}
+                  </span>
+                )}
+                {prefersReducedMotion && <span className="text-earth-400 text-sm">...</span>}
+              </motion.div>
+            )}
+
+            {insightError && !insight && (
+              <motion.div
+                key="error"
+                className="text-center"
+                initial={prefersReducedMotion ? undefined : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4 }}
+              >
+                <p className="text-earth-500 text-sm font-sans">
+                  I couldn&apos;t read your shape right now.
+                  <br />
+                  Save it and I&apos;ll try again next time.
+                </p>
+              </motion.div>
+            )}
+
+            {insight && (
+              <motion.div key="insight" className="w-full space-y-0">
+                {/* Headline */}
+                <motion.p
+                  className="font-serif text-earth-800 text-lg text-center leading-relaxed"
+                  initial={prefersReducedMotion ? undefined : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, ease: HUMA_EASE }}
+                >
+                  {insight.headline}
+                </motion.p>
+
+                {/* Detail */}
+                <motion.p
+                  className="font-sans text-earth-600 text-base text-center leading-relaxed mt-3 line-clamp-3"
+                  initial={prefersReducedMotion ? undefined : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.2, ease: HUMA_EASE }}
+                >
+                  {insight.detail}
+                </motion.p>
+
+                {/* Divider */}
+                <motion.div
+                  className="w-full h-px bg-sand-200 my-5"
+                  initial={prefersReducedMotion ? undefined : { opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
                 />
-              ))}
-            </span>
-          )}
-          {prefersReducedMotion && <span>...</span>}
-        </motion.div>
 
-        {/* Divider */}
-        <div className="w-full max-w-sm h-px bg-sand-200 my-6" />
+                {/* One-thing card */}
+                <motion.div
+                  className="bg-sage-50 rounded-lg border-l-4 border-sage-600 px-4 py-3"
+                  initial={prefersReducedMotion ? undefined : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.4, ease: HUMA_EASE }}
+                >
+                  <p className="font-sans text-sm text-earth-500 mb-1">Try this:</p>
+                  <p className="font-sans text-base text-earth-700 leading-relaxed">
+                    {insight.oneThing}
+                  </p>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        {/* Action buttons — Coming Soon */}
-        <motion.div
-          className="flex gap-4 relative"
-          initial={prefersReducedMotion ? undefined : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5, duration: 0.5 }}
-        >
-          <button
-            onClick={() => showTooltip("Coming soon")}
-            className="px-6 py-3 rounded-full border border-earth-300 text-earth-500 font-sans text-sm hover:bg-sand-100 transition-colors"
+          {/* Divider before buttons */}
+          <div className="w-full h-px bg-sand-200 my-6" />
+
+          {/* Action buttons */}
+          <motion.div
+            className="flex gap-4 relative"
+            initial={prefersReducedMotion ? undefined : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{
+              delay: insight ? 0.8 : 1.5,
+              duration: 0.5,
+            }}
           >
-            Tell me more &rarr;
-          </button>
-          <button
-            onClick={() => showTooltip("Coming soon")}
-            className="px-6 py-3 rounded-full border border-earth-300 text-earth-500 font-sans text-sm hover:bg-sand-100 transition-colors"
-          >
-            Save my shape &rarr;
-          </button>
-        </motion.div>
-
-        {/* Tooltip */}
-        <AnimatePresence>
-          {tooltip && (
-            <motion.div
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="mt-3 text-earth-400 text-xs font-sans"
+            <button
+              onClick={() => showTooltip("Coming soon")}
+              className="px-6 py-3 rounded-full border border-earth-300 text-earth-500 font-sans text-sm hover:bg-sand-100 transition-colors"
             >
-              {tooltip}
-            </motion.div>
-          )}
-        </AnimatePresence>
+              Tell me more &rarr;
+            </button>
+            <button
+              onClick={() => showTooltip("Coming soon")}
+              className="px-6 py-3 rounded-full border border-earth-300 text-earth-500 font-sans text-sm hover:bg-sand-100 transition-colors"
+            >
+              Save my shape &rarr;
+            </button>
+          </motion.div>
+
+          {/* Tooltip */}
+          <AnimatePresence>
+            {tooltip && (
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="mt-3 text-earth-400 text-xs font-sans"
+              >
+                {tooltip}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     );
   }
