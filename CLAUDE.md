@@ -20,17 +20,17 @@ There are 9 foundational documents + 1 portable context reference. Each answers 
 
 ### Core Documents (read in this order for full context)
 
-| # | Document | Path | Consult When... |
-|---|----------|------|-----------------|
-| 1 | **Vision & Strategy** | `/docs/HUMA_VISION_AND_STRATEGY.md` | What HUMA is, why it exists, strategic principles, sovereignty, pattern economy, capture resistance. **Read FIRST for any work.** |
-| 2 | **Product Surface** | `/docs/HUMA_PRODUCT_SURFACE.md` | **THE product surface specification.** What the operator sees, touches, and feels. Shape Builder, three tabs, progressive depth, warmth system, all specs. **Read this FIRST for any UI, component, page, or experience work.** |
-| 3 | **Technical Specification** | `/docs/HUMA_TECHNICAL_SPECIFICATION.md` | You're writing code. Data model, API routes, AI engine, database schema, component tree, build sequence. |
-| 4 | **Ethical Framework** | `/docs/HUMA_ETHICAL_FRAMEWORK.md` | You're handling operator data, building distress responses, designing feedback, or any feature touching sensitive information. Dependency test, data principles, one-thing card sovereignty. |
-| 5 | **Pattern Library** | `/docs/HUMA_PATTERN_LIBRARY.md` | You're working on patterns, the pattern schema, or any feature that surfaces patterns to operators. RPPL v0.1 schema + 12 seed patterns. |
-| 6 | **Voice Bible** | `/docs/HUMA_VOICE_BIBLE.md` | You're writing or modifying any AI prompt, any user-facing copy, or any notification text. Banned phrases, vocabulary, tone arc, dimension names. **Read this before touching any system prompt.** |
-| 7 | **Design System** | `/docs/HUMA_DESIGN_SYSTEM.md` | You're writing any CSS, choosing any color, sizing any element, or creating any animation. Palette, typography, spacing, warmth system, animation standards. **Read this before touching any styling.** |
-| 8 | **User Journey** | `/docs/HUMA_USER_JOURNEY.md` | You're building any user-facing feature. Maps stages from Shape Builder through graduation with emotional targets, data flows, churn points. |
-| 9 | **Intellectual Lineage** | `/docs/HUMA_INTELLECTUAL_LINEAGE.md` | You need deep context on WHY decisions were made. The 9 source traditions and how they converge. |
+| # | Document | Path | Authoritative For | Consult When... |
+|---|----------|------|-------------------|--------------------|
+| 1 | **Vision & Strategy** | `/docs/HUMA_VISION_AND_STRATEGY.md` | Sovereignty principles, capture resistance, design principles (1-20), pattern economy, strategic phases, multiple mediums | What HUMA is, why it exists, strategic direction. **Read FIRST for any work.** |
+| 2 | **Product Surface** | `/docs/HUMA_PRODUCT_SURFACE.md` | Progressive depth, Shape Builder spec, three tabs, context model, pricing tiers, warmth system spec, route structure, build sequence, data model (canvas) | **THE product surface specification.** What the operator sees and touches. **Read FIRST for any UI work.** |
+| 3 | **Technical Specification** | `/docs/HUMA_TECHNICAL_SPECIFICATION.md` | TypeScript interfaces, database schema, API routes, AI engine architecture, prompt assembly, phase transition mechanics | You're writing code. Data model, API routes, AI engine, component tree. |
+| 4 | **Ethical Framework** | `/docs/HUMA_ETHICAL_FRAMEWORK.md` | Dependency test, graduation metric (4 capacities), distress protocol, data principles, one-thing card sovereignty, system prompt condensation | You're handling operator data, building distress responses, or any feature touching sensitive information. |
+| 5 | **Pattern Library** | `/docs/HUMA_PATTERN_LIBRARY.md` | RPPL pattern schema (v0.1), seed patterns, pattern evolution mechanics | You're working on patterns or any feature that surfaces patterns. |
+| 6 | **Voice Bible** | `/docs/HUMA_VOICE_BIBLE.md` | Banned phrases, vocabulary, tone arc, response lengths, dimension names (operator-facing), language mapping (internal → operator) | You're writing any AI prompt or user-facing copy. **Read before touching any system prompt.** |
+| 7 | **Design System** | `/docs/HUMA_DESIGN_SYSTEM.md` | Color palette, typography, spacing, components, warmth visual system, animation standards, dark mode, print styles | You're writing CSS or making any visual decision. **Read before touching any styling.** |
+| 8 | **User Journey** | `/docs/HUMA_USER_JOURNEY.md` | Journey stages (9), emotional targets, churn points, sharing moments, tier experience differences | You're building any user-facing feature end-to-end. |
+| 9 | **Intellectual Lineage** | `/docs/HUMA_INTELLECTUAL_LINEAGE.md` | Source traditions (9+1), convergence architecture, "what HUMA must never violate" (5 principles) | You need deep context on WHY decisions were made. |
 
 ### Quick Reference
 
@@ -228,7 +228,7 @@ Read `/docs/HUMA_ETHICAL_FRAMEWORK.md` for the full specification.
 
 **The graduation metric:** If an operator stops using HUMA after 2 years because they've internalized the thinking — that's success.
 
-**System prompt condensation** (inject into every prompt):
+**System prompt condensation** (canonical version in Ethical Framework §09; inject into every prompt):
 ```
 You are HUMA. You help people see their life as a connected system.
 You are not a therapist, financial advisor, or life coach. You are a

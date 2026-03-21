@@ -2,7 +2,9 @@
 
 _Portable onboarding document. Not a source of truth -- see the 9 foundational documents._
 
-_Last updated: March 20, 2026_
+_Last updated: March 21, 2026_
+
+> **How to use this document:** This is a summary for quick orientation. It is NOT the source of truth for any concept. When building features or making decisions, always consult the authoritative document listed in CLAUDE.md's document table. If this summary conflicts with a foundational document, the foundational document wins.
 
 ---
 
@@ -35,11 +37,17 @@ Four names, four contexts. Never confused.
 
 ## The Product
 
+_Canonical spec: HUMA_PRODUCT_SURFACE.md_
+
 ### Entry: Shape Builder (90 sec)
 
-Eight visual cards, one per dimension. Tap to rate. No numbers -- visual weight from small dot to large dot. The shape (8-vertex radar) appears as you go. After card 8, HUMA delivers a structural insight based on the PATTERN of scores -- not any individual score.
+_Canonical spec: HUMA_PRODUCT_SURFACE.md §05_
+
+Eight visual cards, one per dimension. Tap to rate (1-5, displayed as a visual spectrum from small/dim to large/warm). The shape (8-vertex radar) builds progressively in the corner as cards complete. After card 8, the shape fills the screen and HUMA delivers a structural insight — a reading of the RELATIONSHIP between dimensions, not any individual score. Includes a concrete "Try this" suggestion. Two paths: "Tell me more" (short conversation about the leverage point) or "Save my shape" (auth → return tomorrow).
 
 ### Progressive Depth
+
+_Canonical spec: HUMA_PRODUCT_SURFACE.md §04_
 
 Never forced. Always invited.
 
@@ -51,6 +59,8 @@ Never forced. Always invited.
 
 ### Three Tabs
 
+_Canonical spec: HUMA_PRODUCT_SURFACE.md §06_
+
 User-facing: Your Map / Your Day / Your Journey. Internal/code: Design / Operate / Evolve.
 
 **YOUR MAP** -- spatial canvas with center-outward Palmer clustering. Warmth system shows testing status. The shape as a subtle background.
@@ -60,6 +70,8 @@ User-facing: Your Map / Your Day / Your Journey. Internal/code: Design / Operate
 **YOUR JOURNEY** -- shape timeline showing growth over time. "What shifted" narrative. Seasonal review invitation quarterly.
 
 ### Context Model (Sovereignty-Aligned)
+
+_Canonical spec: HUMA_PRODUCT_SURFACE.md §03_
 
 Four operator-controlled sources only:
 
@@ -72,6 +84,8 @@ No external data harvesting. No bank connections. No calendar sync. No health ap
 
 ### Warmth System
 
+_Canonical spec: HUMA_DESIGN_SYSTEM.md §05.5_
+
 Visual states that communicate testing status without labels or numbers:
 
 - **Faint** (~25% opacity) -- untested aspiration
@@ -81,6 +95,8 @@ Visual states that communicate testing status without labels or numbers:
 - **Faded** (~15% opacity, dashed border) -- tried, did not work, archived with history
 
 ### Dimensions
+
+_Canonical spec: HUMA_PRODUCT_SURFACE.md §13, HUMA_VOICE_BIBLE.md §04_
 
 | Internal (8 Forms of Capital) | User-Facing |
 |-------------------------------|-------------|
@@ -105,6 +121,8 @@ Socratic, not prescriptive. Shows coupling and leverage so the operator learns t
 
 ### Pricing
 
+_Canonical spec: HUMA_PRODUCT_SURFACE.md §17, HUMA_VISION_AND_STRATEGY.md §10_
+
 **Free forever:** Shape Builder, daily pulse, weekly insight (one-card), map conversation (once), shape sharing, "people like you" signals.
 
 **$29/month Operate:** Daily one-thing card with compiled methods, full daily schedule, weekly planner, deep weekly review, practice recommendations, seasonal review, shape timeline, canvas versioning.
@@ -118,6 +136,8 @@ Not the canvas. The shape. Capital radar at two points in time. Dark background 
 ---
 
 ## The 6-Phase Map Conversation (earned at week 2-3)
+
+_Canonical spec: HUMA_PRODUCT_SURFACE.md §07-§12, HUMA_TECHNICAL_SPECIFICATION.md §04_
 
 1. **Ikigai** -- Who are you? Warm, curious. Ends with Essence synthesis.
 2. **Holistic Context** -- What are you reaching for? QoL decomposition into operational chains.
@@ -143,6 +163,8 @@ When validation fails, HUMA ALWAYS looks at the system, NEVER at the person.
 
 ## RPPL Primitives
 
+_Canonical spec: HUMA_VISION_AND_STRATEGY.md §03_
+
 | Primitive | What It Is | The Capacity |
 |-----------|------------|--------------|
 | **Essences** | Irreducible identity. A living singularity the system respects. | See what something IS |
@@ -156,6 +178,8 @@ These are not features of an app. They are capacities of a mind.
 ---
 
 ## Sovereignty Principles
+
+_Canonical spec: HUMA_VISION_AND_STRATEGY.md §05, HUMA_ETHICAL_FRAMEWORK.md §02_
 
 Every thinker in HUMA's lineage built systems that make individuals more sovereign, not less.
 
@@ -223,10 +247,20 @@ Regenerative agriculture operators and homesteaders. The architecture is univers
 
 ## Current State
 
-Updated March 20, 2026. See git log for latest.
+Updated March 21, 2026. See git log for latest.
 
 **Deployed:** huma-two.vercel.app
 **Repo:** github.com/cantlonjack/huma
+
+**What's live:**
+- Landing page (universal positioning)
+- Shape Builder at /begin (8 cards, organic SVG illustrations, structural insight, "Tell me more" / "Save my shape" paths)
+- 6-phase conversation engine (Design Mode)
+- Living Canvas output at /map/[id]
+- Sample maps (Sarah Chen, Maya Okafor)
+- Supabase auth + PostgreSQL
+
+**Building next:** Daily shape pulse, /home three-tab shell, one-thing card.
 
 ---
 

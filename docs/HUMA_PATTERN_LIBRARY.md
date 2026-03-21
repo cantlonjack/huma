@@ -857,7 +857,257 @@ attribution:
 
 ---
 
-## 04 — How Patterns Are Used by the AI Engine
+## 04 — Universal Seed Patterns
+
+*The first 12 seed patterns above emerged from regenerative agriculture — the beachhead domain. The following patterns are domain-general: they apply to any human life understood as a connected system. They demonstrate that the RPPL architecture is universal.*
+
+### Pattern 13: Time Block Batching
+
+```yaml
+rppl_version: "0.1"
+
+pattern:
+  id: "rppl:universal:time-block-batching:1"
+  name: "Time Block Batching"
+  version: 1
+
+  situation:
+    description: "Work feels scattered. You're switching between types of tasks (creative, administrative, communication) multiple times per day. Energy is drained by context-switching, not by the work itself."
+    domains: ["freelance", "small-business", "creative-work", "education", "any-knowledge-work"]
+    signals:
+      - "End of day with many things started, few finished"
+      - "Constant inbox/notification checking between tasks"
+      - "Feeling busy but not productive"
+      - "Creative work interrupted by administrative demands"
+    prerequisites: []
+
+  action:
+    description: "Group similar tasks into dedicated time blocks. Protect creative blocks from interruption. Batch administrative and communication tasks into a single daily window."
+    steps:
+      - "Identify your 3-4 task types (e.g., creative/deep work, communication, admin, meetings)"
+      - "Assign each type a daily block: creative work in your peak energy window, communication after lunch, admin end of day"
+      - "Set a hard boundary: no email/messages during creative blocks"
+      - "Batch all communication into one 60-90 minute window"
+      - "Review weekly: which blocks held? Which leaked? Adjust the design, not the discipline"
+    duration: "1 week to establish, 3 weeks to stabilize"
+    effort: "15 minutes to plan, then discipline to hold the blocks"
+    adaptations:
+      freelance:
+        note: "Client communication is the biggest leak. Set expectations: you respond between 1-3pm."
+        modified_steps:
+          - "Add a 'client day' (e.g., Tuesday) for all calls and reviews — protect other days for deep work"
+      education:
+        note: "Teaching hours are fixed. Batch grading and prep into dedicated non-teaching days."
+        modified_steps:
+          - "Never grade and prep on the same day — they use different cognitive modes"
+
+  principle: "Context-switching has a cognitive cost that compounds across a day. Batching amortizes setup cost and enables flow state. The principle is the same whether you're batching harvest tasks on a farm or creative tasks at a desk."
+
+  provenance:
+    source_tradition: "Perkins enterprise design + universal productivity research"
+    original_context: "Farm task batching (Perkins), adapted to knowledge work"
+    key_reference: "Cal Newport, 'Deep Work'; Richard Perkins, 'Regenerative Agriculture'"
+
+  connections:
+    synergies: ["rppl:universal:energy-rhythm-mapping:1", "rppl:universal:hard-stop-practice:1"]
+    conflicts: ["On-demand client availability expectations"]
+    enables: ["Sustained creative output", "Reduced decision fatigue"]
+    part_of: ["Weekly rhythm design"]
+    contains: []
+
+  capital_impact:
+    primary: ["Intellectual", "Experiential"]
+    secondary: ["Financial", "Social"]
+    cost: ["Requires saying no to real-time availability"]
+
+  validation:
+    metric: "Uninterrupted creative blocks per week (target: 4+)"
+    frequency: "weekly"
+    threshold: "4+ blocks of 90min+ with no interruption, sustained for 3 weeks"
+```
+
+### Pattern 14: Hard Stop Practice
+
+```yaml
+rppl_version: "0.1"
+
+pattern:
+  id: "rppl:universal:hard-stop-practice:1"
+  name: "Hard Stop Practice"
+  version: 1
+
+  situation:
+    description: "Work expands to fill available time. Evenings and weekends erode. The things that matter most — relationships, rest, joy — get whatever is left over, which is usually nothing."
+    domains: ["any-work", "freelance", "parenting", "caregiving"]
+    signals:
+      - "Regularly working past intended stop time"
+      - "Partner/family complaints about availability"
+      - "Rest feels like something you haven't earned yet"
+      - "Joy dimension consistently low despite other dimensions being okay"
+    prerequisites: []
+
+  action:
+    description: "Set a non-negotiable daily stop time tied to a specific quality-of-life commitment. Design the work to fit inside the boundary, not the boundary around the work."
+    steps:
+      - "Name the QoL commitment the stop time protects (e.g., 'dinner with my partner by 6:30')"
+      - "Set the hard stop time (e.g., 5:30pm including shutdown ritual)"
+      - "Work backward: what has to be true for all essential work to be done by then?"
+      - "Identify the one task type that most often causes overrun — redesign or reschedule it"
+      - "When the stop time arrives, stop. Even if something is unfinished. The unfinished thing is tomorrow's first task."
+      - "Weekly review: how many hard stops held? If fewer than 5/7, look at the system, not your discipline"
+    duration: "Immediate to start, 2-3 weeks to stabilize"
+    effort: "Zero additional effort — this is about stopping, not doing more"
+    adaptations:
+      parenting:
+        note: "The hard stop is often set by school pickup or childcare end time. The design challenge is working backward from that fixed point."
+        modified_steps:
+          - "Identify the 'last possible leave time' and subtract 15min buffer — that's your real stop time"
+      freelance:
+        note: "Client urgency is the biggest threat to the hard stop. Set communication boundaries that prevent 4pm emergencies."
+        modified_steps:
+          - "Move all client deliverable deadlines to morning — nothing due end-of-day"
+
+  principle: "Time boundaries protect what matters. When work has no boundary, it consumes everything — not because the work demands it, but because an open system expands to fill its container. A hard stop is a design constraint that forces prioritization."
+
+  provenance:
+    source_tradition: "Holistic Management (Savory) — QoL-first decision making"
+    original_context: "Farm hard stops protecting family time (HUMA beachhead)"
+    key_reference: "Allan Savory, 'Holistic Management'; Dan Martell, 'Buy Back Your Time'"
+
+  connections:
+    synergies: ["rppl:universal:time-block-batching:1", "rppl:universal:weekly-rhythm-design:1"]
+    conflicts: ["Cultures of on-demand availability"]
+    enables: ["Protected relationship time", "Rest without guilt", "Joy recovery"]
+    part_of: ["QoL decomposition chain"]
+    contains: []
+
+  capital_impact:
+    primary: ["Experiential", "Social"]
+    secondary: ["Living", "Spiritual"]
+    cost: ["May limit Financial capital in short term (fewer billable hours)"]
+
+  validation:
+    metric: "Hard stops held per week (target: 5+/7)"
+    frequency: "weekly"
+    threshold: "5+ days with hard stop respected for 4 consecutive weeks"
+```
+
+### Pattern 15: Financial Clarity Practice
+
+```yaml
+rppl_version: "0.1"
+
+pattern:
+  id: "rppl:universal:financial-clarity-practice:1"
+  name: "Financial Clarity Practice"
+  version: 1
+
+  situation:
+    description: "Money feels like fog — you know roughly what comes in and goes out, but the specifics are avoided. The avoidance itself generates anxiety that bleeds into sleep, relationships, and decision-making."
+    domains: ["personal-finance", "freelance", "small-business", "any-life"]
+    signals:
+      - "Money dimension rated low but you can't name the specific gap"
+      - "Avoiding looking at bank balance"
+      - "Financial decisions made from anxiety rather than information"
+      - "Sleep disrupted by money worry"
+    prerequisites: []
+
+  action:
+    description: "Replace money anxiety with money clarity through a single weekly practice: 15 minutes with the real numbers. Not budgeting. Not optimizing. Just seeing."
+    steps:
+      - "Pick a fixed weekly time (Sunday evening or Monday morning works for most people)"
+      - "Open all accounts. Write down three numbers: what came in this week, what went out, what's left"
+      - "No judgment. No planning. Just the numbers. Sit with them for 2 minutes."
+      - "Name one thing that surprised you. That's the signal."
+      - "After 3 weeks: the anxiety shifts from fog to specifics. Specific problems have specific solutions."
+    duration: "15 minutes per week, 3 weeks to shift from avoidance to clarity"
+    effort: "15 minutes weekly"
+
+  principle: "Financial anxiety is almost always driven by avoidance, not by the actual numbers. The fog is worse than the reality. Clarity — even clarity about a bad situation — reduces anxiety because the nervous system can work with concrete information. It can't work with undefined dread."
+
+  provenance:
+    source_tradition: "Holistic Management (Savory) — planning for financial health as part of the whole"
+    original_context: "Universal — applies to any person with income and expenses"
+    key_reference: "Ramit Sethi (conscious spending); Allan Savory (financial planning within holistic context)"
+
+  connections:
+    synergies: ["rppl:universal:hard-stop-practice:1"]
+    conflicts: ["Avoidance as coping strategy (pattern must be introduced gently)"]
+    enables: ["Informed financial decisions", "Sleep improvement", "Reduced relationship tension about money"]
+    part_of: ["Weekly rhythm design"]
+    contains: []
+
+  capital_impact:
+    primary: ["Financial"]
+    secondary: ["Living", "Social", "Experiential"]
+    cost: ["Short-term discomfort of facing numbers"]
+
+  validation:
+    metric: "Weekly money check-ins completed (target: 3+/4 weeks)"
+    frequency: "monthly"
+    threshold: "3+ check-ins per month for 2 consecutive months"
+```
+
+### Pattern 16: Weekly Rhythm Design
+
+```yaml
+rppl_version: "0.1"
+
+pattern:
+  id: "rppl:universal:weekly-rhythm-design:1"
+  name: "Weekly Rhythm Design"
+  version: 1
+
+  situation:
+    description: "Every week feels like it's happening to you rather than being shaped by you. Days blur together. Important-but-not-urgent things (health, relationships, creative projects) never get space because urgent things fill every gap."
+    domains: ["any-life", "freelance", "parenting", "education", "small-business"]
+    signals:
+      - "No distinction between different days of the week"
+      - "Important personal projects haven't moved in weeks"
+      - "Feeling reactive rather than intentional"
+      - "Weekend used to recover from the week rather than to live"
+    prerequisites: ["rppl:universal:hard-stop-practice:1"]
+
+  action:
+    description: "Give each day a theme that reflects what matters. Not a rigid schedule — a shape. Monday is for planning and deep work. Wednesday is for people. Friday is for loose ends. The theme doesn't control every hour — it sets the tone and protects the priority."
+    steps:
+      - "List your 4-5 recurring task/life types (deep work, communication, admin, relationships, rest)"
+      - "Assign each a primary day. Not exclusive — just primary."
+      - "Protect one morning per week for the thing that matters most but never gets space"
+      - "Designate one day as 'light' — half the normal load, buffer for overflow"
+      - "Sunday evening or Monday morning: 10-minute preview of the week's shape"
+      - "Sunday evening: 5-minute review — which themes held? Which got overrun? Adjust the design."
+    duration: "1 week to draft, 4 weeks to stabilize"
+    effort: "15 minutes to plan, then holding the shape through the week"
+
+  principle: "A week without rhythm is a week without leverage. Theming days reduces daily decision-making (you know what today is FOR), protects important-not-urgent work, and creates natural transitions between different modes of attention. The rhythm is a design constraint, not a cage — it shapes the week so the week doesn't shape you."
+
+  provenance:
+    source_tradition: "Perkins (weekly farm rhythm design) + Palmer (design process)"
+    original_context: "Farm weekly rhythm (Perkins), generalized to any life"
+    key_reference: "Richard Perkins, 'Regenerative Agriculture'; Mike Vardy, 'Productivityist'"
+
+  connections:
+    synergies: ["rppl:universal:time-block-batching:1", "rppl:universal:hard-stop-practice:1", "rppl:universal:financial-clarity-practice:1"]
+    conflicts: ["Jobs with unpredictable schedules (pattern needs heavy adaptation)"]
+    enables: ["Protected creative time", "Relationship maintenance", "Sustainable work pace"]
+    part_of: ["Operational design (Phase 6)"]
+    contains: ["rppl:universal:time-block-batching:1", "rppl:universal:hard-stop-practice:1"]
+
+  capital_impact:
+    primary: ["Intellectual", "Experiential", "Social"]
+    secondary: ["Living", "Spiritual"]
+    cost: ["Requires saying no to some spontaneous requests"]
+
+  validation:
+    metric: "Days where the theme held vs. was overridden (target: 4+/5 workdays)"
+    frequency: "weekly"
+    threshold: "4+ themed days holding for 3 consecutive weeks"
+```
+
+---
+
+## 05 — How Patterns Are Used by the AI Engine
 
 The AI engine selects patterns through a three-step process:
 

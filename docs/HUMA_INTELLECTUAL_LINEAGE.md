@@ -2,7 +2,7 @@
 ## Intellectual Lineage & Foundational Sources
 ### A Research Document
 
-*How nine transformative intellectual traditions and one emergent operational principle converged to create the Reality Pattern Protocol Layer and the HUMA Living Systems Design Tool*
+*How nine transformative intellectual traditions and one emergent operational principle converged to create the Reality Pattern Protocol Layer — a perceptual grammar for human flourishing*
 
 March 2026 · Confidential · Foundational Reading
 
@@ -15,6 +15,10 @@ March 2026 · Confidential · Foundational Reading
 > The sources below are not influences. They are load-bearing pillars. Remove any one of them and the intellectual architecture of HUMA — the four-layer system, the 8 Forms of Capital dashboard, the Pattern Library, the Cascade Engine, the RPPL — collapses.
 >
 > This document traces the origin of every core idea in HUMA back to its source, explains what each source contributed, and shows how they synthesise into something genuinely unprecedented.
+
+> **A NOTE ON SCOPE**
+>
+> The sources below emerged from diverse domains — Japanese philosophy, regenerative agriculture, gastronomic knowledge architecture, developmental psychology, holistic land management. The intellectual architecture they produce is universal. It applies to any human life understood as a connected system: a freelancer designing their week, a teacher structuring their practice, a family managing a transition, a small business finding leverage. Agriculture is the first expression of HUMA — the beachhead where the architecture was tested against real land and real stakes. But the perceptual grammar works everywhere, because the underlying structure of human flourishing is the same everywhere.
 
 ---
 
@@ -480,7 +484,7 @@ The mechanism by which RPPL works: never import, always reveal and recombine wha
 >
 > *How do we help living systems — farms, businesses, people, communities, landscapes — not just survive, but regenerate: to become more themselves, more vital, more interconnected with each iteration?*
 >
-> HUMA is the first product to take that question seriously in the domain of regenerative land stewardship — and to give every operator the tools to answer it for themselves, in relationship to their specific land, their specific community, and their specific life.
+> HUMA is the first product to take that question seriously at the level of individual human life — and to give every person the tools to answer it for themselves, in relationship to their specific situation, their specific community, and their specific aspirations. The first operators are land stewards. The architecture serves anyone designing a life.
 
 ---
 
@@ -506,7 +510,7 @@ Understanding the intellectual lineage is not academic. It has direct implicatio
 
 ### What Makes HUMA Genuinely Unprecedented
 
-Every other farm tool operates in one domain. HUMA operates across eight capitals simultaneously. Every other tool gives advice. HUMA gives a language. Every other tool resets each session. HUMA develops its operators over seasons and years. Every other tool is built on reductionist software conventions. HUMA is built on 30 years of living systems research from agriculture, ecology, philosophy, gastronomy, developmental psychology, and the frontiers of AI architecture.
+Every other life-design tool operates in one domain — fitness, finance, productivity, therapy. HUMA operates across eight dimensions simultaneously. Every other tool gives advice. HUMA gives a language. Every other tool resets each session. HUMA develops its operators over seasons and years. Every other tool is built on reductionist software conventions. HUMA is built on 30 years of living systems research from agriculture, ecology, philosophy, gastronomy, developmental psychology, and the frontiers of AI architecture.
 
 No one else has read all these books. No one else has synthesised them into a product. That synthesis is the moat, the mission, and the magic.
 

@@ -184,8 +184,9 @@ Eight dimension-specific cards with visual metaphors. No numbers.
 
 The shape fills the screen. Below it, HUMA delivers the structural
 insight — a reading of the RELATIONSHIP between dimensions. Generated
-by a Claude API call that receives the 8 scores and produces insight
-based on:
+by a Claude API call that receives the 8 scores and produces flowing
+prose that addresses these four aspects naturally (not as a numbered
+list):
 
 1. **Most unusual aspect** — what stands out about this configuration
 2. **Strongest coupling** — which dimensions are pulling on each other most
