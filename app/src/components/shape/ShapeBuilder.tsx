@@ -34,6 +34,7 @@ const HUMA_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 interface ShapeBuilderProps {
   onComplete?: (shape: ShapeData) => void;
   onClose?: () => void;
+  onSave?: (scores: Partial<Record<DimensionKey, number>>, insight: ShapeInsight | null) => void;
 }
 
 type Direction = 1 | -1;
@@ -50,7 +51,7 @@ function useReducedMotion(): boolean {
   return reduced;
 }
 
-export default function ShapeBuilder({ onComplete, onClose }: ShapeBuilderProps) {
+export default function ShapeBuilder({ onComplete, onClose, onSave }: ShapeBuilderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [scores, setScores] = useState<Partial<Record<DimensionKey, number>>>({});
   const [revealed, setRevealed] = useState(false);
@@ -306,8 +307,8 @@ export default function ShapeBuilder({ onComplete, onClose }: ShapeBuilderProps)
               Tell me more &rarr;
             </button>
             <button
-              onClick={() => showTooltip("Coming soon")}
-              className="px-6 py-3 rounded-full border border-earth-300 text-earth-500 font-sans text-sm hover:bg-sand-100 transition-colors"
+              onClick={() => onSave?.(scores, insight)}
+              className="px-6 py-3 rounded-full bg-sage-600 text-white font-sans text-sm font-medium hover:bg-sage-700 transition-colors"
             >
               Save my shape &rarr;
             </button>

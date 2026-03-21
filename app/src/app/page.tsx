@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useConversation } from "@/hooks/useConversation";
 import { useMapGeneration } from "@/hooks/useMapGeneration";
 import { useMapPersistence } from "@/hooks/useMapPersistence";
+import { useAuth } from "@/components/AuthProvider";
+import { fetchLatestShape } from "@/lib/shapes";
 import LandingView from "@/components/views/LandingView";
 import WelcomeView from "@/components/views/WelcomeView";
 import ConversationView from "@/components/views/ConversationView";
@@ -13,6 +16,28 @@ import MapView from "@/components/views/MapView";
 type AppState = "landing" | "welcome" | "conversation" | "generating" | "map";
 
 export default function Home() {
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const [hasShape, setHasShape] = useState<boolean | null>(null);
+
+  // Check if authenticated user already has a shape
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) { setHasShape(false); return; }
+
+    (async () => {
+      const latest = await fetchLatestShape();
+      setHasShape(!!latest);
+    })();
+  }, [user, authLoading]);
+
+  const handleBegin = useCallback(() => {
+    if (user && hasShape) {
+      router.push("/home");
+    } else {
+      router.push("/begin");
+    }
+  }, [user, hasShape, router]);
   const [appState, setAppState] = useState<AppState>("landing");
   const [operatorName, setOperatorName] = useState("");
   const [operatorLocation, setOperatorLocation] = useState("");
@@ -55,7 +80,7 @@ export default function Home() {
     return (
       <LandingView
         savedConvo={savedConvo}
-        onStart={() => setAppState("welcome")}
+        onStart={handleBegin}
         onResume={(saved) => {
           conversation.resumeConversation(saved);
           setOperatorName(saved.operatorName);
