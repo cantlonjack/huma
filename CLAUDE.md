@@ -10,7 +10,7 @@ The application makes money. The protocol makes history.
 
 **Beachhead market:** Regenerative agriculture operators and homesteaders. The architecture is universal. The first users are specific.
 
-**Current state:** MVP deployed at huma-two.vercel.app. Design Mode conversation (6 phases) functional. Living Canvas output at /map/[id]. Next: Shape Builder entry (90 sec, 8 visual cards), daily shape pulse, one-thing card (sovereignty framing), warmth system, spatial canvas with Palmer layout, shape-as-share-artifact.
+**Current state:** MVP deployed at huma-two.vercel.app. Shape Builder live at /begin (8 visual cards, organic SVG illustrations, progressive shape build, structural insight via Claude API, "Tell me more" / "Save my shape" paths). Design Mode conversation (6 phases) functional. Living Canvas output at /map/[id]. Next: Daily shape pulse (Phase 2), /home three-tab shell, one-thing card, weekly shape morph, shape sharing.
 
 ---
 
@@ -100,6 +100,8 @@ Time and Wisdom reserved as future fields.
 **Free forever:** Shape Builder, daily pulse, weekly insight (one-card: shape morph + coherence delta), map conversation (once), shape sharing, "people like you" signals.
 
 **$29/month Operate:** Daily one-thing card with compiled methods, full daily schedule, weekly planner, deep weekly review (5-8 min), practice recommendations, seasonal review, shape timeline, canvas versioning.
+
+**$99/month Professional:** Everything in Operate + Evolve Mode, multi-context management, pattern contribution tools, client dashboards. For consultants, educators, coaches who guide others through the medium.
 
 ### The 6-Phase Conversation (Layer 4)
 

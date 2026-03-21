@@ -92,6 +92,14 @@ The color of text. A warm brownish-black, never pure black.
 | ink-300 | #A89E90 | Placeholder text, very light labels |
 | ink-200 | #C4BAA8 | Disabled text, ghost elements |
 
+### Alias: Earth
+
+Used in dark-mode and share artifact contexts. Identical to ink values — defined separately for semantic clarity in design specs.
+
+| Token | Hex | Alias Of | Usage |
+|-------|-----|----------|-------|
+| earth-900 | #1A1714 | ink-900 | Share card background, dark-mode deepest surface |
+
 ### Rules
 - **Never use pure white (#FFFFFF)** as a page background. sand-50 is the default.
 - **Never use pure black (#000000)** for text. ink-900 is the darkest.

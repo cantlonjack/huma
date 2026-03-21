@@ -910,6 +910,13 @@ $29/MONTH OPERATE:
   - Seasonal review conversation
   - Shape timeline (historical comparison)
   - Canvas versioning
+
+$99/MONTH PROFESSIONAL:
+  - Everything in Operate
+  - Evolve Mode (seasonal reviews that update the map)
+  - Multi-context management (multiple maps for different life domains)
+  - Pattern contribution tools (structure and share what you've learned)
+  - Client dashboards (for consultants, educators, coaches guiding others)
 ```
 
 Free users get the insight and the shape. That drives growth.
@@ -964,7 +971,7 @@ an artifact — the thing someone screenshots and shares.
 
 In order of priority. Ship early, iterate with real users.
 
-### Phase 1: Shape Builder (3-4 sessions)
+### Phase 1: Shape Builder (3-4 sessions) [SHIPPED]
 - 8 cards, one per dimension
 - Visual tap targets (not numbered sliders)
 - Shape builds as they go (SVG radar)
@@ -972,7 +979,7 @@ In order of priority. Ship early, iterate with real users.
 - "Tell me more" / "I'll come back" paths
 - Auth (magic link) to enable return
 
-### Phase 2: Daily Shape Pulse (2-3 sessions)
+### Phase 2: Daily Shape Pulse (2-3 sessions) [NEXT]
 - Show yesterday's shape
 - Tap to adjust vertices
 - "Done — nothing changed" shortcut
@@ -980,37 +987,37 @@ In order of priority. Ship early, iterate with real users.
 - Pattern detection engine (after 3-4 days)
 - Insight cards (max one per 2-3 days)
 
-### Phase 3: One-Thing Card (2-3 sessions)
+### Phase 3: One-Thing Card (2-3 sessions) [FUTURE]
 - Generated from dimensional analysis + temporal patterns
 - Sovereign framing (coupling + community wisdom, operator decides)
 - Got it / Not today
 - Track outcomes vs predictions
 
-### Phase 4: Weekly Shape Morph (2 sessions)
+### Phase 4: Weekly Shape Morph (2 sessions) [FUTURE]
 - Animate shape from Monday to Sunday
 - Show dimension deltas
 - One insight
 - Coherence score delta
 - "Tell me more" / "Go deeper" -> deeper review
 
-### Phase 5: Shape Sharing (2-3 sessions)
+### Phase 5: Shape Sharing (2-3 sessions) [FUTURE]
 - Generate shape card (dark mode, SVG -> PNG)
 - Two time points (then -> now)
 - Coherence delta
 - Share button + Web Share API
 - Per-map OG image with shape
 
-### Phase 6: Map Conversation (3-4 sessions)
+### Phase 6: Map Conversation (3-4 sessions) [FUTURE]
 - Triggered at week 2-3
 - Uses accumulated shape + pulse data as context
 - 15-20 minute version of 6-phase conversation
 - Produces full canvas data
 
-### Phase 7: Three-Tab Experience (4-5 sessions)
+### Phase 7: Three-Tab Experience (4-5 sessions) [FUTURE]
 - Your Map (Palmer canvas with warmth)
 - Your Day (one-thing card, full day optional, weekly planner optional)
 - Your Journey (shape timeline, seasonal review)
 
-**USABLE PRODUCT after Phase 4 (~10 sessions).** Shape builder + daily
-pulse + one-thing + weekly morph. Ship to real humans. Get feedback.
+**Phase 1 shipped March 2026.** USABLE PRODUCT after Phase 4 (~10 sessions from here).
+Shape builder + daily pulse + one-thing + weekly morph. Ship to real humans. Get feedback.
 Then build phases 5-7.

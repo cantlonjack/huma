@@ -137,7 +137,7 @@ interface Conversation {
 type Phase =
   | 'ikigai'
   | 'holistic-context'
-  | 'landscape'
+  | 'field-reading'
   | 'enterprise-map'
   | 'nodal-interventions'
   | 'operational-design'
@@ -542,7 +542,7 @@ The AI signals transitions by appending markers to its response:
 
 ```
 "...now I want to understand the land itself."
-[[PHASE:landscape]]
+[[PHASE:field-reading]]
 [[CONTEXT:holistic-synthesis]]Quality of life centered on family presence
 and creative outdoor work. Production through food growing, ecological
 restoration, and community education. Resource base: soil health, financial
@@ -923,7 +923,7 @@ During the conversation, the canvas builds ring by ring:
 const RING_PHASES: Record<Phase, number> = {
   'ikigai': 0,                 // Essence core appears
   'holistic-context': 1,       // QoL + Production + Resource rings
-  'landscape': 2,              // Field layers + Capital profile
+  'field-reading': 2,           // Field layers + Capital profile
   'enterprise-map': 3,         // Enterprise cards
   'nodal-interventions': 4,    // Nodal action cards
   'operational-design': 5,     // Weekly rhythm (if visible)
