@@ -5,22 +5,6 @@ import { type Phase, PHASES } from "@/engine/types";
 import { type SavedConversation } from "@/lib/persistence";
 import "./landing.css";
 
-const DIMS = [
-  { n: "Body", c: "#3A5A40", v1: 38 },
-  { n: "People", c: "#5C7A62", v1: 42 },
-  { n: "Money", c: "#B5621E", v1: 28 },
-  { n: "Home", c: "#2E6B8A", v1: 62 },
-  { n: "Growth", c: "#8A6D1E", v1: 55 },
-  { n: "Joy", c: "#A04040", v1: 32 },
-  { n: "Purpose", c: "#3A5A40", v1: 60 },
-  { n: "Identity", c: "#8BAF8E", v1: 65 },
-];
-
-const BLOB_EMPTY =
-  "M100,100 L100,100 L100,100 L100,100 L100,100 L100,100 L100,100 L100,100 Z";
-const BLOB_FULL =
-  "M100,38 L130,52 L148,80 L142,112 L124,136 L94,142 L66,128 L54,96 L58,66 L78,46 Z";
-
 function formatTimeAgo(isoString: string): string {
   const diff = Date.now() - new Date(isoString).getTime();
   const mins = Math.floor(diff / 60000);
@@ -53,9 +37,9 @@ export default function LandingView({
 }: LandingViewProps) {
   const [showSaved, setShowSaved] = useState(true);
   const heroShapeRef = useRef<HTMLDivElement>(null);
-  const demoStageRef = useRef<HTMLDivElement>(null);
-  const demoIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const demoStepRef = useRef(-1);
+  const demoRef = useRef<HTMLDivElement>(null);
+  const [demoStep, setDemoStep] = useState(0);
+  const demoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ── Scroll reveal ──
   useEffect(() => {
@@ -92,126 +76,47 @@ export default function LandingView({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // ── Demo animation ──
-  const runDemoStep = useCallback((step: number) => {
-    const stage = demoStageRef.current;
-    if (!stage) return;
-
-    const msgs = [
-      stage.querySelector("#dm0"),
-      stage.querySelector("#dm1"),
-      stage.querySelector("#dm2"),
-    ] as HTMLElement[];
-    const dots = stage.parentElement?.querySelectorAll(
-      ".demo-pdot"
-    ) as NodeListOf<HTMLElement>;
-    const blob = stage.querySelector("#demoBlob") as SVGPathElement;
-    const score = stage.querySelector("#demoScore") as SVGTextElement;
-    const label = stage.querySelector("#demoLabel") as SVGTextElement;
-    const cascade = stage.querySelector("#demoCascade") as HTMLElement;
-
-    dots?.forEach((d) => d.classList.remove("active"));
-    if (dots?.[step]) dots[step].classList.add("active");
-
-    if (step === 0) {
-      msgs.forEach((m) => m?.classList.remove("vis"));
-      blob?.setAttribute("d", BLOB_EMPTY);
-      score?.setAttribute("opacity", "0");
-      label?.setAttribute("opacity", "0");
-      DIMS.forEach((_, i) => {
-        const fill = stage.querySelector(`#df${i}`) as HTMLElement;
-        const val = stage.querySelector(`#dv${i}`) as HTMLElement;
-        if (fill) fill.style.width = "0%";
-        if (val) {
-          val.textContent = "—";
-          val.classList.remove("low");
-        }
-      });
-      cascade?.classList.remove("vis");
-      ["cc0", "cc1", "cc2", "ca0", "ca1"].forEach((id) => {
-        stage.querySelector(`#${id}`)?.classList.remove("vis");
-      });
-      setTimeout(() => msgs[0]?.classList.add("vis"), 200);
-    }
-
-    if (step === 1) {
-      blob?.setAttribute("d", BLOB_FULL);
-      score?.setAttribute("opacity", "1");
-      label?.setAttribute("opacity", "1");
-      DIMS.forEach((d, i) => {
-        setTimeout(() => {
-          const fill = stage.querySelector(`#df${i}`) as HTMLElement;
-          const val = stage.querySelector(`#dv${i}`) as HTMLElement;
-          if (fill) fill.style.width = d.v1 + "%";
-          if (val) {
-            val.textContent = String(d.v1);
-            if (d.v1 < 40) val.classList.add("low");
-          }
-        }, i * 80);
-      });
-    }
-
-    if (step === 2) {
-      msgs[1]?.classList.add("vis");
-    }
-
-    if (step === 3) {
-      msgs[2]?.classList.add("vis");
-      cascade?.classList.add("vis");
-      setTimeout(
-        () => stage.querySelector("#cc0")?.classList.add("vis"),
-        200
-      );
-      setTimeout(
-        () => stage.querySelector("#ca0")?.classList.add("vis"),
-        400
-      );
-      setTimeout(
-        () => stage.querySelector("#cc1")?.classList.add("vis"),
-        600
-      );
-      setTimeout(
-        () => stage.querySelector("#ca1")?.classList.add("vis"),
-        800
-      );
-      setTimeout(
-        () => stage.querySelector("#cc2")?.classList.add("vis"),
-        1000
-      );
-    }
+  // ── Demo walkthrough (4 steps, auto-advance + manual dots) ──
+  const startDemo = useCallback(() => {
+    if (demoTimerRef.current) clearInterval(demoTimerRef.current);
+    demoTimerRef.current = setInterval(() => {
+      setDemoStep((s) => (s + 1) % 4);
+    }, 3500);
   }, []);
 
   useEffect(() => {
-    const stage = demoStageRef.current;
-    if (!stage) return;
-
-    const advance = () => {
-      demoStepRef.current = (demoStepRef.current + 1) % 4;
-      runDemoStep(demoStepRef.current);
-    };
-
+    const el = demoRef.current;
+    if (!el) return;
     const obs = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
-          if (e.isIntersecting && !demoIntervalRef.current) {
-            demoStepRef.current = -1;
-            advance();
-            demoIntervalRef.current = setInterval(advance, 3500);
+          if (e.isIntersecting && !demoTimerRef.current) {
+            setDemoStep(0);
+            startDemo();
           }
-          if (!e.isIntersecting && demoIntervalRef.current) {
-            clearInterval(demoIntervalRef.current);
-            demoIntervalRef.current = null;
+          if (!e.isIntersecting && demoTimerRef.current) {
+            clearInterval(demoTimerRef.current);
+            demoTimerRef.current = null;
           }
         });
       },
       { threshold: 0.3 }
     );
-    obs.observe(stage);
+    obs.observe(el);
     return () => {
       obs.disconnect();
-      if (demoIntervalRef.current) clearInterval(demoIntervalRef.current);
+      if (demoTimerRef.current) clearInterval(demoTimerRef.current);
     };
-  }, [runDemoStep]);
+  }, [startDemo]);
+
+  const goToStep = useCallback((step: number) => {
+    setDemoStep(step);
+    // Reset timer
+    if (demoTimerRef.current) clearInterval(demoTimerRef.current);
+    demoTimerRef.current = setInterval(() => {
+      setDemoStep((s) => (s + 1) % 4);
+    }, 3500);
+  }, []);
 
   return (
     <div className="landing">
@@ -320,139 +225,217 @@ export default function LandingView({
         </div>
       </section>
 
-      {/* ═══ DEMO ═══ */}
+      {/* ═══ DEMO — Shape Builder Walkthrough ═══ */}
       <section className="landing-demo">
         <div className="section-inner">
           <div className="demo-label rv">See it in action</div>
           <h2 className="rv rv-d1">
-            One check-in. The whole <em>picture.</em>
+            90 seconds. Your whole <em>shape.</em>
           </h2>
           <p className="demo-sub rv rv-d2">
-            Watch how HUMA turns what you&apos;re feeling into a map of
-            what&apos;s actually happening — and what to do about it.
+            Watch how HUMA turns 8 honest answers into a picture of your
+            life — and the one insight that changes how you see it.
           </p>
 
-          <div className="demo-stage rv rv-d3" ref={demoStageRef}>
+          {/* ── Desktop: animated walkthrough ── */}
+          <div className="demo-walkthrough rv rv-d3" ref={demoRef}>
             <div className="demo-topbar">
               <div className="demo-topbar-dot" />
               <div className="demo-topbar-dot" />
               <div className="demo-topbar-dot" />
               <div className="demo-topbar-title">HUMA</div>
             </div>
-            <div className="demo-body">
-              {/* Conversation */}
-              <div className="demo-conv">
-                <div className="demo-msg user" id="dm0">
-                  I can&apos;t sleep. Money keeps me up at night. I feel like
-                  I&apos;m failing at everything and I&apos;m distant from the
-                  people I love.
-                </div>
-                <div className="demo-msg huma" id="dm1">
-                  <div className="insight-tag">✦ Connection found</div>
-                  Your <strong>money stress</strong> isn&apos;t separate from
-                  your sleep or your relationship. They&apos;re the same system
-                  under pressure. Right now, financial uncertainty is draining
-                  your Body and pulling you away from People.
-                </div>
-                <div className="demo-msg huma" id="dm2">
-                  <div className="action-tag">⚡ Try this tonight</div>
-                  Write down every recurring expense. Star the ones that bring
-                  genuine joy. <strong>Don&apos;t make decisions yet.</strong>{" "}
-                  Just naming it will give your nervous system something
-                  concrete to hold onto instead of a fog.
+
+            <div className="demo-steps-viewport">
+              {/* STEP 1 — Body card */}
+              <div className={`demo-step${demoStep === 0 ? " active" : ""}`}>
+                <div className="demo-card-content">
+                  <h3 className="demo-card-question">
+                    How does your body feel right now?
+                  </h3>
+                  <div className="demo-card-illustration">
+                    <svg width="140" height="140" viewBox="0 0 240 240" fill="none" aria-hidden="true">
+                      <path d="M120 195 C118 178, 114 162, 116 145 C118 128, 115 112, 118 95 C121 78, 125 62, 132 48 C138 36, 146 28, 155 24" stroke="#5C7A62" strokeWidth="3.2" strokeLinecap="round" fill="none" opacity="0.75" />
+                      <path d="M120 195 C122 176, 126 160, 124 142 C122 125, 125 108, 122 92 C119 76, 114 60, 106 46 C100 36, 90 28, 80 26" stroke="#5C7A62" strokeWidth="2.4" strokeLinecap="round" fill="none" opacity="0.65" />
+                      <path d="M128 88 C134 82, 142 80, 148 84 C144 88, 136 90, 128 88" stroke="#8BAF8E" strokeWidth="2" strokeLinecap="round" fill="#8BAF8E" fillOpacity="0.12" opacity="0.6" />
+                      <path d="M114 106 C108 100, 98 98, 92 102 C98 106, 106 108, 114 106" stroke="#A8C4AA" strokeWidth="1.8" strokeLinecap="round" fill="#A8C4AA" fillOpacity="0.1" opacity="0.5" />
+                      <path d="M120 195 C112 200, 104 204, 96 202" stroke="#8C8274" strokeWidth="2.2" strokeLinecap="round" fill="none" opacity="0.35" />
+                      <path d="M120 195 C128 202, 138 206, 146 203" stroke="#8C8274" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.3" />
+                    </svg>
+                  </div>
+                  <div className="demo-pills">
+                    <span className="demo-pill demo-pill-1">depleted</span>
+                    <span className="demo-pill demo-pill-2">heavy</span>
+                    <span className="demo-pill demo-pill-3">okay</span>
+                    <span className="demo-pill demo-pill-4 demo-pill-selected">strong</span>
+                    <span className="demo-pill demo-pill-5">alive</span>
+                  </div>
                 </div>
               </div>
-              {/* Shape + dims */}
-              <div className="demo-shape-area">
-                <svg viewBox="0 0 200 200" fill="none">
-                  <defs>
-                    <radialGradient id="dg" cx="50%" cy="50%">
-                      <stop offset="0%" stopColor="#8BAF8E" stopOpacity=".25" />
-                      <stop offset="100%" stopColor="#3A5A40" stopOpacity=".05" />
-                    </radialGradient>
-                  </defs>
-                  <circle cx="100" cy="100" r="76" stroke="#C4D9C6" strokeWidth=".5" opacity=".3" strokeDasharray="3 4" />
-                  <circle cx="100" cy="100" r="50" stroke="#C4D9C6" strokeWidth=".5" opacity=".25" strokeDasharray="3 4" />
-                  <circle cx="100" cy="100" r="25" stroke="#A8C4AA" strokeWidth=".5" opacity=".3" strokeDasharray="3 4" />
-                  <path
-                    id="demoBlob"
-                    d={BLOB_EMPTY}
-                    fill="url(#dg)"
-                    stroke="#5C7A62"
-                    strokeWidth="1.2"
-                    strokeLinejoin="round"
-                    style={{ transition: "d 1.4s cubic-bezier(.22,1,.36,1)" }}
-                  />
-                  <text
-                    x="100"
-                    y="97"
-                    textAnchor="middle"
-                    fontFamily="Cormorant Garamond,serif"
-                    fontSize="18"
-                    fill="#3A5A40"
-                    id="demoScore"
-                    opacity="0"
-                    style={{ transition: "opacity .8s" }}
-                  >
-                    48
-                  </text>
-                  <text
-                    x="100"
-                    y="110"
-                    textAnchor="middle"
-                    fontFamily="Source Sans 3,sans-serif"
-                    fontSize="7"
-                    fill="#A89E90"
-                    letterSpacing="1.5"
-                    id="demoLabel"
-                    opacity="0"
-                    style={{ transition: "opacity .8s" }}
-                  >
-                    COHERENCE
-                  </text>
-                </svg>
-                <div className="demo-dims">
-                  {DIMS.map((d, i) => (
-                    <div className="demo-dim" key={d.n}>
-                      <div className="demo-dim-name">{d.n}</div>
-                      <div className="demo-dim-track">
-                        <div
-                          className="demo-dim-fill"
-                          id={`df${i}`}
-                          style={{ width: "0%", background: d.c }}
-                        />
-                      </div>
-                      <div className="demo-dim-val" id={`dv${i}`}>
-                        —
-                      </div>
-                    </div>
-                  ))}
+
+              {/* STEP 2 — Money card + emerging shape */}
+              <div className={`demo-step${demoStep === 1 ? " active" : ""}`}>
+                <div className="demo-card-content">
+                  <h3 className="demo-card-question">
+                    How does money feel?
+                  </h3>
+                  <div className="demo-card-illustration">
+                    <svg width="140" height="140" viewBox="0 0 240 240" fill="none" aria-hidden="true">
+                      <path d="M32 140 C52 132, 68 148, 90 130 C112 112, 128 124, 150 108 C170 94, 182 102, 208 88" stroke="#C87A3A" strokeWidth="3.5" strokeLinecap="round" fill="none" opacity="0.7" />
+                      <path d="M28 150 C50 142, 72 158, 94 140 C116 122, 134 134, 156 118 C176 104, 190 110, 212 98" stroke="#E8935A" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.35" />
+                      <path d="M52 126 C68 120, 82 130, 96 122" stroke="#C87A3A" strokeWidth="1.8" strokeLinecap="round" fill="none" opacity="0.4" />
+                      <path d="M36 155 C60 148, 80 166, 100 148 C120 130, 140 142, 164 126 C182 114, 196 118, 214 106" stroke="#E8935A" strokeWidth="8" strokeLinecap="round" fill="none" opacity="0.12" />
+                    </svg>
+                  </div>
+                  <div className="demo-pills">
+                    <span className="demo-pill demo-pill-1">drowning</span>
+                    <span className="demo-pill demo-pill-2 demo-pill-selected">tight</span>
+                    <span className="demo-pill demo-pill-3">managing</span>
+                    <span className="demo-pill demo-pill-4">stable</span>
+                    <span className="demo-pill demo-pill-5">flowing</span>
+                  </div>
                 </div>
-                <div className="demo-cascade" id="demoCascade">
-                  <span className="casc-chip amber" id="cc0">
-                    💰 Money clarity
-                  </span>
-                  <span className="casc-arr" id="ca0">
-                    →
-                  </span>
-                  <span className="casc-chip sage" id="cc1">
-                    😴 Better sleep
-                  </span>
-                  <span className="casc-arr" id="ca1">
-                    →
-                  </span>
-                  <span className="casc-chip sky" id="cc2">
-                    💞 Present again
-                  </span>
+                {/* Small emerging radar */}
+                <div className="demo-mini-radar">
+                  <svg viewBox="0 0 200 200" fill="none" width="80" height="80">
+                    <circle cx="100" cy="100" r="76" stroke="#C4D9C6" strokeWidth=".5" opacity=".2" strokeDasharray="3 4" />
+                    <circle cx="100" cy="100" r="50" stroke="#C4D9C6" strokeWidth=".5" opacity=".2" strokeDasharray="3 4" />
+                    <path d="M100,28 Q130,86 100,100 Q70,86 100,28 Z" fill="#EBF3EC" stroke="#8BAF8E" strokeWidth="1" opacity=".5" />
+                    <circle cx="100" cy="28" r="3" fill="#5C7A62" opacity=".6" />
+                    <circle cx="130" cy="86" r="3" fill="#5C7A62" opacity=".6" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* STEP 3 — Completed shape */}
+              <div className={`demo-step${demoStep === 2 ? " active" : ""}`}>
+                <div className="demo-shape-reveal">
+                  <p className="demo-shape-heading">Your life, right now.</p>
+                  <svg viewBox="0 0 200 200" fill="none" className="demo-radar-full">
+                    <defs>
+                      <radialGradient id="dsg" cx="50%" cy="50%">
+                        <stop offset="0%" stopColor="#8BAF8E" stopOpacity=".2" />
+                        <stop offset="100%" stopColor="#3A5A40" stopOpacity=".04" />
+                      </radialGradient>
+                    </defs>
+                    {/* Guide rings */}
+                    <circle cx="100" cy="100" r="76" stroke="#C4D9C6" strokeWidth=".5" opacity=".2" strokeDasharray="3 4" />
+                    <circle cx="100" cy="100" r="50" stroke="#C4D9C6" strokeWidth=".5" opacity=".2" strokeDasharray="3 4" />
+                    <circle cx="100" cy="100" r="25" stroke="#A8C4AA" strokeWidth=".5" opacity=".2" strokeDasharray="3 4" />
+                    {/* Axis lines */}
+                    <line x1="100" y1="10" x2="100" y2="190" stroke="#DDD4C0" strokeWidth=".5" opacity=".15" />
+                    <line x1="10" y1="100" x2="190" y2="100" stroke="#DDD4C0" strokeWidth=".5" opacity=".15" />
+                    <line x1="36" y1="36" x2="164" y2="164" stroke="#DDD4C0" strokeWidth=".5" opacity=".12" />
+                    <line x1="164" y1="36" x2="36" y2="164" stroke="#DDD4C0" strokeWidth=".5" opacity=".12" />
+                    {/* Shape — asymmetric, Joy noticeably low */}
+                    <path
+                      d="M100,24 Q148,42 164,64 Q166,100 154,136 Q128,156 100,148 Q56,156 44,140 Q20,110 36,64 Q60,36 100,24 Z"
+                      fill="url(#dsg)"
+                      stroke="#5C7A62"
+                      strokeWidth="1.5"
+                    />
+                    {/* Joy dip — redraw that vertex inward */}
+                    <path
+                      d="M100,24 Q148,42 164,64 Q166,100 154,136 Q128,156 100,148 Q74,128 56,140 Q20,110 36,64 Q60,36 100,24 Z"
+                      fill="url(#dsg)"
+                      stroke="#5C7A62"
+                      strokeWidth="1.5"
+                    />
+                    {/* Vertex dots — Body(high) People(high) Money(low) Home(high) Growth(high) Joy(LOW) Purpose(high) Identity(high) */}
+                    <circle cx="100" cy="24" r="4" fill="#5C7A62" />{/* Body — high */}
+                    <circle cx="164" cy="64" r="4" fill="#5C7A62" />{/* People — high */}
+                    <circle cx="154" cy="136" r="3" fill="#B5621E" />{/* Money — medium-low */}
+                    <circle cx="100" cy="148" r="4" fill="#5C7A62" />{/* Home — high */}
+                    <circle cx="56" cy="140" r="4" fill="#5C7A62" />{/* Growth — high */}
+                    <circle cx="44" cy="100" r="3" fill="#A04040" />{/* Joy — LOW */}
+                    <circle cx="36" cy="64" r="4" fill="#5C7A62" />{/* Purpose — high */}
+                    <circle cx="60" cy="36" r="4" fill="#5C7A62" />{/* Identity — high */}
+                    {/* Labels */}
+                    <text x="100" y="16" textAnchor="middle" fontSize="7" fill="#8C8274" fontFamily="Source Sans 3,sans-serif">Body</text>
+                    <text x="174" y="62" fontSize="7" fill="#8C8274" fontFamily="Source Sans 3,sans-serif">People</text>
+                    <text x="162" y="146" fontSize="7" fill="#8C8274" fontFamily="Source Sans 3,sans-serif">Money</text>
+                    <text x="100" y="164" textAnchor="middle" fontSize="7" fill="#8C8274" fontFamily="Source Sans 3,sans-serif">Home</text>
+                    <text x="30" y="148" fontSize="7" fill="#8C8274" fontFamily="Source Sans 3,sans-serif" textAnchor="end">Growth</text>
+                    <text x="28" y="104" fontSize="7" fill="#A04040" fontFamily="Source Sans 3,sans-serif" textAnchor="end" fontWeight="600">Joy</text>
+                    <text x="22" y="62" fontSize="7" fill="#8C8274" fontFamily="Source Sans 3,sans-serif" textAnchor="end">Purpose</text>
+                    <text x="52" y="30" fontSize="7" fill="#8C8274" fontFamily="Source Sans 3,sans-serif" textAnchor="end">Identity</text>
+                  </svg>
+                </div>
+              </div>
+
+              {/* STEP 4 — Insight + try this */}
+              <div className={`demo-step${demoStep === 3 ? " active" : ""}`}>
+                <div className="demo-insight-content">
+                  <p className="demo-insight-text">
+                    Everything&apos;s humming except joy sits oddly low in an
+                    otherwise thriving system. You&apos;ve built something most
+                    people dream of — strong across the board — but joy lags
+                    behind like it&apos;s not invited to the party. The gap
+                    between having a clear purpose and actually delighting in it
+                    is where your leverage is.
+                  </p>
+                  <div className="demo-trythis">
+                    <div className="demo-trythis-label">Try this:</div>
+                    <p className="demo-trythis-text">
+                      Want to try asking &ldquo;what would make this more
+                      delicious?&rdquo; about one routine thing today — others
+                      with similar patterns find that joy often hides in tiny
+                      permission slips, not big changes.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* ── Mobile: static shape + insight ── */}
+          <div className="demo-static rv rv-d3">
+            <div className="demo-static-inner">
+              <svg viewBox="0 0 200 200" fill="none" className="demo-static-radar">
+                <defs>
+                  <radialGradient id="dsgm" cx="50%" cy="50%">
+                    <stop offset="0%" stopColor="#8BAF8E" stopOpacity=".2" />
+                    <stop offset="100%" stopColor="#3A5A40" stopOpacity=".04" />
+                  </radialGradient>
+                </defs>
+                <circle cx="100" cy="100" r="76" stroke="#C4D9C6" strokeWidth=".5" opacity=".2" strokeDasharray="3 4" />
+                <circle cx="100" cy="100" r="50" stroke="#C4D9C6" strokeWidth=".5" opacity=".2" strokeDasharray="3 4" />
+                <path d="M100,24 Q148,42 164,64 Q166,100 154,136 Q128,156 100,148 Q74,128 56,140 Q20,110 36,64 Q60,36 100,24 Z" fill="url(#dsgm)" stroke="#5C7A62" strokeWidth="1.5" />
+                <circle cx="100" cy="24" r="4" fill="#5C7A62" />
+                <circle cx="164" cy="64" r="4" fill="#5C7A62" />
+                <circle cx="154" cy="136" r="3" fill="#B5621E" />
+                <circle cx="100" cy="148" r="4" fill="#5C7A62" />
+                <circle cx="56" cy="140" r="4" fill="#5C7A62" />
+                <circle cx="44" cy="100" r="3" fill="#A04040" />
+                <circle cx="36" cy="64" r="4" fill="#5C7A62" />
+                <circle cx="60" cy="36" r="4" fill="#5C7A62" />
+                <text x="100" y="16" textAnchor="middle" fontSize="7" fill="#8C8274" fontFamily="Source Sans 3,sans-serif">Body</text>
+                <text x="174" y="62" fontSize="7" fill="#8C8274" fontFamily="Source Sans 3,sans-serif">People</text>
+                <text x="162" y="146" fontSize="7" fill="#8C8274" fontFamily="Source Sans 3,sans-serif">Money</text>
+                <text x="100" y="164" textAnchor="middle" fontSize="7" fill="#8C8274" fontFamily="Source Sans 3,sans-serif">Home</text>
+                <text x="30" y="148" fontSize="7" fill="#8C8274" fontFamily="Source Sans 3,sans-serif" textAnchor="end">Growth</text>
+                <text x="28" y="104" fontSize="7" fill="#A04040" fontFamily="Source Sans 3,sans-serif" textAnchor="end" fontWeight="600">Joy</text>
+                <text x="22" y="62" fontSize="7" fill="#8C8274" fontFamily="Source Sans 3,sans-serif" textAnchor="end">Purpose</text>
+                <text x="52" y="30" fontSize="7" fill="#8C8274" fontFamily="Source Sans 3,sans-serif" textAnchor="end">Identity</text>
+              </svg>
+              <p className="demo-static-insight">
+                Everything&apos;s humming except joy sits oddly low in an
+                otherwise thriving system. The gap between having a clear
+                purpose and actually delighting in it is where your leverage is.
+              </p>
+            </div>
+          </div>
+
+          {/* Progress dots — desktop only */}
           <div className="demo-progress">
-            <div className="demo-pdot active" />
-            <div className="demo-pdot" />
-            <div className="demo-pdot" />
-            <div className="demo-pdot" />
+            {[0, 1, 2, 3].map((i) => (
+              <button
+                key={i}
+                className={`demo-pdot${demoStep === i ? " active" : ""}`}
+                onClick={() => goToStep(i)}
+                aria-label={`Step ${i + 1}`}
+              />
+            ))}
           </div>
         </div>
       </section>
@@ -594,7 +577,8 @@ export default function LandingView({
           </h2>
           <p className="canvas-sec-sub rv rv-d1">
             A real map generated by HUMA. Every circle, every connection, every
-            number — drawn from one conversation.
+            number — drawn from a conversation about one person&apos;s whole
+            situation.
           </p>
           <a href="/map/sample" className="canvas-frame rv rv-d2">
             <svg viewBox="0 0 680 400" fill="none">
@@ -680,18 +664,18 @@ export default function LandingView({
       <section className="landing-signal">
         <div className="signal-inner rv">
           <div className="signal-tags">
-            <span className="signal-tag">Holistic Management</span>
             <span className="signal-tag">Living Systems</span>
-            <span className="signal-tag">8 Forms of Capital</span>
             <span className="signal-tag">Pattern Language</span>
-            <span className="signal-tag">Regenerative Design</span>
+            <span className="signal-tag">Holistic Design</span>
+            <span className="signal-tag">8 Forms of Capital</span>
             <span className="signal-tag">Knowledge Architecture</span>
+            <span className="signal-tag">Developmental Psychology</span>
           </div>
           <p className="signal-note">
-            Built on 30 years of research across regenerative agriculture,
-            living systems theory, developmental psychology, and knowledge
-            architecture. Not another wellness app. A design tool for living
-            systems.
+            Built on 30 years of research across living systems theory,
+            developmental psychology, holistic design, and knowledge
+            architecture. Not another wellness app. Not another productivity
+            tool. A design tool for your whole life.
           </p>
         </div>
       </section>
