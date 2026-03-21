@@ -1,4 +1,4 @@
-/* ═══ Landing Page — World Class Rebuild ═══ */
+/* ═══ Landing Page — Shape-Forward Hero Redesign ═══ */
 
 /* Grain texture overlay */
 .landing-grain {
@@ -28,17 +28,16 @@
 .rv-d3 { transition-delay: 0.3s; }
 .rv-d4 { transition-delay: 0.4s; }
 
-/* ═══ HERO ═══ */
+/* ═══ HERO — Split Composition ═══ */
 .landing-hero {
-  min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  padding: 80px 24px;
   position: relative;
+  overflow: hidden;
+  padding: 0;
 }
 
 .hero-wm {
@@ -51,51 +50,229 @@
   position: absolute;
   top: 40px;
   left: 40px;
+  z-index: 2;
   opacity: 0;
-  animation: heroFadeUp 700ms 0ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: heroFadeIn 700ms 0ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.hero-copy {
-  max-width: 640px;
+/* The split layout */
+.hero-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  width: 100%;
+  max-width: 1280px;
+  padding: 0 48px;
+  margin-top: -3vh; /* optical center nudge */
 }
 
-.hero-line {
-  font-family: var(--font-serif);
-  font-size: clamp(1.8rem, 4vw, 3rem);
-  font-weight: 300;
-  line-height: 1.4;
-  color: var(--color-earth-700);
-  margin: 0;
+/* ── Left side: The Living Shape ── */
+.hero-shape-side {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-shape-container {
+  width: 440px;
+  height: 440px;
+  position: relative;
+}
+
+.hero-shape-svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Axis lines — draw from center outward via stroke-dasharray */
+.hero-axis {
+  stroke-dasharray: 170;
+  stroke-dashoffset: 170;
+  animation: heroAxisDraw 800ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.ha-0 { animation-delay: 0ms; }
+.ha-1 { animation-delay: 60ms; }
+.ha-2 { animation-delay: 120ms; }
+.ha-3 { animation-delay: 180ms; }
+.ha-4 { animation-delay: 240ms; }
+.ha-5 { animation-delay: 300ms; }
+.ha-6 { animation-delay: 360ms; }
+.ha-7 { animation-delay: 420ms; }
+
+@keyframes heroAxisDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Vertex dots — scale in staggered, starting at 500ms */
+.hero-vertex {
   opacity: 0;
+  transform-origin: center;
+  transform: scale(0);
+  animation: heroVertexIn 400ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
-.hero-line-1 { animation: heroFadeUp 700ms 0ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
-.hero-line-2 { animation: heroFadeUp 700ms 150ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
-.hero-line-3 { animation: heroFadeUp 700ms 300ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.hv-0 { animation-delay: 500ms; }
+.hv-1 { animation-delay: 580ms; }
+.hv-2 { animation-delay: 660ms; }
+.hv-3 { animation-delay: 740ms; }
+.hv-4 { animation-delay: 820ms; }
+.hv-5 { animation-delay: 900ms; }
+.hv-6 { animation-delay: 980ms; }
+.hv-7 { animation-delay: 1060ms; }
 
-.hero-turn {
+@keyframes heroVertexIn {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Shape stroke — draws between vertices, starts at 900ms */
+.hero-shape-stroke {
+  stroke-dasharray: 900;
+  stroke-dashoffset: 900;
+  animation: heroStrokeDraw 1000ms 900ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes heroStrokeDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Shape fill — fades in at 1400ms */
+.hero-shape-fill-path {
+  opacity: 0;
+  animation: heroFillIn 600ms 1400ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes heroFillIn {
+  to { opacity: 1; }
+}
+
+/* Dimension labels — fade in with shape */
+.hero-dim-label {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 500;
+  opacity: 0;
+  animation: heroFadeIn 500ms 1200ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Breathing — starts at ~2000ms */
+.hero-shape-container {
+  animation: heroShapeBreathe 7s 2000ms ease-in-out infinite;
+}
+
+@keyframes heroShapeBreathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* Per-vertex micro-drift — each vertex drifts 1-2px on its own timing */
+/* Applied via CSS custom properties for the slightly different periods */
+.hero-vertex {
+  --drift: 1px;
+}
+.hv-0 { animation: heroVertexIn 400ms 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards, heroDrift0 7.0s 2000ms ease-in-out infinite; }
+.hv-1 { animation: heroVertexIn 400ms 580ms cubic-bezier(0.22, 1, 0.36, 1) forwards, heroDrift1 7.3s 2000ms ease-in-out infinite; }
+.hv-2 { animation: heroVertexIn 400ms 660ms cubic-bezier(0.22, 1, 0.36, 1) forwards, heroDrift2 6.8s 2000ms ease-in-out infinite; }
+.hv-3 { animation: heroVertexIn 400ms 740ms cubic-bezier(0.22, 1, 0.36, 1) forwards, heroDrift3 7.1s 2000ms ease-in-out infinite; }
+.hv-4 { animation: heroVertexIn 400ms 820ms cubic-bezier(0.22, 1, 0.36, 1) forwards, heroDrift4 6.9s 2000ms ease-in-out infinite; }
+.hv-5 { animation: heroVertexIn 400ms 900ms cubic-bezier(0.22, 1, 0.36, 1) forwards, heroDrift5 7.4s 2000ms ease-in-out infinite; }
+.hv-6 { animation: heroVertexIn 400ms 980ms cubic-bezier(0.22, 1, 0.36, 1) forwards, heroDrift6 7.2s 2000ms ease-in-out infinite; }
+.hv-7 { animation: heroVertexIn 400ms 1060ms cubic-bezier(0.22, 1, 0.36, 1) forwards, heroDrift7 6.7s 2000ms ease-in-out infinite; }
+
+/* Each drift keyframe moves the vertex slightly along its axis direction */
+/* Body (top) */
+@keyframes heroDrift0 { 0%, 100% { translate: 0 0; } 50% { translate: 0 -1.5px; } }
+/* People (top-right) */
+@keyframes heroDrift1 { 0%, 100% { translate: 0 0; } 50% { translate: 1px -1px; } }
+/* Money (right) */
+@keyframes heroDrift2 { 0%, 100% { translate: 0 0; } 50% { translate: 1.5px 0; } }
+/* Home (bottom-right) */
+@keyframes heroDrift3 { 0%, 100% { translate: 0 0; } 50% { translate: 1px 1px; } }
+/* Growth (bottom) */
+@keyframes heroDrift4 { 0%, 100% { translate: 0 0; } 50% { translate: 0 1.5px; } }
+/* Joy (bottom-left) */
+@keyframes heroDrift5 { 0%, 100% { translate: 0 0; } 50% { translate: -1px 1px; } }
+/* Purpose (left) */
+@keyframes heroDrift6 { 0%, 100% { translate: 0 0; } 50% { translate: -1.5px 0; } }
+/* Identity (top-left) */
+@keyframes heroDrift7 { 0%, 100% { translate: 0 0; } 50% { translate: -1px -1px; } }
+
+/* ── Right side: The Text ── */
+.hero-text-side {
+  max-width: 500px;
+  padding-left: 24px;
+}
+
+/* Whispered opening */
+.hero-whisper {
   font-family: var(--font-serif);
-  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-size: 1.3rem;
   font-weight: 300;
   font-style: italic;
   line-height: 1.4;
-  color: var(--color-sage-700);
-  margin: 0;
-  margin-top: 0.3em;
+  letter-spacing: 0.01em;
+  color: var(--color-sage-600);
+  margin: 0 0 28px;
   opacity: 0;
-  animation: heroFadeUp 700ms 600ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: heroSlideIn 600ms 800ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Main statement — the weight */
+.hero-statement {
+  font-family: var(--font-serif);
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--color-earth-800);
+  margin: 0;
+  max-width: 500px;
+  opacity: 0;
+  animation: heroSlideIn 700ms 1200ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* The turn */
+.hero-turn {
+  font-family: var(--font-serif);
+  font-size: clamp(1.3rem, 2.5vw, 1.9rem);
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.4;
+  color: var(--color-sage-700);
+  margin: 36px 0 0;
+  opacity: 0;
+  animation: heroSlideIn 600ms 2100ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .hero-cta-wrap {
-  margin-top: 2.5rem;
+  margin-top: 40px;
   opacity: 0;
-  animation: heroFadeUp 700ms 900ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: heroSlideIn 500ms 2800ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+/* Text slides in from right (translateX), not from below */
+@keyframes heroSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes heroFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── CTA Button ── */
 .landing-cta {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 16px 40px;
+  padding: 18px 40px;
   background: var(--color-amber-600);
   color: #fff;
   border: none;
@@ -105,13 +282,13 @@
   font-weight: 500;
   cursor: pointer;
   text-decoration: none;
-  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-  box-shadow: 0 4px 20px rgba(181, 98, 30, 0.15);
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 6px 28px rgba(181, 98, 30, 0.15);
 }
 .landing-cta:hover {
   background: var(--color-amber-500);
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(181, 98, 30, 0.25);
+  box-shadow: 0 8px 36px rgba(181, 98, 30, 0.2);
 }
 .cta-arrow {
   font-size: 1.1rem;
@@ -126,41 +303,63 @@
   font-size: 0.75rem;
   font-weight: 400;
   color: var(--color-earth-400);
-  margin-top: 12px;
+  letter-spacing: 0.03em;
+  margin-top: 14px;
 }
 
+/* ── Scroll indicator ── */
 .hero-scroll-cue {
   position: absolute;
   bottom: 32px;
   left: 50%;
   transform: translateX(-50%);
+  z-index: 1;
   opacity: 0;
-  animation: heroFadeUp 700ms 1800ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: heroFadeIn 700ms 3400ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transition: opacity 300ms ease;
+}
+.hero-scroll-hidden {
+  opacity: 0 !important;
+  animation: none;
 }
 .hero-scroll-line {
   width: 1px;
   height: 28px;
-  background: linear-gradient(
-    to bottom,
-    var(--color-earth-200),
-    transparent
-  );
-  animation: scrollPulse 2.5s ease-in-out infinite;
+  background: var(--color-sage-300);
+  opacity: 0.35;
+  animation: scrollPulse 3s ease-in-out infinite;
 }
 
-@keyframes heroFadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
 @keyframes scrollPulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.4; }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .hero-whisper,
+  .hero-statement,
+  .hero-turn,
+  .hero-cta-wrap,
+  .hero-wm,
+  .hero-scroll-cue {
+    opacity: 1 !important;
+    animation: none !important;
+    transform: none !important;
+  }
+  .hero-axis,
+  .hero-shape-stroke,
+  .hero-shape-fill-path,
+  .hero-vertex,
+  .hero-dim-label {
+    opacity: 1 !important;
+    animation: none !important;
+    transform: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+  .hero-shape-container {
+    animation: none !important;
+  }
 }
 
 /* ═══ SECTION 2: THE SHAPE ═══ */
@@ -176,7 +375,6 @@
   gap: 48px;
 }
 
-/* The living shape — NO frame, NO card, just SVG on sand */
 .shape-visual {
   display: flex;
   justify-content: center;
@@ -242,7 +440,7 @@
   opacity: 1;
 }
 
-/* Breathing animation — runs continuously after draw-in */
+/* Breathing animation */
 @keyframes shapeBreath {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.02); }
@@ -406,7 +604,7 @@
   gap: 12px;
   font-size: 0.82rem;
   opacity: 0;
-  animation: heroFadeUp 600ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: heroSlideIn 600ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 .saved-bar-name {
   font-family: var(--font-serif);
@@ -443,7 +641,19 @@
 }
 
 /* ═══ RESPONSIVE ═══ */
+
+/* Tablet (768-1023px) */
 @media (max-width: 1023px) {
+  .hero-split {
+    padding: 0 32px;
+  }
+  .hero-shape-container {
+    width: 300px;
+    height: 300px;
+  }
+  .hero-text-side {
+    padding-left: 16px;
+  }
   .shape-inner {
     grid-template-columns: 1fr;
     gap: 40px;
@@ -460,17 +670,77 @@
   }
 }
 
+/* Mobile (< 768px) */
 @media (max-width: 767px) {
   .hero-wm {
-    position: static;
-    margin-bottom: 32px;
+    position: absolute;
+    top: 24px;
+    left: 20px;
   }
+
   .landing-hero {
-    padding: 60px 20px 80px;
+    min-height: 100svh;
+    padding: 0;
   }
+
+  .hero-split {
+    grid-template-columns: 1fr;
+    padding: 80px 24px 40px;
+    gap: 32px;
+  }
+
+  /* Shape on top, centered */
+  .hero-shape-side {
+    justify-content: center;
+  }
+  .hero-shape-container {
+    width: 280px;
+    height: 280px;
+    /* No per-vertex micro-drift on mobile — just main breathing */
+    animation: heroShapeBreathe 7s 2000ms ease-in-out infinite;
+  }
+  /* Disable micro-drift on mobile */
+  .hv-0, .hv-1, .hv-2, .hv-3, .hv-4, .hv-5, .hv-6, .hv-7 {
+    animation: heroVertexIn 400ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+  }
+  .hv-0 { animation-delay: 500ms !important; }
+  .hv-1 { animation-delay: 580ms !important; }
+  .hv-2 { animation-delay: 660ms !important; }
+  .hv-3 { animation-delay: 740ms !important; }
+  .hv-4 { animation-delay: 820ms !important; }
+  .hv-5 { animation-delay: 900ms !important; }
+  .hv-6 { animation-delay: 980ms !important; }
+  .hv-7 { animation-delay: 1060ms !important; }
+
+  /* Text below, LEFT-ALIGNED */
+  .hero-text-side {
+    padding-left: 0;
+    text-align: left;
+  }
+
+  /* Text enters vertically on mobile (stacked layout) */
+  .hero-whisper {
+    animation: heroFadeUp 600ms 800ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .hero-statement {
+    animation: heroFadeUp 700ms 1200ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .hero-turn {
+    animation: heroFadeUp 600ms 2100ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .hero-cta-wrap {
+    animation: heroFadeUp 500ms 2800ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
   .hero-scroll-cue {
     display: none;
   }
+
+  .landing-cta {
+    padding: 14px 32px;
+    font-size: 0.95rem;
+  }
+
   .shape-svg-wrap {
     width: 280px;
     height: 280px;
@@ -491,5 +761,17 @@
     right: 16px;
     transform: none;
     border-radius: 16px;
+  }
+}
+
+/* Mobile text entrance (vertical) */
+@keyframes heroFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
