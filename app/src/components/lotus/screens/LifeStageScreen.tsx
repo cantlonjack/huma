@@ -3,8 +3,7 @@
 import { useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import type { LotusState, LotusAction, LifeStage } from "@/types/lotus";
-
-const HUMA_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+import { HUMA_EASE } from "@/lib/constants";
 
 interface ScreenProps {
   state: LotusState;

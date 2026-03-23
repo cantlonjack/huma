@@ -4,9 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { LotusState, LotusAction, OperatorContext } from "@/types/lotus";
-import { clearLotusState } from "@/lib/lotus-persistence";
-
-const HUMA_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+import { HUMA_EASE } from "@/lib/constants";
 
 interface ScreenProps {
   state: LotusState;
@@ -40,7 +38,8 @@ export default function SaveScreen({
   }
 
   function handleSave() {
-    clearLotusState();
+    // Don't clear localStorage here — page.tsx clears it after successful auth.
+    // Data must survive if the user closes the auth modal.
     onSave(state.context as OperatorContext);
   }
 

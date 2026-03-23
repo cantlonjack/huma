@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { motion } from "framer-motion";
 import { type ShapeData, DIMENSION_ORDER, DIMENSION_LABELS, type DimensionKey } from "@/types/shape";
+import { HUMA_EASE } from "@/lib/constants";
 
 interface ShapeRadarProps {
   shape: Partial<ShapeData["dimensions"]>;
@@ -67,8 +68,6 @@ export function buildShapePath(
 
   return d;
 }
-
-const HUMA_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 export default function ShapeRadar({
   shape,

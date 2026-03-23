@@ -5,8 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import WholeVisualization from "../WholeVisualization";
 import type { LotusState, LotusAction } from "@/types/lotus";
-
-const HUMA_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+import { HUMA_EASE } from "@/lib/constants";
 
 interface InsightData {
   insight: string;

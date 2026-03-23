@@ -5,8 +5,7 @@ import { motion } from "framer-motion";
 import CapitalSlider from "../CapitalSlider";
 import { CAPITAL_ORDER, CAPITAL_LABELS } from "@/types/lotus";
 import type { LotusState, LotusAction, CapitalKey } from "@/types/lotus";
-
-const HUMA_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+import { HUMA_EASE } from "@/lib/constants";
 
 interface ScreenProps {
   state: LotusState;

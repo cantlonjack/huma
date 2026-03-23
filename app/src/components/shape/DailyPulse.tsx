@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import ShapeRadar, { polarXY, valueToRadius } from "@/components/shape/ShapeRadar";
 import { DIMENSION_LABELS, type DimensionKey } from "@/types/shape";
 import { saveShape, type SavedShape } from "@/lib/shapes";
+import { HUMA_EASE } from "@/lib/constants";
 
-const HUMA_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 const LEVELS = [1, 2, 3, 4, 5] as const;
 
 interface DailyPulseProps {

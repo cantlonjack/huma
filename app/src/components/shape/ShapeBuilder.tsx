@@ -30,6 +30,7 @@ import GrowthIllustration from "./illustrations/GrowthIllustration";
 import JoyIllustration from "./illustrations/JoyIllustration";
 import PurposeIllustration from "./illustrations/PurposeIllustration";
 import IdentityIllustration from "./illustrations/IdentityIllustration";
+import { HUMA_EASE } from "@/lib/constants";
 
 const ILLUSTRATIONS: Record<DimensionKey, React.ComponentType<{ size?: number }>> = {
   body: BodyIllustration,
@@ -41,8 +42,6 @@ const ILLUSTRATIONS: Record<DimensionKey, React.ComponentType<{ size?: number }>
   purpose: PurposeIllustration,
   identity: IdentityIllustration,
 };
-
-const HUMA_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 // Tap target spectrum — visual weight increases from 1 to 5
 const PILL_STYLES = [

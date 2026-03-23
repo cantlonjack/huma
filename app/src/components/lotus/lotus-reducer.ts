@@ -149,7 +149,7 @@ export function lotusReducer(state: LotusState, action: LotusAction): LotusState
           updatedAt: now,
         },
         wholeParams: params,
-        wholePhase: 2,
+        // wholePhase stays at 1 — phase 2 triggers when screen 10 renders
       };
     }
 
@@ -173,12 +173,13 @@ export function lotusReducer(state: LotusState, action: LotusAction): LotusState
 
     case "NEXT_SCREEN": {
       const nextScreen = clampScreen(state.screen + 1);
+      const phase: 1 | 2 | 3 =
+        nextScreen >= 11 ? 3 : nextScreen >= 10 ? 2 : state.wholePhase;
       return {
         ...state,
         screen: nextScreen,
         direction: 1,
-        // Screen 11 = WHOLE phase 3 (organic bloom)
-        wholePhase: nextScreen >= 11 ? 3 : state.wholePhase,
+        wholePhase: phase,
       };
     }
 

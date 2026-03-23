@@ -6,6 +6,7 @@ import LotusFlow from "@/components/lotus/LotusFlow";
 import AuthModal from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
 import { saveShape } from "@/lib/shapes";
+import { clearLotusState } from "@/lib/lotus-persistence";
 import type { OperatorContext } from "@/types/lotus";
 import { CAPITAL_TO_DIMENSION as capitalMap, CAPITAL_ORDER } from "@/types/lotus";
 import type { DimensionKey } from "@/types/shape";
@@ -88,6 +89,7 @@ export default function BeginPage() {
     (async () => {
       await saveContextAsShape(pending);
       clearPendingContext();
+      clearLotusState();
       router.replace("/home");
     })();
   }, [user, loading, router, saveContextAsShape]);
@@ -99,6 +101,7 @@ export default function BeginPage() {
         (async () => {
           await saveContextAsShape(ctx);
           clearPendingContext();
+          clearLotusState();
           router.push("/home");
         })();
       } else {
@@ -116,6 +119,7 @@ export default function BeginPage() {
     if (pendingContext) {
       await saveContextAsShape(pendingContext);
       clearPendingContext();
+      clearLotusState();
       router.push("/home");
     }
   }, [pendingContext, router, saveContextAsShape]);

@@ -106,7 +106,7 @@ describe("lotusReducer", () => {
     expect(state.context.growthAreas).toHaveLength(2);
   });
 
-  it("SET_SYNTHESIS marks what phase complete and advances wholePhase", () => {
+  it("SET_SYNTHESIS marks what phase complete but keeps wholePhase at 1", () => {
     const state = lotusReducer(INITIAL_STATE, {
       type: "SET_SYNTHESIS",
       archetype: "Builder",
@@ -115,7 +115,8 @@ describe("lotusReducer", () => {
       growthAreas: ["spiritual", "cultural"],
     });
     expect(state.context.lotusProgress!.what).toBe(true);
-    expect(state.wholePhase).toBe(2);
+    // wholePhase stays at 1 — phase 2 triggers when screen 10 renders
+    expect(state.wholePhase).toBe(1);
   });
 
   it("SET_INSIGHT stores insight and pattern", () => {
@@ -201,6 +202,14 @@ describe("lotusReducer", () => {
       screen: 7,
     });
     expect(state.direction).toBe(-1); // backward
+  });
+
+  it("NEXT_SCREEN advances wholePhase to 2 at screen 10", () => {
+    const state = lotusReducer({ ...INITIAL_STATE, screen: 9 as const }, {
+      type: "NEXT_SCREEN",
+    });
+    expect(state.screen).toBe(10);
+    expect(state.wholePhase).toBe(2);
   });
 
   it("NEXT_SCREEN advances wholePhase to 3 at screen 11+", () => {

@@ -3,8 +3,7 @@
 import { useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
-
-const HUMA_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+import { HUMA_EASE } from "@/lib/constants";
 
 interface WholeVisualizationProps {
   params: number[]; // [entitySeed, stageSeed, capitalSum, capitalVariance]

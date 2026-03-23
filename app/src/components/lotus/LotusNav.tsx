@@ -8,8 +8,7 @@ import {
   type LotusPhase,
   type LotusScreen,
 } from "@/types/lotus";
-
-const HUMA_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+import { HUMA_EASE } from "@/lib/constants";
 
 /** Only these phases are active for MVP */
 const ACTIVE_PHASES: LotusPhase[] = ["whole", "who", "what"];

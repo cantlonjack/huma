@@ -22,8 +22,7 @@ import InsightScreen from "./screens/InsightScreen";
 import SaveScreen from "./screens/SaveScreen";
 import { screenToPhase } from "@/types/lotus";
 import type { OperatorContext, LotusScreen, LotusAction, LotusState } from "@/types/lotus";
-
-const HUMA_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+import { HUMA_EASE } from "@/lib/constants";
 
 interface LotusFlowProps {
   onComplete: (context: OperatorContext) => void;
@@ -176,7 +175,7 @@ export default function LotusFlow({ onComplete, onClose }: LotusFlowProps) {
       </aside>
 
       {/* Main content area */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 py-8 overflow-y-auto relative">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 overflow-y-auto relative">
         {/* Screen reader announcements */}
         <div aria-live="polite" aria-atomic="true" className="sr-only">
           {announcement}
@@ -247,13 +246,13 @@ export default function LotusFlow({ onComplete, onClose }: LotusFlowProps) {
             Back
           </button>
         )}
-      </main>
+      </div>
 
       {/* Breathing animation keyframes */}
       <style jsx global>{`
         @keyframes whole-breathe {
           0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.03); }
+          50% { transform: scale(1.01); }
         }
       `}</style>
     </div>

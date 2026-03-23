@@ -5,8 +5,7 @@ import { motion } from "framer-motion";
 import { CAPITAL_ORDER, CAPITAL_COLORS } from "@/types/lotus";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { CapitalKey } from "@/types/lotus";
-
-const HUMA_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+import { HUMA_EASE } from "@/lib/constants";
 
 interface RegenerativeFlowerProps {
   capitals: Record<CapitalKey, number>;

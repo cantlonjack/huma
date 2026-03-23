@@ -6,8 +6,7 @@ import { computeArchetype } from "@/engine/archetype";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { CAPITAL_LABELS, CAPITAL_COLORS } from "@/types/lotus";
 import type { LotusState, LotusAction, CapitalKey, LotusScreen } from "@/types/lotus";
-
-const HUMA_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+import { HUMA_EASE } from "@/lib/constants";
 
 const STAGE_ICONS: Record<string, string> = {
   starting: "\u{1F331}",
