@@ -27,7 +27,7 @@ DISCOVER → ARRIVE → SHAPE BUILDER → DAILY PULSE → PATTERN RECOGNITION
 The journey has nine stages. Each stage has a critical transition — a moment where the operator either continues or churns. Design effort should be concentrated at these transitions.
 
 **The three critical transitions (where most people are won or lost):**
-- Shape Builder → Daily Pulse (do they come back day 2?)
+- Lotus Flow → Daily Capital Pulse (do they come back day 2?)
 - Daily Pulse → Map Conversation (do they accept the invitation at week 2?)
 - Map Conversation → Three Tabs (do they engage with the one-thing card?)
 
@@ -61,8 +61,8 @@ The operator clicks through to the landing page. The landing page must convert c
 
 **Data flow:** None. No account creation. No email capture. No cookies consent wall. Zero friction between curiosity and action.
 
-**Critical transition → Shape Builder:**
-They click "See your shape" and arrive at /begin. This is NOT a 40-minute commitment. It's a 90-second visual assessment — the Shape Builder. The threshold is as low as possible.
+**Critical transition → Lotus Flow:**
+They click "See your shape" and arrive at /begin. This is NOT a 40-minute commitment. It's a 90-second context painting — the Lotus Flow. The threshold is as low as possible.
 
 **What can go wrong:**
 - Two competing CTAs dilute the action
@@ -72,27 +72,38 @@ They click "See your shape" and arrive at /begin. This is NOT a 40-minute commit
 
 ---
 
-## 04 — Stage 3: First Touch (Shape Builder)
+## 04 — Stage 3: First Touch (Lotus Flow)
 
 **Duration:** 90 seconds.
 
-**What they experience:** The Shape Builder — a visual, 8-card assessment. Each card represents one dimension (Money, Home, Body, People, Growth, Joy, Purpose, Identity). The operator taps a level for each. No typing. No account creation. No explanation of what HUMA is.
+**What they experience:** The Lotus Flow — an 11-screen visual context painting. Each screen is a visual selection (cards, sliders, taps). No typing required except name. No account creation.
 
-On completion, HUMA shows their shape (capital radar) immediately and responds with three things:
-- **The Connection:** Names a link between dimensions they thought were separate
-- **The One Thing:** A concrete, doable action for today
-- **The Invitation:** "Want to keep going? Come back tomorrow — I'll check in."
+Screens 1-5 (WHOLE): Define entity type and life stage. Watch their WHOLE 1.0 — an organic, animated form — come to life.
 
-**Emotional target:** Surprised recognition. "How did it know that?" The coherence recognition moment — happening in 90 seconds, not 40 minutes. The visual shape makes it tangible.
+Screen 6 (WHO): Identify who else is in their picture.
 
-**Data captured:** Their 8-dimension self-assessment. Under the surface, HUMA identifies dimension coupling, shape asymmetries, and candidate patterns. None of this is shown explicitly. The operator sees their shape and feels understood.
+Screens 7-8 (WHAT): Map their capital spectrum across 8 forms using color-gradient sliders. See the result as a Regenerative Wealth flower.
 
-**Critical transition → Daily Pulse:**
-They leave. They will either come back tomorrow — or they won't. The invitation is warm, not pushy. Within 24 hours, a gentle nudge: "Quick check-in? 30 seconds."
+Screen 9 (Synthesis): HUMA reflects back their archetype, stage, strengths, and growth areas. The "holy shit" moment.
+
+Screens 10-11: Watch their WHOLE evolve — the shape transforms from wireframe to organic as context deepens.
+
+After the flow, HUMA delivers:
+- **The Connection:** A 2-3 sentence insight naming the tension in their
+  capital shape
+- **The First Move:** A compiled pattern recommendation specific to their
+  archetype and situation
+- **The Invitation:** "Come back tomorrow — or keep going now."
+
+**Emotional target:** Surprised recognition. "How did it know that?" The archetype assignment is the coherence recognition moment — HUMA named something about them they hadn't named themselves.
+
+**Data captured:** Entity type, life stage, governance, 8-capital spectrum, inferred archetype, location (optional). Under the surface, HUMA has enough context to compile specific patterns from the RPPL library. None of the architecture is shown explicitly.
+
+**Critical transition → Daily Capital Pulse:** They leave. Within 24 hours, a gentle nudge: "Quick check-in? Tap what changed." The capital sliders from the Lotus Flow become the daily pulse mechanism.
 
 **What can go wrong:**
-- The shape response feels generic (doesn't name THEIR specific connections)
-- The one-thing is too vague or too ambitious
+- The archetype feels wrong (mitigate: easy edit button on synthesis screen)
+- The pattern recommendation is too generic (mitigate: enough context for specificity)
 - The page asks for account creation before delivering value
 - The invitation feels like a marketing hook rather than genuine care
 
@@ -267,7 +278,7 @@ At each stage, there are natural moments where the operator is most likely to sh
 
 | Stage | What They Share | Why | Where |
 |-------|----------------|-----|-------|
-| Shape Builder | A screenshot of their shape | "This thing mapped my life in 90 seconds" | Text to friend, social media |
+| Lotus Flow | A screenshot of their WHOLE or flower | "This thing mapped my life in 90 seconds" | Text to friend, social media |
 | Canvas Moment | The shape or canvas URL | Pride in seeing the whole picture | Text to partner/friend, social media |
 | Week 4-6 | A weekly insight screenshot | "This thing sees connections I missed" | Social media, group chat |
 | Seasonal Review | The shape comparison | Visual proof of growth over time | Social media, newsletter, blog |
@@ -281,8 +292,8 @@ At each stage, there are natural moments where the operator is most likely to sh
 
 | Transition | Churn Risk | Defense |
 |------------|-----------|---------|
-| Landing → Shape Builder | High (70%+ bounce expected) | The problem section must name THEIR pain. 90-second visual entry = zero commitment. |
-| Shape Builder → Day 2 Pulse | Very high | The shape + connection insight must land. The invitation to return must feel natural. 24-hour nudge. |
+| Landing → Lotus Flow | High (70%+ bounce expected) | The problem section must name THEIR pain. 90-second visual entry = zero commitment. |
+| Lotus Flow → Day 2 Pulse | Very high | The archetype synthesis + pattern recommendation must land. The invitation to return must feel natural. 24-hour nudge. |
 | Daily Pulse → Map Conversation | High | Pattern recognition by day 5 builds trust. The invitation at week 2 is earned, not pushed. |
 | Map Conversation → Three Tabs | Medium | The one-thing card bridges canvas insight to daily action. Canvas warmth creates feedback loop. |
 | Month 2-3 → Seasonal Review | Medium | Seasonal review creates a "fresh start" moment. Shape comparison creates visual payoff. |
@@ -294,7 +305,7 @@ At each stage, there are natural moments where the operator is most likely to sh
 
 | Touchpoint | Free | Paid ($29/mo) |
 |------------|------|--------------|
-| Shape Builder (90 sec) | Full | Full |
+| Lotus Flow (90 sec) | Full | Full |
 | Daily pulse | Full | Full |
 | Weekly insight (one card) | Full | Full |
 | Map conversation | Full (once) | Full |

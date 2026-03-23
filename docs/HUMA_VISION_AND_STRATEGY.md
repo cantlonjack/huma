@@ -349,7 +349,7 @@ If the notation is real -- if it describes something true about how human lives 
 
 ### 1. The App (HUMA)
 
-The digital mirror. Helps you see your own patterns through the shape, the conversation, the daily practice. The most scalable medium. The tutor. Entry point: the Shape Builder -- 90 seconds, visual, tactile. Eight cards (one per dimension), tap to rate, your unique life shape appears. Structural insight from the shape. Daily shape pulse. Weekly morph. The shape IS the universal entry point. It works in the app. It could work on a paper card. It could work as the first round of the board game.
+The digital mirror. Helps you see your own patterns through the shape, the conversation, the daily practice. The most scalable medium. The tutor. Entry point: the Lotus Flow -- 90 seconds, visual, tactile. Eleven screens moving through entity type, governance, and capital spectrum. Your unique life shape appears as a living WHOLE form. Archetype synthesis and first pattern recommendation. Daily capital pulse. Weekly WHOLE evolution. The shape IS the universal entry point. It works in the app. It could work on a paper card. It could work as the first round of the board game.
 
 ### 2. The Board Game (Regenaissance)
 
@@ -394,7 +394,7 @@ HUMA the application is a for-profit product built on the open protocol. What pe
 
 | Tier | What You Get | Price |
 |------|-------------|-------|
-| **Free Forever** | Shape Builder, daily pulse, weekly insight (one-card), map conversation (once), shape sharing, "people like you" signals | $0 |
+| **Free Forever** | Lotus Flow, daily capital pulse, weekly insight (one-card), map conversation (once), shape sharing, "people like you" signals | $0 |
 | **Operate ($29/month)** | Daily one-thing card with compiled methods, full daily schedule, weekly planner, deep weekly review, practice recommendations, seasonal review, shape timeline, canvas versioning | $29/month |
 | **Professional ($99/month)** | Evolve Mode + multi-context management. Seasonal reviews, pattern contribution tools, client dashboards. For consultants, educators, designers, coaches who guide others through the medium. | $99/month |
 | **Enterprise** | Portfolio analysis, aggregate pattern intelligence, institutional integration. For organizations, NGOs, governments, impact investors. | Custom |

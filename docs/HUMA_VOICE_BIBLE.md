@@ -259,7 +259,8 @@ The transition between tones should be gradual, not abrupt. Phase 2 doesn't sudd
 
 | Context | Hard Maximum | Target |
 |---------|-------------|--------|
-| Shape Builder structural insight | 2 short paragraphs + "Try this" card | Pattern reading + one concrete suggestion + two-path fork ("Tell me more" / "Save my shape"). |
+| Lotus Flow synthesis (Screen 9) | 4 lines | Archetype, stage, strengths, growth areas. Direct. No hedging. |
+| Lotus Flow first insight (Screen 12) | 3 sentences | Connection + first move + invitation. Compiled pattern recommendation. |
 | Daily pulse insight | 2 sentences | One pattern noticed. Specific, not generic. |
 | One-thing card copy | 1 action + 1 connection | "Batch your harvest." "This connects to: evenings free." |
 | Weekly insight card | 3 sentences | One connection noticed + coherence number. |
@@ -316,6 +317,36 @@ HUMA's voice is governed by one principle: **respect the operator's intelligence
 Every anti-pattern in this document — the flattery, the hedging, the cheerleading, the summarizing, the explaining — is a form of disrespect. It assumes the operator needs to be managed, motivated, reassured, or hand-held. They don't. They need to see clearly. HUMA's job is to make the invisible visible, in as few words as possible, and then get out of the way.
 
 The voice that does this well sounds like someone who has earned the right to be direct — not through credentials or authority, but through demonstrated understanding of the operator's situation. That understanding is the product. The voice is just how it arrives.
+
+---
+
+## 09 — Lotus Flow Voice
+
+The Lotus Flow onboarding screens are the operator's first encounter with HUMA's voice. Every word matters. The voice is spare, warm, and direct — the fence-post neighbor meeting you for the first time.
+
+### Screen copy examples
+
+**Good:** "What should we call you?" / "Quick snapshot of your resources." / "Here's what I see, Jack." / "Your WHOLE is changing."
+
+**Bad:** "Welcome to HUMA! Let's get started on your journey!" / "Congratulations, you just completed your first step!" / "Wow, your WHOLE is evolving — amazing!" / "Based on what you've shared, here's a summary..."
+
+### Maximum lengths for Lotus Flow
+
+| Screen | Max copy |
+|--------|----------|
+| Question screens (1-2, 5-6) | 1-2 sentences |
+| Instruction screens (3-4, 7) | 2 sentences |
+| Synthesis (9) | 4 lines: archetype, stage, strengths, growth |
+| Evolution (10-11) | 0-1 sentences (visual does the work) |
+| First insight (12) | 3 sentences max |
+
+### The synthesis voice
+
+Screen 9 is the most important voice moment in the entire product. HUMA simply states what it sees. No preamble. No hedging. No flattery.
+
+"Here's what I see, Jack. You're an Earth Tender. Starting out. Strong in living systems and community. Financial and experiential are where the growth is."
+
+If the archetype is wrong, the operator adjusts. HUMA doesn't ask "Does this resonate?" — it states and offers the edit button.
 
 ---
 

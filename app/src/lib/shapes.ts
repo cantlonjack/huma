@@ -11,7 +11,7 @@ export interface SavedShape {
   id: string;
   user_id: string;
   dimensions: Record<DimensionKey, number>;
-  source: "builder" | "pulse" | "conversation";
+  source: "builder" | "pulse" | "conversation" | "lotus";
   insight: ShapeInsight | null;
   created_at: string;
 }
@@ -21,7 +21,7 @@ export interface SavedShape {
  */
 export async function saveShape(
   scores: Partial<Record<DimensionKey, number>>,
-  source: "builder" | "pulse" | "conversation",
+  source: "builder" | "pulse" | "conversation" | "lotus",
   insight?: ShapeInsight | null
 ): Promise<SavedShape | null> {
   const supabase = createClient();

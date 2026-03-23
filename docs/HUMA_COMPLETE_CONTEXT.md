@@ -39,11 +39,15 @@ Four names, four contexts. Never confused.
 
 _Canonical spec: HUMA_PRODUCT_SURFACE.md_
 
-### Entry: Shape Builder (90 sec)
+### Entry: Lotus Flow (90 sec)
 
-_Canonical spec: HUMA_PRODUCT_SURFACE.md §05_
+_Canonical spec: HUMA_PRODUCT_SURFACE.md §05, cc-prompt-onboarding-v2.md_
 
-Eight visual cards, one per dimension. Tap to rate (1-5, displayed as a visual spectrum from small/dim to large/warm). The shape (8-vertex radar) builds progressively in the corner as cards complete. After card 8, the shape fills the screen and HUMA delivers a structural insight — a reading of the RELATIONSHIP between dimensions, not any individual score. Includes a concrete "Try this" suggestion. Two paths: "Tell me more" (short conversation about the leverage point) or "Save my shape" (auth → return tomorrow).
+11 screens moving through the first 3 lotus petals (WHOLE → WHO → WHAT). Visual card selection, capital spectrum sliders, archetype synthesis. No typing required except name and optional location. Produces: entity type, life stage, governance, 8-capital spectrum, inferred archetype, first pattern recommendation.
+
+Three reward moments: WHOLE 1.0 born (organic animated form), Regenerative Wealth flower (8-petal capital visualization), WHOLE evolution (shape transforms with context).
+
+The synthesis moment: HUMA reflects back archetype, stage, strengths, growth areas — inferred from capital pattern, not self-reported. This is the "holy shit" moment.
 
 ### Progressive Depth
 
@@ -51,11 +55,12 @@ _Canonical spec: HUMA_PRODUCT_SURFACE.md §04_
 
 Never forced. Always invited.
 
-1. **Shape Builder** (Day 1, 60-90 sec) -- 8 cards, structural insight, invitation to return
-2. **Daily Shape Pulse** (Days 2-14, 15-30 sec) -- tap to adjust what changed, pattern detection by day 3-4
+1. **Lotus Flow** (Day 1, 90 sec) -- 11 screens: entity type, life stage, governance, 8-capital spectrum, archetype synthesis, WHOLE evolution. First pattern recommendation.
+2. **Daily Capital Pulse** (Days 2-14, 15-30 sec) -- return to capital sliders, adjust what changed, watch flower/WHOLE evolve
 3. **One-Thing Card** (Day 5+) -- one high-leverage suggestion per day, Socratic framing, Got it / Not today (equal weight)
-4. **Map Conversation** (Week 2-3, 15-20 min) -- the 6-phase Design conversation, earned and shortened by existing context
-5. **Full Depth** (Ongoing) -- three-tab experience, full daily schedule, deep weekly review, seasonal review
+4. **Context Deepening** (Day 2+, at user's pace) -- Ikigai, Purpose, Vision. Each petal advances the WHOLE.
+5. **Map Conversation** (Week 2-3, 15-20 min) -- the 6-phase Design conversation, now informed by weeks of context
+6. **Full Depth** (Ongoing) -- three-tab experience. Behavior→Pattern mapping, Design, Validate, Evolve.
 
 ### Three Tabs
 
@@ -75,10 +80,11 @@ _Canonical spec: HUMA_PRODUCT_SURFACE.md §03_
 
 Four operator-controlled sources only:
 
-1. **Shape** -- 8-dimension self-assessment (Shape Builder + Daily Pulse)
-2. **Conversation** -- what the operator wants and values (Map Conversation, earned at week 2-3)
-3. **Pulse** -- daily micro-updates, temporal patterns emerge by day 3-4
-4. **Community Wisdom** -- anonymized aggregate patterns from all operators
+1. **Lotus Flow** -- entity type, life stage, governance, 8-capital spectrum, archetype (Day 1 onboarding)
+2. **Capital Pulse** -- daily micro-updates to capital sliders, temporal patterns emerge by day 3-4
+3. **Context Petals** -- Ikigai, Purpose, Vision, Behavior (progressive deepening at user's pace)
+4. **Conversation** -- the 6-phase Map Conversation (earned at week 2-3)
+5. **Community Wisdom** -- anonymized aggregate patterns from all operators
 
 No external data harvesting. No bank connections. No calendar sync. No health app integration. The operator tells HUMA what matters. HUMA does not surveil.
 
@@ -111,6 +117,8 @@ _Canonical spec: HUMA_PRODUCT_SURFACE.md §13, HUMA_VOICE_BIBLE.md §04_
 
 Time and Wisdom reserved as future fields.
 
+User-facing names (Body, People, Money etc.) are used in daily pulse and casual contexts. The formal names (Financial, Material, Living etc.) are used in the capital spectrum during the Lotus Flow.
+
 ### One-Thing Card
 
 Socratic, not prescriptive. Shows coupling and leverage so the operator learns to see it themselves. "Got it" and "Not today" carry equal weight. No guilt. No streak. Graduation = finding the one thing without the card.
@@ -123,7 +131,7 @@ Socratic, not prescriptive. Shows coupling and leverage so the operator learns t
 
 _Canonical spec: HUMA_PRODUCT_SURFACE.md §17, HUMA_VISION_AND_STRATEGY.md §10_
 
-**Free forever:** Shape Builder, daily pulse, weekly insight (one-card), map conversation (once), shape sharing, "people like you" signals.
+**Free forever:** Lotus Flow, daily capital pulse, weekly insight (one-card), map conversation (once), shape sharing, "people like you" signals.
 
 **$29/month Operate:** Daily one-thing card with compiled methods, full daily schedule, weekly planner, deep weekly review, practice recommendations, seasonal review, shape timeline, canvas versioning.
 
@@ -215,13 +223,13 @@ Jack is the founder and sole creator of HUMA. He is a baker by trade. He has bee
 | # | Document | Path | What It Covers |
 |---|----------|------|----------------|
 | 1 | **Vision & Strategy** | `/docs/HUMA_VISION_AND_STRATEGY.md` | What HUMA is, why it exists, sovereignty principles, pattern economy, capture resistance, 20 design principles. Read first. |
-| 2 | **Product Surface** | `/docs/HUMA_PRODUCT_SURFACE.md` | What the operator sees, touches, and feels. Shape Builder, three tabs, progressive depth, warmth system, all UI specs. |
+| 2 | **Product Surface** | `/docs/HUMA_PRODUCT_SURFACE.md` | What the operator sees, touches, and feels. Lotus Flow, three tabs, progressive depth, warmth system, all UI specs. |
 | 3 | **Technical Specification** | `/docs/HUMA_TECHNICAL_SPECIFICATION.md` | Data model, API routes, AI engine, database schema, component tree, build sequence. |
 | 4 | **Ethical Framework** | `/docs/HUMA_ETHICAL_FRAMEWORK.md` | Dependency test, data principles, distress protocols, one-thing card sovereignty, graduation imperative. |
 | 5 | **Pattern Library** | `/docs/HUMA_PATTERN_LIBRARY.md` | RPPL v0.1 schema + 12 seed patterns. |
 | 6 | **Voice Bible** | `/docs/HUMA_VOICE_BIBLE.md` | Banned phrases, vocabulary, tone arc, response lengths, dimension names. Every word. |
 | 7 | **Design System** | `/docs/HUMA_DESIGN_SYSTEM.md` | Palette, typography, spacing, warmth system, animation standards. Every pixel. |
-| 8 | **User Journey** | `/docs/HUMA_USER_JOURNEY.md` | Stages from Shape Builder through graduation. Emotional targets, data flows, churn points. |
+| 8 | **User Journey** | `/docs/HUMA_USER_JOURNEY.md` | Stages from Lotus Flow through graduation. Emotional targets, data flows, churn points. |
 | 9 | **Intellectual Lineage** | `/docs/HUMA_INTELLECTUAL_LINEAGE.md` | The 9 source traditions and how they converge. Deep context on why decisions were made. |
 
 **Quick reference:** `/docs/HUMA_COMPLETE_CONTEXT.md` (this document) -- portable onboarding summary. Not a source of truth.
@@ -254,13 +262,15 @@ Updated March 21, 2026. See git log for latest.
 
 **What's live:**
 - Landing page (universal positioning)
-- Shape Builder at /begin (8 cards, organic SVG illustrations, structural insight, "Tell me more" / "Save my shape" paths)
 - 6-phase conversation engine (Design Mode)
 - Living Canvas output at /map/[id]
 - Sample maps (Sarah Chen, Maya Okafor)
 - Supabase auth + PostgreSQL
+- 216+ tests passing
 
-**Building next:** Daily shape pulse, /home three-tab shell, one-thing card.
+**Building now:** Lotus Flow onboarding at /begin (replaces Shape Builder) — see cc-prompt-onboarding-v2.md
+
+**Building next:** Daily Capital Pulse, One-Thing Card, Context petals (Ikigai).
 
 ---
 

@@ -4,13 +4,23 @@
 
 HUMA is a living medium where the best way to do anything flows to the people who need it, shaped to their specific situation, and every life lived through it makes it smarter for everyone else.
 
-The product has two layers. The **application layer** is a for-profit product with three modes: Design (Shape Builder + Map Conversation → Living Canvas), Operate (daily one-thing card + weekly shape morph validated against your vision), and Evolve (seasonal reviews that update the map and contribute patterns to the commons). The **protocol layer** is RPPL: Reality Pattern Protocol Layer — an open standard for structured, contextual, validated, connected, living knowledge. RPPL is internal/developer-facing only; users see "HUMA."
+The product has two layers. The **application layer** is a for-profit product with three modes: Design (Lotus Flow + Map Conversation → Living Canvas), Operate (daily one-thing card + weekly shape morph validated against your vision), and Evolve (seasonal reviews that update the map and contribute patterns to the commons). The **protocol layer** is RPPL: Reality Pattern Protocol Layer — an open standard for structured, contextual, validated, connected, living knowledge. RPPL is internal/developer-facing only; users see "HUMA."
 
 The application makes money. The protocol makes history.
 
 **Beachhead market:** Regenerative agriculture operators and homesteaders. The architecture is universal. The first users are specific.
 
-**Current state:** MVP deployed at huma-two.vercel.app. Shape Builder live at /begin (8 visual cards, organic SVG illustrations, progressive shape build, structural insight via Claude API, "Tell me more" / "Save my shape" paths). Design Mode conversation (6 phases) functional. Living Canvas output at /map/[id]. Next: Daily shape pulse (Phase 2), /home three-tab shell, one-thing card, weekly shape morph, shape sharing.
+**Current state:** MVP deployed at huma-two.vercel.app. Design Mode conversation (6 phases) functional. Living Canvas output at /map/[id]. Supabase auth + PostgreSQL. 216+ tests passing.
+
+### Build Sequence
+
+[SHIPPED] Landing page, 6-phase conversation, universal flow, sample maps, split-screen canvas, Operate Mode (minimal), Supabase auth, 216+ tests
+
+[CURRENT] Lotus Flow onboarding (replaces Shape Builder) — see cc-prompt-onboarding-v2.md
+
+[NEXT] Daily Capital Pulse, One-Thing Card, Context petals (Ikigai)
+
+[FUTURE] Full Operate depth, Behavior→Pattern mapping, Design phase, RPPL Commons
 
 ---
 
@@ -23,7 +33,7 @@ There are 9 foundational documents + 1 portable context reference. Each answers 
 | # | Document | Path | Authoritative For | Consult When... |
 |---|----------|------|-------------------|--------------------|
 | 1 | **Vision & Strategy** | `/docs/HUMA_VISION_AND_STRATEGY.md` | Sovereignty principles, capture resistance, design principles (1-20), pattern economy, strategic phases, multiple mediums | What HUMA is, why it exists, strategic direction. **Read FIRST for any work.** |
-| 2 | **Product Surface** | `/docs/HUMA_PRODUCT_SURFACE.md` | Progressive depth, Shape Builder spec, three tabs, context model, pricing tiers, warmth system spec, route structure, build sequence, data model (canvas) | **THE product surface specification.** What the operator sees and touches. **Read FIRST for any UI work.** |
+| 2 | **Product Surface** | `/docs/HUMA_PRODUCT_SURFACE.md` | Progressive depth, Lotus Flow spec, three tabs, context model, pricing tiers, warmth system spec, route structure, build sequence, data model (canvas) | **THE product surface specification.** What the operator sees and touches. **Read FIRST for any UI work.** |
 | 3 | **Technical Specification** | `/docs/HUMA_TECHNICAL_SPECIFICATION.md` | TypeScript interfaces, database schema, API routes, AI engine architecture, prompt assembly, phase transition mechanics | You're writing code. Data model, API routes, AI engine, component tree. |
 | 4 | **Ethical Framework** | `/docs/HUMA_ETHICAL_FRAMEWORK.md` | Dependency test, graduation metric (4 capacities), distress protocol, data principles, one-thing card sovereignty, system prompt condensation | You're handling operator data, building distress responses, or any feature touching sensitive information. |
 | 5 | **Pattern Library** | `/docs/HUMA_PATTERN_LIBRARY.md` | RPPL pattern schema (v0.1), seed patterns, pattern evolution mechanics | You're working on patterns or any feature that surfaces patterns. |
@@ -52,23 +62,25 @@ There are 9 foundational documents + 1 portable context reference. Each answers 
 
 ### Progressive Depth (How People Enter)
 
-The entry is NOT the 40-minute conversation. It's a 90-second Shape Builder.
+The entry is the Lotus Flow — an 11-screen context painting that moves through the first 3 lotus petals (WHOLE → WHO → WHAT) in 90 seconds.
 
-1. **Layer 1: Shape Builder** (Day 1, 60-90 sec) — 8 visual cards, one per dimension. Tap to rate. Structural insight + invitation to return.
-2. **Layer 2: Daily Shape Pulse** (Days 2-14, 15-30 sec) — Tap to adjust vertices that changed. Pattern detection by day 3-4.
-3. **Layer 3: One-Thing Card** (Day 5+) — One high-leverage suggestion per day. Socratic framing — shows coupling, operator decides. Got it / Not today (equal weight).
-4. **Layer 4: Map Conversation** (Week 2-3, 15-20 min) — The 6-phase Design conversation, earned and shortened by existing context.
-5. **Layer 5: Full Depth** (Ongoing) — Three-tab experience. Full daily schedule, deep weekly review, seasonal review. Always available, never forced.
+1. **Layer 1: Lotus Flow** (Day 1, 90 sec) — 11 screens: entity type, life stage, governance, 8-capital spectrum, archetype synthesis, WHOLE evolution. Produces first pattern recommendation.
+2. **Layer 2: Daily Capital Pulse** (Days 2-14, 15-30 sec) — Return to capital sliders, adjust what changed, watch flower/WHOLE evolve.
+3. **Layer 3: One-Thing Card** (Day 5+) — One high-leverage suggestion per day. Socratic framing. Got it / Not today (equal weight).
+4. **Layer 4: Context Deepening** (Day 2+, at user's pace) — Ikigai (Love/Good/Need), Purpose, Vision. Available immediately or progressively. Each petal advances the WHOLE.
+5. **Layer 5: Map Conversation** (Week 2-3, 15-20 min) — The 6-phase Design conversation, now informed by weeks of context.
+6. **Layer 6: Full Depth** (Ongoing) — Three-tab experience. Behavior→Pattern mapping, Design, Validate, Evolve.
 
 ### Context Model (Sovereignty-Aligned)
 
-Context comes from four operator-controlled sources only:
-1. **Shape** — 8-dimension self-assessment (Shape Builder + Daily Pulse)
-2. **Conversation** — What the operator wants, values, reaches for (Map Conversation, earned at week 2-3)
-3. **Pulse** — Daily micro-updates, temporal patterns emerge by day 3-4
-4. **Community Wisdom** — Anonymized aggregate patterns from all operators
+Context comes from operator-controlled sources only:
+1. **Lotus Flow** — entity type, life stage, governance, 8-capital spectrum, archetype (Day 1 onboarding)
+2. **Capital Pulse** — daily micro-updates to capital sliders, temporal patterns emerge by day 3-4
+3. **Context Petals** — Ikigai, Purpose, Vision, Behavior (progressive deepening at user's pace)
+4. **Conversation** — the 6-phase Map Conversation (earned at week 2-3)
+5. **Community Wisdom** — anonymized aggregate patterns from all operators
 
-No external data harvesting. No bank connections. No calendar sync. No health app integration. The operator tells HUMA what matters.
+No external data harvesting. No bank connections. No calendar sync. No health app integration.
 
 ### Three Tabs (What They See)
 
@@ -97,7 +109,7 @@ Time and Wisdom reserved as future fields.
 
 ### Pricing
 
-**Free forever:** Shape Builder, daily pulse, weekly insight (one-card: shape morph + coherence delta), map conversation (once), shape sharing, "people like you" signals.
+**Free forever:** Lotus Flow, daily capital pulse, weekly insight (one-card: shape morph + coherence delta), map conversation (once), shape sharing, "people like you" signals.
 
 **$29/month Operate:** Daily one-thing card with compiled methods, full daily schedule, weekly planner, deep weekly review (5-8 min), practice recommendations, seasonal review, shape timeline, canvas versioning.
 
@@ -174,7 +186,8 @@ Read `/docs/HUMA_VOICE_BIBLE.md` for the full specification. These are the non-n
 - NEVER USE: optimize, productivity, hack, goals, accountability, mindset, journey, empower, unlock, self-care, wellness, boundaries, actionable, impactful, transformative
 
 **Response lengths:**
-- Shape Builder insight: Structural insight + one connection + invitation to return. 3 short paragraphs maximum.
+- Lotus Flow synthesis: Archetype + stage + strengths + growth areas. 4 lines maximum.
+- Lotus Flow first insight: 3 sentences maximum.
 - Daily pulse insight: 1-2 sentences maximum
 - One-thing card: Action + "this connects to" + Done/Not today. One card.
 - Weekly insight card: 1 observation + coherence number. 3 sentences maximum.

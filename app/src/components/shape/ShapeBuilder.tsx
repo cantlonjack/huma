@@ -1,3 +1,16 @@
+/**
+ * DEPRECATED — March 2026
+ *
+ * The Shape Builder has been replaced by the Lotus Flow (components/lotus/)
+ * as the entry experience at /begin.
+ *
+ * This component is RETAINED for use as the Daily Capital Pulse
+ * (returning users adjusting their dimensional scores). Do not delete.
+ *
+ * The Lotus Flow captures richer context (entity type, governance,
+ * 8-capital spectrum, archetype) while this component handles the
+ * simpler daily check-in.
+ */
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";

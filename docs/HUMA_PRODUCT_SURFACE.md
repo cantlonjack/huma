@@ -15,7 +15,7 @@ March 2026 · Foundational Architecture
 
 ## 01 — Design Rationale
 
-Seven problems this design solves:
+Eight problems this design solves:
 
 **1. The 40-minute wall.** Nobody commits 40 minutes to something they've
 never tried. Not even if the landing page is perfect. The gap between
@@ -51,6 +51,13 @@ exercise, not a moment of recognition.
 "Enabling actions." "Validation states." This is language for the
 architect of the system, not the person living in it.
 
+**8. The Shape Builder was too thin.** Rating dimensions 1-5 gives the AI
+eight numbers. Eight numbers can't produce GPS-level guidance. The entry
+experience needs to capture WHO (entity type, archetype), WHERE (stage,
+governance), and WHAT (capital spectrum) — not just HOW IT FEELS. The
+Lotus Flow solves this by painting context through visual selections
+across the first three lotus petals in 90 seconds.
+
 **The unicorn principle:** Make the deep work feel like play. Make system
 thinking happen without the user knowing. Make the hard thing easy by
 making the first step tiny and the reward immediate.
@@ -71,12 +78,13 @@ prediction models. The driver sees a blue line and "turn left in
 
 The product IS the shape. Everything flows from it:
 
-- **Build it** (Shape Builder, 90 sec)
-- **Update it** (Daily Pulse, 15-30 sec)
+- **Paint it** (Lotus Flow, 90 sec — WHOLE + WHO + WHAT petals)
+- **Update it** (Daily Capital Pulse, 15-30 sec)
 - **Understand it** (One-Thing Card, Pattern Insights)
-- **Deepen it** (Map Conversation, 15-20 min)
-- **Watch it change** (Weekly Shape Morph)
-- **Share it** (The Shape as artifact)
+- **Deepen it** (Context Petals: Ikigai, Purpose, Vision, Behavior)
+- **Map it** (Map Conversation, 15-20 min, week 2-3)
+- **Watch it change** (Weekly WHOLE Evolution)
+- **Share it** (The WHOLE as artifact)
 
 The shape is an 8-vertex radar across the dimensions. It captures the
 operator's felt sense of their life across all dimensions simultaneously.
@@ -98,16 +106,19 @@ because only HUMA has the full dimensional picture.
 Sovereignty-aligned. HUMA knows what the operator TELLS it. Four sources
 of context, all operator-controlled:
 
-**1. The Shape** — 8-dimension self-assessment. Subjective felt-sense.
-Updated through Shape Builder and Daily Pulse.
+**1. Lotus Flow** — entity type, life stage, governance, 8-capital
+spectrum, archetype. Rich context from Day 1 onboarding.
 
-**2. The Conversation** — What the operator wants, values, is reaching
+**2. Capital Pulse** — daily micro-updates to capital sliders. Temporal
+patterns emerge by day 3-4. Which capitals move together, what predicts what.
+
+**3. Context Petals** — Ikigai, Purpose, Vision, Behavior. Progressive
+deepening at operator's pace. Each petal advances the WHOLE.
+
+**4. The Conversation** — What the operator wants, values, is reaching
 for. Interior experience. Earned at week 2-3 through the Map Conversation.
 
-**3. The Pulse** — Daily micro-updates. Temporal patterns emerge by
-day 3-4. Which dimensions move together, what predicts what.
-
-**4. Community Wisdom** — Anonymized, aggregated patterns from all
+**5. Community Wisdom** — Anonymized, aggregated patterns from all
 operators. "When Money drops and Body holds steady, 73% recover within
 8 weeks if People is above 3." Applied to THIS operator's specific
 configuration.
@@ -122,100 +133,75 @@ HUMA what matters. HUMA doesn't surveil.
 
 How operators enter and deepen. Never forced — always invited.
 
-### Layer 1: Shape Builder (Day 1, 60-90 sec)
+### Layer 1: Lotus Flow (Day 1, 90 sec)
 
-Eight cards, one per dimension. Tap to rate. Structural insight
-generated from the PATTERN of scores. Invitation to return tomorrow.
+11 screens moving through the first 3 lotus petals (WHOLE → WHO → WHAT).
+Entity type, life stage, governance, 8-capital spectrum, archetype
+synthesis, WHOLE evolution. Produces first pattern recommendation.
 
-### Layer 2: Daily Shape Pulse (Days 2-14, 15-30 sec)
+### Layer 2: Daily Capital Pulse (Days 2-14, 15-30 sec)
 
-Show yesterday's shape. Tap to adjust vertices that changed.
-"Done — nothing changed" shortcut. Pattern detection begins by day 3-4.
+Show the Regenerative Wealth flower (yesterday's state). Tap capital
+sliders to adjust what changed. "Nothing changed" shortcut. Pattern
+detection begins by day 3-4. The WHOLE evolves with each pulse.
 
 ### Layer 3: One-Thing Card (Day 5+, when patterns emerge)
 
-One high-leverage suggestion per day based on dimensional analysis +
-temporal patterns. Socratic framing. Done / Not today.
+One high-leverage suggestion per day based on capital analysis +
+temporal patterns. Socratic framing. Got it / Not today.
 
-### Layer 4: Map Conversation (Week 2-3, 15-20 min)
+### Layer 4: Context Deepening (Day 2+, at user's pace)
 
-The 6-phase Design conversation, earned and shortened by accumulated
-shape + pulse data. Phase 1 (Ikigai) shortened — HUMA already knows
-the shape. Phase 3 (Situation) informed — 2 weeks of data. Phase 4
-(Patterns) grounded — HUMA knows what's working.
+Ikigai (Love/Good/Need), Purpose, Vision, Behavior. Available
+immediately or progressively. Each petal advances the WHOLE.
 
-### Layer 5: Full Depth (Ongoing)
+### Layer 5: Map Conversation (Week 2-3, 15-20 min)
 
-Three-tab experience. Full daily schedule, deep weekly review, seasonal
-review. Always available, never the default.
+The 6-phase Design conversation, now informed by weeks of context.
+Phase 1 (Ikigai) shortened — HUMA already knows the archetype and
+capitals. Phase 3 (Situation) informed — weeks of pulse data.
+
+### Layer 6: Full Depth (Ongoing)
+
+Three-tab experience. Behavior→Pattern mapping, Design, Validate,
+Evolve. Always available, never the default.
 
 ---
 
-## 05 — Shape Builder Specification
+## 05 — Entry: Lotus Flow
 
-Eight dimension-specific cards with visual metaphors. No numbers.
+The primary entry point is the Lotus Flow at `/begin` — an 11-screen,
+90-second context painting that moves through the first three lotus
+petals (WHOLE → WHO → WHAT).
 
-| Card | Dimension | Question | Visual Language |
-|------|-----------|----------|----------------|
-| 1 | Body | "How does your body feel right now?" | wilting - growing - thriving |
-| 2 | People | "The people around you — helping or draining?" | empty - sparse - full |
-| 3 | Money | "How does money feel?" | sinking - floating - flowing |
-| 4 | Home | "Does where you live work for you?" | cramped - functional - sanctuary |
-| 5 | Growth | "Are you learning and developing?" | stagnant - moving - accelerating |
-| 6 | Joy | "When was the last time you felt genuine joy?" | distant - occasional - regular |
-| 7 | Purpose | "Do you know what you're building toward?" | fog - glimpses - clear path |
-| 8 | Identity | "Do you feel like yourself right now?" | fractured - assembling - whole |
+The flow captures:
+- **WHOLE:** Entity type (Person for MVP) and life stage
+- **WHO:** Governance — solo, partnered, family
+- **WHAT:** 8-form capital spectrum with color-gradient sliders
 
-### Card Design
+From these inputs, HUMA infers:
+- **Archetype** (Earth Tender, Maker, Healer, Builder, Seeker, etc.)
+- **Development stage** (starting, transition, building, searching)
+- **Strengths** (top 3 capitals)
+- **Growth areas** (bottom 2 capitals)
 
-- Full-screen card, sand-50 background
-- Question at top in Cormorant Garamond, earth-900, generous size
-- Abstract warm illustration in center — NOT clipart. Think watercolor
-  washes or ink strokes that evoke the spectrum from struggling to
-  thriving. Each dimension has its own visual language.
-- 5 tap targets at bottom — NOT numbered. Visual weight: small dot to
-  large dot. Labels: "struggling — getting by — okay — good — thriving"
-- Tapping animates the card forward to the next
-- Subtle shape preview builds in corner as cards complete — each tap
-  adds a vertex to an evolving radar form
-- 60-90 seconds total
+Three reward moments punctuate the flow:
+1. WHOLE 1.0 born (Screen 5) — organic animated form from first selections
+2. Regenerative Wealth flower (Screen 8) — 8-petal capital visualization
+3. WHOLE evolution (Screens 10-11) — the shape transforms as context deepens
 
-### After Card 8: The Structural Insight
+The synthesis (Screen 9) is the "holy shit" moment: HUMA reflects back
+the operator's archetype, stage, strengths, and growth areas — inferred
+from the pattern of their inputs, not self-reported.
 
-The shape fills the screen. Below it, HUMA delivers the structural
-insight — a reading of the RELATIONSHIP between dimensions. Generated
-by a Claude API call that receives the 8 scores and produces flowing
-prose that addresses these four aspects naturally (not as a numbered
-list):
+After the flow, HUMA delivers a compiled pattern recommendation specific
+to the operator's archetype, stage, and capital shape.
 
-1. **Most unusual aspect** — what stands out about this configuration
-2. **Strongest coupling** — which dimensions are pulling on each other most
-3. **Hidden asset** — which high dimension could support a low one
-4. **The one lever** — which dimension, if moved, would cascade most
+The full Lotus Framework has 12 petals. Petals 4-12 (Context through
+Evolve) are available as progressive depth — the operator goes deeper
+at their own pace, and the WHOLE evolves with each petal completed.
 
-Example:
-
-"You rated People at 4 and Identity at 4, but Money at 1 and Body
-at 2. That's unusual — most people in financial stress feel isolated.
-You haven't. That means your community is a structural asset, not
-just support. Your strongest lever right now is Body — not because
-fitness solves money problems, but because your energy is the
-infrastructure for everything else."
-
-### After the Insight
-
-Two paths:
-
-**"Tell me more" ->** Opens a short conversation (5-10 minutes)
-where HUMA asks about the specific coupling it identified. Not all
-8 dimensions. Just the 2-3 where the leverage is. This IS layer 1
-of the Design process — HUMA is accumulating context. The operator
-experiences it as a natural follow-up.
-
-**"I'll come back" ->** HUMA saves the shape and says: "Your shape
-is saved. Come back tomorrow — I'll check in."
-
-Either path works. The operator has already received value.
+See `cc-prompt-onboarding-v2.md` for the complete specification.
 
 ---
 
@@ -480,17 +466,21 @@ the person. "Packing ran long. Is it volume or staging?" not
 
 ---
 
-## 08 — Daily Shape Pulse
+## 08 — Daily Capital Pulse
 
-- Show yesterday's shape (radar visualization)
-- Tap tappable vertices to adjust what changed
-- "Done — nothing changed" shortcut
+- Show the Regenerative Wealth flower (yesterday's state)
+- Tap capital sliders to adjust what changed
+- "Nothing changed" shortcut
 - 15-30 seconds total
-- After 3-4 days: pattern insights emerge
+- After 3-4 days: pattern insights emerge from temporal capital data
+- The WHOLE visualization subtly evolves with each pulse
+
+The 8-capital spectrum from the Lotus Flow IS the pulse mechanism.
+Return users see their flower and sliders, adjust what changed, done.
 
 **Pattern Insight (days 3+):**
 
-Shows temporal patterns — which dimensions move together, what predicts
+Shows temporal patterns — which capitals move together, what predicts
 what. Cross-referenced to community wisdom.
 
 Maximum one insight every 2-3 days. Not every day. Scarcity makes them
@@ -624,16 +614,16 @@ What people share: "I was 38 in January. I'm 67 now."
 
 ## 12 — Dimension Mapping
 
-| Internal (8 Forms of Capital) | User-Facing | Shape Builder Question |
-|-------------------------------|-------------|----------------------|
-| Financial | Money | "How does money feel?" |
-| Material | Home | "Does where you live work for you?" |
-| Living/Natural | Body | "How does your body feel right now?" |
-| Social | People | "The people around you — helping or draining?" |
-| Intellectual | Growth | "Are you learning and developing?" |
-| Experiential | Joy | "When was the last time you felt genuine joy?" |
-| Spiritual | Purpose | "Do you know what you're building toward?" |
-| Cultural | Identity | "Do you feel like yourself right now?" |
+| Internal (8 Forms of Capital) | User-Facing | Capital Pulse Context |
+|-------------------------------|-------------|---------------------|
+| Financial | Money | Capital spectrum slider (1-10) |
+| Material | Home | Capital spectrum slider (1-10) |
+| Living/Natural | Body | Capital spectrum slider (1-10) |
+| Social | People | Capital spectrum slider (1-10) |
+| Intellectual | Growth | Capital spectrum slider (1-10) |
+| Experiential | Joy | Capital spectrum slider (1-10) |
+| Spiritual | Purpose | Capital spectrum slider (1-10) |
+| Cultural | Identity | Capital spectrum slider (1-10) |
 
 **Reserved future fields:** Time (the scarcest resource), Wisdom
 (emergent property, not a capital).
@@ -895,8 +885,8 @@ the knowledge. That's the goal.
 
 ```
 FREE FOREVER:
-  - Shape Builder
-  - Daily pulse
+  - Lotus Flow
+  - Daily capital pulse
   - Weekly insight (one-card: shape morph + coherence delta)
   - Map conversation (once, produces the canvas + shape)
   - Shape sharing
@@ -950,7 +940,7 @@ Every free canvas is a potential share. Every share is distribution.
 
 ```
 /               Landing page (unauthenticated)
-/begin          Shape Builder entry
+/begin          Lotus Flow entry (11 screens → pattern recommendation → auth)
 /home           Three-tab experience (default: Your Day)
   #map          Tab 1: Your Map
   #today        Tab 2: Your Day
@@ -972,20 +962,27 @@ an artifact — the thing someone screenshots and shares.
 
 In order of priority. Ship early, iterate with real users.
 
-### Phase 1: Shape Builder (3-4 sessions) [SHIPPED]
-- 8 cards, one per dimension
-- Visual tap targets (not numbered sliders)
-- Shape builds as they go (SVG radar)
-- Structural insight generated via Claude API
-- "Tell me more" / "I'll come back" paths
-- Auth (magic link) to enable return
+### Phase 1: Shape Builder [SHIPPED — DEPRECATED]
+- Original 8-card dimension rating entry. Replaced by the Lotus Flow.
+- Capital sliders from this design live on as the Daily Capital Pulse.
 
-### Phase 2: Daily Shape Pulse (2-3 sessions) [NEXT]
-- Show yesterday's shape
-- Tap to adjust vertices
-- "Done — nothing changed" shortcut
+### Phase 1.5: Lotus Flow [CURRENT]
+- 11-screen context painting (WHOLE → WHO → WHAT petals)
+- Entity type, life stage, governance, 8-capital spectrum
+- Archetype inference + synthesis screen
+- WHOLE visualization (animated SVG → future Three.js)
+- Regenerative Wealth flower (8-petal capital visualization)
+- First pattern recommendation via Claude AI
+- Auth trigger after pattern recommendation
+- See `cc-prompt-onboarding-v2.md` for complete specification
+
+### Phase 2: Daily Capital Pulse [NEXT]
+- Show Regenerative Wealth flower (yesterday's state)
+- Tap capital sliders to adjust what changed
+- "Nothing changed" shortcut
 - Save to pulse history
 - Pattern detection engine (after 3-4 days)
+- WHOLE evolves with each pulse
 - Insight cards (max one per 2-3 days)
 
 ### Phase 3: One-Thing Card (2-3 sessions) [FUTURE]
