@@ -188,6 +188,17 @@ export interface OperatorContext {
   firstInsight?: string;
   firstPattern?: CompiledPattern;
 
+  // Ikigai (Context petal)
+  ikigai?: {
+    love: string[];
+    good: string[];
+    need: string[];
+    loveCards?: string[];
+    goodCards?: string[];
+    needCards?: string[];
+    synthesis?: string;
+  };
+
   // System
   createdAt: string;
   updatedAt: string;
