@@ -8,7 +8,7 @@ Jack's original HUMA Guide wireframes (27 screens). This spec covers Screens 1-1
 
 The system GIVES before it ASKS. Every 3-4 screens, the user receives a visual reward or synthesis. By screen 9, the system has already reflected back who they are — archetype, stage, strengths, growth areas. The user is SEEN before they're asked to go deeper.
 
-This REPLACES the current Shape Builder at `/begin`. The existing Shape Builder code is deprecated. The 8-dimension pulse check (rating Body, People, Money etc.) becomes the DAILY PULSE for returning users — it no longer serves as the entry experience.
+This REPLACES the current Shape Builder at `/begin`. The existing Shape Builder code is deprecated. Capital values are now editable directly in the workspace — there is no separate daily slider ritual.
 
 ## What Changes
 
@@ -19,7 +19,7 @@ This REPLACES the current Shape Builder at `/begin`. The existing Shape Builder 
 | AI input | 8 numbers | Rich context object (type, sub-type, governance, capitals, archetype, stage) |
 | First output | Generic structural insight | Archetype synthesis + compiled pattern recommendation |
 | Visual artifact | Radar chart | WHOLE (evolving organic 3D form) + Regenerative Wealth flower |
-| Progressive depth | Shape Builder → Daily Pulse → One-Thing → Map | Lotus Flow → Daily Pulse (capital sliders) → One-Thing → Context/Ikigai → deeper petals |
+| Progressive depth | Shape Builder → Daily Pulse → One-Thing → Map | Lotus Flow → Context Deepening → One-Thing → Behavior + Design → Full Depth |
 
 ## Read Before Building
 
@@ -548,11 +548,11 @@ Come back tomorrow — or keep going now.
 | Day 1 (90 sec) | WHOLE + WHO + WHAT → archetype + first pattern | whole, who, what |
 | Day 2+ (optional depth) | CONTEXT: Ikigai (Love, Good, Need) | context |
 | Day 3+ | PURPOSE + VISION | purpose, vision |
-| Daily return (15 sec) | Capital pulse: adjust sliders, see flower change | what (pulse mode) |
+| Daily return | Workspace: see context, edit anything, get recommendations | workspace |
 | Week 2+ | BEHAVIOR: purpose→pattern mapping | behavior |
 | Ongoing | DESIGN, INSTALL, VALIDATE, EVOLVE | deeper petals |
 
-Each return visit can advance through a new petal, or just do the daily capital pulse. The WHOLE evolves with each petal completed. The user controls the pace.
+Each return visit can advance through a new petal, or edit any existing context. The WHOLE evolves with each petal completed. The user controls the pace.
 
 ---
 
@@ -564,7 +564,7 @@ Each return visit can advance through a new petal, or just do the daily capital 
 |-------|------|--------|
 | `/begin` | The Lotus Flow onboarding (this spec) | REPLACE existing Shape Builder |
 | `/home` | Three-tab shell (Your Map / Your Day / Your Journey) | EXISTS (minimal) |
-| `/home/pulse` | Daily capital pulse (return users) | NEW |
+| `/home` | Workspace (context dashboard + recommendations + editing) | EXISTS (update for workspace model) |
 | `/` | Landing page | EXISTS (update later with Google Maps positioning) |
 
 ### Existing Code Impact

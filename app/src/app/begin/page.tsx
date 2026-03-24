@@ -7,6 +7,7 @@ import AuthModal from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
 import { saveShape } from "@/lib/shapes";
 import { clearLotusState } from "@/lib/lotus-persistence";
+import { saveOperatorContextLocal } from "@/lib/operator-context";
 import type { OperatorContext } from "@/types/lotus";
 import { CAPITAL_TO_DIMENSION as capitalMap, CAPITAL_ORDER } from "@/types/lotus";
 import type { DimensionKey } from "@/types/shape";
@@ -67,6 +68,18 @@ export default function BeginPage() {
    */
   const saveContextAsShape = useCallback(
     async (ctx: OperatorContext) => {
+      // Persist full operator context for the workspace
+      const fullCtx: OperatorContext = {
+        ...ctx,
+        lotusProgress: {
+          ...(ctx.lotusProgress || {}),
+          whole: true,
+          who: true,
+          what: true,
+        } as OperatorContext["lotusProgress"],
+      };
+      saveOperatorContextLocal(fullCtx);
+
       const scores = contextToShapeScores(ctx);
       const insight = ctx.firstInsight
         ? {

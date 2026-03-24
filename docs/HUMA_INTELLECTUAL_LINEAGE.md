@@ -185,6 +185,8 @@ The Christopher Alexander connection: Alexander's *A Pattern Language* (1977) sh
 
 **→** Savory's "planned grazing" insight — that restoration requires periodic, intentional disturbance — maps to HUMA's developmental partnership. Positive change requires active intervention, not passive hope.
 
+**→ The Feedback Loop as Operating Principle:** Savory's loop is not a methodology reference — it is the engineering architecture of the workspace. Every piece of context is hypothesis. The workspace facilitates continuous testing. This is why HUMA is a workspace (always editable, always responsive) rather than an app (fixed flows, static outputs).
+
 ---
 
 ## SOURCE 5 OF 9: The Regrarians Platform

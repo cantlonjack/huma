@@ -11,9 +11,9 @@
 ## 01 — The Journey at a Glance
 
 ```
-DISCOVER → ARRIVE → SHAPE BUILDER → DAILY PULSE → PATTERN RECOGNITION
+DISCOVER → ARRIVE → LOTUS FLOW → WORKSPACE → CONTEXT DEEPENING
     ↓                                                      ↓
- (days)                                        ONE-THING CARD (day 5+)
+ (days)                                        ONE-THING CARD (context deep enough)
                                                            ↓
                                                      MAP CONVERSATION
                                                            ↓
@@ -27,8 +27,8 @@ DISCOVER → ARRIVE → SHAPE BUILDER → DAILY PULSE → PATTERN RECOGNITION
 The journey has nine stages. Each stage has a critical transition — a moment where the operator either continues or churns. Design effort should be concentrated at these transitions.
 
 **The three critical transitions (where most people are won or lost):**
-- Lotus Flow → Daily Capital Pulse (do they come back day 2?)
-- Daily Pulse → Map Conversation (do they accept the invitation at week 2?)
+- Lotus Flow → Workspace (do they come back day 2?)
+- Context Deepening → Map Conversation (do they accept the invitation when context is deep enough?)
 - Map Conversation → Three Tabs (do they engage with the one-thing card?)
 
 ---
@@ -99,7 +99,7 @@ After the flow, HUMA delivers:
 
 **Data captured:** Entity type, life stage, governance, 8-capital spectrum, inferred archetype, location (optional). Under the surface, HUMA has enough context to compile specific patterns from the RPPL library. None of the architecture is shown explicitly.
 
-**Critical transition → Daily Capital Pulse:** They leave. Within 24 hours, a gentle nudge: "Quick check-in? Tap what changed." The capital sliders from the Lotus Flow become the daily pulse mechanism.
+**Critical transition → Workspace:** They leave. Within 24 hours, a gentle nudge: "Your workspace is ready." The context from the Lotus Flow is visible, editable, and waiting for them to deepen.
 
 **What can go wrong:**
 - The archetype feels wrong (mitigate: easy edit button on synthesis screen)
@@ -109,63 +109,53 @@ After the flow, HUMA delivers:
 
 ---
 
-## 05 — Stage 4: Daily Pulse (Days 2-14)
+## 05 — Stage 4: The Workspace (Day 2+)
 
-**Duration:** 30 seconds per day.
+**Duration:** Variable — the operator returns because their project is there.
 
-**What they experience:** A quick check-in showing 2-3 dimensions most relevant to what they shared on day one. Tap 1-5 for each. Done.
+**What they experience:** Their living context — everything from the Lotus Flow, organized by the lotus structure. Archetype, capitals, strengths, growth areas. All visible. All tappable. All editable. The WHOLE reflects the current state.
 
-```
-Quick check — how's today?
+The workspace invites them to deepen: "Your Ikigai petal is ready." Each petal is 5-15 minutes. Each makes compiled recommendations sharper. Each evolves the WHOLE. The operator controls the pace.
 
-Body    [1——2——3——4——5]
-Money   [1——2——3——4——5]
-People  [1——2——3——4——5]
+When reality proves an assumption wrong — a capital score that was too high, a strength that turned out to be a growth area — the operator taps the element and changes it. No ceremony. No daily check-in screen. Context is always visible, always editable.
 
-[Done]
-```
+**Emotional target:** Ownership and growing clarity. "This is MY project. I can see it evolving."
 
-After 3-4 days, HUMA starts seeing patterns: "Your Body dips every Wednesday. What happens on Wednesdays?"
+**Data flow:** Context edits and petal completions create signals. As context deepens, recommendations compile more specifically. Each Transition Event (petal completion) evolves the WHOLE.
 
-These small insights build trust and demonstrate that HUMA sees things they don't.
-
-**Emotional target:** Building trust through accumulated small moments. "It remembers. And it's right."
-
-**Data flow:** Each pulse creates a data point in the operator's timeline. After 3-4 days, patterns become detectable. After 5-7 days, the one-thing card may appear alongside the pulse.
-
-**Critical transition → Pattern Recognition:**
-Do they keep coming back? The 30-second commitment is key — low enough to sustain daily. Each day's insight makes the next day's return more likely.
+**Critical transition → Context Deepening:**
+Do they complete at least one petal? The workspace must make deepening feel natural, not effortful. Each petal completion delivers a visible reward — the WHOLE evolves, recommendations sharpen.
 
 **What can go wrong:**
-- The pulse asks too many dimensions (overwhelming, not 30 seconds)
-- HUMA's pattern detection is too slow (no insight by day 4 = no trust)
-- The insights are generic rather than connected to their specific data
+- The workspace feels empty after just the Lotus Flow (not enough visible value)
+- Petal invitations are too aggressive or too subtle
+- Editing context feels cumbersome rather than one-tap
 - No notification/reminder brings them back on day 2-3
 
 ---
 
-## 06 — Stage 5: Pattern Recognition (Days 5-10)
+## 06 — Stage 5: Compiled Recommendations (when context is deep enough)
 
-**Duration:** Organic — happens within daily pulse interactions.
+**Duration:** Organic — happens as context deepens through petals.
 
-**What they experience:** HUMA's insights get noticeably more specific. Connections they hadn't seen. "Your sleep improved 2 nights after you did the expense list. Money clarity → better sleep. That's not random."
+**What they experience:** As petals complete, HUMA's compiled recommendations get noticeably sharper. After Ikigai: recommendations matched to what they love and are good at. After Purpose: aligned with stated direction. Each petal completion is a Transition Event — the WHOLE evolves, and the operator sees the difference.
 
-This is the magic moment — but it happens gradually through accumulated data, not in a marathon conversation. The coherence recognition deepens each day.
+The one-thing card may appear here — one high-leverage suggestion per day, Socratic framing, Got it / Not today.
 
 **Emotional target:** Growing trust + dawning realization. "This thing actually understands my life as a system."
 
-**Data flow:** Enough daily pulse data to detect multi-dimensional coupling. Pattern matching against the growing context model.
+**Data flow:** Context petals + workspace edits build the coupling model. Pattern matching against the growing context.
 
 **Critical transition → Map Conversation:**
-At approximately day 10-14, HUMA extends the invitation: "I've been watching the patterns in your check-ins. I think I see your whole picture forming. Want to map it together? Takes about 15-20 minutes."
+When context is deep enough, HUMA extends the invitation: "I think I see your whole picture forming. Want to map it together? Takes about 15-20 minutes."
 
-This invitation is EARNED, not pushed. The operator has experienced value for 2 weeks. They're curious what the full picture looks like.
+This invitation is EARNED, not pushed. The operator has experienced value through deepening context. They're curious what the full picture looks like.
 
 **What can go wrong:**
 - The invitation comes too early (before trust is built)
-- The invitation comes too late (operator plateaus on daily pulse)
+- The invitation comes too late (operator stops deepening)
 - The invitation feels like an upsell rather than a natural deepening
-- Pattern recognition is too shallow to justify the deeper conversation
+- Pattern compilation is too shallow to justify the deeper conversation
 
 ---
 
@@ -179,7 +169,7 @@ The conversation still follows the phase structure internally (ikigai → contex
 
 **Emotional target:** Excitement + recognition. "Oh — all of this connects."
 
-**Data flow:** Phase transitions store context syntheses and canvas data. The accumulated daily pulse data enriches every phase. On completion, all data flows into the canvas.
+**Data flow:** Phase transitions store context syntheses and canvas data. The accumulated workspace context enriches every phase. On completion, all data flows into the canvas.
 
 **Critical transition → Canvas Moment:**
 The conversation ends. The "See your map" button appears. This click must feel like a reward — 2+ weeks of daily engagement crystallizing into a tangible whole-life artifact.
@@ -198,7 +188,7 @@ The conversation ends. The "See your map" button appears. This click must feel l
 
 **What they experience:** Their spatial canvas — the center-outward map showing Essence → What Matters → What Makes It Work → Practices → Where I'm Going. Warmth system active: elements connected to their 2 weeks of daily data are already emerging; untested elements are faint.
 
-**Emotional target:** Awe + ownership. "This is MY life. I can SEE it." The coherence recognition feeling at maximum intensity. The canvas is partly warm (tested through daily pulses) and partly faint (new from the conversation) — visually honest about what's real and what's aspiration.
+**Emotional target:** Awe + ownership. "This is MY life. I can SEE it." The coherence recognition feeling at maximum intensity. The canvas is partly warm (tested through workspace engagement) and partly faint (new from the conversation) — visually honest about what's real and what's aspiration.
 
 **Interactions available:**
 - Tap any element to see detail, connections, warmth history
@@ -293,8 +283,8 @@ At each stage, there are natural moments where the operator is most likely to sh
 | Transition | Churn Risk | Defense |
 |------------|-----------|---------|
 | Landing → Lotus Flow | High (70%+ bounce expected) | The problem section must name THEIR pain. 90-second visual entry = zero commitment. |
-| Lotus Flow → Day 2 Pulse | Very high | The archetype synthesis + pattern recommendation must land. The invitation to return must feel natural. 24-hour nudge. |
-| Daily Pulse → Map Conversation | High | Pattern recognition by day 5 builds trust. The invitation at week 2 is earned, not pushed. |
+| Lotus Flow → Workspace | Very high | The archetype synthesis + pattern recommendation must land. The workspace must feel like YOUR project. 24-hour nudge. |
+| Context Deepening → Map Conversation | High | Petal completions build trust. The invitation is earned when context is deep enough, not pushed. |
 | Map Conversation → Three Tabs | Medium | The one-thing card bridges canvas insight to daily action. Canvas warmth creates feedback loop. |
 | Month 2-3 → Seasonal Review | Medium | Seasonal review creates a "fresh start" moment. Shape comparison creates visual payoff. |
 | Free → Paid | Medium | Paid tier (one-thing card + compiled methods + deep review) must deliver obvious daily value beyond the free insight. |
@@ -306,7 +296,7 @@ At each stage, there are natural moments where the operator is most likely to sh
 | Touchpoint | Free | Paid ($29/mo) |
 |------------|------|--------------|
 | Lotus Flow (90 sec) | Full | Full |
-| Daily pulse | Full | Full |
+| Workspace (context visible + editable) | Full | Full |
 | Weekly insight (one card) | Full | Full |
 | Map conversation | Full (once) | Full |
 | Shape + sharing | Full | Full |

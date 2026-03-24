@@ -56,11 +56,10 @@ _Canonical spec: HUMA_PRODUCT_SURFACE.md §04_
 Never forced. Always invited.
 
 1. **Lotus Flow** (Day 1, 90 sec) -- 11 screens: entity type, life stage, governance, 8-capital spectrum, archetype synthesis, WHOLE evolution. First pattern recommendation.
-2. **Daily Capital Pulse** (Days 2-14, 15-30 sec) -- return to capital sliders, adjust what changed, watch flower/WHOLE evolve
-3. **One-Thing Card** (Day 5+) -- one high-leverage suggestion per day, Socratic framing, Got it / Not today (equal weight)
-4. **Context Deepening** (Day 2+, at user's pace) -- Ikigai, Purpose, Vision. Each petal advances the WHOLE.
-5. **Map Conversation** (Week 2-3, 15-20 min) -- the 6-phase Design conversation, now informed by weeks of context
-6. **Full Depth** (Ongoing) -- three-tab experience. Behavior→Pattern mapping, Design, Validate, Evolve.
+2. **Context Deepening** (Day 2+, at operator's pace) -- Ikigai, Purpose, Vision. Each petal is 5-15 min. Each makes compiled recommendations sharper. Each evolves the WHOLE.
+3. **One-Thing Card** (when context is deep enough) -- requires Lotus Flow + one context petal. Socratic framing, Got it / Not today (equal weight)
+4. **Behavior + Design** -- pattern mapping, enterprise compilation, validation. The workspace becomes the operator's project.
+5. **Full Depth** (Ongoing) -- masterplan, seasonal review, pattern contribution. Three-tab experience.
 
 ### Three Tabs
 
@@ -81,9 +80,9 @@ _Canonical spec: HUMA_PRODUCT_SURFACE.md §03_
 Four operator-controlled sources only:
 
 1. **Lotus Flow** -- entity type, life stage, governance, 8-capital spectrum, archetype (Day 1 onboarding)
-2. **Capital Pulse** -- daily micro-updates to capital sliders, temporal patterns emerge by day 3-4
-3. **Context Petals** -- Ikigai, Purpose, Vision, Behavior (progressive deepening at user's pace)
-4. **Conversation** -- the 6-phase Map Conversation (earned at week 2-3)
+2. **Context Petals** -- Ikigai, Purpose, Vision, Behavior (progressive deepening at operator's pace)
+3. **Workspace Edits** -- any context element is one tap from editing. Every piece of context is hypothesis under continuous testing.
+4. **Conversation** -- the 6-phase Map Conversation (when context is deep enough)
 5. **Community Wisdom** -- anonymized aggregate patterns from all operators
 
 No external data harvesting. No bank connections. No calendar sync. No health app integration. The operator tells HUMA what matters. HUMA does not surveil.
@@ -117,7 +116,7 @@ _Canonical spec: HUMA_PRODUCT_SURFACE.md §13, HUMA_VOICE_BIBLE.md §04_
 
 Time and Wisdom reserved as future fields.
 
-User-facing names (Body, People, Money etc.) are used in daily pulse and casual contexts. The formal names (Financial, Material, Living etc.) are used in the capital spectrum during the Lotus Flow.
+User-facing names (Body, People, Money etc.) are used in the workspace and casual contexts. The formal names (Financial, Material, Living etc.) are used in the capital spectrum during the Lotus Flow.
 
 ### One-Thing Card
 
@@ -131,7 +130,7 @@ Socratic, not prescriptive. Shows coupling and leverage so the operator learns t
 
 _Canonical spec: HUMA_PRODUCT_SURFACE.md §17, HUMA_VISION_AND_STRATEGY.md §10_
 
-**Free forever:** Lotus Flow, daily capital pulse, weekly insight (one-card), map conversation (once), shape sharing, "people like you" signals.
+**Free forever:** Lotus Flow, workspace (context always visible + editable), weekly insight (one-card), map conversation (once), shape sharing, "people like you" signals.
 
 **$29/month Operate:** Daily one-thing card with compiled methods, full daily schedule, weekly planner, deep weekly review, practice recommendations, seasonal review, shape timeline, canvas versioning.
 
@@ -161,7 +160,7 @@ _Canonical spec: HUMA_PRODUCT_SURFACE.md §07-§12, HUMA_TECHNICAL_SPECIFICATION
   -> What makes it work (all work done by 3pm)
     -> Weekly commitments (Tue/Thu: pack days done by 2pm)
       -> Daily behaviors (today's schedule with hard stop)
-        -> Validation (daily pulse + weekly insight)
+        -> Validation (workspace feedback + weekly insight)
           -> Adjustment (systemic, never personal)
 ```
 
@@ -270,7 +269,15 @@ Updated March 21, 2026. See git log for latest.
 
 **Building now:** Lotus Flow onboarding at /begin (replaces Shape Builder) — see cc-prompt-onboarding-v2.md
 
-**Building next:** Daily Capital Pulse, One-Thing Card, Context petals (Ikigai).
+**Building next:** Context petal (Ikigai), /home workspace shell, One-Thing Card.
+
+### The Workspace Model
+
+HUMA is a workspace, not an app. The daily return isn't a feature — it's the byproduct of building something essential. The operator opens /home and sees their living context — everything they've told HUMA, organized by the lotus structure. All visible. All tappable. All editable. The WHOLE reflects the state of everything in real time.
+
+Every piece of context is hypothesis, not fact. When the operator reports an assumption was wrong, context updates, the WHOLE shifts, recommendations recompile. The workspace is in constant flux. That flux IS the product working.
+
+Desktop: the full workspace. All petals accessible via the lotus nav. Mobile: the field companion — See, Report, Edit, Capture.
 
 ---
 

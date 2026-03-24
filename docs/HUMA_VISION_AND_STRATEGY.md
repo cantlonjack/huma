@@ -63,6 +63,16 @@ Four names, four contexts. Never confused.
 
 ---
 
+## 02.5 -- The Concentric Model
+
+Five scales of one system:
+
+**Self** → **Context** → **Role** → **Community** → **Renaissance**
+
+HUMA enters through Self and radiates outward. The current build handles Self and Context. Role is next. Community and Renaissance emerge from the protocol as the network grows. Each scale unlocks from the depth of the previous one.
+
+---
+
 ## 03 -- The Five Capacities
 
 The five primitives of RPPL are not technical concepts. They are perceptual capacities -- things a mind learns to do.
@@ -78,6 +88,18 @@ The five primitives of RPPL are not technical concepts. They are perceptual capa
 **Transformers** -- the ability to see across domains. Not "farming is different from freelancing" (that's obvious). "The principle that makes enterprise batching work is the SAME principle that would make my client workflow work, adapted for different constraints" (that's a transformer). Cross-domain bridges that convert patterns between contexts while preserving principles. Discovering Transformers is discovering the generative grammar of RPPL -- the rules that enable novel pattern creation, not just storage of existing patterns. When you can see transformers, all of human knowledge becomes available to you, not just the knowledge in your domain.
 
 These are not features of an app. They are capacities of a mind. HUMA develops these capacities. The app is the training ground. Graduation is when the capacities live in the person.
+
+### RPPL as Visual Language
+
+RPPL is a visual, universal language of holistic living systems. Reality is a complex network of nested components, patterns, and frameworks. RPPL structures this complexity into composable, shareable, compilable units.
+
+Components compose into Patterns. Patterns compile into Frameworks. Frameworks connect into bioregional networks.
+
+### The Compilation Cascade
+
+Data → Information → Knowledge → Connected Knowledge → Understanding → Empowered Action → Innovation → Renaissance
+
+RPPL makes each transition happen — an epistemological engine that compiles raw human context upward through every level until individual self-discovery becomes civilizational transformation.
 
 ---
 
@@ -349,7 +371,7 @@ If the notation is real -- if it describes something true about how human lives 
 
 ### 1. The App (HUMA)
 
-The digital mirror. Helps you see your own patterns through the shape, the conversation, the daily practice. The most scalable medium. The tutor. Entry point: the Lotus Flow -- 90 seconds, visual, tactile. Eleven screens moving through entity type, governance, and capital spectrum. Your unique life shape appears as a living WHOLE form. Archetype synthesis and first pattern recommendation. Daily capital pulse. Weekly WHOLE evolution. The shape IS the universal entry point. It works in the app. It could work on a paper card. It could work as the first round of the board game.
+The digital workspace. Helps you see your own patterns through the shape, the context petals, the compiled recommendations. The most scalable medium. The tutor. Entry point: the Lotus Flow -- 90 seconds, visual, tactile. Eleven screens moving through entity type, governance, and capital spectrum. Your unique life shape appears as a living WHOLE form. Archetype synthesis and first pattern recommendation. Context deepens through petals. Weekly WHOLE evolution. The shape IS the universal entry point. It works in the app. It could work on a paper card. It could work as the first round of the board game. Two form factors: desktop (full workspace) and mobile (field companion).
 
 ### 2. The Board Game (Regenaissance)
 
@@ -394,7 +416,7 @@ HUMA the application is a for-profit product built on the open protocol. What pe
 
 | Tier | What You Get | Price |
 |------|-------------|-------|
-| **Free Forever** | Lotus Flow, daily capital pulse, weekly insight (one-card), map conversation (once), shape sharing, "people like you" signals | $0 |
+| **Free Forever** | Lotus Flow, workspace (context always visible + editable), weekly insight (one-card), map conversation (once), shape sharing, "people like you" signals | $0 |
 | **Operate ($29/month)** | Daily one-thing card with compiled methods, full daily schedule, weekly planner, deep weekly review, practice recommendations, seasonal review, shape timeline, canvas versioning | $29/month |
 | **Professional ($99/month)** | Evolve Mode + multi-context management. Seasonal reviews, pattern contribution tools, client dashboards. For consultants, educators, designers, coaches who guide others through the medium. | $99/month |
 | **Enterprise** | Portfolio analysis, aggregate pattern intelligence, institutional integration. For organizations, NGOs, governments, impact investors. | Custom |

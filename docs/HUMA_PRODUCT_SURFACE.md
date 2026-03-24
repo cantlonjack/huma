@@ -79,10 +79,10 @@ prediction models. The driver sees a blue line and "turn left in
 The product IS the shape. Everything flows from it:
 
 - **Paint it** (Lotus Flow, 90 sec — WHOLE + WHO + WHAT petals)
-- **Update it** (Daily Capital Pulse, 15-30 sec)
-- **Understand it** (One-Thing Card, Pattern Insights)
 - **Deepen it** (Context Petals: Ikigai, Purpose, Vision, Behavior)
-- **Map it** (Map Conversation, 15-20 min, week 2-3)
+- **Understand it** (One-Thing Card, Compiled Recommendations)
+- **Edit it** (Workspace — any element, any time, one tap)
+- **Map it** (Map Conversation, 15-20 min, when context is deep enough)
 - **Watch it change** (Weekly WHOLE Evolution)
 - **Share it** (The WHOLE as artifact)
 
@@ -109,14 +109,16 @@ of context, all operator-controlled:
 **1. Lotus Flow** — entity type, life stage, governance, 8-capital
 spectrum, archetype. Rich context from Day 1 onboarding.
 
-**2. Capital Pulse** — daily micro-updates to capital sliders. Temporal
-patterns emerge by day 3-4. Which capitals move together, what predicts what.
-
-**3. Context Petals** — Ikigai, Purpose, Vision, Behavior. Progressive
+**2. Context Petals** — Ikigai, Purpose, Vision, Behavior. Progressive
 deepening at operator's pace. Each petal advances the WHOLE.
 
-**4. The Conversation** — What the operator wants, values, is reaching
-for. Interior experience. Earned at week 2-3 through the Map Conversation.
+**3. The Conversation** — What the operator wants, values, is reaching
+for. Interior experience. The Map Conversation deepens context further.
+
+**4. Workspace Edits** — Any piece of context is one tap from editing.
+When reality proves an assumption wrong, the operator changes it directly.
+No ceremony. No daily check-in screen. Context is always visible, always
+editable. Every edit is a signal — the system learns from what changes.
 
 **5. Community Wisdom** — Anonymized, aggregated patterns from all
 operators. "When Money drops and Body holds steady, 73% recover within
@@ -139,32 +141,27 @@ How operators enter and deepen. Never forced — always invited.
 Entity type, life stage, governance, 8-capital spectrum, archetype
 synthesis, WHOLE evolution. Produces first pattern recommendation.
 
-### Layer 2: Daily Capital Pulse (Days 2-14, 15-30 sec)
+### Layer 2: Context Deepening (Day 2+, at operator's pace)
 
-Show the Regenerative Wealth flower (yesterday's state). Tap capital
-sliders to adjust what changed. "Nothing changed" shortcut. Pattern
-detection begins by day 3-4. The WHOLE evolves with each pulse.
+Ikigai (Love/Good/Need), Purpose, Vision, Behavior. Each petal is
+5-15 minutes. Each makes compiled recommendations sharper. Each
+evolves the WHOLE. Available immediately or progressively.
 
-### Layer 3: One-Thing Card (Day 5+, when patterns emerge)
+### Layer 3: One-Thing Card (when context is deep enough)
 
-One high-leverage suggestion per day based on capital analysis +
-temporal patterns. Socratic framing. Got it / Not today.
+Requires at least Lotus Flow + one context petal. One high-leverage
+suggestion per day. Socratic framing. Got it / Not today.
 
-### Layer 4: Context Deepening (Day 2+, at user's pace)
+### Layer 4: Behavior + Design
 
-Ikigai (Love/Good/Need), Purpose, Vision, Behavior. Available
-immediately or progressively. Each petal advances the WHOLE.
+Pattern mapping, enterprise compilation, validation. The workspace
+becomes the operator's project — the place where their life design
+lives and evolves.
 
-### Layer 5: Map Conversation (Week 2-3, 15-20 min)
+### Layer 5: Full Depth (Ongoing)
 
-The 6-phase Design conversation, now informed by weeks of context.
-Phase 1 (Ikigai) shortened — HUMA already knows the archetype and
-capitals. Phase 3 (Situation) informed — weeks of pulse data.
-
-### Layer 6: Full Depth (Ongoing)
-
-Three-tab experience. Behavior→Pattern mapping, Design, Validate,
-Evolve. Always available, never the default.
+Masterplan, seasonal review, pattern contribution. Three-tab
+experience. Always available, never the default.
 
 ---
 
@@ -456,7 +453,7 @@ Earned at Layer 4 (week 2-3). Shortened by existing context.
   -> What makes it work (all work done by 3pm)
     -> Weekly commitments (Tue/Thu: pack days done by 2pm)
       -> Daily behaviors (today's schedule with hard stop)
-        -> Validation (daily pulse + weekly insight)
+        -> Validation (workspace feedback + weekly insight)
           -> Adjustment (systemic, never personal)
 ```
 
@@ -466,40 +463,60 @@ the person. "Packing ran long. Is it volume or staging?" not
 
 ---
 
-## 08 — Daily Capital Pulse
+## 08 — The Workspace Experience
 
-- Show the Regenerative Wealth flower (yesterday's state)
-- Tap capital sliders to adjust what changed
-- "Nothing changed" shortcut
-- 15-30 seconds total
-- After 3-4 days: pattern insights emerge from temporal capital data
-- The WHOLE visualization subtly evolves with each pulse
+### What the Operator Sees
 
-The 8-capital spectrum from the Lotus Flow IS the pulse mechanism.
-Return users see their flower and sliders, adjust what changed, done.
+Their living context, organized by the lotus. All visible. All tappable.
+All editable. The WHOLE reflects the current state.
 
-**Pattern Insight (days 3+):**
+The operator opens `/home` and sees everything they've told HUMA —
+archetype, capitals, Ikigai (if completed), purpose statements (if
+completed), active patterns, enterprise data (if completed). Organized
+by the lotus structure. The WHOLE reflects the state of everything in
+real time.
 
-Shows temporal patterns — which capitals move together, what predicts
-what. Cross-referenced to community wisdom.
+### The Feedback Loop
 
-Maximum one insight every 2-3 days. Not every day. Scarcity makes them
-powerful. The operator looks forward to them because they don't come
-every time.
+Every piece of context is hypothesis, not fact. When the operator
+reports an assumption was wrong, context updates, the WHOLE shifts,
+recommendations recompile. The workspace is in constant flux. That
+flux IS the product working.
 
-Example:
+The Holistic Management feedback loop is the operating principle:
+Act → Observe → If on track, continue → If off track → Clarify →
+Brainstorm → Decide (using testing questions) → Act
 
-```
-I noticed something
+The workspace makes this loop frictionless: see your context, act on
+a recommendation, observe what happens, update the assumption that was
+wrong. The WHOLE shifts. Recommendations recompile.
 
-Your Body dips every day after your Money drops.
-Not the other way around. The money stress hits
-your body before you feel it physically.
+### Compiled Recommendations
 
-[Interesting]  [That's off]
-```
+HUMA compiles patterns against current context. Deeper context =
+sharper recommendations:
 
-Each insight is the coherence recognition moment in miniature.
+- After Lotus Flow: archetype-based patterns
+- After Ikigai: matched to what you love + good at
+- After Purpose + Vision: aligned with stated direction
+- After Behavior mapping: specific daily/weekly actions
+- After Design: full enterprise budgets with real numbers
+
+### Transition Events
+
+Each petal completion is a Transition Event. The WHOLE evolves.
+Recommendations recompile. The operator sees the difference.
+
+### Desktop vs. Mobile
+
+Desktop: the full workspace. All petals accessible via the lotus nav
+(which functions as a file system for your life). Spatial canvas.
+Enterprise budgets. Deep work. You open it because your project is there.
+
+Mobile: the field companion. Not a simplified desktop — purpose-built.
+Four functions: See (compiled recommendations), Report (feedback on
+actions), Edit (tap any context element), Capture (field notes,
+realizations). Same data, right tool for the moment.
 
 ---
 
@@ -526,7 +543,7 @@ numbers. No symbols. Just warmth.
 ```
 Faint -> Emerging:
   First week of Operate engagement where this element has
-  related daily pulse data or the operator engages with a
+  related workspace activity or the operator engages with a
   one-thing card that serves it.
 
 Emerging -> Solid:
@@ -614,26 +631,27 @@ What people share: "I was 38 in January. I'm 67 now."
 
 ## 12 — Dimension Mapping
 
-| Internal (8 Forms of Capital) | User-Facing | Capital Pulse Context |
+| Internal (8 Forms of Capital) | User-Facing | Workspace Context |
 |-------------------------------|-------------|---------------------|
-| Financial | Money | Capital spectrum slider (1-10) |
-| Material | Home | Capital spectrum slider (1-10) |
-| Living/Natural | Body | Capital spectrum slider (1-10) |
-| Social | People | Capital spectrum slider (1-10) |
-| Intellectual | Growth | Capital spectrum slider (1-10) |
-| Experiential | Joy | Capital spectrum slider (1-10) |
-| Spiritual | Purpose | Capital spectrum slider (1-10) |
-| Cultural | Identity | Capital spectrum slider (1-10) |
+| Financial | Money | Capital spectrum (1-10), editable |
+| Material | Home | Capital spectrum (1-10), editable |
+| Living/Natural | Body | Capital spectrum (1-10), editable |
+| Social | People | Capital spectrum (1-10), editable |
+| Intellectual | Growth | Capital spectrum (1-10), editable |
+| Experiential | Joy | Capital spectrum (1-10), editable |
+| Spiritual | Purpose | Capital spectrum (1-10), editable |
+| Cultural | Identity | Capital spectrum (1-10), editable |
 
 **Reserved future fields:** Time (the scarcest resource), Wisdom
 (emergent property, not a capital).
 
 **Coupling Matrix:** How dimensions interact FOR THIS SPECIFIC PERSON.
-Built from longitudinal pulse data. Only buildable from the operator's
-own data over time. The coupling matrix is what makes insights personal
-rather than generic. "YOUR Body dips with a 2-day delay after YOUR
-Money drops" — not a generic correlation, but a personal dynamic
-discovered through sustained observation.
+Built from longitudinal workspace data — context edits, behavior
+reports, petal deepening over time. Only buildable from the operator's
+own data. The coupling matrix is what makes insights personal rather
+than generic. "YOUR Body dips when YOUR Money drops" — not a generic
+correlation, but a personal dynamic discovered through sustained
+observation.
 
 ---
 
@@ -886,7 +904,7 @@ the knowledge. That's the goal.
 ```
 FREE FOREVER:
   - Lotus Flow
-  - Daily capital pulse
+  - Workspace (context always visible + editable)
   - Weekly insight (one-card: shape morph + coherence delta)
   - Map conversation (once, produces the canvas + shape)
   - Shape sharing
@@ -964,9 +982,9 @@ In order of priority. Ship early, iterate with real users.
 
 ### Phase 1: Shape Builder [SHIPPED — DEPRECATED]
 - Original 8-card dimension rating entry. Replaced by the Lotus Flow.
-- Capital sliders from this design live on as the Daily Capital Pulse.
+- Capital sliders from this design live on in the workspace.
 
-### Phase 1.5: Lotus Flow [CURRENT]
+### Phase 1.5: Lotus Flow [SHIPPED]
 - 11-screen context painting (WHOLE → WHO → WHAT petals)
 - Entity type, life stage, governance, 8-capital spectrum
 - Archetype inference + synthesis screen
@@ -976,46 +994,50 @@ In order of priority. Ship early, iterate with real users.
 - Auth trigger after pattern recommendation
 - See `cc-prompt-onboarding-v2.md` for complete specification
 
-### Phase 2: Daily Capital Pulse [NEXT]
-- Show Regenerative Wealth flower (yesterday's state)
-- Tap capital sliders to adjust what changed
-- "Nothing changed" shortcut
-- Save to pulse history
-- Pattern detection engine (after 3-4 days)
-- WHOLE evolves with each pulse
-- Insight cards (max one per 2-3 days)
+### Phase 2: Context Petal — Ikigai [NEXT]
+- Love/Good/Need (text + visual cards + AI chat)
+- Populated Ikigai Venn diagram, review and edit
+- WHOLE evolves on completion
+- Compiled recommendations sharpen
 
-### Phase 3: One-Thing Card (2-3 sessions) [FUTURE]
-- Generated from dimensional analysis + temporal patterns
+### Phase 2.5: /home Workspace Shell [NEXT]
+- Lotus nav sidebar as workspace file system
+- Context dashboard (completed petals visible, all editable)
+- Compiled recommendations panel
+- WHOLE corner element
+- Desktop layout + mobile layout
+
+### Phase 3: One-Thing Card [FUTURE]
+- Requires Lotus Flow + at least one context petal
 - Sovereign framing (coupling + community wisdom, operator decides)
 - Got it / Not today
 - Track outcomes vs predictions
 
-### Phase 4: Weekly Shape Morph (2 sessions) [FUTURE]
+### Phase 4: Weekly Shape Morph [FUTURE]
 - Animate shape from Monday to Sunday
 - Show dimension deltas
 - One insight
 - Coherence score delta
 - "Tell me more" / "Go deeper" -> deeper review
 
-### Phase 5: Shape Sharing (2-3 sessions) [FUTURE]
+### Phase 5: Shape Sharing [FUTURE]
 - Generate shape card (dark mode, SVG -> PNG)
 - Two time points (then -> now)
 - Coherence delta
 - Share button + Web Share API
 - Per-map OG image with shape
 
-### Phase 6: Map Conversation (3-4 sessions) [FUTURE]
-- Triggered at week 2-3
-- Uses accumulated shape + pulse data as context
+### Phase 6: Map Conversation [FUTURE]
+- Triggered when context is deep enough
+- Uses accumulated workspace context
 - 15-20 minute version of 6-phase conversation
 - Produces full canvas data
 
-### Phase 7: Three-Tab Experience (4-5 sessions) [FUTURE]
+### Phase 7: Three-Tab Experience [FUTURE]
 - Your Map (Palmer canvas with warmth)
 - Your Day (one-thing card, full day optional, weekly planner optional)
 - Your Journey (shape timeline, seasonal review)
 
-**Phase 1 shipped March 2026.** USABLE PRODUCT after Phase 4 (~10 sessions from here).
-Shape builder + daily pulse + one-thing + weekly morph. Ship to real humans. Get feedback.
+**Phase 1.5 shipped March 2026.** USABLE PRODUCT after Phase 4 (~8 sessions from here).
+Workspace + context petals + one-thing + weekly morph. Ship to real humans. Get feedback.
 Then build phases 5-7.

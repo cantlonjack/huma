@@ -14,13 +14,21 @@ The application makes money. The protocol makes history.
 
 ### Build Sequence
 
-[SHIPPED] Landing page, 6-phase conversation, universal flow, sample maps, split-screen canvas, Operate Mode (minimal), Supabase auth, 216+ tests
+[SHIPPED] Landing page, 6-phase conversation, universal flow, sample maps, split-screen canvas, Operate Mode (minimal), Supabase auth, Lotus Flow onboarding, 351+ tests
 
-[CURRENT] Lotus Flow onboarding (replaces Shape Builder) — see cc-prompt-onboarding-v2.md
-
-[NEXT] Daily Capital Pulse, One-Thing Card, Context petals (Ikigai)
+[NEXT] Context petal (Ikigai) → /home workspace shell → Purpose petal → Vision petal → One-Thing Card → Behavior petal → Design petal → Full desktop workspace → Mobile companion
 
 [FUTURE] Full Operate depth, Behavior→Pattern mapping, Design phase, RPPL Commons
+
+### Resolved Decisions
+
+| Decision | Resolution |
+|----------|-----------|
+| Daily interaction | The workspace IS the daily experience. No slider rituals. |
+| Form factors | Desktop (full workspace) + Mobile (field companion). |
+| Context nature | All context is hypothesis under continuous testing. |
+| Product model | Workspace, not app. |
+| RPPL components | Components → Patterns → Frameworks (protocol-level vocabulary only). |
 
 ---
 
@@ -64,20 +72,19 @@ There are 9 foundational documents + 1 portable context reference. Each answers 
 
 The entry is the Lotus Flow — an 11-screen context painting that moves through the first 3 lotus petals (WHOLE → WHO → WHAT) in 90 seconds.
 
-1. **Layer 1: Lotus Flow** (Day 1, 90 sec) — 11 screens: entity type, life stage, governance, 8-capital spectrum, archetype synthesis, WHOLE evolution. Produces first pattern recommendation.
-2. **Layer 2: Daily Capital Pulse** (Days 2-14, 15-30 sec) — Return to capital sliders, adjust what changed, watch flower/WHOLE evolve.
-3. **Layer 3: One-Thing Card** (Day 5+) — One high-leverage suggestion per day. Socratic framing. Got it / Not today (equal weight).
-4. **Layer 4: Context Deepening** (Day 2+, at user's pace) — Ikigai (Love/Good/Need), Purpose, Vision. Available immediately or progressively. Each petal advances the WHOLE.
-5. **Layer 5: Map Conversation** (Week 2-3, 15-20 min) — The 6-phase Design conversation, now informed by weeks of context.
-6. **Layer 6: Full Depth** (Ongoing) — Three-tab experience. Behavior→Pattern mapping, Design, Validate, Evolve.
+1. **Layer 1: Lotus Flow** (Day 1, 90 sec) — Identity sketch. Archetype, capitals, first pattern.
+2. **Layer 2: Context Deepening** (Day 2+, at operator's pace) — Ikigai, Purpose, Vision. Each petal is 5-15 min. Each makes compiled recommendations sharper. Each evolves the WHOLE.
+3. **Layer 3: One-Thing Card** (when context is deep enough) — Requires at least Lotus Flow + one context petal. Socratic. Got it / Not today.
+4. **Layer 4: Behavior + Design** — Pattern mapping, enterprise compilation, validation.
+5. **Layer 5: Full Depth** (Ongoing) — Masterplan, seasonal review, pattern contribution.
 
 ### Context Model (Sovereignty-Aligned)
 
 Context comes from operator-controlled sources only:
 1. **Lotus Flow** — entity type, life stage, governance, 8-capital spectrum, archetype (Day 1 onboarding)
-2. **Capital Pulse** — daily micro-updates to capital sliders, temporal patterns emerge by day 3-4
-3. **Context Petals** — Ikigai, Purpose, Vision, Behavior (progressive deepening at user's pace)
-4. **Conversation** — the 6-phase Map Conversation (earned at week 2-3)
+2. **Context Petals** — Ikigai, Purpose, Vision, Behavior (progressive deepening at operator's pace)
+3. **Workspace Edits** — any context element is one tap from editing. Every piece of context is hypothesis under continuous testing.
+4. **Conversation** — the 6-phase Map Conversation (when context is deep enough)
 5. **Community Wisdom** — anonymized aggregate patterns from all operators
 
 No external data harvesting. No bank connections. No calendar sync. No health app integration.
@@ -109,7 +116,7 @@ Time and Wisdom reserved as future fields.
 
 ### Pricing
 
-**Free forever:** Lotus Flow, daily capital pulse, weekly insight (one-card: shape morph + coherence delta), map conversation (once), shape sharing, "people like you" signals.
+**Free forever:** Lotus Flow, workspace (context always visible + editable), weekly insight (one-card: shape morph + coherence delta), map conversation (once), shape sharing, "people like you" signals.
 
 **$29/month Operate:** Daily one-thing card with compiled methods, full daily schedule, weekly planner, deep weekly review (5-8 min), practice recommendations, seasonal review, shape timeline, canvas versioning.
 
@@ -131,7 +138,7 @@ Time and Wisdom reserved as future fields.
   → What makes it work (all work done by 3pm)
     → Weekly commitments (Tue/Thu: pack days done by 2pm)
       → Daily behaviors (today's schedule with hard stop)
-        → Validation (daily pulse + weekly insight)
+        → Validation (workspace feedback + weekly insight)
           → Adjustment (systemic, never personal)
 ```
 
@@ -188,7 +195,7 @@ Read `/docs/HUMA_VOICE_BIBLE.md` for the full specification. These are the non-n
 **Response lengths:**
 - Lotus Flow synthesis: Archetype + stage + strengths + growth areas. 4 lines maximum.
 - Lotus Flow first insight: 3 sentences maximum.
-- Daily pulse insight: 1-2 sentences maximum
+- Workspace recommendation: 1-2 sentences maximum
 - One-thing card: Action + "this connects to" + Done/Not today. One card.
 - Weekly insight card: 1 observation + coherence number. 3 sentences maximum.
 - Deep weekly review insight: 3 sentences maximum (observation, diagnosis, action)

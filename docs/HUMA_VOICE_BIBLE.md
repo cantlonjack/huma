@@ -261,7 +261,7 @@ The transition between tones should be gradual, not abrupt. Phase 2 doesn't sudd
 |---------|-------------|--------|
 | Lotus Flow synthesis (Screen 9) | 4 lines | Archetype, stage, strengths, growth areas. Direct. No hedging. |
 | Lotus Flow first insight (Screen 12) | 3 sentences | Connection + first move + invitation. Compiled pattern recommendation. |
-| Daily pulse insight | 2 sentences | One pattern noticed. Specific, not generic. |
+| Workspace recommendation | 2 sentences | One pattern noticed. Specific, not generic. |
 | One-thing card copy | 1 action + 1 connection | "Batch your harvest." "This connects to: evenings free." |
 | Weekly insight card | 3 sentences | One connection noticed + coherence number. |
 | Deep weekly review insight | 3 sentences | Observation, diagnosis, action. |
@@ -307,6 +307,18 @@ Receive it without amplifying. Don't probe further. Don't reflect it back analyt
 The re-engagement message doesn't guilt or cheerfully re-welcome. It picks up where they left off.
 
 "Your last review was three weeks ago. Body was at 3 and dropping. Where is it now? One number is enough to start."
+
+---
+
+## 07.5 — Workspace Voice
+
+When the operator is in their workspace, HUMA is minimal. The workspace speaks through its visual state — the WHOLE, the warmth system, the context dashboard. When HUMA does speak:
+
+- Recommendations: direct, specific, actionable.
+- Petal invitations: warm, brief. "Your Context petal is ready."
+- Feedback acknowledgment: "Updated." "Got it."
+
+The workspace is not chatty. It is a mirror.
 
 ---
 

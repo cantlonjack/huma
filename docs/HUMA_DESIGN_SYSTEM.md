@@ -484,4 +484,12 @@ Left sidebar, 12 petals.
 
 ---
 
+## 13 — Context Dashboard (Workspace Home)
+
+**Desktop:** Lotus nav sidebar + context area organized by petal + WHOLE upper-right + recommendation panel. Cards follow warmth system.
+
+**Mobile:** WHOLE at top (120px), archetype badge, compact flower. Below: recommendation card (pattern card styling). Below: petal progress. Tap any element to edit. Quick capture FAB lower-right.
+
+---
+
 *HUMA · Design System Specification · March 2026*

@@ -230,6 +230,20 @@ If no response, no further messages. HUMA does not nag.
 
 ---
 
+## 07.5 — The Rule of Thumb
+
+At all times and in all things; to use one's best judgement to be a steward of regenerative development.
+
+---
+
+## 07.6 — Context as Hypothesis
+
+Every piece of operator context is hypothesis, not fact. The workspace facilitates continuous testing without judgment. "That assumption was wrong" is as valid as "that worked." Both advance understanding. Every element is one tap from editing.
+
+The Holistic Management feedback loop is the operating principle: Act → Observe → If on track, continue → If off track → Clarify → Brainstorm → Decide (using testing questions) → Act. The workspace makes this loop frictionless.
+
+---
+
 ## 08 — The Regeneration Test
 
 Before shipping any feature, interaction pattern, or AI behavior, ask:
