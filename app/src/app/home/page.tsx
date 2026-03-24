@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence } from "framer-motion";
 import { useAuth } from "@/components/AuthProvider";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import {
@@ -52,13 +51,58 @@ export default function HomePage() {
     })();
   }, [user, router, hasAuth]);
 
-  // ─── Build recommendation from first insight/pattern ──────────────────────
-  const recommendation = useMemo(() => {
-    if (!context?.firstInsight) return null;
-    return {
-      text: context.firstInsight,
-      pattern: context.firstPattern?.name || undefined,
-    };
+  // ─── Compiled recommendation (fetched from API based on context depth) ────
+  const [recommendation, setRecommendation] = useState<{
+    text: string;
+    pattern?: string;
+  } | null>(null);
+  const recFetchedForRef = useRef<string>("");
+
+  useEffect(() => {
+    if (!context?.name || !context?.capitals) return;
+
+    // Build a fingerprint of context depth to avoid re-fetching
+    const depth = context.ikigai?.synthesis ? "ikigai" : "lotus";
+    const fingerprint = `${context.name}:${depth}:${context.version}`;
+    if (recFetchedForRef.current === fingerprint) return;
+
+    // If we have a firstInsight and no Ikigai, use it directly (skip API)
+    if (!context.ikigai?.synthesis && context.firstInsight) {
+      setRecommendation({
+        text: context.firstInsight,
+        pattern: context.firstPattern?.name || undefined,
+      });
+      recFetchedForRef.current = fingerprint;
+      return;
+    }
+
+    // For Tier 2 (post-Ikigai), fetch from recommendation API
+    if (context.ikigai?.synthesis) {
+      recFetchedForRef.current = fingerprint;
+      fetch("/api/workspace-recommendation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ context }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.recommendation) {
+            setRecommendation({
+              text: data.recommendation,
+              pattern: data.pattern || undefined,
+            });
+          }
+        })
+        .catch(() => {
+          // Fall back to first insight
+          if (context.firstInsight) {
+            setRecommendation({
+              text: context.firstInsight,
+              pattern: context.firstPattern?.name || undefined,
+            });
+          }
+        });
+    }
   }, [context]);
 
   // ─── Handlers ─────────────────────────────────────────────────────────────
@@ -148,65 +192,82 @@ export default function HomePage() {
         )}
       </header>
 
-      {/* Content */}
+      {/* Content — CSS crossfade transitions, prefers-reduced-motion: instant */}
       <main className="flex-1 px-4 py-4 md:px-8 md:py-8">
-        <AnimatePresence mode="wait">
-          {view.mode === "whole" && (
+        {view.mode === "whole" && (
+          <div className="animate-view-enter">
             <WholeView
-              key="whole"
               context={context}
               onPetalClick={handlePetalClick}
               recommendation={recommendation}
             />
-          )}
+          </div>
+        )}
 
-          {view.mode === "petal" && (
+        {view.mode === "petal" && (
+          <div className="animate-view-enter">
             <PetalView
-              key={`petal-${view.petal}`}
               petal={view.petal}
               context={context}
               onBack={handleBack}
               onEdit={handleEdit}
             />
-          )}
+          </div>
+        )}
 
-          {view.mode === "flow" && view.petal === "context" && context && (
-            <IkigaiFlow
-              key="flow-context"
-              context={context}
-              onComplete={handleIkigaiComplete}
-              onClose={handleBack}
-            />
-          )}
+        {view.mode === "flow" && view.petal === "context" && context && (
+          <IkigaiFlow
+            context={context}
+            onComplete={handleIkigaiComplete}
+            onClose={handleBack}
+          />
+        )}
 
-          {view.mode === "flow" && view.petal !== "context" && (
-            <div
-              key={`flow-${view.petal}`}
-              className="flex flex-col items-center justify-center py-20"
+        {view.mode === "flow" && view.petal !== "context" && (
+          <div className="flex flex-col items-center justify-center py-20 animate-view-enter">
+            <p
+              className="text-earth-600 text-lg mb-4"
+              style={{ fontFamily: "var(--font-cormorant)" }}
             >
-              <p
-                className="text-earth-600 text-lg mb-4"
-                style={{ fontFamily: "var(--font-cormorant)" }}
-              >
-                Starting {view.petal} flow...
-              </p>
-              <p
-                className="text-earth-400 text-sm mb-8"
-                style={{ fontFamily: "var(--font-source-sans)" }}
-              >
-                This guided experience is coming soon.
-              </p>
-              <button
-                onClick={handleBack}
-                className="px-6 py-2.5 rounded-full border border-earth-300 text-earth-500 text-sm hover:bg-sand-100 transition-colors"
-                style={{ fontFamily: "var(--font-source-sans)" }}
-              >
-                Back to workspace
-              </button>
-            </div>
-          )}
-        </AnimatePresence>
+              Starting {view.petal} flow...
+            </p>
+            <p
+              className="text-earth-400 text-sm mb-8"
+              style={{ fontFamily: "var(--font-source-sans)" }}
+            >
+              This guided experience is coming soon.
+            </p>
+            <button
+              onClick={handleBack}
+              className="px-6 py-2.5 rounded-full border border-earth-300 text-earth-500 text-sm hover:bg-sand-100 transition-colors"
+              style={{ fontFamily: "var(--font-source-sans)" }}
+            >
+              Back to workspace
+            </button>
+          </div>
+        )}
       </main>
+
+      <style jsx global>{`
+        @keyframes view-enter {
+          from {
+            opacity: 0;
+            transform: scale(0.97);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        .animate-view-enter {
+          animation: view-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .animate-view-enter {
+            animation: none;
+          }
+        }
+      `}</style>
     </div>
   );
 }

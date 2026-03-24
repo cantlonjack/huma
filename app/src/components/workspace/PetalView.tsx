@@ -437,11 +437,11 @@ export default function PetalView({
 
   return (
     <motion.div
-      className="w-full max-w-lg mx-auto"
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.4, ease: HUMA_EASE }}
+      className="w-full max-w-lg mx-auto md:max-w-lg"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3, ease: HUMA_EASE }}
     >
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">

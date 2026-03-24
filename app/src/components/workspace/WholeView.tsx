@@ -1,9 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
-import { motion } from "framer-motion";
+import { useMemo, useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import WholeVisualization from "@/components/lotus/WholeVisualization";
-import RegenerativeFlower from "@/components/lotus/RegenerativeFlower";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { HUMA_EASE } from "@/lib/constants";
 import {
@@ -44,6 +43,8 @@ const PETAL_POSITIONS: Record<LotusPhase, { x: number; y: number }> = {
 const RADIUS_COMPLETE = 28;
 const RADIUS_NEXT = 28;
 const RADIUS_FUTURE = 20;
+// Invisible hit area for mobile tap targets (≥44px at 375px viewport)
+const TAP_RADIUS = 36;
 
 // ─── Miniature content previews for completed petals ─────────────────────────
 
@@ -108,6 +109,17 @@ function WhatPetalPreview({
   );
 }
 
+function ContextPetalPreview({ x, y }: { x: number; y: number }) {
+  // Three overlapping circles (Ikigai Venn hint)
+  return (
+    <g opacity={0.45}>
+      <circle cx={x - 3} cy={y - 2} r={4} fill="none" stroke="#C5D86D" strokeWidth={0.6} />
+      <circle cx={x + 3} cy={y - 2} r={4} fill="none" stroke="#5C7A62" strokeWidth={0.6} />
+      <circle cx={x} cy={y + 3} r={4} fill="none" stroke="#2E6B8A" strokeWidth={0.6} />
+    </g>
+  );
+}
+
 // ─── Main component ──────────────────────────────────────────────────────────
 
 export default function WholeView({
@@ -117,6 +129,10 @@ export default function WholeView({
 }: WholeViewProps) {
   const prefersReducedMotion = useReducedMotion();
   const nextPetal = useMemo(() => getNextPetal(context), [context]);
+  const hasIkigai = !!(context.ikigai?.synthesis);
+
+  // WHOLE phase: 3 after Lotus Flow, 4 after Ikigai
+  const wholePhase: 1 | 2 | 3 | 4 = hasIkigai ? 4 : 3;
 
   // WholeVisualization params
   const wholeParams = useMemo(() => {
@@ -156,7 +172,7 @@ export default function WholeView({
 
   return (
     <div className="relative w-full flex flex-col items-center">
-      {/* Spatial SVG workspace */}
+      {/* Spatial SVG workspace — scales to viewport, maintains aspect ratio */}
       <div className="w-full max-w-[600px] mx-auto aspect-square relative">
         <svg
           viewBox="0 0 600 600"
@@ -186,6 +202,8 @@ export default function WholeView({
                 }}
                 style={{ cursor: hasFlow ? "pointer" : "default" }}
               >
+                {/* Invisible tap target for mobile */}
+                <circle cx={pos.x} cy={pos.y} r={TAP_RADIUS} fill="transparent" />
                 <circle
                   cx={pos.x}
                   cy={pos.y}
@@ -210,21 +228,25 @@ export default function WholeView({
           })}
 
           {/* ── "Next" petal (glowing guide) ── */}
-          {nextPetal && (() => {
+          {nextPetal && AVAILABLE_FLOWS.includes(nextPetal) && (() => {
             const pos = PETAL_POSITIONS[nextPetal];
             const meta = PETAL_META.find((m) => m.phase === nextPetal);
+            const petalLabel = meta?.label || nextPetal;
+            const timeHint = meta?.timeHint || "10 min";
             return (
               <g
                 key={`next-${nextPetal}`}
                 role="button"
                 tabIndex={0}
-                aria-label={`${meta?.label || nextPetal} petal — ready, ${meta?.timeHint || "10 min"}`}
+                aria-label={`${petalLabel} petal — ready, ${timeHint}`}
                 onClick={() => onPetalClick(nextPetal)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") onPetalClick(nextPetal);
                 }}
                 style={{ cursor: "pointer" }}
+                className="group"
               >
+                {/* Organic glow on stroke */}
                 <circle
                   cx={pos.x}
                   cy={pos.y}
@@ -237,7 +259,7 @@ export default function WholeView({
                   {!prefersReducedMotion && (
                     <animate
                       attributeName="opacity"
-                      values="0.4;0.9;0.4"
+                      values="0.5;1;0.5"
                       dur="3s"
                       repeatCount="indefinite"
                     />
@@ -276,20 +298,61 @@ export default function WholeView({
                   fontFamily="var(--font-source-sans)"
                   fontWeight={500}
                 >
+                  {petalLabel}
+                </text>
+                <text
+                  x={pos.x}
+                  y={pos.y + RADIUS_NEXT + 26}
+                  textAnchor="middle"
+                  fill="#A89E90"
+                  fontSize="9"
+                  fontFamily="var(--font-source-sans)"
+                >
+                  {timeHint}
+                </text>
+                {/* Hover tooltip (desktop) */}
+                <title>{`Map your ${petalLabel} — ${timeHint}`}</title>
+              </g>
+            );
+          })()}
+
+          {/* ── "Next" petal that has no flow yet (coming soon guide) ── */}
+          {nextPetal && !AVAILABLE_FLOWS.includes(nextPetal) && (() => {
+            const pos = PETAL_POSITIONS[nextPetal];
+            const meta = PETAL_META.find((m) => m.phase === nextPetal);
+            return (
+              <g key={`next-${nextPetal}`}>
+                <circle
+                  cx={pos.x}
+                  cy={pos.y}
+                  r={RADIUS_NEXT}
+                  fill="none"
+                  stroke="#5C7A62"
+                  strokeWidth={1.2}
+                  opacity={0.5}
+                  strokeDasharray="3 3"
+                />
+                <text
+                  x={pos.x}
+                  y={pos.y + RADIUS_NEXT + 14}
+                  textAnchor="middle"
+                  fill="#8BAF8E"
+                  fontSize="11"
+                  fontFamily="var(--font-source-sans)"
+                  fontWeight={500}
+                >
                   {meta?.label || nextPetal}
                 </text>
-                {meta?.timeHint && (
-                  <text
-                    x={pos.x}
-                    y={pos.y + RADIUS_NEXT + 26}
-                    textAnchor="middle"
-                    fill="#A89E90"
-                    fontSize="9"
-                    fontFamily="var(--font-source-sans)"
-                  >
-                    {meta.timeHint}
-                  </text>
-                )}
+                <text
+                  x={pos.x}
+                  y={pos.y + RADIUS_NEXT + 26}
+                  textAnchor="middle"
+                  fill="#C4BAA8"
+                  fontSize="9"
+                  fontFamily="var(--font-source-sans)"
+                >
+                  Coming soon
+                </text>
               </g>
             );
           })()}
@@ -312,6 +375,8 @@ export default function WholeView({
                 }}
                 style={{ cursor: "pointer" }}
               >
+                {/* Invisible tap target for mobile */}
+                <circle cx={pos.x} cy={pos.y} r={TAP_RADIUS} fill="transparent" />
                 <circle
                   cx={pos.x}
                   cy={pos.y}
@@ -333,6 +398,9 @@ export default function WholeView({
                     y={pos.y}
                     context={context}
                   />
+                )}
+                {phase === "context" && (
+                  <ContextPetalPreview x={pos.x} y={pos.y} />
                 )}
                 <text
                   x={pos.x}
@@ -364,7 +432,7 @@ export default function WholeView({
         >
           <WholeVisualization
             params={wholeParams}
-            phase={3}
+            phase={wholePhase}
             size={200}
           />
         </div>
@@ -398,13 +466,17 @@ export default function WholeView({
       {/* ── Compiled recommendation card ── */}
       {recommendation && (
         <motion.div
-          className="w-full max-w-md mx-auto mt-6 bg-white rounded-xl border border-sand-200 overflow-hidden"
-          style={{ borderLeft: "4px solid #5C7A62" }}
+          className={`w-full mx-auto mt-6 bg-white rounded-xl overflow-hidden ${
+            hasIkigai
+              ? "max-w-lg border-2 border-sage-200"
+              : "max-w-md border border-sand-200"
+          }`}
+          style={{ borderLeft: hasIkigai ? "4px solid #3A5A40" : "4px solid #5C7A62" }}
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5, ease: HUMA_EASE }}
         >
-          <div className="p-5">
+          <div className={hasIkigai ? "p-6" : "p-5"}>
             {recommendation.pattern && (
               <span
                 className="text-sage-500 uppercase block mb-1"
@@ -422,7 +494,7 @@ export default function WholeView({
               className="text-earth-600 leading-relaxed"
               style={{
                 fontFamily: "var(--font-source-sans)",
-                fontSize: "0.85rem",
+                fontSize: hasIkigai ? "0.9rem" : "0.85rem",
                 fontWeight: 300,
               }}
             >
@@ -430,6 +502,20 @@ export default function WholeView({
             </p>
           </div>
         </motion.div>
+      )}
+
+      {/* ── Empty state: all flows complete, no new ones ── */}
+      {!nextPetal && !recommendation && (
+        <motion.p
+          className="text-center text-earth-400 text-sm mt-8 max-w-md mx-auto"
+          style={{ fontFamily: "var(--font-source-sans)" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+        >
+          You&apos;ve gone deep. More petals coming soon. In the meantime, your
+          context is always here — tap anything to refine.
+        </motion.p>
       )}
 
       {/* Breathing keyframe */}

@@ -7,7 +7,7 @@ import { HUMA_EASE } from "@/lib/constants";
 
 interface WholeVisualizationProps {
   params: number[]; // [entitySeed, stageSeed, capitalSum, capitalVariance]
-  phase: 1 | 2 | 3;
+  phase: 1 | 2 | 3 | 4;
   size?: number;
   className?: string;
 }
@@ -62,7 +62,7 @@ interface CurveConfig {
   color: string;
 }
 
-function computeCurves(params: number[], phase: 1 | 2 | 3): CurveConfig[] {
+function computeCurves(params: number[], phase: 1 | 2 | 3 | 4): CurveConfig[] {
   const [entitySeed = 3, stageSeed = 1, capitalSum = 0, capitalVariance = 0] = params;
 
   // Base k from entity type (Person=3 gives 3-petal rose, Enterprise=5 gives 5-petal)
@@ -150,7 +150,7 @@ function computeCurves(params: number[], phase: 1 | 2 | 3): CurveConfig[] {
       opacity: 0.25,
       color: "#5C7A62",
     });
-  } else {
+  } else if (phase === 3) {
     // Phase 3: Organic — same as phase 2 but rendered with glow/blur
     curves.push({
       a: 0.3 + asymmetry * 0.1,
@@ -181,6 +181,49 @@ function computeCurves(params: number[], phase: 1 | 2 | 3): CurveConfig[] {
       strokeWidth: 1.5,
       opacity: 0.4,
       color: "#3A5A40",
+    });
+  } else {
+    // Phase 4: Ikigai-influenced — topology shift with warmer color and new curve
+    curves.push({
+      a: 0.35 + asymmetry * 0.12,
+      b: 1,
+      k: baseK,
+      scale: 44 * scaleBoost,
+      phaseOffset: asymmetry * 0.6,
+      strokeWidth: 2.5,
+      opacity: 0.9,
+      color: "#3A5A40", // deeper sage — grounded by Ikigai
+    });
+    curves.push({
+      a: 0.2,
+      b: 1,
+      k: baseK + 2,
+      scale: 38 * scaleBoost * complexity,
+      phaseOffset: Math.PI / (baseK + 2) + asymmetry * 0.4,
+      strokeWidth: 1.8,
+      opacity: 0.55,
+      color: "#8BAF8E",
+    });
+    curves.push({
+      a: 0.45,
+      b: 0.75,
+      k: baseK * 2 + 1,
+      scale: 32 * scaleBoost,
+      phaseOffset: Math.PI / 4.5,
+      strokeWidth: 1.5,
+      opacity: 0.45,
+      color: "#5C7A62",
+    });
+    // New inner curve — Ikigai adds visible complexity
+    curves.push({
+      a: 0.1,
+      b: 0.85,
+      k: baseK + 4,
+      scale: 20 * scaleBoost,
+      phaseOffset: Math.PI / 3 + asymmetry * 0.2,
+      strokeWidth: 1.0,
+      opacity: 0.3,
+      color: "#B5621E", // amber accent — warmth from Ikigai
     });
   }
 
@@ -221,7 +264,7 @@ export default function WholeVisualization({
     });
   }, [paths, prefersReducedMotion]);
 
-  const isPhase3 = phase === 3;
+  const isPhase3Plus = phase >= 3;
 
   return (
     <motion.div
@@ -236,19 +279,19 @@ export default function WholeVisualization({
         viewBox="0 0 200 200"
         fill="none"
         aria-hidden="true"
-        style={isPhase3 ? { filter: "blur(1.5px)" } : undefined}
+        style={isPhase3Plus ? { filter: "blur(1.5px)" } : undefined}
       >
-        {/* Phase 3: gradient overlay */}
-        {isPhase3 && (
+        {/* Phase 3+: gradient overlay */}
+        {isPhase3Plus && (
           <defs>
             <radialGradient id="whole-glow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#5C7A62" stopOpacity="0.15" />
-              <stop offset="60%" stopColor="#B5621E" stopOpacity="0.06" />
+              <stop offset="0%" stopColor={phase === 4 ? "#3A5A40" : "#5C7A62"} stopOpacity={phase === 4 ? 0.2 : 0.15} />
+              <stop offset="60%" stopColor="#B5621E" stopOpacity={phase === 4 ? 0.1 : 0.06} />
               <stop offset="100%" stopColor="#FAF8F3" stopOpacity="0" />
             </radialGradient>
           </defs>
         )}
-        {isPhase3 && (
+        {isPhase3Plus && (
           <circle cx="100" cy="100" r="90" fill="url(#whole-glow)" />
         )}
 
