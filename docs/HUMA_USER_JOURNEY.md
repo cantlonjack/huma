@@ -29,7 +29,7 @@ The journey has nine stages. Each stage has a critical transition — a moment w
 **The three critical transitions (where most people are won or lost):**
 - Lotus Flow → Workspace (do they come back day 2?)
 - Context Deepening → Map Conversation (do they accept the invitation when context is deep enough?)
-- Map Conversation → Three Tabs (do they engage with the one-thing card?)
+- Map Conversation → Full Workspace (do they engage with the one-thing card?)
 
 ---
 
@@ -175,7 +175,7 @@ The conversation still follows the phase structure internally (ikigai → contex
 The conversation ends. The "See your map" button appears. This click must feel like a reward — 2+ weeks of daily engagement crystallizing into a tangible whole-life artifact.
 
 **What can go wrong:**
-- The AI doesn't reference prior pulse data (feels disconnected from daily experience)
+- The AI doesn't reference prior workspace context (feels disconnected from daily experience)
 - The conversation is too long despite having existing context
 - The canvas build isn't visible during the conversation
 - Phase transitions feel abrupt rather than natural
@@ -285,7 +285,7 @@ At each stage, there are natural moments where the operator is most likely to sh
 | Landing → Lotus Flow | High (70%+ bounce expected) | The problem section must name THEIR pain. 90-second visual entry = zero commitment. |
 | Lotus Flow → Workspace | Very high | The archetype synthesis + pattern recommendation must land. The workspace must feel like YOUR project. 24-hour nudge. |
 | Context Deepening → Map Conversation | High | Petal completions build trust. The invitation is earned when context is deep enough, not pushed. |
-| Map Conversation → Three Tabs | Medium | The one-thing card bridges canvas insight to daily action. Canvas warmth creates feedback loop. |
+| Map Conversation → Full Workspace | Medium | The one-thing card bridges canvas insight to daily action. Canvas warmth creates feedback loop. |
 | Month 2-3 → Seasonal Review | Medium | Seasonal review creates a "fresh start" moment. Shape comparison creates visual payoff. |
 | Free → Paid | Medium | Paid tier (one-thing card + compiled methods + deep review) must deliver obvious daily value beyond the free insight. |
 

@@ -403,12 +403,13 @@ When the operator prints or exports to PDF:
 
 *These components are defined in `HUMA_PRODUCT_SURFACE.md` §11. Specs here for implementation reference.*
 
-### Tab Bar
-- Three labels: **Your Map** | **Your Day** | **Your Journey**
-- Active: sage-700, 2px underline
-- Inactive: ink-500
-- Desktop: top-right of header
-- Mobile: bottom bar (3 icons + labels)
+### Lotus Nav
+- Petal circles orbiting the WHOLE — no tab bar
+- Active/completed petal: sage-700, solid opacity
+- Next recommended: gentle glow animation
+- Incomplete: faint opacity
+- Desktop: spatial layout around WHOLE
+- Mobile: field companion nav (See, Report, Edit, Capture)
 
 ### Warmth Visuals (Canvas Elements)
 - **Faint:** 25% opacity, 1px sage-200 border, text at ink-400

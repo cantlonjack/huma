@@ -202,230 +202,56 @@ See `cc-prompt-onboarding-v2.md` for the complete specification.
 
 ---
 
-## 06 — Three Tabs: Your Map / Your Day / Your Journey
+## 06 — The Guided Spatial Workspace (/home)
 
-User-facing names: Your Map, Your Day, Your Journey.
-Internal/code names: Design, Operate, Evolve.
+The operator opens `/home` and sees their living system. Not tabs. Not a dashboard. A spatial workspace organized by the lotus structure.
 
-### Tab 1: Your Map (internal: Design)
+### Layout
 
-The spatial canvas. Center-outward Palmer clustering. NOT a linear
-document. NOT a dashboard.
+**Center: The WHOLE** — the operator's evolving organic form. Breathing animation (sage, scale 1→1.03, 6s). This is the anchor. It reflects the current state of all context. It changes shape as petals complete and context deepens.
 
-**Layout:**
+**Orbiting: Lotus Petals as Circles** — each petal (WHOLE, WHO, WHAT, Ikigai, Purpose, Vision, Behavior, Design, Operate, Evolve, Community, Contribute) is a circle orbiting the WHOLE. Completed petals are warm (solid opacity, sage fill). The next recommended petal glows gently — the guide. Incomplete petals are faint.
 
-1. **Center: Who You Are** — name, place, phrase, breathing glow
-   animation (sage, scale 1 to 1.03, 6s)
-2. **Ring 1: What Matters** — quality of life commitments (sage pills),
-   arranged organically by affinity. Related commitments cluster near
-   each other.
-3. **Ring 2: What Makes It Work** — enabling actions, clustered around
-   the commitment they serve. Spatial proximity IS the connection
-   (Palmer's layout). "All revenue work done by 3pm" sits near
-   "Evenings free by 4."
-4. **Ring 3: Your Practices** — enterprises, methods, routines,
-   frameworks. Positioned near the enabling actions they support.
-   Types: enterprise, method, routine, framework, protocol.
-   Roles: anchor, foundation, multiplier, long-game.
-5. **Perimeter: Where I'm Going** — future resource base. Long-term
-   bets. The slowest to warm up.
-6. **Background: The Shape** — capital radar, semi-transparent overlay.
-   Always visible but never dominant.
+**Tap to zoom** — tapping a petal zooms into that petal's context. All context within is visible, tappable, editable. Tap the WHOLE to zoom back out.
 
-Warmth system applies to every element (see section 09).
+This is a file system for your life. The lotus nav IS the navigation. No sidebar, no tab bar, no hamburger menu.
 
-**Interactions:**
+### What Lives in the Workspace
 
-- **Tap commitment pill** -> expand decomposition (enabling conditions,
-  validation question, current data from pulse)
-- **Tap enabling action** -> show detail + "See in Your Day"
-- **Tap practice** -> expand compiled method (steps adapted for this
-  person, capital impact, fit narrative, failure mode, source)
-- **Tap/hover connections** -> related elements highlight, others dim
-- **Long-press any element** -> validation history (when added, when
-  state changed, notes)
-- **Toggle: "Show my shape"** -> brings radar chart forward. Hover
-  axis to see capital name + what drives it.
+The content from the former three-tab model lives here, accessed through the lotus structure:
 
-**Responsive:**
+**Spatial Canvas (formerly "Your Map")** — accessible through the Design-related petals. Center-outward Palmer clustering. Commitments, enabling actions, practices, enterprises — all positioned by relationship. Warmth system shows testing status. The shape as subtle background.
 
-- **Desktop:** Full spatial SVG, all layers visible
-- **Tablet:** Compressed, pills may truncate
-- **Mobile:** Essence + What Matters + Practices as list. Full spatial
-  view in landscape orientation.
+**One-Thing Card + Daily Experience (formerly "Your Day")** — the one-thing card appears in the workspace when context is deep enough. Socratic, not prescriptive. Shows coupling and leverage. "Got it" and "Not today" carry equal weight. Full daily schedule and weekly planner available as depth features within the workspace.
 
-### Tab 2: Your Day (internal: Operate)
+**Shape Timeline + Seasonal Review (formerly "Your Journey")** — shape timeline, "what shifted" narratives, seasonal review invitations, graduation tracking. Accessible through the Evolve petal.
 
-**Default view: One-Thing Card**
+**Weekly Shape Morph** — appears in the workspace on Sundays. Animated morph (Monday → Sunday) + dimension deltas + one insight + coherence delta. 30-60 sec default. "Go deeper" available for 5-8 min validation review.
 
-The one-thing card is Socratic, not prescriptive. It shows what HUMA
-sees in the coupling between dimensions and what others in similar
-situations have found. The operator decides.
+### Interactions
 
-Sovereign framing:
+- **Tap petal** → zoom into that petal's context
+- **Tap WHOLE** → zoom back to full workspace view
+- **Tap any context element** → expand detail, edit inline
+- **Tap commitment** → see decomposition (enabling conditions, validation question, current context)
+- **Tap practice** → see compiled method (steps adapted for this person, capital impact, failure mode, source)
+- **Long-press any element** → validation history (when added, state changes, notes)
+- **Connections** → tap/hover to highlight related elements, others dim
 
-> "Your Body has been dropping for 3 days. Others in similar situations
-> found morning movement was the lever. Want to try it?"
+### Responsive
 
-NOT: "Your one thing today: exercise."
+- **Desktop:** Full spatial workspace. All petals visible. Zoom transitions. Deep work environment.
+- **Mobile:** Field companion (see §08). Not a simplified desktop — purpose-built for See, Report, Edit, Capture.
 
-- Explained in coupling terms: "20 minutes of movement not to get fit —
-  to get thinking back"
-- **[Got it] [Not today]** — equal weight. No guilt. No streak.
-- The card teaches the WHY (the coupling, the leverage point) so the
-  person learns to see it themselves
-- **Graduation = they find the one thing without the card**
+### The Workspace Voice
 
-**"Got it":** Canvas warms slightly on related elements. Coherence
-score ticks up. HUMA says nothing or something brief: "Noted." No
-confetti. No points.
+HUMA is minimal in the workspace. The workspace speaks through its visual state — the WHOLE, the warmth system, the context itself. When HUMA does speak:
 
-**"Not today":** No guilt. "Got it. This one will come back when
-it's right." HUMA learns — maybe Thursday isn't the right day. The
-system adapts.
+- Recommendations: compiled, specific, 2 sentences max.
+- Petal invitations: warm, brief. "Your Ikigai petal is ready."
+- Feedback acknowledgment: "Noted." or silence. No confetti.
 
-**Hard Stop Management:**
-
-Each day has an editable hard stop linked to a What Matters statement.
-Always visible on the one-thing card as a reminder.
-
-Editing shows the tradeoff: "Moving from 3:30 to 4:30 means 'evenings
-free' target drops by 1 hour." Override visible, not hidden.
-
-**"See full day" (depth):**
-
-Full daily schedule with time blocks. Each block shows:
-
-- Warmth state
-- What (task name)
-- Which practice (name + type)
-- Tap to expand:
-  - **WHY** — the QoL chain (which commitment -> which enabler -> this task)
-  - **HOW** — the compiled method for this person (the pattern adapted to
-    their field, expressed as plain instructions)
-  - **WHAT TO WATCH FOR** — the failure mode most likely for their profile
-  - **SIGNAL** — what tells you it worked
-
-**"Plan my week" (depth):**
-
-Weekly view with themed days. 7-column interactive grid. Drag to
-rearrange blocks. Pattern coverage bar shows which practices have
-time and which don't. QoL health indicators show which commitments
-are being served. Hard stop editing with consequence display.
-
-Advanced feature. Never the default. Most users never need this.
-
-**Weekly Shape Morph (Sunday default, 30-60 sec):**
-
-```
-Your week:
-
-[animated shape morph: Monday -> Sunday]
-
-Body:    2.0 -> 2.8  (up)
-Money:   1.5 -> 1.5  (steady)
-Joy:     1.0 -> 2.0  (up)
-
-What I noticed:
-Your Body improved every day after you did the morning
-movement. Joy followed. Money held steady — which is
-actually good news.
-
-Coherence: 41 -> 48  (+7)
-
-[Sounds right]  [Tell me more]
-```
-
-The animated shape morph is the signature HUMA moment. Watching your
-shape change over a week — even slightly — is visceral.
-
-**"Tell me more" / "Go deeper" (5-8 min depth):**
-
-Full validation review with tap-to-answer per commitment:
-
-```
-"Evenings free for my daughter"
-How many evenings genuinely free?
-[1] [2] [3] [4] [5] [6] [7]
-                          5+
-```
-
-After all answers, HUMA responds — maximum one insight:
-
-- If on target: "Clean week. Your hypothesis is holding."
-  (Warmth advances on related elements.)
-- If below target: the systemic question. NOT "try harder."
-  "Packing ran long twice. Is it the harvest volume or the staging
-  setup? [Adjust Tuesday block] [Flag for seasonal review]"
-- The insight always looks at the SYSTEM, not the person.
-
-Three sentences max: observation, diagnosis, action.
-
-### Tab 3: Your Journey (internal: Evolve)
-
-**Shape Timeline:**
-
-The primary visual. The operator's shape at each point in time —
-overlaid or side-by-side. Animated morph between shapes.
-
-```
-  January        March          June
-     *              *             *
-    / \            /|\           /|\
-   /   \          / | \         / | \
-  *     *       *  *  *      *  *  *
-   \   /          \ | /         \ | /
-    \ /            \|/           \|/
-     *              *             *
-
-  Coherence: 38     51            67
-```
-
-The shape grows. The coherence rises. The operator SEES their growth.
-
-**"What shifted" narrative:**
-
-```
-March 15 — "Evenings free" went from faint to solid
-  You hit 5+/7 evenings free for 4 weeks running.
-  What made it work: batching harvest to Tuesdays.
-
-April 2 — "Income without anxiety" shifted
-  You realized it wasn't about the amount — it was about
-  predictability. New framing: "Know what's coming next month."
-```
-
-Human, warm, specific. Not a validation state log. A story of growth.
-
-**Validation history per commitment:**
-
-Timeline view of every commitment's journey through warmth states,
-with dates and notes on what prompted each change.
-
-**Seasonal review invitation (quarterly):**
-
-"It's been a season. Want to look at what changed?"
-
-A conversation (reusing the conversation UI, 20 minutes) that:
-
-1. Asks the Evolution Question: "What do you know now that you didn't
-   know when this season started?"
-2. Reviews what held, what shifted, what surprised
-3. Reviews which practices worked, which were abandoned, why
-4. Updates the canvas (new version saved, feeds the shape timeline)
-5. Identifies next season's priorities
-
-**Graduation:**
-
-Measured passively. Never displayed as a score. Four capacities:
-
-1. Pattern Internalization — do they execute without prompting?
-2. Self-Diagnosis — do they name the systemic cause before HUMA does?
-3. Node Recognition — can they find leverage points in novel situations?
-4. Whole Seeing — do they reference multiple dimensions unprompted?
-
-When graduation threshold is reached: "You're seeing the connections
-on your own now. You don't need the daily card anymore."
+The workspace is not chatty. It is a mirror.
 
 ---
 
@@ -733,7 +559,7 @@ TESTING/REVISING -> ABANDONED
 ## 15 — Canvas TypeScript Interface
 
 The 6-phase conversation produces a Canvas. This is the data structure
-that powers all three tabs.
+that powers the workspace.
 
 ```typescript
 interface Canvas {
@@ -832,14 +658,14 @@ interface Canvas {
     restSeason: string;
   };
 
-  // Analytical (feeds Your Journey tab, shape)
+  // Analytical (feeds shape timeline + insights)
   capitalProfile: {
     [key: string]: { score: number; note: string };
   };
   coherenceScore: number;
 
-  // Pulse data (feeds insights)
-  pulseHistory: DailyPulse[];
+  // Context edit history (feeds insights)
+  contextEditHistory: ContextEdit[];
   oneThingHistory: OneThingEntry[];
 
   // Metadata
@@ -856,11 +682,6 @@ interface WarmthEntry {
   from: WarmthLevel;
   to: WarmthLevel;
   note?: string;
-}
-
-interface DailyPulse {
-  date: Date;
-  dimensions: { [key: string]: number };  // 1-5 ratings
 }
 
 interface OneThingEntry {
@@ -959,16 +780,12 @@ Every free canvas is a potential share. Every share is distribution.
 ```
 /               Landing page (unauthenticated)
 /begin          Lotus Flow entry (11 screens → pattern recommendation → auth)
-/home           Three-tab experience (default: Your Day)
-  #map          Tab 1: Your Map
-  #today        Tab 2: Your Day
-  #journey      Tab 3: Your Journey
+/home           Guided spatial workspace (requires auth, lotus nav)
 /map/[id]       Public shareable view (read-only canvas + shape)
 /map/sample     Sample maps (read-only)
 ```
 
-**/home is where you live.** Open HUMA daily -> Your Day tab (default).
-Your Map when you need the whole picture. Your Journey quarterly.
+**/home is where you live.** Open HUMA daily → the workspace. Your living context, your WHOLE, your next move. The lotus nav takes you anywhere.
 
 **/map/[id] is where you share.** Read-only, beautiful, spatial. No
 Operate data (private). No Journey data (private). Just the canvas as

@@ -20,7 +20,7 @@ It is organized in three layers, from most concrete to most abstract:
 
 A technical co-founder should read sections 01–05 and be ready to start building. Sections 06–14 are the architecture they're building TOWARD — decisions made now must not foreclose these possibilities later.
 
-**Tab naming convention:** User-facing tab names are "Your Map / Your Day / Your Journey." Engineering uses Design / Operate / Evolve. This document uses the engineering names throughout.
+**Mode naming convention:** The three modes (Design / Operate / Evolve) are internal engineering concepts. Users see the guided spatial workspace with lotus navigation — no tabs. This document uses the engineering mode names throughout.
 
 ---
 
@@ -844,10 +844,7 @@ _Canonical definition in HUMA_PRODUCT_SURFACE.md §19. Reproduced here for techn
 ```
 /               Landing page (unauthenticated, SSR)
 /begin          Lotus Flow entry (11 screens → pattern recommendation → auth)
-/home           Three-tab experience (requires auth, default: Your Day)
-  #map          Tab 1: Your Map (internal: Design)
-  #today        Tab 2: Your Day (internal: Operate)
-  #journey      Tab 3: Your Journey (internal: Evolve)
+/home           Guided spatial workspace (requires auth, lotus nav)
 /map/[id]       Public shareable view (read-only canvas + shape)
 /map/sample     Sample maps (read-only)
 ```
@@ -1008,7 +1005,7 @@ The briefing is a push notification or a card shown when the user opens the app.
 
 ### One-Thing Card
 
-The default "Your Day" experience is the one-thing card: one high-leverage action per day, with Done / Not today buttons.
+The default workspace experience is the one-thing card: one high-leverage action per day, with Done / Not today buttons.
 
 **Sovereignty framing:** The one-thing card is a suggestion, not a prescription. It uses a Socratic approach — surfacing what the operator's own system is pointing toward, not dictating tasks. The operator always decides. If they tap "Not today," the system respects that without friction, guilt, or follow-up. The card connects the suggested action back to a QoL commitment so the operator sees *why* this matters in their terms.
 

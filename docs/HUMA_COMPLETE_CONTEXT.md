@@ -59,19 +59,17 @@ Never forced. Always invited.
 2. **Context Deepening** (Day 2+, at operator's pace) -- Ikigai, Purpose, Vision. Each petal is 5-15 min. Each makes compiled recommendations sharper. Each evolves the WHOLE.
 3. **One-Thing Card** (when context is deep enough) -- requires Lotus Flow + one context petal. Socratic framing, Got it / Not today (equal weight)
 4. **Behavior + Design** -- pattern mapping, enterprise compilation, validation. The workspace becomes the operator's project.
-5. **Full Depth** (Ongoing) -- masterplan, seasonal review, pattern contribution. Three-tab experience.
+5. **Full Depth** (Ongoing) -- masterplan, seasonal review, pattern contribution. Full workspace depth.
 
-### Three Tabs
+### The Workspace
 
-_Canonical spec: HUMA_PRODUCT_SURFACE.md §06_
+_Canonical spec: HUMA_PRODUCT_SURFACE.md §06, §08_
 
-User-facing: Your Map / Your Day / Your Journey. Internal/code: Design / Operate / Evolve.
+The operator opens /home and sees the guided spatial workspace. WHOLE at center (breathing, evolving). Lotus petals orbiting as navigation circles — completed petals warm, next recommended petal glowing gently. Tap to zoom into any petal's context. All visible. All tappable. All editable.
 
-**YOUR MAP** -- spatial canvas with center-outward Palmer clustering. Warmth system shows testing status. The shape as a subtle background.
+The spatial canvas, one-thing card, weekly shape morph, shape timeline, and seasonal review all live within the workspace — accessed through the lotus nav, not tabs.
 
-**YOUR DAY** -- default: one-thing card (sovereign framing -- suggests, never prescribes). Available depth: full daily schedule, weekly planner. Weekly shape morph on Sundays (30-60 sec default, deeper review available).
-
-**YOUR JOURNEY** -- shape timeline showing growth over time. "What shifted" narrative. Seasonal review invitation quarterly.
+Desktop: the full workspace. Mobile: the field companion (See, Report, Edit, Capture).
 
 ### Context Model (Sovereignty-Aligned)
 
@@ -222,7 +220,7 @@ Jack is the founder and sole creator of HUMA. He is a baker by trade. He has bee
 | # | Document | Path | What It Covers |
 |---|----------|------|----------------|
 | 1 | **Vision & Strategy** | `/docs/HUMA_VISION_AND_STRATEGY.md` | What HUMA is, why it exists, sovereignty principles, pattern economy, capture resistance, 20 design principles. Read first. |
-| 2 | **Product Surface** | `/docs/HUMA_PRODUCT_SURFACE.md` | What the operator sees, touches, and feels. Lotus Flow, three tabs, progressive depth, warmth system, all UI specs. |
+| 2 | **Product Surface** | `/docs/HUMA_PRODUCT_SURFACE.md` | What the operator sees, touches, and feels. Lotus Flow, workspace, progressive depth, warmth system, all UI specs. |
 | 3 | **Technical Specification** | `/docs/HUMA_TECHNICAL_SPECIFICATION.md` | Data model, API routes, AI engine, database schema, component tree, build sequence. |
 | 4 | **Ethical Framework** | `/docs/HUMA_ETHICAL_FRAMEWORK.md` | Dependency test, data principles, distress protocols, one-thing card sovereignty, graduation imperative. |
 | 5 | **Pattern Library** | `/docs/HUMA_PATTERN_LIBRARY.md` | RPPL v0.1 schema + 12 seed patterns. |
