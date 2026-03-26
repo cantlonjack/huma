@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useMemo } from "react";
+import { motion } from "framer-motion";
 import WholeVisualization from "@/components/lotus/WholeVisualization";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { HUMA_EASE } from "@/lib/constants";
@@ -19,37 +19,34 @@ interface WholeViewProps {
   recommendation?: { text: string; pattern?: string } | null;
 }
 
-// ─── Petal spatial positions (organic, not a perfect circle) ──────────────────
-// Coordinates in a 600×600 SVG viewBox. WHOLE at ~center.
-// Completed petals cluster lower-left, "next" above, future spread outward.
+// ─── Petal circle radii ──────────────────────────────────────────────────────
 
-const PETAL_POSITIONS: Record<LotusPhase, { x: number; y: number }> = {
-  whole: { x: 200, y: 410 },
-  who: { x: 155, y: 330 },
-  what: { x: 130, y: 240 },
-  context: { x: 170, y: 155 },
-  purpose: { x: 255, y: 95 },
-  vision: { x: 365, y: 100 },
-  behavior: { x: 445, y: 165 },
-  nurture: { x: 480, y: 260 },
-  validate: { x: 450, y: 350 },
-  design: { x: 395, y: 415 },
-  install: { x: 455, y: 440 },
-  evolve: { x: 505, y: 375 },
-};
+const RADIUS = 28;
+// Invisible hit area for mobile tap targets (≥48px at 375px viewport)
+const TAP_RADIUS = 38;
+// Distance from center for petal orbit
+const ORBIT_RADIUS = 160;
+// Center of 600×600 viewBox
+const CX = 300;
+const CY = 300;
 
-// ─── Petal circle radii by state ─────────────────────────────────────────────
+// ─── Compute dynamic positions ──────────────────────────────────────────────
+// Distributes visible petals evenly around the WHOLE, full 360°.
+// Start angle offset: -90° (top) so first petal sits above center.
 
-const RADIUS_COMPLETE = 28;
-const RADIUS_NEXT = 28;
-const RADIUS_FUTURE = 20;
-// Invisible hit area for mobile tap targets (≥44px at 375px viewport)
-const TAP_RADIUS = 36;
+function computePositions(count: number): Array<{ x: number; y: number }> {
+  return Array.from({ length: count }, (_, i) => {
+    const angle = (-90 + (360 / count) * i) * (Math.PI / 180);
+    return {
+      x: CX + Math.cos(angle) * ORBIT_RADIUS,
+      y: CY + Math.sin(angle) * ORBIT_RADIUS,
+    };
+  });
+}
 
 // ─── Miniature content previews for completed petals ─────────────────────────
 
 function WholePetalPreview({ x, y }: { x: number; y: number }) {
-  // Tiny rose curve hint
   return (
     <g opacity={0.5}>
       <circle cx={x} cy={y} r={8} fill="none" stroke="#5C7A62" strokeWidth={0.6} />
@@ -59,7 +56,6 @@ function WholePetalPreview({ x, y }: { x: number; y: number }) {
 }
 
 function WhoPetalPreview({ x, y }: { x: number; y: number }) {
-  // Tiny person icon
   return (
     <g opacity={0.5}>
       <circle cx={x} cy={y - 3} r={3} fill="none" stroke="#5C7A62" strokeWidth={0.6} />
@@ -82,7 +78,6 @@ function WhatPetalPreview({
   y: number;
   context: OperatorContext;
 }) {
-  // Tiny 8-petal flower hint
   const r = 10;
   return (
     <g opacity={0.45}>
@@ -110,7 +105,6 @@ function WhatPetalPreview({
 }
 
 function ContextPetalPreview({ x, y }: { x: number; y: number }) {
-  // Three overlapping circles (Ikigai Venn hint)
   return (
     <g opacity={0.45}>
       <circle cx={x - 3} cy={y - 2} r={4} fill="none" stroke="#C5D86D" strokeWidth={0.6} />
@@ -118,6 +112,33 @@ function ContextPetalPreview({ x, y }: { x: number; y: number }) {
       <circle cx={x} cy={y + 3} r={4} fill="none" stroke="#2E6B8A" strokeWidth={0.6} />
     </g>
   );
+}
+
+// ─── Preview renderer ────────────────────────────────────────────────────────
+
+function PetalPreview({
+  phase,
+  x,
+  y,
+  context,
+}: {
+  phase: LotusPhase;
+  x: number;
+  y: number;
+  context: OperatorContext;
+}) {
+  switch (phase) {
+    case "whole":
+      return <WholePetalPreview x={x} y={y} />;
+    case "who":
+      return <WhoPetalPreview x={x} y={y} />;
+    case "what":
+      return <WhatPetalPreview x={x} y={y} context={context} />;
+    case "context":
+      return <ContextPetalPreview x={x} y={y} />;
+    default:
+      return null;
+  }
 }
 
 // ─── Main component ──────────────────────────────────────────────────────────
@@ -170,6 +191,42 @@ export default function WholeView({
     return [entitySeed, stageSeed, capitalSum, variance];
   }, [context]);
 
+  // ── Build visible petals: earned + one invite ──────────────────────────────
+  const visiblePetals = useMemo(() => {
+    const earned: Array<{ phase: LotusPhase; label: string; state: "complete" }> = [];
+    for (const { phase, label } of PETAL_META) {
+      if (isPetalComplete(phase, context)) {
+        earned.push({ phase, label, state: "complete" });
+      }
+    }
+
+    const invite: Array<{
+      phase: LotusPhase;
+      label: string;
+      state: "invite";
+      timeHint: string;
+      hasFlow: boolean;
+    }> = [];
+    if (nextPetal) {
+      const meta = PETAL_META.find((m) => m.phase === nextPetal);
+      invite.push({
+        phase: nextPetal,
+        label: meta?.label || nextPetal,
+        state: "invite",
+        timeHint: meta?.timeHint || "10 min",
+        hasFlow: AVAILABLE_FLOWS.includes(nextPetal),
+      });
+    }
+
+    return [...earned, ...invite];
+  }, [context, nextPetal]);
+
+  // Compute dynamic orbital positions for visible petals
+  const positions = useMemo(
+    () => computePositions(visiblePetals.length),
+    [visiblePetals.length]
+  );
+
   return (
     <div className="relative w-full flex flex-col items-center">
       {/* Spatial SVG workspace — scales to viewport, maintains aspect ratio */}
@@ -181,240 +238,238 @@ export default function WholeView({
           role="group"
           aria-label="Your workspace — tap a petal to explore"
         >
-          {/* ── Future petals (faint outlines) ── */}
-          {PETAL_META.map(({ phase, label, timeHint }) => {
-            const pos = PETAL_POSITIONS[phase];
-            const complete = isPetalComplete(phase, context);
-            const isNext = phase === nextPetal;
-            const hasFlow = AVAILABLE_FLOWS.includes(phase);
-
-            if (complete || isNext) return null;
-
+          {/* ── Faint connector lines from center to each petal ── */}
+          {visiblePetals.map((petal, i) => {
+            const pos = positions[i];
             return (
-              <g
-                key={phase}
-                role="button"
-                tabIndex={0}
-                aria-label={`${label} petal — coming soon`}
-                onClick={() => hasFlow && onPetalClick(phase)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && hasFlow) onPetalClick(phase);
-                }}
-                style={{ cursor: hasFlow ? "pointer" : "default" }}
-              >
-                {/* Invisible tap target for mobile */}
-                <circle cx={pos.x} cy={pos.y} r={TAP_RADIUS} fill="transparent" />
-                <circle
-                  cx={pos.x}
-                  cy={pos.y}
-                  r={RADIUS_FUTURE}
-                  fill="none"
-                  stroke="#D4CBBA"
-                  strokeWidth={0.8}
-                  opacity={0.3}
-                />
-                <text
-                  x={pos.x}
-                  y={pos.y + RADIUS_FUTURE + 14}
-                  textAnchor="middle"
-                  fill="#C4BAA8"
-                  fontSize="10"
-                  fontFamily="var(--font-source-sans)"
-                >
-                  {label}
-                </text>
-              </g>
+              <line
+                key={`line-${petal.phase}`}
+                x1={CX}
+                y1={CY}
+                x2={pos.x}
+                y2={pos.y}
+                stroke="#D4CBBA"
+                strokeWidth={0.5}
+                opacity={0.3}
+              />
             );
           })}
 
-          {/* ── "Next" petal (glowing guide) ── */}
-          {nextPetal && AVAILABLE_FLOWS.includes(nextPetal) && (() => {
-            const pos = PETAL_POSITIONS[nextPetal];
-            const meta = PETAL_META.find((m) => m.phase === nextPetal);
-            const petalLabel = meta?.label || nextPetal;
-            const timeHint = meta?.timeHint || "10 min";
-            return (
-              <g
-                key={`next-${nextPetal}`}
-                role="button"
-                tabIndex={0}
-                aria-label={`${petalLabel} petal — ready, ${timeHint}`}
-                onClick={() => onPetalClick(nextPetal)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") onPetalClick(nextPetal);
-                }}
-                style={{ cursor: "pointer" }}
-                className="group"
-              >
-                {/* Organic glow on stroke */}
-                <circle
-                  cx={pos.x}
-                  cy={pos.y}
-                  r={RADIUS_NEXT}
-                  fill="none"
-                  stroke="#5C7A62"
-                  strokeWidth={1.5}
-                  opacity={0.8}
+          {/* ── Render each visible petal ── */}
+          {visiblePetals.map((petal, i) => {
+            const pos = positions[i];
+
+            if (petal.state === "complete") {
+              return (
+                <g
+                  key={petal.phase}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${petal.label} petal — tap to view`}
+                  onClick={() => onPetalClick(petal.phase)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onPetalClick(petal.phase);
+                    }
+                  }}
+                  style={{ cursor: "pointer" }}
+                  className="petal-hit-area"
                 >
-                  {!prefersReducedMotion && (
-                    <animate
-                      attributeName="opacity"
-                      values="0.5;1;0.5"
-                      dur="3s"
-                      repeatCount="indefinite"
-                    />
-                  )}
-                </circle>
-                {/* Outer glow ring */}
-                {!prefersReducedMotion && (
+                  {/* Invisible tap target (≥48px) */}
+                  <circle cx={pos.x} cy={pos.y} r={TAP_RADIUS} fill="transparent" />
+                  {/* Visible circle */}
                   <circle
                     cx={pos.x}
                     cy={pos.y}
-                    r={RADIUS_NEXT + 4}
-                    fill="none"
-                    stroke="#8BAF8E"
-                    strokeWidth={0.5}
-                  >
-                    <animate
-                      attributeName="r"
-                      values={`${RADIUS_NEXT + 2};${RADIUS_NEXT + 8};${RADIUS_NEXT + 2}`}
-                      dur="3s"
-                      repeatCount="indefinite"
-                    />
-                    <animate
-                      attributeName="opacity"
-                      values="0.3;0.08;0.3"
-                      dur="3s"
-                      repeatCount="indefinite"
-                    />
-                  </circle>
-                )}
-                <text
-                  x={pos.x}
-                  y={pos.y + RADIUS_NEXT + 14}
-                  textAnchor="middle"
-                  fill="#5C7A62"
-                  fontSize="11"
-                  fontFamily="var(--font-source-sans)"
-                  fontWeight={500}
-                >
-                  {petalLabel}
-                </text>
-                <text
-                  x={pos.x}
-                  y={pos.y + RADIUS_NEXT + 26}
-                  textAnchor="middle"
-                  fill="#A89E90"
-                  fontSize="9"
-                  fontFamily="var(--font-source-sans)"
-                >
-                  {timeHint}
-                </text>
-                {/* Hover tooltip (desktop) */}
-                <title>{`Map your ${petalLabel} — ${timeHint}`}</title>
-              </g>
-            );
-          })()}
-
-          {/* ── "Next" petal that has no flow yet (coming soon guide) ── */}
-          {nextPetal && !AVAILABLE_FLOWS.includes(nextPetal) && (() => {
-            const pos = PETAL_POSITIONS[nextPetal];
-            const meta = PETAL_META.find((m) => m.phase === nextPetal);
-            return (
-              <g key={`next-${nextPetal}`}>
-                <circle
-                  cx={pos.x}
-                  cy={pos.y}
-                  r={RADIUS_NEXT}
-                  fill="none"
-                  stroke="#5C7A62"
-                  strokeWidth={1.2}
-                  opacity={0.5}
-                  strokeDasharray="3 3"
-                />
-                <text
-                  x={pos.x}
-                  y={pos.y + RADIUS_NEXT + 14}
-                  textAnchor="middle"
-                  fill="#8BAF8E"
-                  fontSize="11"
-                  fontFamily="var(--font-source-sans)"
-                  fontWeight={500}
-                >
-                  {meta?.label || nextPetal}
-                </text>
-                <text
-                  x={pos.x}
-                  y={pos.y + RADIUS_NEXT + 26}
-                  textAnchor="middle"
-                  fill="#C4BAA8"
-                  fontSize="9"
-                  fontFamily="var(--font-source-sans)"
-                >
-                  Coming soon
-                </text>
-              </g>
-            );
-          })()}
-
-          {/* ── Completed petals (warm, filled) ── */}
-          {PETAL_META.map(({ phase, label }) => {
-            const pos = PETAL_POSITIONS[phase];
-            if (!isPetalComplete(phase, context) || phase === nextPetal)
-              return null;
-
-            return (
-              <g
-                key={phase}
-                role="button"
-                tabIndex={0}
-                aria-label={`${label} petal — completed, tap to view`}
-                onClick={() => onPetalClick(phase)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") onPetalClick(phase);
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                {/* Invisible tap target for mobile */}
-                <circle cx={pos.x} cy={pos.y} r={TAP_RADIUS} fill="transparent" />
-                <circle
-                  cx={pos.x}
-                  cy={pos.y}
-                  r={RADIUS_COMPLETE}
-                  fill="#EBF3EC"
-                  stroke="#5C7A62"
-                  strokeWidth={1.2}
-                />
-                {/* Miniature preview inside */}
-                {phase === "whole" && (
-                  <WholePetalPreview x={pos.x} y={pos.y} />
-                )}
-                {phase === "who" && (
-                  <WhoPetalPreview x={pos.x} y={pos.y} />
-                )}
-                {phase === "what" && (
-                  <WhatPetalPreview
-                    x={pos.x}
-                    y={pos.y}
-                    context={context}
+                    r={RADIUS}
+                    fill="#EBF3EC"
+                    stroke="#5C7A62"
+                    strokeWidth={1.2}
+                    className="petal-circle"
                   />
-                )}
-                {phase === "context" && (
-                  <ContextPetalPreview x={pos.x} y={pos.y} />
-                )}
-                <text
-                  x={pos.x}
-                  y={pos.y + RADIUS_COMPLETE + 14}
-                  textAnchor="middle"
-                  fill="#5C7A62"
-                  fontSize="11"
-                  fontFamily="var(--font-source-sans)"
-                  fontWeight={500}
+                  {/* Miniature preview inside */}
+                  <PetalPreview phase={petal.phase} x={pos.x} y={pos.y} context={context} />
+                  {/* Label */}
+                  <text
+                    x={pos.x}
+                    y={pos.y + RADIUS + 14}
+                    textAnchor="middle"
+                    fill="#5C7A62"
+                    fontSize="11"
+                    fontFamily="var(--font-source-sans)"
+                    fontWeight={500}
+                  >
+                    {petal.label}
+                  </text>
+                  <title>{`View ${petal.label}`}</title>
+                </g>
+              );
+            }
+
+            // ── Invite petal (the one glowing "next") ──
+            if (petal.state === "invite" && petal.hasFlow) {
+              return (
+                <g
+                  key={petal.phase}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${petal.label} petal — ready, ${petal.timeHint}`}
+                  onClick={() => onPetalClick(petal.phase)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onPetalClick(petal.phase);
+                    }
+                  }}
+                  style={{ cursor: "pointer" }}
+                  className="petal-hit-area"
                 >
-                  {label}
-                </text>
-              </g>
-            );
+                  {/* Invisible tap target */}
+                  <circle cx={pos.x} cy={pos.y} r={TAP_RADIUS} fill="transparent" />
+                  {/* Glowing dashed circle */}
+                  <circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={RADIUS}
+                    fill="none"
+                    stroke="#5C7A62"
+                    strokeWidth={1.5}
+                    strokeDasharray="4 3"
+                    opacity={0.8}
+                    className="petal-circle"
+                  >
+                    {!prefersReducedMotion && (
+                      <animate
+                        attributeName="opacity"
+                        values="0.5;0.8;0.5"
+                        dur="3s"
+                        repeatCount="indefinite"
+                      />
+                    )}
+                  </circle>
+                  {/* Outer glow ring */}
+                  {!prefersReducedMotion && (
+                    <circle
+                      cx={pos.x}
+                      cy={pos.y}
+                      r={RADIUS + 4}
+                      fill="none"
+                      stroke="#8BAF8E"
+                      strokeWidth={0.5}
+                    >
+                      <animate
+                        attributeName="r"
+                        values={`${RADIUS + 2};${RADIUS + 8};${RADIUS + 2}`}
+                        dur="3s"
+                        repeatCount="indefinite"
+                      />
+                      <animate
+                        attributeName="opacity"
+                        values="0.3;0.08;0.3"
+                        dur="3s"
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                  )}
+                  {/* Label */}
+                  <text
+                    x={pos.x}
+                    y={pos.y + RADIUS + 14}
+                    textAnchor="middle"
+                    fill="#5C7A62"
+                    fontSize="11"
+                    fontFamily="var(--font-source-sans)"
+                    fontWeight={500}
+                  >
+                    {petal.label}
+                  </text>
+                  {/* Time estimate */}
+                  <text
+                    x={pos.x}
+                    y={pos.y + RADIUS + 26}
+                    textAnchor="middle"
+                    fill="#A89E90"
+                    fontSize="9"
+                    fontFamily="var(--font-source-sans)"
+                  >
+                    {petal.timeHint}
+                  </text>
+                  <title>{`Map your ${petal.label} — ${petal.timeHint}`}</title>
+                </g>
+              );
+            }
+
+            // ── Invite petal with no flow yet (coming soon) ──
+            if (petal.state === "invite" && !petal.hasFlow) {
+              return (
+                <g
+                  key={petal.phase}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${petal.label} petal — coming soon`}
+                  onClick={() => onPetalClick(petal.phase)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onPetalClick(petal.phase);
+                    }
+                  }}
+                  style={{ cursor: "pointer" }}
+                  className="petal-hit-area"
+                >
+                  {/* Invisible tap target */}
+                  <circle cx={pos.x} cy={pos.y} r={TAP_RADIUS} fill="transparent" />
+                  {/* Dashed circle */}
+                  <circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={RADIUS}
+                    fill="none"
+                    stroke="#5C7A62"
+                    strokeWidth={1.2}
+                    strokeDasharray="3 3"
+                    opacity={0.5}
+                    className="petal-circle"
+                  >
+                    {!prefersReducedMotion && (
+                      <animate
+                        attributeName="opacity"
+                        values="0.4;0.7;0.4"
+                        dur="3s"
+                        repeatCount="indefinite"
+                      />
+                    )}
+                  </circle>
+                  {/* Label */}
+                  <text
+                    x={pos.x}
+                    y={pos.y + RADIUS + 14}
+                    textAnchor="middle"
+                    fill="#8BAF8E"
+                    fontSize="11"
+                    fontFamily="var(--font-source-sans)"
+                    fontWeight={500}
+                  >
+                    {petal.label}
+                  </text>
+                  {/* Time estimate */}
+                  <text
+                    x={pos.x}
+                    y={pos.y + RADIUS + 26}
+                    textAnchor="middle"
+                    fill="#C4BAA8"
+                    fontSize="9"
+                    fontFamily="var(--font-source-sans)"
+                  >
+                    {petal.timeHint}
+                  </text>
+                  <title>{`${petal.label} — coming soon`}</title>
+                </g>
+              );
+            }
+
+            return null;
           })}
         </svg>
 
@@ -518,7 +573,7 @@ export default function WholeView({
         </motion.p>
       )}
 
-      {/* Breathing keyframe */}
+      {/* Breathing keyframe + petal hover effects */}
       <style jsx global>{`
         @keyframes workspace-breathe {
           0%,
@@ -528,6 +583,21 @@ export default function WholeView({
           50% {
             transform: translate(-50%, -50%) scale(1.01);
           }
+        }
+        .petal-hit-area:hover .petal-circle,
+        .petal-hit-area:focus .petal-circle {
+          transform-origin: center;
+          filter: brightness(1.05);
+        }
+        .petal-hit-area:focus {
+          outline: none;
+        }
+        .petal-hit-area:focus .petal-circle {
+          stroke-width: 2.2;
+        }
+        .petal-hit-area:focus-visible .petal-circle {
+          stroke: #3A5A40;
+          stroke-width: 2.5;
         }
       `}</style>
     </div>

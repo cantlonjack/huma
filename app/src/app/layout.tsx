@@ -23,18 +23,18 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://huma.earth"),
   title: "HUMA — See the pattern in your life",
   description:
-    "8 questions. 90 seconds. Your whole life in one shape.",
+    "90 seconds to see your whole life as one connected system.",
   openGraph: {
     title: "HUMA — See the pattern in your life",
     description:
-      "8 questions. 90 seconds. Your whole life in one shape.",
+      "90 seconds to see your whole life as one connected system.",
     images: ["/api/og"],
   },
   twitter: {
     card: "summary_large_image",
     title: "HUMA — See the pattern in your life",
     description:
-      "8 questions. 90 seconds. Your whole life in one shape.",
+      "90 seconds to see your whole life as one connected system.",
     images: ["/api/og"],
   },
 };
