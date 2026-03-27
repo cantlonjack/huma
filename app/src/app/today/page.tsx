@@ -13,6 +13,73 @@ function formatDate(dateStr: string): string {
   });
 }
 
+/**
+ * Collect recent check-off history from localStorage (last 7 days).
+ */
+function getRecentHistory(): Array<{ date: string; behaviorKey: string; checked: boolean }> {
+  const history: Array<{ date: string; behaviorKey: string; checked: boolean }> = [];
+  const today = new Date();
+
+  for (let i = 1; i <= 7; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split("T")[0];
+    const cacheKey = `huma-v2-sheet-${dateStr}`;
+
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const entries: SheetEntry[] = JSON.parse(cached);
+        for (const entry of entries) {
+          history.push({
+            date: dateStr,
+            behaviorKey: entry.behaviorKey,
+            checked: entry.checked,
+          });
+        }
+      }
+    } catch { /* skip corrupt entries */ }
+  }
+
+  return history;
+}
+
+/**
+ * Build a fallback sheet from raw behaviors when API fails.
+ */
+function buildFallbackSheet(aspirations: Aspiration[]): SheetEntry[] {
+  const dayOfWeek = new Date().toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
+  const entries: SheetEntry[] = [];
+
+  for (const aspiration of aspirations) {
+    for (const behavior of aspiration.behaviors) {
+      // Filter by frequency/day
+      let includeToday = false;
+      if (behavior.frequency === "daily") {
+        includeToday = true;
+      } else if (behavior.frequency === "weekly") {
+        includeToday = true; // Show weekly items every day, let operator decide
+      } else if (behavior.frequency === "specific-days" && behavior.days) {
+        includeToday = behavior.days.some(d => d.toLowerCase() === dayOfWeek);
+      }
+
+      if (includeToday) {
+        entries.push({
+          id: crypto.randomUUID(),
+          aspirationId: aspiration.id,
+          behaviorKey: behavior.key,
+          behaviorText: behavior.text,
+          detail: { text: behavior.detail || "" },
+          timeOfDay: "morning",
+          checked: false,
+        });
+      }
+    }
+  }
+
+  return entries;
+}
+
 function SheetCard({
   entry,
   onToggle,
@@ -102,6 +169,7 @@ export default function TodayPage() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [date] = useState(() => new Date().toISOString().split("T")[0]);
+  const [isFallback, setIsFallback] = useState(false);
 
   const compileSheet = useCallback(async () => {
     setLoading(true);
@@ -133,6 +201,9 @@ export default function TodayPage() {
       } catch { /* recompile */ }
     }
 
+    // Collect recent history for the feedback loop
+    const recentHistory = getRecentHistory();
+
     try {
       const res = await fetch("/api/sheet", {
         method: "POST",
@@ -141,10 +212,12 @@ export default function TodayPage() {
           name: knownContext.name || "",
           aspirations,
           knownContext,
-          recentHistory: [],
+          recentHistory,
           date,
         }),
       });
+
+      if (!res.ok) throw new Error(`Sheet API returned ${res.status}`);
 
       const data = await res.json();
       const compiled: SheetEntry[] = (data.entries || []).map(
@@ -159,14 +232,26 @@ export default function TodayPage() {
         })
       );
 
-      // Sort by time of day
-      const order = { morning: 0, afternoon: 1, evening: 2 };
-      compiled.sort((a, b) => order[a.timeOfDay] - order[b.timeOfDay]);
-
-      setEntries(compiled);
-      localStorage.setItem(cacheKey, JSON.stringify(compiled));
+      if (compiled.length === 0) {
+        // API returned empty — use fallback
+        const fallback = buildFallbackSheet(aspirations);
+        setEntries(fallback);
+        setIsFallback(true);
+        localStorage.setItem(cacheKey, JSON.stringify(fallback));
+      } else {
+        // Sort by time of day
+        const order = { morning: 0, afternoon: 1, evening: 2 };
+        compiled.sort((a, b) => order[a.timeOfDay] - order[b.timeOfDay]);
+        setEntries(compiled);
+        localStorage.setItem(cacheKey, JSON.stringify(compiled));
+      }
     } catch (err) {
       console.error("Sheet compilation error:", err);
+      // Fallback: show raw behaviors without AI-compiled specificity
+      const fallback = buildFallbackSheet(aspirations);
+      setEntries(fallback);
+      setIsFallback(true);
+      localStorage.setItem(cacheKey, JSON.stringify(fallback));
     } finally {
       setLoading(false);
     }
@@ -175,6 +260,62 @@ export default function TodayPage() {
   useEffect(() => {
     compileSheet();
   }, [compileSheet]);
+
+  // Check for insight opportunity (5+ days of cross-aspiration data)
+  useEffect(() => {
+    async function checkInsight() {
+      // Don't overwrite existing insight
+      if (localStorage.getItem("huma-v2-pending-insight")) return;
+
+      const history = getRecentHistory();
+      if (history.length === 0) return;
+
+      // Count unique dates
+      const uniqueDates = new Set(history.map(h => h.date));
+      if (uniqueDates.size < 5) return;
+
+      // Load aspirations for behavior metadata
+      let aspirations: Aspiration[] = [];
+      try {
+        const saved = localStorage.getItem("huma-v2-aspirations");
+        if (saved) aspirations = JSON.parse(saved);
+      } catch { return; }
+
+      if (aspirations.length < 2) return; // Need cross-aspiration data
+
+      // Build behavior meta and entries for the insight API
+      const behaviorMeta = aspirations.flatMap(a =>
+        a.behaviors.map(b => ({
+          key: b.key,
+          text: b.text,
+          aspirationId: a.id,
+          aspirationText: a.clarifiedText || a.rawText,
+          dimensions: (b.dimensions || []).map((d: { dimension: string }) => d.dimension),
+        }))
+      );
+
+      const entries = history.map(h => ({
+        date: h.date,
+        behaviorKey: h.behaviorKey,
+        aspirationId: aspirations.find(a => a.behaviors.some(b => b.key === h.behaviorKey))?.id || "",
+        checked: h.checked,
+      }));
+
+      try {
+        const res = await fetch("/api/insight", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ entries, behaviorMeta }),
+        });
+        const data = await res.json();
+        if (data.insight) {
+          localStorage.setItem("huma-v2-pending-insight", JSON.stringify(data.insight));
+        }
+      } catch { /* non-critical */ }
+    }
+
+    checkInsight();
+  }, []);
 
   // Persist check-off state
   const toggleEntry = (id: string) => {
@@ -212,7 +353,7 @@ export default function TodayPage() {
           <div className="flex flex-col items-center justify-center h-64 text-center">
             <p className="font-serif text-xl text-earth-500 mb-4">No sheet yet.</p>
             <p className="font-sans text-sm text-earth-400 mb-6">
-              Tell HUMA what&apos;s going on and your first production sheet will appear here.
+              Tell HUMA what you&apos;re working on and your first production sheet will appear here.
             </p>
             <Link
               href="/start"
@@ -223,6 +364,12 @@ export default function TodayPage() {
           </div>
         ) : (
           <div className="space-y-3 max-w-2xl mx-auto">
+            {isFallback && (
+              <p className="font-sans text-xs text-earth-400 mb-2">
+                Showing your behaviors for today. Talk to HUMA for more specific guidance.
+              </p>
+            )}
+
             {entries.map(entry => (
               <SheetCard
                 key={entry.id}

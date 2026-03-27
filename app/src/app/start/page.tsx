@@ -310,13 +310,20 @@ export default function StartPage() {
   // Handle action button
   const handleActionTap = (action: string) => {
     if (action === "Start tomorrow" || action.toLowerCase().includes("start")) {
+      // Build clarified text from the user's conversation selections
+      const userMessages = messages.filter(m => m.role === "user").map(m => m.content);
+      const rawText = userMessages[0] || "";
+      const clarifiedText = userMessages.length > 1
+        ? `${rawText} — ${userMessages.slice(1).join(", ")}`
+        : rawText;
+
       // Save state and redirect to /today
       localStorage.setItem("huma-v2-behaviors", JSON.stringify(decomposedBehaviors));
       localStorage.setItem("huma-v2-known-context", JSON.stringify(knownContext));
       localStorage.setItem("huma-v2-aspirations", JSON.stringify([{
         id: crypto.randomUUID(),
-        rawText: messages.find(m => m.role === "user")?.content || "",
-        clarifiedText: "",
+        rawText,
+        clarifiedText,
         behaviors: decomposedBehaviors,
         dimensionsTouched: [],
         status: "active",

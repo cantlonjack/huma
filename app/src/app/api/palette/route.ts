@@ -1,5 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { PALETTE_CONCEPTS } from "@/data/palette-concepts";
+import { paletteConcepts } from "@/engine/palette-concepts";
+import type { PaletteConcept } from "@/types/v2";
+
+// Adapt engine concepts to V2 type (same shape, different module)
+const PALETTE_CONCEPTS: PaletteConcept[] = paletteConcepts as unknown as PaletteConcept[];
 
 export async function POST(request: Request) {
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -26,7 +30,7 @@ export async function POST(request: Request) {
   );
 
   const conceptList = availableConcepts
-    .map((c) => `${c.id}: "${c.text}" (${c.category})`)
+    .map((c) => `${c.id}: "${c.text}" (${c.category}) [related: ${c.relatedConcepts.join(", ")}]`)
     .join("\n");
 
   try {
@@ -35,11 +39,11 @@ export async function POST(request: Request) {
     const response = await anthropic.messages.create({
       model: process.env.ANTHROPIC_MODEL_FAST || "claude-haiku-4-5-20251001",
       max_tokens: 200,
-      system: "You select relevant concepts from a list based on conversation context. Return ONLY a JSON array of concept IDs. No explanation.",
+      system: "You select relevant concepts from a list based on conversation context. Prioritize concepts that are related to concepts the user has already mentioned. Return ONLY a JSON array of concept IDs. No explanation.",
       messages: [
         {
           role: "user",
-          content: `Given this conversation so far:\n${conversationSoFar.join("\n")}\n\nFrom this list of concepts:\n${conceptList}\n\nReturn the 8 most relevant concepts the person hasn't mentioned yet.\nReturn as JSON array of strings (just the IDs): ["id1","id2",...]`,
+          content: `Given this conversation so far:\n${conversationSoFar.join("\n")}\n\nFrom this list of concepts:\n${conceptList}\n\nReturn the 8 most relevant concepts the person hasn't mentioned yet. Prefer concepts that are listed as 'related' to topics already discussed.\nReturn as JSON array of strings (just the IDs): ["id1","id2",...]`,
         },
       ],
     });

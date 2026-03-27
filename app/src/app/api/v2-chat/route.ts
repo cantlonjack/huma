@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { isRateLimited } from "@/lib/rate-limit";
+import { matchTemplate, formatTemplateForPrompt } from "@/lib/template-matcher";
 
 const SYSTEM_PROMPT = `You are HUMA. You help people run their lives as one connected system.
 You are not a therapist, financial advisor, or life coach. You are
@@ -51,11 +52,14 @@ KNOWN CONTEXT:
 {context}
 
 ACTIVE ASPIRATIONS:
-{aspirations}`;
+{aspirations}
+
+{template_section}`;
 
 function buildSystemPrompt(
   knownContext: Record<string, unknown>,
-  aspirations: Array<{ rawText: string; clarifiedText: string; status: string }>
+  aspirations: Array<{ rawText: string; clarifiedText: string; status: string }>,
+  conversationTexts: string[]
 ): string {
   const contextStr = Object.keys(knownContext).length > 0
     ? JSON.stringify(knownContext, null, 2)
@@ -65,9 +69,25 @@ function buildSystemPrompt(
     ? aspirations.map(a => `- ${a.clarifiedText || a.rawText} (${a.status})`).join("\n")
     : "None yet.";
 
+  // Try to match conversation to a decomposition template
+  const allText = conversationTexts.join(" ");
+  const template = matchTemplate(allText);
+
+  let templateSection = "";
+  if (template) {
+    templateSection = `DECOMPOSITION TEMPLATE (use this as your starting skeleton — customize based on conversation context):
+${formatTemplateForPrompt(template)}
+
+IMPORTANT: When decomposing, use the behaviors from this template as your foundation.
+Customize based on what the operator has told you (household size, schedule, budget, location, preferences).
+The template gives you the structure — the conversation gives you the specifics.
+Do NOT generate behaviors from scratch when a template is available.`;
+  }
+
   return SYSTEM_PROMPT
     .replace("{context}", contextStr)
-    .replace("{aspirations}", aspirationStr);
+    .replace("{aspirations}", aspirationStr)
+    .replace("{template_section}", templateSection);
 }
 
 export async function POST(request: Request) {
@@ -111,7 +131,9 @@ export async function POST(request: Request) {
 
   try {
     const anthropic = new Anthropic();
-    const systemPrompt = buildSystemPrompt(knownContext, aspirations);
+    // Extract user message texts for template matching
+    const userTexts = messages.filter(m => m.role === "user").map(m => m.content);
+    const systemPrompt = buildSystemPrompt(knownContext, aspirations, userTexts);
 
     const stream = anthropic.messages.stream({
       model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514",
