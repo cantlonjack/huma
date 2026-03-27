@@ -3,34 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import type { PaletteConcept, ChatMessage, Behavior, Aspiration, Insight } from "@/types/v2";
 import { DIMENSION_LABELS, DIMENSION_COLORS } from "@/types/v2";
-
-// ─── Marker Parsing (shared with /start) ─────────────────────────────────────
-
-function parseMarkers(text: string) {
-  const options = text.match(/\[\[OPTIONS:([\s\S]*?)\]\]/);
-  const behaviors = text.match(/\[\[BEHAVIORS:([\s\S]*?)\]\]/);
-  const actions = text.match(/\[\[ACTIONS:([\s\S]*?)\]\]/);
-  const context = text.match(/\[\[CONTEXT:([\s\S]*?)\]\]/);
-
-  const cleanText = text
-    .replace(/\[\[OPTIONS:[\s\S]*?\]\]/, "")
-    .replace(/\[\[BEHAVIORS:[\s\S]*?\]\]/, "")
-    .replace(/\[\[ACTIONS:[\s\S]*?\]\]/, "")
-    .replace(/\[\[CONTEXT:[\s\S]*?\]\]/, "")
-    .trim();
-
-  let parsedOptions: string[] | null = null;
-  let parsedBehaviors: Behavior[] | null = null;
-  let parsedActions: string[] | null = null;
-  let parsedContext: Record<string, unknown> | null = null;
-
-  try { if (options) parsedOptions = JSON.parse(options[1]); } catch { /* skip */ }
-  try { if (behaviors) parsedBehaviors = JSON.parse(behaviors[1]); } catch { /* skip */ }
-  try { if (actions) parsedActions = JSON.parse(actions[1]); } catch { /* skip */ }
-  try { if (context) parsedContext = JSON.parse(context[1]); } catch { /* skip */ }
-
-  return { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext };
-}
+import { parseMarkersV2 as parseMarkers } from "@/lib/parse-markers-v2";
 
 // ─── Insight Card ────────────────────────────────────────────────────────────
 

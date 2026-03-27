@@ -22,20 +22,20 @@ const sourceSans = Source_Sans_3({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://huma.earth"),
-  title: "HUMA — See the pattern in your life",
+  title: "HUMA — Your life, one connected system",
   description:
-    "90 seconds to see your whole life as one connected system.",
+    "Tell HUMA what's going on. Get a daily production sheet. See the connections you couldn't.",
   openGraph: {
-    title: "HUMA — See the pattern in your life",
+    title: "HUMA — Your life, one connected system",
     description:
-      "90 seconds to see your whole life as one connected system.",
+      "Tell HUMA what's going on. Get a daily production sheet. See the connections you couldn't.",
     images: ["/api/og"],
   },
   twitter: {
     card: "summary_large_image",
-    title: "HUMA — See the pattern in your life",
+    title: "HUMA — Your life, one connected system",
     description:
-      "90 seconds to see your whole life as one connected system.",
+      "Tell HUMA what's going on. Get a daily production sheet. See the connections you couldn't.",
     images: ["/api/og"],
   },
 };
