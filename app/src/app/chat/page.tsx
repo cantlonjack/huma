@@ -188,7 +188,14 @@ export default function ChatPage() {
 
       const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext } = parseMarkers(fullResponse);
 
-      if (parsedContext) setKnownContext(prev => ({ ...prev, ...parsedContext }));
+      if (parsedContext) {
+        setKnownContext(prev => ({ ...prev, ...parsedContext }));
+        // Invalidate today's and tomorrow's sheet cache so next compile includes new context
+        const today = new Date().toISOString().split("T")[0];
+        const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
+        localStorage.removeItem(`huma-v2-sheet-${today}`);
+        localStorage.removeItem(`huma-v2-sheet-${tomorrow}`);
+      }
 
       if (parsedBehaviors) {
         const newAspiration: Aspiration = {
@@ -290,7 +297,7 @@ export default function ChatPage() {
                 }`}
                 style={{ lineHeight: "1.7" }}
               >
-                <p className="font-sans text-base whitespace-pre-wrap">{msg.content}</p>
+                <p className={`${msg.role === "user" ? "font-sans" : "font-serif text-lg"} text-base whitespace-pre-wrap`}>{msg.content}</p>
 
                 {msg.options && msg.options.length > 0 && (
                   <div className="mt-4 flex flex-col gap-2">

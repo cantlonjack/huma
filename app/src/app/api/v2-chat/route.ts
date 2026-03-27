@@ -40,13 +40,15 @@ Assistant: "Eating better — that's a design problem, not a discipline problem.
 [[OPTIONS:["More home cooking, less takeout","Cleaner ingredients — cut the processed stuff","Save money on food without eating garbage","Feed my family well without it taking over my life"]]]"
 
 User: "More home cooking, less takeout"
-Assistant: "Home cooking it is. How many people are you feeding, and how many nights a week feels realistic?
-[[OPTIONS:["Just me, 4-5 nights","Two of us, 4-5 nights","Family with kids, most nights","Just weekends to start"]]]"
+Assistant: "Home cooking it is. How many people are you feeding?
+[[OPTIONS:["Just me","Two of us","Family with kids","Just weekends to start"]]]
+[[CONTEXT:{"aspiration":"eat better","approach":"home cooking"}]]"
 
-User: "Two of us, 4-5 nights"
-Assistant: "Two people, 4-5 nights a week — here's what that looks like as a system.
-[[BEHAVIORS:[{"key":"meal-prep-sunday","text":"Sunday meal prep — one protein, two sides, enough for Monday-Tuesday","frequency":"weekly","detail":"Pick one protein, roast or slow-cook. Two simple sides. 60-90 min sets up half the week."},{"key":"cook-wednesday","text":"Cook fresh Wednesday — simple one-pan meal","frequency":"specific-days","days":["wednesday"],"detail":"One-pan or sheet-pan dinner. 30 min max. Use what's in the fridge."},{"key":"cook-thursday","text":"Cook Thursday — use Wednesday leftovers or a new simple meal","frequency":"specific-days","days":["thursday"],"detail":"Repurpose Wednesday ingredients or cook something equally simple."},{"key":"farmers-market","text":"Saturday morning — farmers market or grocery run","frequency":"weekly","detail":"Buy for the week. Protein, vegetables, staples. One trip."}]]]
-[[ACTIONS:["Start tomorrow","Adjust these first"]]]"
+User: "Two of us"
+Assistant: "Two people, home cooking most nights — here's what that looks like as a system.
+[[BEHAVIORS:[{"key":"meal-prep-sunday","text":"Sunday meal prep — one protein, two sides, enough for Monday-Tuesday","frequency":"weekly","detail":"Pick one protein, roast or slow-cook. Two simple sides. 60-90 min sets up half the week."},{"key":"cook-dinner","text":"Cook dinner at home 4-5 nights","frequency":"specific-days","days":["monday","tuesday","wednesday","thursday"],"detail":"Simple whole-food meals. 30-45 min. Use what's prepped."},{"key":"grocery-shopping","text":"Saturday grocery run","frequency":"weekly","detail":"Buy for the week. Protein, vegetables, staples. One trip."},{"key":"no-processed-snacks","text":"No processed snacks — keep jerky, nuts, cheese available","frequency":"daily","detail":"Stock the kitchen so the easy choice is the good choice."},{"key":"meal-plan-sunday","text":"Sunday morning — plan the week's meals","frequency":"weekly","detail":"20 minutes. Pick 4 dinners. Write the grocery list."}]]]
+[[ACTIONS:["Start tomorrow","Adjust these first"]]]
+[[CONTEXT:{"household_size":2,"cooking_nights":4}]]"
 
 KNOWN CONTEXT:
 {context}
@@ -59,7 +61,8 @@ ACTIVE ASPIRATIONS:
 function buildSystemPrompt(
   knownContext: Record<string, unknown>,
   aspirations: Array<{ rawText: string; clarifiedText: string; status: string }>,
-  conversationTexts: string[]
+  conversationTexts: string[],
+  userMessageCount: number
 ): string {
   const contextStr = Object.keys(knownContext).length > 0
     ? JSON.stringify(knownContext, null, 2)
@@ -84,10 +87,21 @@ The template gives you the structure — the conversation gives you the specific
 Do NOT generate behaviors from scratch when a template is available.`;
   }
 
+  // Inject hard message count rule
+  let messageCountRule = "";
+  if (userMessageCount >= 3) {
+    messageCountRule = `\n\nCRITICAL INSTRUCTION: This is user message #${userMessageCount}. You have already asked enough clarifying questions. You MUST decompose into specific daily behaviors NOW. Output [[BEHAVIORS:[...]]] and [[ACTIONS:[...]]] markers. Do NOT ask another clarifying question. Do NOT output [[OPTIONS:[...]]]. DECOMPOSE NOW.`;
+  } else if (userMessageCount === 2) {
+    messageCountRule = `\n\nNOTE: This is user message #2. Ask ONE more clarifying question with tappable [[OPTIONS:[...]]]. Your NEXT response MUST decompose into behaviors — no more clarifying after this.`;
+  } else {
+    messageCountRule = `\n\nNOTE: This is user message #1. Acknowledge what they said and offer 3-4 tappable clarification options via [[OPTIONS:[...]]].`;
+  }
+
   return SYSTEM_PROMPT
     .replace("{context}", contextStr)
     .replace("{aspirations}", aspirationStr)
-    .replace("{template_section}", templateSection);
+    .replace("{template_section}", templateSection)
+    + messageCountRule;
 }
 
 export async function POST(request: Request) {
@@ -131,9 +145,10 @@ export async function POST(request: Request) {
 
   try {
     const anthropic = new Anthropic();
-    // Extract user message texts for template matching
+    // Extract user message texts for template matching and count
     const userTexts = messages.filter(m => m.role === "user").map(m => m.content);
-    const systemPrompt = buildSystemPrompt(knownContext, aspirations, userTexts);
+    const userMessageCount = userTexts.length;
+    const systemPrompt = buildSystemPrompt(knownContext, aspirations, userTexts, userMessageCount);
 
     const stream = anthropic.messages.stream({
       model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514",

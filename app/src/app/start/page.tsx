@@ -32,7 +32,7 @@ function MessageBubble({
         }`}
         style={{ lineHeight: "1.7" }}
       >
-        <p className="font-sans text-base whitespace-pre-wrap">{message.content}</p>
+        <p className={`${isUser ? "font-sans" : "font-serif text-lg"} text-base whitespace-pre-wrap`}>{message.content}</p>
 
         {/* Tappable Options */}
         {message.options && message.options.length > 0 && (
@@ -142,6 +142,7 @@ export default function StartPage() {
   const [knownContext, setKnownContext] = useState<Record<string, unknown>>({});
   const [decomposedBehaviors, setDecomposedBehaviors] = useState<Behavior[]>([]);
   const [showPaletteMobile, setShowPaletteMobile] = useState(false);
+  const [showTransition, setShowTransition] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -317,7 +318,7 @@ export default function StartPage() {
         ? `${rawText} — ${userMessages.slice(1).join(", ")}`
         : rawText;
 
-      // Save state and redirect to /today
+      // Save state
       localStorage.setItem("huma-v2-behaviors", JSON.stringify(decomposedBehaviors));
       localStorage.setItem("huma-v2-known-context", JSON.stringify(knownContext));
       localStorage.setItem("huma-v2-aspirations", JSON.stringify([{
@@ -328,7 +329,10 @@ export default function StartPage() {
         dimensionsTouched: [],
         status: "active",
       }]));
-      router.push("/today");
+
+      // Show transition, then redirect
+      setShowTransition(true);
+      setTimeout(() => router.push("/today"), 2200);
     } else {
       // "Adjust these first" — just let them keep chatting
       sendMessage(action);
@@ -351,6 +355,22 @@ export default function StartPage() {
 
   const hasMessages = messages.length > 0;
 
+  // Transition screen
+  if (showTransition) {
+    return (
+      <div className="min-h-dvh bg-sand-50 flex items-center justify-center animate-fade-in">
+        <div className="text-center px-8">
+          <p className="font-serif text-2xl text-sage-700 mb-3">
+            Your day starts tomorrow.
+          </p>
+          <p className="font-sans text-sm text-earth-400">
+            I&apos;ll have your sheet ready.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-dvh bg-sand-50 flex flex-col lg:flex-row">
       {/* ─── Conversation Panel ─── */}
@@ -363,8 +383,8 @@ export default function StartPage() {
         {/* Messages or Prompt */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 pb-4">
           {!hasMessages && (
-            <div className="flex flex-col items-center justify-center h-full -mt-16">
-              <h2 className="font-serif text-2xl text-earth-700 mb-8">
+            <div className="flex flex-col items-center justify-center h-full pb-16">
+              <h2 className="font-serif text-2xl text-earth-700">
                 What&apos;s going on?
               </h2>
             </div>

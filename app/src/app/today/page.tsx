@@ -83,14 +83,14 @@ function buildFallbackSheet(aspirations: Aspiration[]): SheetEntry[] {
 function SheetCard({
   entry,
   onToggle,
-  expanded,
-  onExpand,
 }: {
   entry: SheetEntry;
   onToggle: () => void;
-  expanded: boolean;
-  onExpand: () => void;
 }) {
+  const detailText = typeof entry.detail === "string"
+    ? entry.detail
+    : (entry.detail as Record<string, unknown>)?.text as string || "";
+
   return (
     <div
       className={`bg-white rounded-xl border border-sand-200 overflow-hidden transition-all duration-300 ${
@@ -121,45 +121,18 @@ function SheetCard({
           </div>
         </button>
 
-        {/* Content */}
+        {/* Content — headline + detail always visible */}
         <div className="flex-1 min-w-0">
           <p className="font-sans text-base text-earth-700 font-medium leading-relaxed">
             {entry.behaviorText}
           </p>
+          {detailText && (
+            <p className="font-sans text-sm text-earth-400 leading-relaxed mt-1.5">
+              {detailText}
+            </p>
+          )}
         </div>
-
-        {/* Expand arrow */}
-        {entry.detail && Object.keys(entry.detail).length > 0 && (
-          <button
-            onClick={onExpand}
-            className="flex-shrink-0 mt-0.5 p-1 text-earth-300 hover:text-earth-500 transition-colors duration-200 cursor-pointer"
-            aria-label="Show detail"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={`transition-transform duration-200 ${expanded ? "rotate-90" : ""}`}
-            >
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </button>
-        )}
       </div>
-
-      {/* Expanded detail */}
-      {expanded && entry.detail && (
-        <div className="px-4 pb-4 pl-14">
-          <p className="font-sans text-sm text-earth-400 leading-relaxed">
-            {typeof entry.detail === "string" ? entry.detail : (entry.detail as Record<string, unknown>).text as string || JSON.stringify(entry.detail)}
-          </p>
-        </div>
-      )}
     </div>
   );
 }
@@ -167,7 +140,7 @@ function SheetCard({
 export default function TodayPage() {
   const [entries, setEntries] = useState<SheetEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  // expandedId removed — detail always visible (specificity is the product)
   const [date] = useState(() => new Date().toISOString().split("T")[0]);
   const [isFallback, setIsFallback] = useState(false);
 
@@ -375,8 +348,6 @@ export default function TodayPage() {
                 key={entry.id}
                 entry={entry}
                 onToggle={() => toggleEntry(entry.id)}
-                expanded={expandedId === entry.id}
-                onExpand={() => setExpandedId(expandedId === entry.id ? null : entry.id)}
               />
             ))}
 
