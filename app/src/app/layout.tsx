@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, Source_Sans_3 } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import AuthProvider from "@/components/AuthProvider";
+import BottomNav from "@/components/BottomNav";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -52,6 +53,7 @@ export default function RootLayout({
           <main id="main-content">
           {children}
           </main>
+          <BottomNav />
         </AuthProvider>
         <Analytics />
       </body>

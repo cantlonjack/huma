@@ -2,102 +2,111 @@
 
 ## Read This First
 
-HUMA is a living medium where the best way to do anything flows to the people who need it, shaped to their specific situation, and every life lived through it makes it smarter for everyone else.
+HUMA is infrastructure for running your life as one connected system. Not a wellness app. Not a life design tool. Not a coach. Infrastructure — like Google Maps is infrastructure for navigation. You don't use HUMA to improve yourself. You use it because your life runs better with it than without it.
 
-The product has two layers. The **application layer** is a for-profit product with three modes: Design (Lotus Flow + Map Conversation → Living Canvas), Operate (daily one-thing card + weekly shape morph validated against your vision), and Evolve (seasonal reviews that update the map and contribute patterns to the commons). The **protocol layer** is RPPL: Reality Pattern Protocol Layer — an open standard for structured, contextual, validated, connected, living knowledge. RPPL is internal/developer-facing only; users see "HUMA."
+The product has two layers. The **application layer** is a for-profit product built on three layers: Conversation (how HUMA learns you), Computation (how HUMA thinks — RPPL decomposition, cross-dimensional correlation, pattern matching), and Output (how HUMA serves you — the daily production sheet, insight cards, the canvas that materializes over time). The **protocol layer** is RPPL: Reality Pattern Protocol Layer — an open standard for structured, contextual, validated, connected, living knowledge. RPPL is internal/developer-facing only; users see "HUMA."
 
 The application makes money. The protocol makes history.
 
-**Beachhead market:** Regenerative agriculture operators and homesteaders. The architecture is universal. The first users are specific.
+**Beachhead market:** Universal. The architecture serves anyone who wants their life to run better. Entry points are pain-specific: "I want to eat better," "I'm always broke," "I never have time."
 
-**Current state:** MVP deployed at huma-two.vercel.app. Design Mode conversation (6 phases) functional. Living Canvas output at /map/[id]. Supabase auth + PostgreSQL. 216+ tests passing.
+**Current state:** V2 MVP in development. V1 (Lotus Flow, workspace with petals) archived on `v1-archive` branch. Core loop: conversation → decomposition → production sheet → insight.
 
 ### Build Sequence
 
-[SHIPPED] Landing page, 6-phase conversation, universal flow, sample maps, split-screen canvas, Operate Mode (minimal), Supabase auth, Lotus Flow onboarding, 351+ tests
+[SHIPPED — V1, ARCHIVED] Landing page, 6-phase conversation, Lotus Flow onboarding, workspace with petals, sample maps, Supabase auth, 351+ tests
 
-[NEXT] Context petal (Ikigai) → /home workspace shell → Purpose petal → Vision petal → One-Thing Card → Behavior petal → Design petal → Full desktop workspace → Mobile companion
+[BUILDING — V2 MVP] Conversation interface at /start → Decomposition engine → Daily production sheet at /today → Ongoing chat at /chat → Insight engine
 
-[FUTURE] Full Operate depth, Behavior→Pattern mapping, Design phase, RPPL Commons
+[NEXT] Template gallery (forkable aspiration bundles) → Pattern commons (cross-operator validated knowledge) → Canvas view (Palmer map materializes from accumulated context) → Mobile field companion
+
+[FUTURE] Voice input, full pattern economy, multi-context management (Professional tier)
 
 ### Resolved Decisions
 
 | Decision | Resolution |
 |----------|-----------|
-| Daily interaction | The workspace IS the daily experience. No slider rituals. |
-| Form factors | Desktop (full workspace) + Mobile (field companion). |
-| Context nature | All context is hypothesis under continuous testing. |
-| Product model | Workspace, not app. |
+| Entry experience | Open conversation: "What's going on?" + dynamic palette sidebar. NOT guided onboarding flow. |
+| Daily experience | Production sheet (bakery worksheet model). Glanceable, checkable, zero cognitive load. |
+| Capital scores | COMPUTED from behavior data through decomposition chains. NOT self-reported. |
+| Context building | Through conversation and use over time. NOT forms or onboarding screens. |
+| Product model | Life operating system. Infrastructure, not self-improvement tool. |
+| Form factors | Mobile-first (production sheet). Desktop for canvas/deep work. |
 | RPPL components | Components → Patterns → Frameworks (protocol-level vocabulary only). |
+| V1 architecture | Archived on v1-archive branch. Lotus Flow, petals, workspace may return in evolved form. |
 
 ---
 
 ## Document Architecture
 
-There are 9 foundational documents + 1 portable context reference. Each answers a different question. **Consult the right document before making decisions in its domain.** Don't guess — read. Historical documents are archived in `docs/archive/`.
+There are 9 foundational documents + 1 V2 Foundation + 1 portable context reference. **The V2 Foundation supersedes previous product surface, user journey, and technical architecture where they conflict.** The 9 docs remain valid for intellectual lineage, ethics, voice, design language, and RPPL theory.
+
+### Source of Truth
+
+| Document | Path | Status |
+|----------|------|--------|
+| **V2 Foundation** | `/docs/HUMA_V2_FOUNDATION.md` | **PRIMARY.** The core loop, three layers, entry point, production sheet, insight engine, growth model, MVP spec. **Read FIRST for any product or build decision.** |
 
 ### Core Documents (read in this order for full context)
 
 | # | Document | Path | Authoritative For | Consult When... |
 |---|----------|------|-------------------|--------------------|
-| 1 | **Vision & Strategy** | `/docs/HUMA_VISION_AND_STRATEGY.md` | Sovereignty principles, capture resistance, design principles (1-20), pattern economy, strategic phases, multiple mediums | What HUMA is, why it exists, strategic direction. **Read FIRST for any work.** |
-| 2 | **Product Surface** | `/docs/HUMA_PRODUCT_SURFACE.md` | Progressive depth, Lotus Flow spec, three tabs, context model, pricing tiers, warmth system spec, route structure, build sequence, data model (canvas) | **THE product surface specification.** What the operator sees and touches. **Read FIRST for any UI work.** |
-| 3 | **Technical Specification** | `/docs/HUMA_TECHNICAL_SPECIFICATION.md` | TypeScript interfaces, database schema, API routes, AI engine architecture, prompt assembly, phase transition mechanics | You're writing code. Data model, API routes, AI engine, component tree. |
-| 4 | **Ethical Framework** | `/docs/HUMA_ETHICAL_FRAMEWORK.md` | Dependency test, graduation metric (4 capacities), distress protocol, data principles, one-thing card sovereignty, system prompt condensation | You're handling operator data, building distress responses, or any feature touching sensitive information. |
-| 5 | **Pattern Library** | `/docs/HUMA_PATTERN_LIBRARY.md` | RPPL pattern schema (v0.1), seed patterns, pattern evolution mechanics | You're working on patterns or any feature that surfaces patterns. |
-| 6 | **Voice Bible** | `/docs/HUMA_VOICE_BIBLE.md` | Banned phrases, vocabulary, tone arc, response lengths, dimension names (operator-facing), language mapping (internal → operator) | You're writing any AI prompt or user-facing copy. **Read before touching any system prompt.** |
-| 7 | **Design System** | `/docs/HUMA_DESIGN_SYSTEM.md` | Color palette, typography, spacing, components, warmth visual system, animation standards, dark mode, print styles | You're writing CSS or making any visual decision. **Read before touching any styling.** |
-| 8 | **User Journey** | `/docs/HUMA_USER_JOURNEY.md` | Journey stages (9), emotional targets, churn points, sharing moments, tier experience differences | You're building any user-facing feature end-to-end. |
-| 9 | **Intellectual Lineage** | `/docs/HUMA_INTELLECTUAL_LINEAGE.md` | Source traditions (9+1), convergence architecture, "what HUMA must never violate" (5 principles) | You need deep context on WHY decisions were made. |
+| 1 | **Vision & Strategy** | `/docs/HUMA_VISION_AND_STRATEGY.md` | Sovereignty principles, capture resistance, design principles (1-20), pattern economy, strategic phases, multiple mediums | What HUMA is, why it exists, strategic direction. |
+| 2 | **Product Surface** | `/docs/HUMA_PRODUCT_SURFACE.md` | ⚠️ **PARTIALLY SUPERSEDED by V2 Foundation.** Warmth system spec, pricing tiers, dimension mapping, canvas data model still valid. Entry experience, daily experience, workspace model, and route structure are superseded. | Legacy reference for warmth system, canvas data structures, pricing. |
+| 3 | **Technical Specification** | `/docs/HUMA_TECHNICAL_SPECIFICATION.md` | ⚠️ **PARTIALLY SUPERSEDED by V2 Foundation.** AI engine architecture, prompt assembly patterns, provider abstraction still valid. Database schema, route structure, and component tree are superseded. | AI engine patterns, prompt architecture. New schema is in V2 Foundation + build prompt. |
+| 4 | **Ethical Framework** | `/docs/HUMA_ETHICAL_FRAMEWORK.md` | Dependency test, graduation metric (4 capacities), distress protocol, data principles, sovereignty | You're handling operator data, building distress responses, or any feature touching sensitive information. **Fully valid.** |
+| 5 | **Pattern Library** | `/docs/HUMA_PATTERN_LIBRARY.md` | RPPL pattern schema (v0.1), seed patterns, pattern evolution mechanics | You're working on patterns or any feature that surfaces patterns. **Fully valid.** |
+| 6 | **Voice Bible** | `/docs/HUMA_VOICE_BIBLE.md` | Banned phrases, vocabulary, tone arc, response lengths, dimension names (operator-facing), language mapping (internal → operator) | You're writing any AI prompt or user-facing copy. **Read before touching any system prompt. Fully valid.** |
+| 7 | **Design System** | `/docs/HUMA_DESIGN_SYSTEM.md` | Color palette, typography, spacing, components, warmth visual system, animation standards, dark mode, print styles | You're writing CSS or making any visual decision. **Read before touching any styling. Fully valid.** |
+| 8 | **User Journey** | `/docs/HUMA_USER_JOURNEY.md` | ⚠️ **PARTIALLY SUPERSEDED by V2 Foundation.** Emotional targets and churn point analysis still relevant. Journey stages and specific flows are superseded. | Emotional design reference. |
+| 9 | **Intellectual Lineage** | `/docs/HUMA_INTELLECTUAL_LINEAGE.md` | Source traditions (9+1), convergence architecture, "what HUMA must never violate" (5 principles) | You need deep context on WHY decisions were made. **Fully valid.** |
 
 ### Quick Reference
 
 | Document | Path | What It Is |
 |----------|------|------------|
-| **Complete Context** | `/docs/HUMA_COMPLETE_CONTEXT.md` | Portable onboarding summary. For new sessions. **Not a source of truth** — the 9 docs above are. |
+| **Complete Context** | `/docs/HUMA_COMPLETE_CONTEXT.md` | Portable onboarding summary. ⚠️ **Partially outdated — V2 Foundation is now the primary reference.** |
+
+### Build Prompts
+
+| Document | Path | What It Is |
+|----------|------|------------|
+| **V2 MVP Build Prompt** | `/docs/cc-prompt-huma-v2-mvp.md` | The CC build prompt for the V2 core loop. Conversation + decomposition + production sheet + insight engine. |
 
 ### Design References (HTML)
 
 | Reference | Path | What It Is |
 |-----------|------|------------|
 | **Landing Page** | `/docs/references/huma_landing_reference.html` | The design target for `/`. Match exactly. |
-| **Living Canvas** | `/docs/references/huma_living_canvas.html` | The design target for `/map/[id]` canvas view. |
-| **Map Document** | `/docs/references/huma_map_reference.html` | The design target for `/map/[id]` document/print view. |
+| **Living Canvas** | `/docs/references/huma_living_canvas.html` | The design target for `/map/[id]` canvas view. (Future — canvas materializes from accumulated context.) |
+| **Map Document** | `/docs/references/huma_map_reference.html` | The design target for `/map/[id]` document/print view. (Future.) |
 
 ---
 
-## The Product in Brief
+## The Product in Brief (V2)
 
-### Progressive Depth (How People Enter)
+### The Core Loop
 
-The entry is the Lotus Flow — an 11-screen context painting that moves through the first 3 lotus petals (WHOLE → WHO → WHAT) in 90 seconds.
+1. **Conversation:** Operator says what's going on. HUMA structures it, clarifies through tappable options, decomposes into behaviors.
+2. **Computation:** RPPL decomposes aspirations into behavior chains with dimensional mappings. Cross-references behavior data for correlations. Invisible to operator.
+3. **Production Sheet:** Daily output. 3-5 specific, actionable behaviors for today. Mobile-first. Check off as you go. This is the bakery worksheet.
+4. **Insight:** After enough behavior data, HUMA reveals a cross-dimensional connection the operator didn't see. "On days you cook dinner, everything else in your evening works. Every time."
 
-1. **Layer 1: Lotus Flow** (Day 1, 90 sec) — Identity sketch. Archetype, capitals, first pattern.
-2. **Layer 2: Context Deepening** (Day 2+, at operator's pace) — Ikigai, Purpose, Vision. Each petal is 5-15 min. Each makes compiled recommendations sharper. Each evolves the WHOLE.
-3. **Layer 3: One-Thing Card** (when context is deep enough) — Requires at least Lotus Flow + one context petal. Socratic. Got it / Not today.
-4. **Layer 4: Behavior + Design** — Pattern mapping, enterprise compilation, validation.
-5. **Layer 5: Full Depth** (Ongoing) — Masterplan, seasonal review, pattern contribution.
+### Entry Point
+
+**"What's going on?"** Open conversation prompt. No onboarding flow. No forms. Dynamic palette sidebar shows related pain points and aspirations based on conversation context. The palette solves the nescience problem — people don't know life design is a thing, so the palette shows what's possible.
+
+Value delivered in under 2 minutes: first aspiration decomposed into behaviors, first production sheet populated.
 
 ### Context Model (Sovereignty-Aligned)
 
-Context comes from operator-controlled sources only:
-1. **Lotus Flow** — entity type, life stage, governance, 8-capital spectrum, archetype (Day 1 onboarding)
-2. **Context Petals** — Ikigai, Purpose, Vision, Behavior (progressive deepening at operator's pace)
-3. **Workspace Edits** — any context element is one tap from editing. Every piece of context is hypothesis under continuous testing.
-4. **Conversation** — the 6-phase Map Conversation (when context is deep enough)
-5. **Community Wisdom** — anonymized aggregate patterns from all operators
+Context enters through conversation and use, not forms:
+1. **Conversation** — operator says what's on their mind, HUMA structures and stores it
+2. **Production Sheet Usage** — check-offs, skips, and patterns become behavioral data
+3. **Ongoing Chat** — context deepens organically over time ("I have a half cow in the freezer")
+4. **Community Wisdom** — anonymized aggregate patterns from all operators (future)
 
-No external data harvesting. No bank connections. No calendar sync. No health app integration.
-
-### Three Tabs (What They See)
-
-User-facing: "Your Map / Your Day / Your Journey." Internal/code: Design / Operate / Evolve.
-
-**YOUR MAP** — The spatial canvas. Center-outward Palmer clustering. Warmth system (faint → emerging → solid → shifting → faded) shows testing status. The shape (capital radar) as a subtle background.
-
-**YOUR DAY** — Default: one-thing card (sovereignty framing — suggests, never prescribes). "See full day" and "Plan my week" available for depth. Weekly shape morph on Sundays (30-60 sec default, "Go deeper" for 5-8 min review).
-
-**YOUR JOURNEY** — Shape timeline. "What shifted" narrative. Seasonal review invitation quarterly.
+No external data harvesting. No bank connections. No calendar sync. No health app integration. Every piece of context is a gift the operator chooses to give because they got value back.
 
 ### Dimension Mapping
 
@@ -112,52 +121,42 @@ User-facing: "Your Map / Your Day / Your Journey." Internal/code: Design / Opera
 | Spiritual | Purpose |
 | Cultural | Identity |
 
-Time and Wisdom reserved as future fields.
+Dimensions are COMPUTED from behavior data through decomposition chains, NOT self-reported.
+
+### Route Structure (V2)
+
+```
+/               Landing page (keep existing for now)
+/start          Conversation entry point (new)
+/today          Daily production sheet (new)
+/chat           Ongoing conversation with HUMA (new)
+/api/decompose  Decomposition endpoint (new)
+/api/sheet      Production sheet compilation (new)
+/api/insight    Insight computation (new)
+```
 
 ### Pricing
 
-**Free forever:** Lotus Flow, workspace (context always visible + editable), weekly insight (one-card: shape morph + coherence delta), map conversation (once), shape sharing, "people like you" signals.
+**Free forever:** Conversation with HUMA. Up to 3 aspirations decomposed. Basic daily production sheet. Weekly view. One insight when data supports it. Template browsing.
 
-**$29/month Operate:** Daily one-thing card with compiled methods, full daily schedule, weekly planner, deep weekly review (5-8 min), practice recommendations, seasonal review, shape timeline, canvas versioning.
+**$29/month Operate:** Unlimited aspirations. Full cross-dimensional computation. Deep production sheet (specific recipes, specific financial actions, seasonal planning). Pattern commons access. Canvas view. Template publishing.
 
-**$99/month Professional:** Everything in Operate + Evolve Mode, multi-context management, pattern contribution tools, client dashboards. For consultants, educators, coaches who guide others through the medium.
+**$99/month Professional:** Multi-context management (clients, students, patients). Professional dashboard. Bulk template creation. API access.
 
-### The 6-Phase Conversation (Layer 4)
-
-1. **Ikigai** — Who are you? Warm, curious. Ends with Essence synthesis.
-2. **Holistic Context** — What are you reaching for? QoL decomposition into operational chains. Gently challenging.
-3. **Field Reading** — What does your context afford? Layers from permanent to flexible. Grounded, specific.
-4. **Enterprise Map** — What could you build? Real numbers, tested against QoL. Exciting, surprising.
-5. **Nodal Interventions** — Where do you begin? Cascade chains. Focused, relieving.
-6. **Operational Design** — What does your week look like? Rhythm, validation, seasonal arc. Confident, grounding.
-
-### The Key Innovation: QoL Decomposition
+### The Key Innovation: Decomposition → Computation → Insight
 
 ```
-"What matters" statement ("Evenings free for my daughter")
-  → What makes it work (all work done by 3pm)
-    → Weekly commitments (Tue/Thu: pack days done by 2pm)
-      → Daily behaviors (today's schedule with hard stop)
-        → Validation (workspace feedback + weekly insight)
-          → Adjustment (systemic, never personal)
+Aspiration ("I want to eat clean")
+  → Clarification (animal-based/keto, family of two)
+    → Behavior chain (meal prep Sunday, cook 4 nights, farmers market)
+      → Dimensional mapping (Body + Money + Home + Joy + People)
+        → Daily production sheet (specific meals, recipes, shopping list)
+          → Behavior data (check-offs over days/weeks)
+            → Cross-dimensional correlation (cooking correlates with sleep, 95%)
+              → Insight ("Your food rhythm and your sleep are connected")
 ```
 
-When validation fails, HUMA ALWAYS looks at the system, NEVER at the person.
-
-### The Living Canvas
-
-Center-outward spatial layout (Palmer clustering). NOT a linear document. NOT a dashboard. Warmth indicates testing status — faint is untested, solid is validated.
-
-1. Center: Who You Are (name, place, phrase, breathing glow)
-2. Ring 1: What Matters (quality of life commitments, sage pills)
-3. Ring 2: What Makes It Work (enabling actions, clustered by commitment)
-4. Ring 3: Your Practices (enterprises, methods, routines, frameworks)
-5. Perimeter: Where I'm Going (future resource base)
-6. Background: The Shape (capital radar, semi-transparent overlay)
-
-### The Share Artifact: Your Shape
-
-Not the canvas. **The shape.** Capital radar at two points in time. Dark background (earth-900), sage shapes. Sized for Instagram (1080x1080) and Twitter (1200x630). Every shared shape is distribution.
+The operator experiences: talk → daily checklist → surprise insight. The decomposition engine, dimensional mapping, and correlation computation are invisible.
 
 ### RPPL Primitives (Reality Pattern Protocol Layer)
 
@@ -192,15 +191,12 @@ Read `/docs/HUMA_VOICE_BIBLE.md` for the full specification. These are the non-n
 - USE: "what's working," "what wants to happen," "where the leverage is," "what the system is telling you," "that's a design problem, not a discipline problem"
 - NEVER USE: optimize, productivity, hack, goals, accountability, mindset, journey, empower, unlock, self-care, wellness, boundaries, actionable, impactful, transformative
 
-**Response lengths:**
-- Lotus Flow synthesis: Archetype + stage + strengths + growth areas. 4 lines maximum.
-- Lotus Flow first insight: 3 sentences maximum.
-- Workspace recommendation: 1-2 sentences maximum
-- One-thing card: Action + "this connects to" + Done/Not today. One card.
-- Weekly insight card: 1 observation + coherence number. 3 sentences maximum.
-- Deep weekly review insight: 3 sentences maximum (observation, diagnosis, action)
-- Morning briefing: 2 sentences maximum
-- Seasonal review: 2 paragraphs maximum
+**Response lengths (V2):**
+- Conversation clarification: tappable options + 1 sentence of context
+- Decomposition output: behavior list + 1 sentence framing
+- Production sheet items: specific action + brief detail. No essays.
+- Insight card: 3 sentences maximum (observation, connection, implication)
+- Palette suggestions: just the concept text, no explanation
 - One question per message. Never two.
 
 ---
@@ -218,13 +214,13 @@ Read `/docs/HUMA_DESIGN_SYSTEM.md` for the full specification. These are the non
 - Warning: rose-600 `#A04040`. Only for declining dimensions.
 
 **Typography:**
-- Display: Cormorant Garamond (headlines, essence text, HUMA messages, phase names)
-- Body: Source Sans 3 (UI, data, labels, user messages, buttons)
+- Display: Cormorant Garamond (headlines, HUMA messages, insight cards)
+- Body: Source Sans 3 (UI, data, labels, user messages, buttons, production sheet)
 - Max reading width: 680px prose, 760px canvas sections
 
 **Animation:**
 - Easing: `cubic-bezier(0.22, 1, 0.36, 1)` — everything in HUMA uses this curve
-- Entrance: 500-700ms. Micro-interactions: 200-300ms. Scroll reveals: 800-900ms.
+- Entrance: 500-700ms. Micro-interactions: 200-300ms.
 - The breathing animation: `scale(1) → scale(1.03)`, 6-8s, ease-in-out
 - Nothing bouncy, snappy, or elastic. Everything grows, breathes, emerges.
 
@@ -238,7 +234,7 @@ Read `/docs/HUMA_ETHICAL_FRAMEWORK.md` for the full specification.
 
 **The Dependency Test:** Does this feature develop the operator's capacity, or create dependency? If dependency, redesign.
 
-**The One-Thing Card:** Suggests, never prescribes. Shows coupling and leverage so the operator learns to see it themselves. "Got it" and "Not today" carry equal weight. No guilt. No streak. Graduation = finding the one thing without the card.
+**The Sovereignty Test:** Is this context entering through the operator's choice, or through surveillance? If surveillance, it doesn't belong.
 
 **When validation fails:** Look at the system, never at the person. "What changed?" not "Try harder."
 
@@ -248,15 +244,15 @@ Read `/docs/HUMA_ETHICAL_FRAMEWORK.md` for the full specification.
 
 **The graduation metric:** If an operator stops using HUMA after 2 years because they've internalized the thinking — that's success.
 
-**System prompt condensation** (canonical version in Ethical Framework §09; inject into every prompt):
+**System prompt condensation** (inject into every prompt):
 ```
-You are HUMA. You help people see their life as a connected system.
-You are not a therapist, financial advisor, or life coach. You are a
-design tool that makes systems visible.
+You are HUMA. You help people run their lives as one connected system.
+You are not a therapist, financial advisor, or life coach. You are
+infrastructure that reduces cognitive load and reveals connections.
 When something is hard, name it briefly and offer one concrete entry
 point. Don't minimize, catastrophize, or over-probe.
 When you're uncertain, say so and say what would help.
-When a QoL target is missed, look at the system, never at the person.
+When a behavior isn't sticking, look at the system, never at the person.
 When you don't know, say "I don't know" and name who might.
 Never explain your framework. Let the structure teach.
 Say the minimum. Leave space. One insight is worth more than five.
@@ -272,19 +268,17 @@ Skills are installed in `.claude/skills/`. They auto-trigger based on task type.
 
 ### HUMA Domain Skills (Consolidated)
 
-Domain skills that encode HUMA-specific knowledge. Auto-trigger based on task type.
-
 | Skill | Path | Triggers When |
 |-------|------|--------------|
 | **huma-design** | `.claude/skills/huma-design/` | ANY visual element — CSS, components, colors, fonts, layout, brand, responsive |
-| **huma-voice** | `.claude/skills/huma-voice/` | ANY operator-facing text — prompts, copy, CTAs, labels, marketing, notifications |
-| **huma-preflight** | `.claude/skills/huma-preflight/` | Deploy, verify, test, QA, audit (design, a11y, responsive, UX, landing page) |
-| **huma-prompts** | `.claude/skills/huma-prompts/` | System prompts, phase prompts, transition logic, conversation testing/simulation |
-| **huma-git** | `.claude/skills/huma-git/` | Reviewing diffs, committing, PR reviews — classifies by architecture layer |
-| **huma-sessions** | `.claude/skills/huma-sessions/` | Large tasks, session planning, "what should we do next", breaking down work |
-| **huma-enterprise-author** | `.claude/skills/huma-enterprise-author/` | Creating or editing enterprise templates with real financial data |
-| **huma-rppl-pattern** | `.claude/skills/huma-rppl-pattern/` | Authoring RPPL patterns for the living pattern library |
-| **huma-researcher** | `.claude/skills/huma-researcher/` | Self-improvement research — tune output quality, discover RPPL patterns, study effectiveness, simulate population-scale life design. Invoke explicitly with /huma-researcher |
+| **huma-voice** | `.claude/skills/huma-voice/` | ANY operator-facing text — prompts, copy, CTAs, labels, notifications |
+| **huma-preflight** | `.claude/skills/huma-preflight/` | Deploy, verify, test, QA, audit |
+| **huma-prompts** | `.claude/skills/huma-prompts/` | System prompts, phase prompts, transition logic, conversation testing |
+| **huma-git** | `.claude/skills/huma-git/` | Reviewing diffs, committing, PR reviews |
+| **huma-sessions** | `.claude/skills/huma-sessions/` | Large tasks, session planning, breaking down work |
+| **huma-enterprise-author** | `.claude/skills/huma-enterprise-author/` | Creating or editing enterprise templates |
+| **huma-rppl-pattern** | `.claude/skills/huma-rppl-pattern/` | Authoring RPPL patterns |
+| **huma-researcher** | `.claude/skills/huma-researcher/` | Self-improvement research. Invoke explicitly with /huma-researcher |
 | **huma-changelog** | `.claude/skills/huma-changelog/` | Generating release notes grouped by architecture layer |
 | **huma-logo-brief** | `.claude/skills/huma-logo-brief/` | Commissioning logo or visual identity work |
 
@@ -300,12 +294,13 @@ runs when explicitly invoked with `/huma-researcher tune`, `/huma-researcher dis
 
 ### How They Work Together
 
-When you say "rebuild the landing page":
+When you say "build the /start conversation":
 1. **huma-sessions** breaks it into session-sized units
 2. **huma-design** loads palette, fonts, components, anti-patterns
-3. **huma-voice** loads copy constraints for any text changes
-4. **huma-preflight** runs comprehensive checks before deploy
-5. **huma-git** creates architecture-aware commits
+3. **huma-voice** loads copy constraints for any HUMA response text
+4. **huma-prompts** loads conversation prompt architecture
+5. **huma-preflight** runs comprehensive checks before deploy
+6. **huma-git** creates architecture-aware commits
 
 Always let skills activate. They point to the right foundational documents and prevent regressions.
 
@@ -315,23 +310,34 @@ Always let skills activate. They point to the right foundational documents and p
 
 - **Frontend:** Next.js 14+ (App Router) + TypeScript
 - **Styling:** Tailwind CSS with custom design tokens from Design System doc
-- **AI:** Claude API (Sonnet for conversation, Opus for document generation). Provider-agnostic via AIProvider interface.
-- **Database:** PostgreSQL via Supabase. JSONB for flexible context data.
+- **AI:** Claude API (Sonnet for conversation + sheet compilation, Haiku for palette, Opus for insight generation). Provider-agnostic via AIProvider interface.
+- **Database:** PostgreSQL via Supabase. JSONB for flexible context data. New V2 tables: contexts, aspirations, sheet_entries, insights, chat_messages.
 - **Hosting:** Vercel + Supabase
-- **Auth:** Email magic links (no passwords)
+- **Auth:** Email magic links (no passwords). Pre-auth state in localStorage, migrated to Supabase on auth.
 
 ---
 
 ## Key Source Files
 
+### V1 Engine (archived, may inform V2)
 ```
 src/engine/
-├── types.ts                  # TypeScript interfaces (from Tech Spec §03)
+├── types.ts                  # TypeScript interfaces
 ├── prompts.ts                # Base system prompt + phase prompts
 ├── operational-prompts.ts    # QoL decomposition, weekly review, morning briefing
 ├── enterprise-templates.ts   # 14 enterprise templates with real numbers
 ├── prompt-builder.ts         # Assembles full prompt per phase
 └── response-parser.ts        # Extracts [[PHASE:]], [[CONTEXT:]], [[CANVAS_DATA:]] markers
+```
+
+### V2 Routes (building)
+```
+app/start/                    # Conversation entry point
+app/today/                    # Daily production sheet
+app/chat/                     # Ongoing conversation
+app/api/decompose/            # Decomposition endpoint
+app/api/sheet/                # Production sheet compilation
+app/api/insight/              # Insight computation
 ```
 
 ---
@@ -340,9 +346,9 @@ src/engine/
 
 Before building anything, ask:
 
-**Does this make the invisible visible?**
+**Does this reduce cognitive load and reveal connections?**
 
-Does this feature help someone see a connection in their life they couldn't see before? Does this interaction produce the coherence recognition feeling? If yes, build it. If no, it doesn't belong in HUMA.
+Does this feature help the operator's life run better? Does it surface a connection they couldn't see before? Does the operator have to think less, not more? If yes, build it. If no, it doesn't belong in HUMA.
 
 ---
 
@@ -352,12 +358,13 @@ Does this feature help someone see a connection in their life they couldn't see 
 - Fragment a whole into parts without holding the whole in view
 - Impose a template for what a good life looks like
 - Create dependency (every interaction develops the operator's own capacity)
-- Use shame, guilt, or comparison when validation checks fail
+- Use shame, guilt, or comparison when behaviors don't stick
 - Look or feel like a generic SaaS product, wellness app, or chatbot
 - Explain its own framework mid-conversation (the structure teaches, not the explanation)
 - Present unvalidated patterns as proven
 - Retain conversation data for purposes the operator hasn't consented to
 - Prioritize growth metrics over capability metrics
+- Scrape, surveil, or infer from external data sources without the operator's gift
 
 ---
 
@@ -369,8 +376,9 @@ Does this feature help someone see a connection in their life they couldn't see 
 - Show connections between dimensions, not isolated insights
 - Use the operator's own language when reflecting back
 - Leave space after insights (silence is a feature)
-- Make the shared shape beautiful enough to screenshot and share
+- Make the shared insight beautiful enough to screenshot and send
 - Develop the operator's capacity to see and decide for themselves
+- Deliver specific, actionable outputs — not plans, not advice, but "here's your tomorrow"
 
 ---
 
