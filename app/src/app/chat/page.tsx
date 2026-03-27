@@ -4,6 +4,18 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import type { PaletteConcept, ChatMessage, Behavior, Aspiration, Insight } from "@/types/v2";
 import { DIMENSION_LABELS, DIMENSION_COLORS } from "@/types/v2";
 import { parseMarkersV2 as parseMarkers } from "@/lib/parse-markers-v2";
+import { useAuth } from "@/components/AuthProvider";
+import { createClient } from "@/lib/supabase";
+import {
+  getChatMessages,
+  saveChatMessage,
+  getAspirations,
+  saveAspiration,
+  getKnownContext,
+  updateKnownContext,
+  getUndeliveredInsight,
+  markInsightDelivered,
+} from "@/lib/supabase-v2";
 
 // ─── Insight Card ────────────────────────────────────────────────────────────
 
@@ -61,6 +73,7 @@ function InsightCard({
 // ─── Main Page ──────────────────────────────────────────────────────────────
 
 export default function ChatPage() {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<
     (ChatMessage & { options?: string[] | null; behaviors?: Behavior[] | null; actions?: string[] | null })[]
   >([]);
@@ -72,6 +85,7 @@ export default function ChatPage() {
   const [paletteConcepts, setPaletteConcepts] = useState<PaletteConcept[]>([]);
   const [selectedConcepts, setSelectedConcepts] = useState<string[]>([]);
   const [showPaletteMobile, setShowPaletteMobile] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll
@@ -81,36 +95,66 @@ export default function ChatPage() {
     }
   }, [messages, streaming]);
 
-  // Load state
+  // Load state — Supabase first, localStorage fallback
   useEffect(() => {
-    try {
-      const savedMessages = localStorage.getItem("huma-v2-chat-messages");
-      const startMessages = localStorage.getItem("huma-v2-start-messages");
-      if (savedMessages) {
-        setMessages(JSON.parse(savedMessages));
-      } else if (startMessages) {
-        // Migrate from /start conversation
-        setMessages(JSON.parse(startMessages));
+    async function loadState() {
+      if (user) {
+        const supabase = createClient();
+        if (supabase) {
+          try {
+            const [dbMessages, dbAspirations, dbContext, dbInsight] = await Promise.all([
+              getChatMessages(supabase, user.id),
+              getAspirations(supabase, user.id),
+              getKnownContext(supabase, user.id),
+              getUndeliveredInsight(supabase, user.id),
+            ]);
+
+            if (dbMessages.length > 0) setMessages(dbMessages);
+            if (dbAspirations.length > 0) setAspirations(dbAspirations);
+            if (Object.keys(dbContext).length > 0) setKnownContext(dbContext);
+            if (dbInsight) setPendingInsight(dbInsight);
+
+            setLoaded(true);
+            return;
+          } catch (err) {
+            console.error("Failed to load from Supabase:", err);
+          }
+        }
       }
 
-      const ctx = localStorage.getItem("huma-v2-known-context");
-      if (ctx) setKnownContext(JSON.parse(ctx));
+      // Fallback: localStorage
+      try {
+        const savedMessages = localStorage.getItem("huma-v2-chat-messages");
+        const startMessages = localStorage.getItem("huma-v2-start-messages");
+        if (savedMessages) {
+          setMessages(JSON.parse(savedMessages));
+        } else if (startMessages) {
+          setMessages(JSON.parse(startMessages));
+        }
 
-      const asp = localStorage.getItem("huma-v2-aspirations");
-      if (asp) setAspirations(JSON.parse(asp));
+        const ctx = localStorage.getItem("huma-v2-known-context");
+        if (ctx) setKnownContext(JSON.parse(ctx));
 
-      const ins = localStorage.getItem("huma-v2-pending-insight");
-      if (ins) setPendingInsight(JSON.parse(ins));
-    } catch { /* fresh */ }
-  }, []);
+        const asp = localStorage.getItem("huma-v2-aspirations");
+        if (asp) setAspirations(JSON.parse(asp));
 
-  // Persist
+        const ins = localStorage.getItem("huma-v2-pending-insight");
+        if (ins) setPendingInsight(JSON.parse(ins));
+      } catch { /* fresh */ }
+      setLoaded(true);
+    }
+
+    loadState();
+  }, [user]);
+
+  // Persist to localStorage (fallback for non-authed)
   useEffect(() => {
+    if (!loaded) return;
     if (messages.length > 0) {
       localStorage.setItem("huma-v2-chat-messages", JSON.stringify(messages));
       localStorage.setItem("huma-v2-known-context", JSON.stringify(knownContext));
     }
-  }, [messages, knownContext]);
+  }, [messages, knownContext, loaded]);
 
   // Fetch palette
   const fetchPalette = useCallback(async (conversationTexts: string[]) => {
@@ -140,6 +184,16 @@ export default function ChatPage() {
     setMessages(newMessages as typeof messages);
     setInput("");
     setStreaming(true);
+
+    // Persist user message to Supabase
+    if (user) {
+      const supabase = createClient();
+      if (supabase) {
+        saveChatMessage(supabase, user.id, userMsg).catch(err =>
+          console.error("Failed to save user message:", err)
+        );
+      }
+    }
 
     const userTexts = newMessages.filter(m => m.role === "user").map(m => m.content);
     fetchPalette(userTexts);
@@ -188,9 +242,36 @@ export default function ChatPage() {
 
       const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext } = parseMarkers(fullResponse);
 
+      // Save HUMA response to Supabase
+      const finalHumaMsg: ChatMessage = {
+        ...humaMsg,
+        content: cleanText,
+        contextExtracted: parsedContext || undefined,
+      };
+      if (user) {
+        const supabase = createClient();
+        if (supabase) {
+          saveChatMessage(supabase, user.id, finalHumaMsg).catch(err =>
+            console.error("Failed to save HUMA message:", err)
+          );
+        }
+      }
+
       if (parsedContext) {
-        setKnownContext(prev => ({ ...prev, ...parsedContext }));
-        // Invalidate today's and tomorrow's sheet cache so next compile includes new context
+        const newContext = { ...knownContext, ...parsedContext };
+        setKnownContext(newContext);
+
+        // Persist context to Supabase
+        if (user) {
+          const supabase = createClient();
+          if (supabase) {
+            updateKnownContext(supabase, user.id, newContext).catch(err =>
+              console.error("Failed to update context:", err)
+            );
+          }
+        }
+
+        // Invalidate sheet cache
         const today = new Date().toISOString().split("T")[0];
         const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
         localStorage.removeItem(`huma-v2-sheet-${today}`);
@@ -209,6 +290,16 @@ export default function ChatPage() {
         const updatedAspirations = [...aspirations, newAspiration];
         setAspirations(updatedAspirations);
         localStorage.setItem("huma-v2-aspirations", JSON.stringify(updatedAspirations));
+
+        // Persist to Supabase
+        if (user) {
+          const supabase = createClient();
+          if (supabase) {
+            saveAspiration(supabase, user.id, newAspiration).catch(err =>
+              console.error("Failed to save aspiration:", err)
+            );
+          }
+        }
       }
 
       setMessages(prev => {
@@ -239,7 +330,24 @@ export default function ChatPage() {
     } finally {
       setStreaming(false);
     }
-  }, [messages, streaming, knownContext, aspirations, fetchPalette]);
+  }, [messages, streaming, knownContext, aspirations, fetchPalette, user]);
+
+  const handleInsightDismiss = () => {
+    if (pendingInsight && user) {
+      const supabase = createClient();
+      if (supabase) {
+        markInsightDelivered(supabase, pendingInsight.id, user.id).catch(() => {});
+      }
+    }
+    setPendingInsight(null);
+    localStorage.removeItem("huma-v2-pending-insight");
+  };
+
+  const handleInsightTellMore = () => {
+    const insightText = pendingInsight?.text || "";
+    handleInsightDismiss();
+    sendMessage(`Tell me more about this connection: ${insightText}`);
+  };
 
   const handlePaletteTap = (concept: PaletteConcept) => {
     setSelectedConcepts(prev => [...prev, concept.id]);
@@ -269,15 +377,8 @@ export default function ChatPage() {
           {pendingInsight && (
             <InsightCard
               insight={pendingInsight}
-              onDismiss={() => {
-                setPendingInsight(null);
-                localStorage.removeItem("huma-v2-pending-insight");
-              }}
-              onTellMore={() => {
-                setPendingInsight(null);
-                localStorage.removeItem("huma-v2-pending-insight");
-                sendMessage(`Tell me more about this connection: ${pendingInsight.text}`);
-              }}
+              onDismiss={handleInsightDismiss}
+              onTellMore={handleInsightTellMore}
             />
           )}
 

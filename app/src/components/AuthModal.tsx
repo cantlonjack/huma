@@ -89,17 +89,17 @@ export default function AuthModal({ open, onClose, onAuthenticated }: AuthModalP
                 <p className="font-sans text-earth-500 text-sm leading-relaxed">
                   We sent a link to <span className="text-earth-700">{email}</span>.
                   <br />
-                  Tap it to save your shape.
+                  Tap it to save your day.
                 </p>
               </div>
             ) : (
               /* Email input state */
               <>
                 <p className="font-serif text-earth-800 text-xl text-center mb-2">
-                  Save your shape
+                  Save your day
                 </p>
                 <p className="font-sans text-earth-500 text-sm text-center mb-6">
-                  So you can come back.
+                  So your sheet is ready tomorrow.
                 </p>
 
                 <form onSubmit={handleSubmit}>

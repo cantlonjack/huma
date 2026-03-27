@@ -4,6 +4,10 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { PaletteConcept, ChatMessage, Behavior } from "@/types/v2";
 import { parseMarkersV2 as parseMarkers } from "@/lib/parse-markers-v2";
+import { useAuth } from "@/components/AuthProvider";
+import AuthModal from "@/components/AuthModal";
+import { createClient } from "@/lib/supabase";
+import { migrateLocalStorageToSupabase } from "@/lib/supabase-v2";
 
 // ─── Message Component ──────────────────────────────────────────────────────
 
@@ -131,6 +135,7 @@ function PalettePanel({
 
 export default function StartPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [messages, setMessages] = useState<
     (ChatMessage & { options?: string[] | null; behaviors?: Behavior[] | null; actions?: string[] | null })[]
   >([]);
@@ -143,6 +148,11 @@ export default function StartPage() {
   const [decomposedBehaviors, setDecomposedBehaviors] = useState<Behavior[]>([]);
   const [showPaletteMobile, setShowPaletteMobile] = useState(false);
   const [showTransition, setShowTransition] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingAspiration, setPendingAspiration] = useState<{
+    rawText: string;
+    clarifiedText: string;
+  } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -308,31 +318,73 @@ export default function StartPage() {
     sendMessage(option);
   };
 
+  // Save aspiration to localStorage and trigger auth or redirect
+  const saveAndProceed = useCallback(async () => {
+    const userMessages = messages.filter(m => m.role === "user").map(m => m.content);
+    const rawText = userMessages[0] || "";
+    const clarifiedText = userMessages.length > 1
+      ? `${rawText} — ${userMessages.slice(1).join(", ")}`
+      : rawText;
+
+    // Always save to localStorage first (fallback)
+    localStorage.setItem("huma-v2-behaviors", JSON.stringify(decomposedBehaviors));
+    localStorage.setItem("huma-v2-known-context", JSON.stringify(knownContext));
+    localStorage.setItem("huma-v2-aspirations", JSON.stringify([{
+      id: crypto.randomUUID(),
+      rawText,
+      clarifiedText,
+      behaviors: decomposedBehaviors,
+      dimensionsTouched: [],
+      status: "active",
+    }]));
+
+    if (user) {
+      // Already authed → migrate to Supabase and go to /today
+      try {
+        const supabase = createClient();
+        if (supabase) {
+          await migrateLocalStorageToSupabase(supabase, user.id);
+        }
+      } catch (err) {
+        console.error("Migration error:", err);
+        // localStorage is intact as fallback
+      }
+      setShowTransition(true);
+      setTimeout(() => router.push("/today"), 2200);
+    } else {
+      // Not authed → store pending info and show AuthModal
+      setPendingAspiration({ rawText, clarifiedText });
+      setShowAuthModal(true);
+    }
+  }, [messages, decomposedBehaviors, knownContext, user, router]);
+
+  // Called when auth completes (from AuthModal or magic link return)
+  const handleAuthenticated = useCallback(async () => {
+    setShowAuthModal(false);
+
+    // Wait a tick for auth state to propagate
+    await new Promise(r => setTimeout(r, 500));
+
+    try {
+      const supabase = createClient();
+      if (supabase) {
+        const { data: { user: freshUser } } = await supabase.auth.getUser();
+        if (freshUser) {
+          await migrateLocalStorageToSupabase(supabase, freshUser.id);
+        }
+      }
+    } catch (err) {
+      console.error("Post-auth migration error:", err);
+    }
+
+    setShowTransition(true);
+    setTimeout(() => router.push("/today"), 2200);
+  }, [router]);
+
   // Handle action button
   const handleActionTap = (action: string) => {
     if (action === "Start tomorrow" || action.toLowerCase().includes("start")) {
-      // Build clarified text from the user's conversation selections
-      const userMessages = messages.filter(m => m.role === "user").map(m => m.content);
-      const rawText = userMessages[0] || "";
-      const clarifiedText = userMessages.length > 1
-        ? `${rawText} — ${userMessages.slice(1).join(", ")}`
-        : rawText;
-
-      // Save state
-      localStorage.setItem("huma-v2-behaviors", JSON.stringify(decomposedBehaviors));
-      localStorage.setItem("huma-v2-known-context", JSON.stringify(knownContext));
-      localStorage.setItem("huma-v2-aspirations", JSON.stringify([{
-        id: crypto.randomUUID(),
-        rawText,
-        clarifiedText,
-        behaviors: decomposedBehaviors,
-        dimensionsTouched: [],
-        status: "active",
-      }]));
-
-      // Show transition, then redirect
-      setShowTransition(true);
-      setTimeout(() => router.push("/today"), 2200);
+      saveAndProceed();
     } else {
       // "Adjust these first" — just let them keep chatting
       sendMessage(action);
@@ -373,6 +425,13 @@ export default function StartPage() {
 
   return (
     <div className="min-h-dvh bg-sand-50 flex flex-col lg:flex-row">
+      {/* Auth Modal */}
+      <AuthModal
+        open={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onAuthenticated={handleAuthenticated}
+      />
+
       {/* ─── Conversation Panel ─── */}
       <div className="flex-1 flex flex-col min-h-0 lg:w-[60%]">
         {/* Header */}

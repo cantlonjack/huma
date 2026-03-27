@@ -3,6 +3,16 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import type { SheetEntry, Aspiration } from "@/types/v2";
+import { useAuth } from "@/components/AuthProvider";
+import { createClient } from "@/lib/supabase";
+import {
+  getAspirations,
+  getSheetEntries,
+  saveSheetEntries,
+  updateSheetEntryCheck,
+  getRecentSheetHistory,
+  getKnownContext,
+} from "@/lib/supabase-v2";
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00");
@@ -16,7 +26,7 @@ function formatDate(dateStr: string): string {
 /**
  * Collect recent check-off history from localStorage (last 7 days).
  */
-function getRecentHistory(): Array<{ date: string; behaviorKey: string; checked: boolean }> {
+function getLocalRecentHistory(): Array<{ date: string; behaviorKey: string; checked: boolean }> {
   const history: Array<{ date: string; behaviorKey: string; checked: boolean }> = [];
   const today = new Date();
 
@@ -53,12 +63,11 @@ function buildFallbackSheet(aspirations: Aspiration[]): SheetEntry[] {
 
   for (const aspiration of aspirations) {
     for (const behavior of aspiration.behaviors) {
-      // Filter by frequency/day
       let includeToday = false;
       if (behavior.frequency === "daily") {
         includeToday = true;
       } else if (behavior.frequency === "weekly") {
-        includeToday = true; // Show weekly items every day, let operator decide
+        includeToday = true;
       } else if (behavior.frequency === "specific-days" && behavior.days) {
         includeToday = behavior.days.some(d => d.toLowerCase() === dayOfWeek);
       }
@@ -137,33 +146,112 @@ function SheetCard({
   );
 }
 
+function YesterdaySection({ userId }: { userId: string | null }) {
+  const [entries, setEntries] = useState<SheetEntry[]>([]);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    async function loadYesterday() {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const dateStr = yesterday.toISOString().split("T")[0];
+
+      if (userId) {
+        const supabase = createClient();
+        if (supabase) {
+          try {
+            const dbEntries = await getSheetEntries(supabase, userId, dateStr);
+            if (dbEntries.length > 0) {
+              setEntries(dbEntries);
+              return;
+            }
+          } catch { /* fall through to localStorage */ }
+        }
+      }
+
+      // Fallback to localStorage
+      try {
+        const cached = localStorage.getItem(`huma-v2-sheet-${dateStr}`);
+        if (cached) setEntries(JSON.parse(cached));
+      } catch { /* no yesterday data */ }
+    }
+
+    loadYesterday();
+  }, [userId]);
+
+  if (entries.length === 0) return null;
+
+  const checkedCount = entries.filter(e => e.checked).length;
+
+  return (
+    <div className="mt-8">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="font-sans text-sm text-earth-400 hover:text-earth-500 transition-colors duration-200 cursor-pointer"
+      >
+        Yesterday {checkedCount > 0 && `· ${checkedCount}/${entries.length}`} {expanded ? "↑" : "↓"}
+      </button>
+
+      {expanded && (
+        <div className="mt-3 space-y-2 opacity-60">
+          {entries.map(entry => {
+            const detailText = typeof entry.detail === "string"
+              ? entry.detail
+              : (entry.detail as Record<string, unknown>)?.text as string || "";
+
+            return (
+              <div key={entry.id} className="flex items-start gap-3 px-4 py-3 rounded-xl bg-white border border-sand-200">
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                  entry.checked ? "bg-sage-500 border-sage-500" : "border-earth-300"
+                }`}>
+                  {entry.checked && (
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                </div>
+                <div>
+                  <p className="font-sans text-sm text-earth-600">{entry.behaviorText}</p>
+                  {detailText && (
+                    <p className="font-sans text-xs text-earth-400 mt-0.5">{detailText}</p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function TodayPage() {
+  const { user } = useAuth();
   const [entries, setEntries] = useState<SheetEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  // expandedId removed — detail always visible (specificity is the product)
   const [date] = useState(() => new Date().toISOString().split("T")[0]);
   const [isFallback, setIsFallback] = useState(false);
 
   const compileSheet = useCallback(async () => {
     setLoading(true);
 
-    // Load aspirations from localStorage (pre-auth) or Supabase (post-auth)
-    let aspirations: Aspiration[] = [];
-    let knownContext: Record<string, unknown> = {};
+    const supabase = user ? createClient() : null;
 
-    try {
-      const savedAspirations = localStorage.getItem("huma-v2-aspirations");
-      if (savedAspirations) aspirations = JSON.parse(savedAspirations);
-      const savedContext = localStorage.getItem("huma-v2-known-context");
-      if (savedContext) knownContext = JSON.parse(savedContext);
-    } catch { /* fresh */ }
-
-    if (aspirations.length === 0) {
-      setLoading(false);
-      return;
+    // 1. Check if Supabase already has today's entries
+    if (supabase && user) {
+      try {
+        const dbEntries = await getSheetEntries(supabase, user.id, date);
+        if (dbEntries.length > 0) {
+          const order = { morning: 0, afternoon: 1, evening: 2 };
+          dbEntries.sort((a, b) => order[a.timeOfDay] - order[b.timeOfDay]);
+          setEntries(dbEntries);
+          setLoading(false);
+          return;
+        }
+      } catch { /* fall through to compile */ }
     }
 
-    // Check if we already have today's sheet cached
+    // 2. Check localStorage cache
     const cacheKey = `huma-v2-sheet-${date}`;
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
@@ -174,9 +262,40 @@ export default function TodayPage() {
       } catch { /* recompile */ }
     }
 
-    // Collect recent history for the feedback loop
-    const recentHistory = getRecentHistory();
+    // 3. Load aspirations and context
+    let aspirations: Aspiration[] = [];
+    let knownContext: Record<string, unknown> = {};
+    let recentHistory: Array<{ date: string; behaviorKey: string; checked: boolean }> = [];
 
+    if (supabase && user) {
+      try {
+        aspirations = await getAspirations(supabase, user.id);
+        knownContext = await getKnownContext(supabase, user.id);
+        recentHistory = await getRecentSheetHistory(supabase, user.id);
+      } catch {
+        // Fall back to localStorage
+      }
+    }
+
+    if (aspirations.length === 0) {
+      try {
+        const savedAspirations = localStorage.getItem("huma-v2-aspirations");
+        if (savedAspirations) aspirations = JSON.parse(savedAspirations);
+        const savedContext = localStorage.getItem("huma-v2-known-context");
+        if (savedContext) knownContext = JSON.parse(savedContext);
+      } catch { /* fresh */ }
+    }
+
+    if (recentHistory.length === 0) {
+      recentHistory = getLocalRecentHistory();
+    }
+
+    if (aspirations.length === 0) {
+      setLoading(false);
+      return;
+    }
+
+    // 4. Compile via API
     try {
       const res = await fetch("/api/sheet", {
         method: "POST",
@@ -206,21 +325,27 @@ export default function TodayPage() {
       );
 
       if (compiled.length === 0) {
-        // API returned empty — use fallback
         const fallback = buildFallbackSheet(aspirations);
         setEntries(fallback);
         setIsFallback(true);
         localStorage.setItem(cacheKey, JSON.stringify(fallback));
       } else {
-        // Sort by time of day
         const order = { morning: 0, afternoon: 1, evening: 2 };
         compiled.sort((a, b) => order[a.timeOfDay] - order[b.timeOfDay]);
         setEntries(compiled);
         localStorage.setItem(cacheKey, JSON.stringify(compiled));
+
+        // Persist to Supabase if authed
+        if (supabase && user) {
+          try {
+            await saveSheetEntries(supabase, user.id, compiled, date);
+          } catch (err) {
+            console.error("Failed to save sheet to Supabase:", err);
+          }
+        }
       }
     } catch (err) {
       console.error("Sheet compilation error:", err);
-      // Fallback: show raw behaviors without AI-compiled specificity
       const fallback = buildFallbackSheet(aspirations);
       setEntries(fallback);
       setIsFallback(true);
@@ -228,7 +353,7 @@ export default function TodayPage() {
     } finally {
       setLoading(false);
     }
-  }, [date]);
+  }, [date, user]);
 
   useEffect(() => {
     compileSheet();
@@ -237,26 +362,36 @@ export default function TodayPage() {
   // Check for insight opportunity (5+ days of cross-aspiration data)
   useEffect(() => {
     async function checkInsight() {
-      // Don't overwrite existing insight
       if (localStorage.getItem("huma-v2-pending-insight")) return;
 
-      const history = getRecentHistory();
-      if (history.length === 0) return;
+      let history: Array<{ date: string; behaviorKey: string; checked: boolean }> = [];
+      let aspirations: Aspiration[] = [];
 
-      // Count unique dates
+      if (user) {
+        const supabase = createClient();
+        if (supabase) {
+          try {
+            history = await getRecentSheetHistory(supabase, user.id, 14);
+            aspirations = await getAspirations(supabase, user.id);
+          } catch { /* fall through */ }
+        }
+      }
+
+      if (history.length === 0) {
+        history = getLocalRecentHistory();
+      }
+      if (aspirations.length === 0) {
+        try {
+          const saved = localStorage.getItem("huma-v2-aspirations");
+          if (saved) aspirations = JSON.parse(saved);
+        } catch { return; }
+      }
+
+      if (history.length === 0) return;
       const uniqueDates = new Set(history.map(h => h.date));
       if (uniqueDates.size < 5) return;
+      if (aspirations.length < 2) return;
 
-      // Load aspirations for behavior metadata
-      let aspirations: Aspiration[] = [];
-      try {
-        const saved = localStorage.getItem("huma-v2-aspirations");
-        if (saved) aspirations = JSON.parse(saved);
-      } catch { return; }
-
-      if (aspirations.length < 2) return; // Need cross-aspiration data
-
-      // Build behavior meta and entries for the insight API
       const behaviorMeta = aspirations.flatMap(a =>
         a.behaviors.map(b => ({
           key: b.key,
@@ -288,9 +423,9 @@ export default function TodayPage() {
     }
 
     checkInsight();
-  }, []);
+  }, [user]);
 
-  // Persist check-off state
+  // Persist check-off state (localStorage + Supabase)
   const toggleEntry = (id: string) => {
     setEntries(prev => {
       const updated = prev.map(e =>
@@ -299,6 +434,20 @@ export default function TodayPage() {
           : e
       );
       localStorage.setItem(`huma-v2-sheet-${date}`, JSON.stringify(updated));
+
+      // Persist to Supabase
+      if (user) {
+        const entry = updated.find(e => e.id === id);
+        if (entry) {
+          const supabase = createClient();
+          if (supabase) {
+            updateSheetEntryCheck(supabase, id, user.id, entry.checked).catch(err => {
+              console.error("Failed to persist check:", err);
+            });
+          }
+        }
+      }
+
       return updated;
     });
   };
@@ -307,9 +456,9 @@ export default function TodayPage() {
 
   return (
     <div className="min-h-dvh bg-sand-50 flex flex-col">
-      {/* Header */}
-      <div className="px-6 pt-6 pb-4">
-        <p className="font-sans text-sm text-earth-400">{formatDate(date)}</p>
+      {/* Header — just the day */}
+      <div className="px-6 pt-8 pb-6 text-center">
+        <p className="font-serif text-xl text-earth-600">{formatDate(date)}</p>
       </div>
 
       {/* Sheet */}
@@ -338,9 +487,22 @@ export default function TodayPage() {
         ) : (
           <div className="space-y-3 max-w-2xl mx-auto">
             {isFallback && (
-              <p className="font-sans text-xs text-earth-400 mb-2">
-                Showing your behaviors for today. Talk to HUMA for more specific guidance.
-              </p>
+              <div className="flex items-center gap-3 mb-3">
+                <p className="font-sans text-xs text-earth-400">
+                  Showing your behaviors for today.
+                </p>
+                <button
+                  onClick={() => {
+                    // Clear cache to force recompile
+                    localStorage.removeItem(`huma-v2-sheet-${date}`);
+                    setIsFallback(false);
+                    compileSheet();
+                  }}
+                  className="font-sans text-xs text-sage-600 hover:text-sage-700 underline cursor-pointer"
+                >
+                  Retry
+                </button>
+              </div>
             )}
 
             {entries.map(entry => (
@@ -358,6 +520,9 @@ export default function TodayPage() {
                 Done for today. See you tomorrow.
               </p>
             )}
+
+            {/* Yesterday link */}
+            <YesterdaySection userId={user?.id || null} />
           </div>
         )}
       </div>

@@ -39,6 +39,8 @@ export async function proxy(request: NextRequest) {
   // Refresh session (important for keeping auth alive)
   const { data: { user } } = await supabase.auth.getUser();
 
+  const pathname = request.nextUrl.pathname;
+
   // Protected routes require auth
   if (request.nextUrl.pathname.startsWith("/operate") && !user) {
     const loginUrl = new URL("/login", request.url);
@@ -46,9 +48,18 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // V2 protected routes: /today and /chat require auth
+  if ((pathname === "/today" || pathname === "/chat") && !user) {
+    return NextResponse.redirect(new URL("/start", request.url));
+  }
+
   return response;
 }
 
 export const config = {
-  matcher: ["/operate/:path*"],
+  matcher: [
+    "/operate/:path*",
+    "/today",
+    "/chat",
+  ],
 };

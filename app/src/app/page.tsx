@@ -20,16 +20,34 @@ export default function Home() {
   const { user, loading: authLoading } = useAuth();
   const [hasShape, setHasShape] = useState<boolean | null>(null);
 
-  // Check if authenticated user already has a shape
+  // Check if authenticated user already has a shape or V2 aspirations
   useEffect(() => {
     if (authLoading) return;
     if (!user) { setHasShape(false); return; }
 
     (async () => {
+      // Check for V2 aspirations first — if they exist, go to /today
+      try {
+        const { createClient } = await import("@/lib/supabase");
+        const supabase = createClient();
+        if (supabase) {
+          const { data } = await supabase
+            .from("aspirations")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("status", "active")
+            .limit(1);
+          if (data && data.length > 0) {
+            router.push("/today");
+            return;
+          }
+        }
+      } catch { /* fall through to V1 check */ }
+
       const latest = await fetchLatestShape();
       setHasShape(!!latest);
     })();
-  }, [user, authLoading]);
+  }, [user, authLoading, router]);
 
   const handleBegin = useCallback(() => {
     if (user && hasShape) {
