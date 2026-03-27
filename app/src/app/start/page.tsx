@@ -146,6 +146,7 @@ export default function StartPage() {
   const [paletteLoading, setPaletteLoading] = useState(false);
   const [knownContext, setKnownContext] = useState<Record<string, unknown>>({});
   const [decomposedBehaviors, setDecomposedBehaviors] = useState<Behavior[]>([]);
+  const [aspirationName, setAspirationName] = useState<string | null>(null);
   const [showPaletteMobile, setShowPaletteMobile] = useState(false);
   const [showTransition, setShowTransition] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -273,7 +274,7 @@ export default function StartPage() {
       }
 
       // Final parse with all markers
-      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext } = parseMarkers(fullResponse);
+      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName } = parseMarkers(fullResponse);
 
       if (parsedContext) {
         setKnownContext(prev => ({ ...prev, ...parsedContext }));
@@ -281,6 +282,10 @@ export default function StartPage() {
 
       if (parsedBehaviors) {
         setDecomposedBehaviors(parsedBehaviors);
+      }
+
+      if (parsedAspirationName) {
+        setAspirationName(parsedAspirationName);
       }
 
       setMessages(prev => {
@@ -322,9 +327,8 @@ export default function StartPage() {
   const saveAndProceed = useCallback(async () => {
     const userMessages = messages.filter(m => m.role === "user").map(m => m.content);
     const rawText = userMessages[0] || "";
-    const clarifiedText = userMessages.length > 1
-      ? `${rawText} — ${userMessages.slice(1).join(", ")}`
-      : rawText;
+    // Use Claude-extracted short name, fall back to first user message
+    const clarifiedText = aspirationName || rawText;
 
     // Always save to localStorage first (fallback)
     localStorage.setItem("huma-v2-behaviors", JSON.stringify(decomposedBehaviors));
@@ -356,7 +360,7 @@ export default function StartPage() {
       setPendingAspiration({ rawText, clarifiedText });
       setShowAuthModal(true);
     }
-  }, [messages, decomposedBehaviors, knownContext, user, router]);
+  }, [messages, decomposedBehaviors, knownContext, aspirationName, user, router]);
 
   // Called when auth completes (from AuthModal or magic link return)
   const handleAuthenticated = useCallback(async () => {

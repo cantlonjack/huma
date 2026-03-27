@@ -159,7 +159,7 @@ export default function ConversationSheet({
         });
       }
 
-      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext } = parseMarkers(fullResponse);
+      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName } = parseMarkers(fullResponse);
 
       // Save HUMA response
       const finalHumaMsg: ChatMessage = {
@@ -205,7 +205,7 @@ export default function ConversationSheet({
         const newAspiration: Aspiration = {
           id: crypto.randomUUID(),
           rawText: text,
-          clarifiedText: "",
+          clarifiedText: parsedAspirationName || "",
           behaviors: parsedBehaviors,
           dimensionsTouched: [],
           status: "active",

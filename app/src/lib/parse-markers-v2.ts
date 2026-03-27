@@ -6,9 +6,10 @@ export interface ParsedMarkers {
   parsedBehaviors: Behavior[] | null;
   parsedActions: string[] | null;
   parsedContext: Record<string, unknown> | null;
+  parsedAspirationName: string | null;
 }
 
-const MARKER_TYPES = ["OPTIONS", "BEHAVIORS", "ACTIONS", "CONTEXT"] as const;
+const MARKER_TYPES = ["OPTIONS", "BEHAVIORS", "ACTIONS", "CONTEXT", "ASPIRATION_NAME"] as const;
 
 /**
  * Extract a single marker from text by finding [[TYPE: then scanning forward
@@ -89,10 +90,19 @@ export function parseMarkersV2(text: string): ParsedMarkers {
   let parsedBehaviors: Behavior[] | null = null;
   let parsedActions: string[] | null = null;
   let parsedContext: Record<string, unknown> | null = null;
+  let parsedAspirationName: string | null = null;
 
   let cleanText = text;
 
+  // Extract ASPIRATION_NAME separately — it uses a simple string value, not JSON
+  const nameMatch = cleanText.match(/\[\[ASPIRATION_NAME:"([^"]+)"\]\]/);
+  if (nameMatch) {
+    parsedAspirationName = nameMatch[1];
+    cleanText = cleanText.replace(nameMatch[0], "");
+  }
+
   for (const type of MARKER_TYPES) {
+    if (type === "ASPIRATION_NAME") continue; // Already handled above
     const result = extractMarker(text, type);
     if (result) {
       switch (type) {
@@ -115,8 +125,8 @@ export function parseMarkersV2(text: string): ParsedMarkers {
 
   // Strip incomplete markers at end of stream (e.g. "[[OPTIONS:" without closing "]]")
   cleanText = cleanText
-    .replace(/\[\[(?:OPTIONS|BEHAVIORS|ACTIONS|CONTEXT):?[\s\S]*$/g, "")
+    .replace(/\[\[(?:OPTIONS|BEHAVIORS|ACTIONS|CONTEXT|ASPIRATION_NAME):?[\s\S]*$/g, "")
     .trim();
 
-  return { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext };
+  return { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName };
 }
