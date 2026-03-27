@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import type { SheetEntry, Aspiration } from "@/types/v2";
 import { useAuth } from "@/components/AuthProvider";
@@ -231,8 +231,12 @@ export default function TodayPage() {
   const [loading, setLoading] = useState(true);
   const [date] = useState(() => new Date().toISOString().split("T")[0]);
   const [isFallback, setIsFallback] = useState(false);
+  const compilingRef = useRef(false);
 
   const compileSheet = useCallback(async () => {
+    // Prevent concurrent compilations (race from useEffect re-fires)
+    if (compilingRef.current) return;
+    compilingRef.current = true;
     setLoading(true);
 
     const supabase = user ? createClient() : null;
@@ -262,16 +266,24 @@ export default function TodayPage() {
       } catch { /* recompile */ }
     }
 
-    // 3. Load aspirations and context
+    // 3. Load aspirations, context, and conversation history
     let aspirations: Aspiration[] = [];
     let knownContext: Record<string, unknown> = {};
     let recentHistory: Array<{ date: string; behaviorKey: string; checked: boolean }> = [];
+    let conversationMessages: Array<{ role: string; content: string }> = [];
 
     if (supabase && user) {
       try {
-        aspirations = await getAspirations(supabase, user.id);
-        knownContext = await getKnownContext(supabase, user.id);
-        recentHistory = await getRecentSheetHistory(supabase, user.id);
+        const [dbAspirations, dbContext, dbHistory, dbMessages] = await Promise.all([
+          getAspirations(supabase, user.id),
+          getKnownContext(supabase, user.id),
+          getRecentSheetHistory(supabase, user.id),
+          import("@/lib/supabase-v2").then(m => m.getChatMessages(supabase!, user!.id)),
+        ]);
+        aspirations = dbAspirations;
+        knownContext = dbContext;
+        recentHistory = dbHistory;
+        conversationMessages = dbMessages.map(m => ({ role: m.role, content: m.content }));
       } catch {
         // Fall back to localStorage
       }
@@ -283,6 +295,19 @@ export default function TodayPage() {
         if (savedAspirations) aspirations = JSON.parse(savedAspirations);
         const savedContext = localStorage.getItem("huma-v2-known-context");
         if (savedContext) knownContext = JSON.parse(savedContext);
+      } catch { /* fresh */ }
+    }
+
+    // Load conversation from localStorage if not loaded from Supabase
+    if (conversationMessages.length === 0) {
+      try {
+        const startMsgs = localStorage.getItem("huma-v2-start-messages");
+        const chatMsgs = localStorage.getItem("huma-v2-chat-messages");
+        const raw = startMsgs || chatMsgs;
+        if (raw) {
+          const parsed = JSON.parse(raw) as Array<{ role: string; content: string }>;
+          conversationMessages = parsed.map(m => ({ role: m.role, content: m.content }));
+        }
       } catch { /* fresh */ }
     }
 
@@ -305,6 +330,7 @@ export default function TodayPage() {
           aspirations,
           knownContext,
           recentHistory,
+          conversationMessages,
           date,
         }),
       });
@@ -352,6 +378,7 @@ export default function TodayPage() {
       localStorage.setItem(cacheKey, JSON.stringify(fallback));
     } finally {
       setLoading(false);
+      compilingRef.current = false;
     }
   }, [date, user]);
 
@@ -495,6 +522,7 @@ export default function TodayPage() {
                   onClick={() => {
                     // Clear cache to force recompile
                     localStorage.removeItem(`huma-v2-sheet-${date}`);
+                    compilingRef.current = false;
                     setIsFallback(false);
                     compileSheet();
                   }}

@@ -184,6 +184,14 @@ export async function saveSheetEntries(
 ) {
   if (entries.length === 0) return;
 
+  // Delete any existing entries for this user+date first to prevent duplicates.
+  // Each compilation generates new UUIDs, so upsert-by-id doesn't deduplicate.
+  await supabase
+    .from("sheet_entries")
+    .delete()
+    .eq("user_id", userId)
+    .eq("date", date);
+
   // Validate aspiration_ids exist in DB to avoid FK constraint violations
   const aspirationIds = [...new Set(entries.map(e => e.aspirationId).filter(Boolean))];
   const validAspirationIds = new Set<string>();
@@ -210,7 +218,7 @@ export async function saveSheetEntries(
     checked_at: e.checkedAt || null,
   }));
 
-  const { error } = await supabase.from("sheet_entries").upsert(rows, { onConflict: "id" });
+  const { error } = await supabase.from("sheet_entries").insert(rows);
   if (error) throw error;
 }
 
@@ -321,12 +329,16 @@ export async function migrateLocalStorageToSupabase(
   supabase: SupabaseClient,
   userId: string
 ) {
+  // Track which keys were successfully migrated so we only clear those
+  const migratedKeys: string[] = [];
+
   // 1. Migrate known context
   try {
     const ctxStr = localStorage.getItem("huma-v2-known-context");
     if (ctxStr) {
       const knownContext = JSON.parse(ctxStr);
       await updateKnownContext(supabase, userId, knownContext);
+      migratedKeys.push("huma-v2-known-context");
     }
   } catch { /* skip */ }
 
@@ -352,8 +364,9 @@ export async function migrateLocalStorageToSupabase(
 
     if (messages.length > 0) {
       await saveChatMessages(supabase, userId, messages);
+      migratedKeys.push("huma-v2-start-messages", "huma-v2-chat-messages");
     }
-  } catch { /* skip */ }
+  } catch { /* skip — localStorage preserved as fallback */ }
 
   // 3. Migrate aspirations
   try {
@@ -365,6 +378,7 @@ export async function migrateLocalStorageToSupabase(
           await saveAspiration(supabase, userId, asp);
         } catch { /* may already exist */ }
       }
+      migratedKeys.push("huma-v2-aspirations");
     }
   } catch { /* skip */ }
 
@@ -386,26 +400,24 @@ export async function migrateLocalStorageToSupabase(
     if (insStr) {
       const insight = JSON.parse(insStr) as Insight;
       await saveInsight(supabase, userId, insight);
+      migratedKeys.push("huma-v2-pending-insight");
     }
   } catch { /* skip */ }
 
-  // 6. Clear localStorage V2 keys (Supabase is now source of truth)
-  const v2Keys = [
-    "huma-v2-start-messages",
-    "huma-v2-chat-messages",
-    "huma-v2-known-context",
-    "huma-v2-aspirations",
-    "huma-v2-behaviors",
-    "huma-v2-pending-insight",
-  ];
-  for (const key of v2Keys) {
+  // 6. Only clear keys that were successfully migrated to Supabase
+  migratedKeys.push("huma-v2-behaviors"); // always safe to clear (derived data)
+  for (const key of migratedKeys) {
     localStorage.removeItem(key);
   }
-  // Also clear any cached sheets
+  // Clear cached sheets (non-critical, regeneratable)
+  const sheetKeys: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (key?.startsWith("huma-v2-sheet-")) {
-      localStorage.removeItem(key);
+      sheetKeys.push(key);
     }
+  }
+  for (const key of sheetKeys) {
+    localStorage.removeItem(key);
   }
 }

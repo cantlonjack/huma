@@ -9,6 +9,9 @@ Active aspirations and behaviors:
 
 {specificity_section}
 
+CONVERSATION TRANSCRIPT (this is what the operator actually said — use their exact details):
+{conversation_transcript}
+
 Known context:
 {known_context}
 
@@ -23,7 +26,9 @@ For each behavior that applies to today, produce a SPECIFIC, actionable entry.
 Not "cook dinner" — instead "Beef stew: use the bone broth from Sunday, chuck from the freezer. One pot. Recipe: [basic instructions]."
 Not "morning movement" — instead "20-minute walk. Sunrise is 7:14am, 34°F. Layer up."
 
-Be specific. Use the known context. Reference leftovers, inventory, schedules.
+CRITICAL: The conversation transcript contains specifics the operator told you — household size, budget constraints, dietary approach, available ingredients, schedule. USE THEM. Every entry should feel like it was written for THIS person, not a generic template. If they said "two of us" — portions are for two. If they said "save money" — suggest budget-conscious options. If they mentioned specific ingredients — use those ingredients.
+
+Be specific. Use the known context and conversation details. Reference leftovers, inventory, schedules.
 The operator should not have to think — just execute.
 
 Voice: fence-post neighbor. Direct. Spare. No therapy-speak. No cheerleading.
@@ -124,6 +129,7 @@ export async function POST(request: Request) {
   }>;
   const knownContext = (body.knownContext || {}) as Record<string, unknown>;
   const recentHistory = (body.recentHistory || []) as RecentEntry[];
+  const conversationMessages = (body.conversationMessages || []) as Array<{ role: string; content: string }>;
   const date = (body.date || new Date().toISOString().split("T")[0]) as string;
 
   if (aspirations.length === 0) {
@@ -171,10 +177,17 @@ ${Object.entries(allSpecificityHints).map(([key, hint]) => `  ${key}: ${hint}`).
     ? JSON.stringify(knownContext, null, 2)
     : "Limited context so far.";
 
+  // Build conversation transcript (last 20 messages max to stay within token budget)
+  const recentConvo = conversationMessages.slice(-20);
+  const conversationStr = recentConvo.length > 0
+    ? recentConvo.map(m => `${m.role === "user" ? "Operator" : "HUMA"}: ${m.content}`).join("\n\n")
+    : "No conversation yet.";
+
   const prompt = SHEET_PROMPT
     .replace("{name}", name)
     .replace("{aspirations_with_behaviors}", aspirationsStr)
     .replace("{specificity_section}", specificitySection)
+    .replace("{conversation_transcript}", conversationStr)
     .replace("{known_context}", contextStr)
     .replace("{recent_history}", historyStr)
     .replace("{history_analysis}", historyAnalysis)

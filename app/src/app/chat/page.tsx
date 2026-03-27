@@ -98,6 +98,8 @@ export default function ChatPage() {
   // Load state — Supabase first, localStorage fallback
   useEffect(() => {
     async function loadState() {
+      let foundMessages = false;
+
       if (user) {
         const supabase = createClient();
         if (supabase) {
@@ -109,38 +111,46 @@ export default function ChatPage() {
               getUndeliveredInsight(supabase, user.id),
             ]);
 
-            if (dbMessages.length > 0) setMessages(dbMessages);
+            if (dbMessages.length > 0) {
+              setMessages(dbMessages);
+              foundMessages = true;
+            }
             if (dbAspirations.length > 0) setAspirations(dbAspirations);
             if (Object.keys(dbContext).length > 0) setKnownContext(dbContext);
             if (dbInsight) setPendingInsight(dbInsight);
-
-            setLoaded(true);
-            return;
           } catch (err) {
             console.error("Failed to load from Supabase:", err);
           }
         }
       }
 
-      // Fallback: localStorage
-      try {
-        const savedMessages = localStorage.getItem("huma-v2-chat-messages");
-        const startMessages = localStorage.getItem("huma-v2-start-messages");
-        if (savedMessages) {
-          setMessages(JSON.parse(savedMessages));
-        } else if (startMessages) {
-          setMessages(JSON.parse(startMessages));
-        }
+      // Fallback: localStorage (always check if Supabase had no messages)
+      if (!foundMessages) {
+        try {
+          const savedMessages = localStorage.getItem("huma-v2-chat-messages");
+          const startMessages = localStorage.getItem("huma-v2-start-messages");
+          if (savedMessages) {
+            setMessages(JSON.parse(savedMessages));
+          } else if (startMessages) {
+            setMessages(JSON.parse(startMessages));
+          }
+        } catch { /* fresh */ }
+      }
 
-        const ctx = localStorage.getItem("huma-v2-known-context");
-        if (ctx) setKnownContext(JSON.parse(ctx));
+      // Load other state from localStorage if Supabase didn't provide them
+      if (!user) {
+        try {
+          const ctx = localStorage.getItem("huma-v2-known-context");
+          if (ctx) setKnownContext(JSON.parse(ctx));
 
-        const asp = localStorage.getItem("huma-v2-aspirations");
-        if (asp) setAspirations(JSON.parse(asp));
+          const asp = localStorage.getItem("huma-v2-aspirations");
+          if (asp) setAspirations(JSON.parse(asp));
 
-        const ins = localStorage.getItem("huma-v2-pending-insight");
-        if (ins) setPendingInsight(JSON.parse(ins));
-      } catch { /* fresh */ }
+          const ins = localStorage.getItem("huma-v2-pending-insight");
+          if (ins) setPendingInsight(JSON.parse(ins));
+        } catch { /* fresh */ }
+      }
+
       setLoaded(true);
     }
 
