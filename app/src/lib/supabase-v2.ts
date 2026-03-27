@@ -323,6 +323,176 @@ export async function markInsightDelivered(
     .eq("user_id", userId);
 }
 
+// ─── Behavior Log (check-off tracking) ──────────────────────────────────────
+
+export async function logBehaviorCheckoff(
+  supabase: SupabaseClient,
+  userId: string,
+  behaviorKey: string,
+  behaviorName: string,
+  aspirationId: string | null,
+  date: string,
+  completed: boolean
+) {
+  // Upsert: one entry per user+behavior+date
+  const { data: existing } = await supabase
+    .from("behavior_log")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("behavior_name", behaviorName)
+    .eq("date", date)
+    .limit(1)
+    .maybeSingle();
+
+  if (existing) {
+    await supabase
+      .from("behavior_log")
+      .update({
+        completed,
+        completed_at: completed ? new Date().toISOString() : null,
+      })
+      .eq("id", existing.id);
+  } else {
+    await supabase.from("behavior_log").insert({
+      user_id: userId,
+      behavior_id: null,
+      behavior_name: behaviorName,
+      date,
+      completed,
+      completed_at: completed ? new Date().toISOString() : null,
+    });
+  }
+}
+
+export async function getBehaviorWeekCount(
+  supabase: SupabaseClient,
+  userId: string,
+  behaviorName: string
+): Promise<{ completed: number; total: number }> {
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 7);
+  const startStr = startDate.toISOString().split("T")[0];
+
+  const { data } = await supabase
+    .from("behavior_log")
+    .select("completed")
+    .eq("user_id", userId)
+    .eq("behavior_name", behaviorName)
+    .gte("date", startStr);
+
+  if (!data) return { completed: 0, total: 0 };
+  return {
+    completed: data.filter(r => r.completed).length,
+    total: data.length,
+  };
+}
+
+export async function getBehaviorWeekCounts(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<Record<string, { completed: number; total: number }>> {
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 7);
+  const startStr = startDate.toISOString().split("T")[0];
+
+  const { data } = await supabase
+    .from("behavior_log")
+    .select("behavior_name, completed")
+    .eq("user_id", userId)
+    .gte("date", startStr);
+
+  if (!data) return {};
+
+  const counts: Record<string, { completed: number; total: number }> = {};
+  for (const row of data) {
+    if (!counts[row.behavior_name]) {
+      counts[row.behavior_name] = { completed: 0, total: 0 };
+    }
+    counts[row.behavior_name].total++;
+    if (row.completed) counts[row.behavior_name].completed++;
+  }
+  return counts;
+}
+
+// ─── Structural Insight (Day 1) ─────────────────────────────────────────────
+
+const DIMENSION_LABEL_MAP: Record<string, string> = {
+  living: "Body", body: "Body",
+  social: "People", people: "People",
+  financial: "Money", money: "Money",
+  material: "Home", home: "Home",
+  intellectual: "Growth", growth: "Growth",
+  experiential: "Joy", joy: "Joy",
+  spiritual: "Purpose", purpose: "Purpose",
+  cultural: "Identity", identity: "Identity",
+};
+
+export function computeStructuralInsight(aspirations: Aspiration[]): Insight | null {
+  const allBehaviors = aspirations.flatMap(a =>
+    a.behaviors.map(b => ({
+      ...b,
+      aspirationName: a.clarifiedText || a.rawText,
+      aspirationId: a.id,
+    }))
+  );
+
+  if (allBehaviors.length === 0) return null;
+
+  // Find behavior touching most dimensions
+  let maxDims = 0;
+  let mostConnected: (typeof allBehaviors)[0] | null = null;
+
+  for (const b of allBehaviors) {
+    const dimCount = (b.dimensions || []).length;
+    if (dimCount > maxDims) {
+      maxDims = dimCount;
+      mostConnected = b;
+    }
+  }
+
+  // Find shared behaviors across aspirations
+  const behaviorsByText = new Map<string, Set<string>>();
+  for (const b of allBehaviors) {
+    const key = b.text.toLowerCase().trim();
+    if (!behaviorsByText.has(key)) behaviorsByText.set(key, new Set());
+    behaviorsByText.get(key)!.add(b.aspirationName);
+  }
+  const shared = [...behaviorsByText.entries()].filter(([, asps]) => asps.size > 1);
+
+  if (!mostConnected) return null;
+
+  const dims = (mostConnected.dimensions || [])
+    .map(d => {
+      const key = typeof d === "string" ? d : d.dimension;
+      return DIMENSION_LABEL_MAP[key] || key;
+    })
+    .filter(Boolean);
+
+  let text: string;
+  if (shared.length > 0) {
+    const [, sharedAsps] = shared[0];
+    const aspNames = [...sharedAsps].join(" and ");
+    text = `${mostConnected.text} serves both ${aspNames}. It touches ${dims.join(", ")} \u2014 ${maxDims} of your 8 dimensions. That\u2019s the most connected behavior in your system.`;
+  } else {
+    text = `${mostConnected.text} touches ${dims.join(", ")} \u2014 ${maxDims} of your 8 dimensions from one behavior. That\u2019s your most connected move.`;
+  }
+
+  return {
+    id: crypto.randomUUID(),
+    text,
+    dimensionsInvolved: (mostConnected.dimensions || []).map(d =>
+      typeof d === "string" ? d : d.dimension
+    ) as Insight["dimensionsInvolved"],
+    behaviorsInvolved: [mostConnected.key || mostConnected.text],
+    dataBasis: {
+      correlation: 1,
+      dataPoints: 0,
+      pattern: "structural",
+    },
+    delivered: false,
+  };
+}
+
 // ─── Migration: localStorage → Supabase ──────────────────────────────────────
 
 export async function migrateLocalStorageToSupabase(

@@ -39,6 +39,16 @@
   --color-earth-800: #2C2620;
   --color-earth-900: #1A1714;
 
+  /* ── Ink (V2.1 design system aliases) ── */
+  --color-ink-200: #C4BAA8;
+  --color-ink-300: #A8A196;
+  --color-ink-400: #8C8274;
+  --color-ink-500: #6B6358;
+  --color-ink-600: #524A40;
+  --color-ink-700: #3A342C;
+  --color-ink-800: #2C2620;
+  --color-ink-900: #1A1714;
+
   /* ── Accent Colors ── */
   --color-sky: #2E6B8A;
   --color-sky-light: #D6EAF2;
@@ -54,7 +64,11 @@
   --font-sans: var(--font-source-sans, "Source Sans 3"), system-ui, -apple-system, sans-serif;
 }
 
-body {
+:root {
+  --huma-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html, body {
   background: var(--color-sand-50);
   color: var(--color-earth-800);
   font-family: var(--font-sans);
@@ -256,6 +270,102 @@ textarea:focus-visible {
 
 .animate-fade-in {
   animation: fade-in-up 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ─── V2.1 Conversation Sheet ─── */
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes check-bounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.animate-slide-up {
+  animation: slide-up 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.animate-slide-down {
+  animation: slide-down 300ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-overlay-in {
+  animation: overlay-in 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.animate-check-bounce {
+  animation: check-bounce 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ─── V2.1 Entrance Animations ─── */
+
+@keyframes huma-fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-entrance-1 { animation: huma-fade-in-up 400ms var(--huma-ease) 100ms both; }
+  .animate-entrance-2 { animation: huma-fade-in-up 400ms var(--huma-ease) 200ms both; }
+  .animate-entrance-3 { animation: huma-fade-in-up 400ms var(--huma-ease) 300ms both; }
+  .animate-entrance-4 { animation: huma-fade-in-up 400ms var(--huma-ease) 350ms both; }
+  .animate-entrance-5 { animation: huma-fade-in-up 400ms var(--huma-ease) 400ms both; }
+}
+
+/* ─── Streaming Dot Pulse ─── */
+
+@keyframes huma-dot-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.animate-dot-pulse {
+  animation: huma-dot-pulse 2s ease-in-out infinite;
+}
+
+/* ─── Scrollbar Hiding ─── */
+
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── V2.1 Reduced Motion ─── */
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-slide-up,
+  .animate-slide-down {
+    animation: none;
+  }
+  .animate-overlay-in {
+    animation: none;
+  }
+  .animate-check-bounce {
+    animation: none;
+  }
+  .animate-fade-in {
+    animation-duration: 200ms;
+  }
+  .animate-dot-pulse {
+    animation: none;
+    opacity: 0.7;
+  }
 }
 
 /* ─── Toast ─── */

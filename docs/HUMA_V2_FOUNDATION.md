@@ -1,6 +1,6 @@
 # HUMA V2 Foundation
 
-_The source of truth for what HUMA is and how it works. Written March 26, 2026. Supersedes previous product architecture where they conflict. The 9 foundational documents remain valid for intellectual lineage, ethics, voice, design language, and RPPL theory — but the product surface, user journey, and technical architecture are redefined here._
+_The source of truth for what HUMA is, how it works, and what operators see. Updated March 27, 2026. Incorporates the V2.1 artifact-first redesign. The foundational documents remain valid for intellectual lineage, ethics, voice, design language, and RPPL theory._
 
 ---
 
@@ -26,6 +26,8 @@ HUMA doesn't ask people to design their lives. It doesn't ask them to develop pa
 
 The person who follows HUMA's production sheet for 3 months and then notices "wait, every time I cook dinner, everything else in my evening works better" — that person just learned what a Node is without ever hearing the word. The capacity developed through use, not instruction.
 
+**What HUMA does that no other app can:** Show you how the different parts of your life are connected — and which specific daily behaviors are the leverage points that hold everything together. Fitbit knows your body. YNAB knows your money. Todoist knows your tasks. None of them can tell you that cooking dinner at home is the keystone behavior that produces better sleep, lower spending, more time with your partner, AND a cleaner kitchen. They can't because they each only see one dimension. HUMA sees all eight.
+
 ---
 
 ## The Three Layers
@@ -38,15 +40,11 @@ The entry is: **"What's going on?"** Open. One prompt. The operator talks or typ
 
 Every statement is context that HUMA structures and stores. Context enters through conversation, not onboarding flows. The operator talks to HUMA like a trusted friend who knows their whole life and never forgets.
 
-**The Palette:** Alongside the conversation, a dynamic sidebar shows tappable concepts — pain points and aspirations that relate to what the operator has already said. The person who says "I'm exhausted" sees bubbles appear: "sleeping badly" / "working too much" / "eating like crap" / "no time for myself." Tap what resonates. The context sharpens. HUMA decomposes further.
+**The Palette:** A browseable library of tappable concepts — pain points and aspirations organized by life dimension. The PrepBoard model: the palette updates based on what's already in the system. The person who can't articulate what they want browses the palette and discovers options they didn't know existed. The person who knows exactly what they want ignores the palette and just talks. Both paths work. Neither is gated.
 
-This is the PrepBoard model. The conversation is the recipe you're building in the center. The palette is the suggestion sidebar that updates based on what's already in the bowl. The person who can't articulate what they want browses the palette and discovers options they didn't know existed. The person who knows exactly what they want ignores the palette and just talks. Both paths work. Neither is gated.
+The palette solves the nescience problem — people don't know life design is a thing, so they don't know what to ask for. The palette shows them what's possible.
 
-The palette solves the nescience problem — people don't know life design is a thing, so they don't know what to ask for. The palette shows them what's possible. "Self-sufficient" is a bubble most people would never type into a text field. But when they see it, some will think "yes, THAT."
-
-The conversation layer is also where insights are delivered, where aspirations get clarified, where HUMA asks the Socratic questions that sharpen context. "When you say eat clean, do you mean...?" with tappable options, not open-ended text fields.
-
-**Key principle:** The conversation is warm, direct, specific. The fence-post neighbor voice from the Voice Bible applies here completely. No therapy-speak. No cheerleading. No jargon.
+**Key principle:** Conversation is an input method, not the product. The operator's primary experience is their system and their production sheet — not a chat log. Conversations are ephemeral interactions that produce structured outputs. They don't pile up as the primary artifact.
 
 ### Layer 2: Computation (how HUMA thinks)
 
@@ -57,20 +55,22 @@ Invisible to the operator. This is RPPL doing real work.
 "I want to eat clean" →
 - Means: animal-based/keto, for a family of two →
 - Behaviors: meal prep Sunday, cook at home 4 nights, no processed snacks, shop at farmers market Saturday →
-- Dimensions touched: Body (nutrition), Money (grocery spending), Home (kitchen as workspace), Joy (cooking as shared activity), People (cooking together with Madison) →
+- Dimensions touched: Body (nutrition), Money (grocery spending), Home (kitchen as workspace), Joy (cooking as shared activity), People (cooking together) →
 - Connections: "cook at home" also serves the "more time together" aspiration; "farmers market" also serves the "connect to local community" aspiration if it exists
 
 One aspiration, decomposed, touches five dimensions and connects to other aspirations through shared behaviors. The operator didn't map any of this. HUMA computed it from the structure of the decomposition.
 
-**Cross-dimensional correlation:** After enough behavior data, HUMA computes correlations. On days you did morning movement, you also completed family behaviors 90% of the time. On days you didn't, family behaviors dropped to 30%. The morning walk is the keystone — it holds up everything else. This insight is computed from checkbox data cross-referenced through decomposition chains. No self-reporting. No evening review. No journaling.
+**Structural insight (Day 1):** The decomposition chain itself reveals which behavior touches the most dimensions and which behaviors are shared across aspirations. This requires NO behavioral data — only the decomposition structure. The day the operator's first aspiration is decomposed, HUMA can say: "Cook at home touches Body, Money, Joy, People, and Home — 5 of your 8 dimensions from one behavior. That's your most connected move."
 
-**Pattern matching:** HUMA matches the operator's context and behaviors against the knowledge commons. "For people with your pattern — family of two, rural, building stage, high Living capital, low Financial — the highest-leverage behavior is X, validated by Y people over Z months." This requires scale and comes later, but the architecture supports it from day one.
+**Cross-dimensional correlation (Week 2+):** After enough behavior data, HUMA computes correlations. On days you did morning movement, you also completed family behaviors 90% of the time. On days you didn't, family behaviors dropped to 30%. The morning walk is the keystone — it holds up everything else. This insight is computed from checkbox data cross-referenced through decomposition chains. No self-reporting. No evening review. No journaling.
 
-**Compilation:** All of the above compiles into the daily production sheet. What to do today, computed from decomposed aspirations, adjusted for the day of the week, the weather, what's in the freezer, what's coming up on the calendar (if shared), what worked and didn't work last week.
+**Pattern matching (Future):** HUMA matches the operator's context and behaviors against the knowledge commons. "For people with your pattern — family of two, rural, building stage, high Living capital, low Financial — the highest-leverage behavior is X, validated by Y people over Z months." This requires scale and comes later, but the architecture supports it from day one.
+
+**Compilation:** All of the above compiles into the daily production sheet. What to do today, computed from decomposed aspirations, adjusted for the day of the week, what's in the freezer, what's coming up, what worked and didn't work last week.
 
 ### Layer 3: Output (how HUMA serves you)
 
-What you see during the day. Glanceable. Actionable. Zero cognitive load. Not a conversation — an artifact.
+What you see during the day. Glanceable. Actionable. Zero cognitive load.
 
 **The daily production sheet.** Mobile-first. Morning notification: "Your day." Open it. See 3-5 things. Not abstract behaviors — specific actions.
 
@@ -80,15 +80,65 @@ Not "do morning movement." Instead: "20-minute walk. It's 28°F but sunny by 9am
 
 Not "stay on budget." Instead: "No purchases today. Electric bill comes Friday — you're covered if you hold."
 
-Each item is tappable for more detail. Check it off when done. The checking off IS the data collection — no separate tracking step.
+Each item is tappable for more detail. Check it off when done. The checking off IS the data collection — no separate tracking step. Check-offs produce visible feedback: "Cooked at home · 3 of 4 days this week."
 
-**The insight card.** Not daily. When the data supports it — maybe day 5, maybe day 10. One cross-dimensional observation. Specific. Computed from behavior data. Connecting something the operator didn't consciously link.
+**The insight card.** Structural insights available from Day 1 (from decomposition). Behavioral insights after 5+ days of check-off data. One cross-dimensional observation. Specific. Connecting something the operator didn't consciously link.
 
-"You've cooked at home 8 of the last 10 nights. On those nights, you also went to bed before 10pm — every time. On the two takeout nights, you stayed up past midnight. Your food and your sleep are connected, and it's not about nutrition. It's about the rhythm. Cooking puts you in evening mode."
+**The system view.** The visible artifact — the structured, connected representation of aspirations, behaviors, dimensions, and connections. Materializes from conversation and grows with use. The operator can see, browse, edit, and extend their system at any time.
 
-**The weekly view.** What's coming. The meal plan. The maintenance tasks. The financial picture. All compiled from decomposed aspirations plus accumulated context. This is the "open on Sunday evening for 5 minutes" artifact.
+**The canvas (future).** The full Palmer Holistic Context spatial map, built from the bottom up through daily living. Opens when the operator wants to see the whole picture. Emerges from the system view when enough context accumulates.
 
-**The canvas.** Materializes over time as a byproduct of accumulated context. All aspirations, all behaviors, all dimensional connections, all insights — rendered as a spatial map. The Palmer Holistic Context, built from the bottom up through daily living, not top-down through a design exercise. Opens when the operator wants to see the whole picture. Not the daily experience.
+---
+
+## The Product Surface
+
+### Design Principle
+
+**Open → see your system → use what it produces → close. The system gets smarter every time you touch it.**
+
+The operator spends **10 seconds** most mornings (glance at production sheet, check off what they do). **2 minutes** when adding context (quick input, structured immediately). **5 minutes** weekly exploring their system (browse connections, add aspirations, review what's working).
+
+The artifact (the life system) is visible and central. Conversation is one input method. The palette is another. The production sheet is one output. Insights are another. The system view is where it all lives.
+
+### Three Screens
+
+**Screen 1: YOUR DAY** (home screen — `/today`)
+The bakery production sheet. What you see when you open HUMA.
+- Date header, aspiration ribbon (scrollable pills showing active aspirations)
+- Insight card (structural or behavioral, when available)
+- Production sheet cards (3-5 items, collapsible detail, checkable, dimension tags)
+- Check-off feedback: counters showing behavioral accumulation ("Day 3 of cooking at home")
+- Prompt bar: persistent input that opens a conversation sheet overlay for quick context additions
+
+**Screen 2: YOUR SYSTEM** (the visible artifact — `/system`)
+The structured map of your life. The PrepBoard/Obsidian/Bullipedia hybrid.
+- Aspiration cards with nested behavior lists, dimensional tags, activity indicators
+- Connection indicators between aspirations sharing behaviors (with insight text)
+- "HUMA KNOWS" context card: editable summary of everything HUMA has extracted
+- Palette: browseable by the 8 dimensions, showing aspirations and possibilities
+- Tapping a palette item triggers a quick conversation → decomposition → new aspiration appears
+- The system grows as context accumulates — proof that HUMA is learning
+
+**Screen 3: TALK** (the conversation tool — `/chat`)
+For longer conversations that don't fit a quick bottom-sheet exchange.
+- Context card at top (what HUMA knows)
+- Latest exchange displayed fully, with "Context added: [fact]" when context was extracted
+- Past exchanges as collapsed one-line summaries with dates (not a chat log)
+- Input field at bottom
+
+**Conversation Sheet** (bottom sheet overlay — available from any screen)
+- Slides up from the prompt bar on Today or System
+- Quick context additions: "We got a chest freezer" / "I'm off Wednesdays now"
+- HUMA responds, extracts context, the sheet dismisses
+- Ephemeral interaction that produces structured output
+
+**Navigation:** Today | System | Talk (bottom tab bar). Today is home. Tab bar hidden during the entry flow at `/start`.
+
+### The Entry Flow (`/start`)
+
+"What's going on?" → conversation → clarification (tappable options) → decomposition into behaviors → "Start this Sunday" → auth (magic link) → redirect to `/today`.
+
+The conversation produces structured data: an aspiration record, behavior records with dimensional mappings, and extracted context. This data populates the System screen immediately — the operator's first visit shows their life system already taking shape.
 
 ---
 
@@ -96,15 +146,15 @@ Each item is tappable for more detail. Check it off when done. The checking off 
 
 Context builds gradually through use and conversation. The operator never fills out a profile. They just live, and HUMA learns.
 
-**Day 1:** Almost no context. HUMA knows a name and 2-3 aspirations. The production sheet is generic but useful — template-based meal ideas, general movement suggestions.
+**Day 1:** Almost no context. HUMA knows a name and 2-3 aspirations. The production sheet is generic but useful. The structural insight is available (from decomposition, no behavioral data needed).
 
-**Week 1:** HUMA knows daily patterns from production sheet usage — which days are busy, which meals get cooked, which behaviors stick and which get skipped. The production sheet starts adapting — simpler meals on bakery days.
+**Week 1:** HUMA knows daily patterns from production sheet usage — which days are busy, which meals get cooked, which behaviors stick and which get skipped. The production sheet starts adapting.
 
-**Month 1:** HUMA knows the freezer inventory (mentioned in conversation), the budget constraints (mentioned when aspiration was "stop being broke"), the family dynamics (Madison came up in conversation), the property (mentioned in "grow our own food"). The production sheet is deeply specific — "Use the leftover roast for beef hash tonight, the potatoes are from Sunday."
+**Month 1:** HUMA knows the freezer inventory (mentioned in conversation), the budget constraints, the family dynamics, the schedule. The production sheet is deeply specific.
 
-**Month 3:** HUMA knows the seasonal rhythms, the financial cycles, the energy patterns across the week, which behaviors are keystones and which are fragile. The production sheet is orchestrated — it accounts for the relationships between domains and sequences things to minimize friction.
+**Month 3:** HUMA knows the seasonal rhythms, the financial cycles, the energy patterns across the week, which behaviors are keystones and which are fragile. The production sheet is orchestrated.
 
-**Key principle:** Every piece of context the operator shares makes the production sheet better. The operator experiences this directly — the meal suggestions got better after mentioning the freezer. This creates a natural, selfish motivation to share more. Not because HUMA asks, but because the value exchange is obvious.
+**Key principle:** Every piece of context the operator shares makes the production sheet better. The operator experiences this directly. This creates a natural, selfish motivation to share more. Not because HUMA asks, but because the value exchange is obvious.
 
 **Key principle:** The operator controls the context. HUMA never scrapes, surveils, or infers from external data sources. Every piece of context is a gift, freely given because the operator got value back. This is the sovereignty principle in practice.
 
@@ -130,28 +180,11 @@ An LLM is a brain without memory or methodology. HUMA is a methodology with a br
 
 **"What's going on?"** Not "design your life." Not "rate your dimensions." Not a selection screen. An open prompt.
 
-The operator says whatever they say. "I'm exhausted." "I want to grow my own food." "My marriage is falling apart." HUMA responds with immediate value — structuring what they said, beginning to decompose it, and producing the first useful output within 2 minutes.
-
-The dynamic palette alongside the conversation shows related concepts — pain points and aspirations the operator might not have thought to mention. These function as a menu of possibilities for people who don't know what to ask for, and as context-sharpening tools for people who do. Tap to add. Ignore if not relevant. Never a gate.
-
-After the first aspiration is decomposed into behaviors, HUMA says: "Here's your tomorrow." The production sheet is live. Value delivered before the operator has decided to commit to anything.
-
-### The Template/Fork Model
-
-Pre-decomposed aspiration bundles, validated by real operators:
-
-- "Animal-based keto, family of two, under $150/week, Michigan"
-- "Morning movement habit, 20 min, zero equipment, winter-adapted"
-- "Food sovereignty, Zone 5a, quarter acre, year one"
-- "Debt paydown while building a side income"
-
-Browse by situation, by bioregion, by life stage. Tap to fork. Customize for your specifics. Your production sheet is populated with a validated, tested system on day one.
-
-Templates are also the viral artifact. An operator who's run "food sovereignty, Zone 5a" for a year publishes their version — adjusted, validated, annotated with what worked and what didn't. That's the Bullipedia fork. Someone else in Zone 5a finds it, forks it, starts with a working system instead of a blank page.
+The operator says whatever they say. HUMA responds with immediate value — structuring what they said, beginning to decompose it, and producing the first useful output within 2 minutes.
 
 ### The Viral Loop
 
-The share moment isn't a radar chart. It's a specific, concrete, surprising insight:
+The share moment is a specific, concrete, surprising insight:
 
 "HUMA showed me that cooking dinner is the single behavior that holds my entire evening together — family time, sleep, budget, everything. I had no idea."
 
@@ -159,11 +192,18 @@ Screenshot. Text to a friend. The friend thinks: "what would it show ME?" Downlo
 
 The loop: aspiration → production sheet → behavior data → surprising insight → share → friend downloads → repeat.
 
-### Situation Entry Points (SEO + Growth)
+### The Template/Fork Model (Future)
 
-Pain-specific landing pages: "Just lost my job." "New parent, no sleep." "Want to homestead." "Drowning in debt." "Career change at 40."
+Pre-decomposed aspiration bundles, validated by real operators:
+- "Animal-based keto, family of two, under $150/week, Michigan"
+- "Morning movement habit, 20 min, zero equipment, winter-adapted"
+- "Debt paydown while building a side income"
 
-Each page leads to a pre-populated aspiration bundle. The person gets a production sheet for their specific situation within minutes. This is the SEO strategy, the ad targeting, and the conversion funnel — all one thing.
+Browse by situation, by bioregion, by life stage. Tap to fork. Customize for your specifics. This is the Bullipedia model.
+
+### Situation Entry Points (Future — SEO + Growth)
+
+Pain-specific landing pages: "Just lost my job." "New parent, no sleep." "Drowning in debt." "Career change at 40." Each leads to a pre-populated aspiration bundle.
 
 ---
 
@@ -175,17 +215,15 @@ One person's life OS is useful. A million people's behavioral data, anonymized a
 
 This knowledge doesn't exist anywhere. Not in research. Not in self-help books. Not in therapy. It's computed from real behavioral data flowing through standardized decomposition chains. It gets better with every operator, which means every operator makes HUMA more valuable for the next one. That's the network effect.
 
-This is the RPPL protocol layer. The knowledge commons. The thing that "makes history" while the app makes money.
-
 ---
 
-## Pricing (Revised)
+## Pricing
 
 **Free forever:** Conversation with HUMA. Up to 3 aspirations decomposed. Basic daily production sheet. Weekly view. One insight when data supports it. Template browsing.
 
-**$29/month Operate:** Unlimited aspirations. Full cross-dimensional computation. Deep production sheet (specific recipes, specific financial actions, seasonal planning). Pattern commons access (what others with your pattern found). Canvas view. Template publishing.
+**$29/month Operate:** Unlimited aspirations. Full cross-dimensional computation. Deep production sheet (specific recipes, specific financial actions, seasonal planning). Pattern commons access. Canvas view. Template publishing.
 
-**$99/month Professional:** Multi-context management (clients, students, patients). Professional dashboard. Bulk template creation. API access for integrations.
+**$99/month Professional:** Multi-context management (clients, students, patients). Professional dashboard. Bulk template creation. API access.
 
 ---
 
@@ -194,60 +232,27 @@ This is the RPPL protocol layer. The knowledge commons. The thing that "makes hi
 - **Tech stack:** Next.js 14+, TypeScript, Tailwind, Claude API, Supabase, Vercel
 - **RPPL:** The five primitives (Essences, Patterns, Fields, Nodes, Transformers) are the computation layer
 - **8 Forms of Capital:** The dimensional framework — now computed from behavior, not self-reported
-- **Sovereignty principles:** All of them. Stronger now — context through gift, not surveillance
-- **Ethical framework:** Dependency test, graduation imperative, distress protocol. All still apply
-- **Voice Bible:** Fence-post neighbor. Every word matters. No jargon. More relevant than ever for the conversation layer
-- **Design system:** Sand/sage/amber/sky palette. Cormorant Garamond + Source Sans 3. Warmth system for the canvas
-- **Intellectual lineage:** All 9 source traditions. Palmer's framework is the canvas that materializes. Bullipedia's fork model is the template system. Adrià's structured knowledge is RPPL. Sanford's whole-system thinking is the cross-dimensional computation. Perkins' enterprise breakdown is the decomposition engine
-- **The Lotus Flow:** Retired as entry point. Potential future use as "deepen your context" experience after the operator is already hooked
-- **Workspace code:** Retired as daily experience. Potential future use as the canvas view that materializes from accumulated context
-- **Conversation engine:** The 6-phase structure may inform how the conversation layer deepens context over time
-
----
-
-## MVP: The Core Loop
-
-The minimum build to test the hypothesis: if HUMA decomposes what someone wants into daily behaviors, produces a production sheet, and computes cross-dimensional insights from behavior data — will people come back?
-
-### What to build:
-
-1. **Conversation interface.** Text-based (voice later). Open prompt: "What's going on?" No gated onboarding. Claude API structures the operator's natural language into context. Dynamic palette sidebar shows related pain points and aspirations as tappable bubbles that update based on the conversation. Palette drawn from a curated set of ~50 common pain points and aspirations, each pre-mapped to dimensional effects and decomposition templates.
-
-2. **Decomposition engine.** Takes conversation output, produces structured behavior sets with dimensional mappings. Starts with 20-30 pre-built aspiration templates that Claude customizes based on conversation context.
-
-3. **Daily production sheet.** Mobile-first. Today's 3-5 specific behaviors from decomposed aspirations. Tappable for detail. Checkable. Morning notification.
-
-4. **Insight engine.** After 5+ days of behavior data, cross-references check-off patterns through decomposition chains. Produces one connection-based observation when the data supports it. Delivered in-app and optionally via notification.
-
-5. **Persistence.** All context from conversation stored in structured format (Supabase JSONB). All behavior data stored with timestamps. Decomposition chains stored as structured objects.
-
-### What NOT to build (yet):
-
-- Lotus Flow / onboarding flow
-- Capital ratings / shape / radar chart
-- Workspace with petals / spatial canvas
-- Template gallery / fork system
-- Pattern commons / social signals
-- Weekly review / seasonal review
-- Voice input
-- Desktop layout
-
-### Test with:
-
-20 people. 2 weeks. Measure:
-
-1. **Day 7 retention.** Are they opening the production sheet daily?
-2. **Insight response.** When the first insight lands, do they share it, add an aspiration, or ignore it?
-3. **Context volunteering.** Do they tell HUMA more without being asked?
-4. **The sentence test.** Can they tell a friend what HUMA does in one sentence that makes the friend want to try it?
+- **Sovereignty principles:** All of them. Context through gift, not surveillance
+- **Ethical framework:** Dependency test, graduation imperative, distress protocol
+- **Voice Bible:** Fence-post neighbor. Every word matters. No jargon
+- **Design system:** Sand/sage/amber/sky palette. Cormorant Garamond + Source Sans 3
+- **Intellectual lineage:** All 9 source traditions
 
 ---
 
 ## The Test
 
-The product works when someone states an aspiration, gets a production sheet, follows it for a week, receives an insight that connects two parts of their life they didn't know were related, and texts that insight to a friend who then downloads HUMA and states their own aspiration.
+The product works when someone:
+1. States an aspiration
+2. Sees their system materialize — aspiration, behaviors, connections, dimensions
+3. Gets a production sheet that feels personal
+4. Checks things off and sees the data accumulate visibly
+5. Opens the System tab and sees their life becoming structured — without having designed anything
+6. Browses the palette and discovers something they didn't know they wanted
+7. Receives an insight that connects two parts of their life they didn't know were related
+8. Screenshots that insight and texts it to a friend
 
-The paradigm breaks one production sheet at a time.
+The paradigm breaks one production sheet at a time. But what makes them stay is watching their system grow.
 
 ---
 
@@ -255,7 +260,7 @@ The paradigm breaks one production sheet at a time.
 
 Nothing about this requires people to improve themselves, develop new capacities, or learn a framework. They just run their lives through HUMA because it's easier than not doing so. The seeing develops as a byproduct. The capacity grows through use. The pattern literacy emerges without being taught.
 
-When a million people are running their lives through HUMA, the knowledge commons contains validated, structured, contextual knowledge about how human lives actually work — what behaviors cascade, what dimensions couple, what leverage points exist for specific contexts. That knowledge changes policy, community design, education, medicine. Not because HUMA tells institutions what to do — because the data reveals what actually works for real people in real situations.
+When a million people are running their lives through HUMA, the knowledge commons contains validated, structured, contextual knowledge about how human lives actually work — what behaviors cascade, what dimensions couple, what leverage points exist for specific contexts. That knowledge changes policy, community design, education, medicine.
 
 The renaissance happens not because people decided to be better, but because the infrastructure made wholeness the path of least resistance.
 
