@@ -874,6 +874,7 @@ export default function SystemPage() {
   const [conversationInitialMsg, setConversationInitialMsg] = useState<string | undefined>();
   const [loaded, setLoaded] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -915,12 +916,16 @@ export default function SystemPage() {
   // ─── Aspiration management functions ──────────────────────────────────────
 
   async function updateStage(aspirationId: string, newStage: "active" | "planning" | "someday") {
-    setAspirations(prev => prev.map(a =>
-      a.id === aspirationId ? { ...a, stage: newStage } : a
-    ));
-    localStorage.setItem("huma-v2-aspirations", JSON.stringify(
-      aspirations.map(a => a.id === aspirationId ? { ...a, stage: newStage } : a)
-    ));
+    // 1. Update local state
+    const updated = aspirations.map(a => a.id === aspirationId ? { ...a, stage: newStage } : a);
+    setAspirations(updated);
+    localStorage.setItem("huma-v2-aspirations", JSON.stringify(updated));
+
+    // 2. Clear cached sheet so Today page recompiles
+    const today = new Date().toISOString().split("T")[0];
+    localStorage.removeItem(`huma-v2-sheet-${today}`);
+
+    // 3. Persist to Supabase + clean up sheet entries if moving away from active
     if (user) {
       const supabase = createClient();
       if (supabase) {
@@ -928,8 +933,25 @@ export default function SystemPage() {
           .update({ stage: newStage, updated_at: new Date().toISOString() })
           .eq("id", aspirationId)
           .then(() => {});
+        if (newStage !== "active") {
+          supabase.from("sheet_entries")
+            .delete()
+            .eq("aspiration_id", aspirationId)
+            .eq("date", today)
+            .then(() => {});
+        }
       }
     }
+
+    // 4. Visual feedback
+    if (newStage === "someday") {
+      setFeedback("Moved to someday \u2014 removed from daily sheet");
+    } else if (newStage === "planning") {
+      setFeedback("Moved to planning \u2014 daily tasks paused");
+    } else {
+      setFeedback("Set to active \u2014 will appear on tomorrow\u2019s sheet");
+    }
+    setTimeout(() => setFeedback(null), 3000);
   }
 
   async function toggleBehavior(aspirationId: string, behaviorKey: string, enabled: boolean) {
@@ -956,12 +978,19 @@ export default function SystemPage() {
   }
 
   async function deleteAspiration(aspirationId: string) {
-    if (!confirm("Remove this aspiration? Your history is preserved.")) return;
-    setAspirations(prev => prev.filter(a => a.id !== aspirationId));
+    if (!confirm("Remove this aspiration and its daily items?")) return;
+
+    // 1. Update local state
+    const updated = aspirations.filter(a => a.id !== aspirationId);
+    setAspirations(updated);
     setEditingId(null);
-    localStorage.setItem("huma-v2-aspirations", JSON.stringify(
-      aspirations.filter(a => a.id !== aspirationId)
-    ));
+    localStorage.setItem("huma-v2-aspirations", JSON.stringify(updated));
+
+    // 2. Clear cached sheet so Today page recompiles
+    const today = new Date().toISOString().split("T")[0];
+    localStorage.removeItem(`huma-v2-sheet-${today}`);
+
+    // 3. Persist to Supabase + delete sheet entries
     if (user) {
       const supabase = createClient();
       if (supabase) {
@@ -969,8 +998,17 @@ export default function SystemPage() {
           .update({ status: "dropped", updated_at: new Date().toISOString() })
           .eq("id", aspirationId)
           .then(() => {});
+        supabase.from("sheet_entries")
+          .delete()
+          .eq("aspiration_id", aspirationId)
+          .eq("date", today)
+          .then(() => {});
       }
     }
+
+    // 4. Visual feedback
+    setFeedback("Aspiration removed");
+    setTimeout(() => setFeedback(null), 3000);
   }
 
   // Filter dropped aspirations from display
@@ -1156,6 +1194,29 @@ export default function SystemPage() {
           localStorage.setItem("huma-v2-aspirations", JSON.stringify([...aspirations, asp]));
         }}
       />
+
+      {/* Feedback toast */}
+      {feedback && (
+        <div
+          className="font-sans animate-fade-in"
+          style={{
+            position: "fixed",
+            bottom: 80,
+            left: 24,
+            right: 24,
+            padding: "12px 16px",
+            background: "#5C7A62",
+            color: "white",
+            borderRadius: 8,
+            fontSize: "0.85rem",
+            fontWeight: 500,
+            textAlign: "center",
+            zIndex: 100,
+          }}
+        >
+          {feedback}
+        </div>
+      )}
     </div>
   );
 }

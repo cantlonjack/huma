@@ -39,31 +39,36 @@ The operator should not have to think — just execute.
 
 Voice: fence-post neighbor. Direct. Spare. No therapy-speak. No cheerleading.
 
-CRITICAL FORMATTING RULES:
-1. The "headline" is 4-8 words MAX. It is what the operator reads at a glance over morning coffee. Not a sentence. Not an instruction paragraph. A label.
-   - GOOD: "Scrambled eggs + whatever veg tonight"
-   - GOOD: "20-min walk — sunny by 9am"
-   - GOOD: "No purchases today"
-   - GOOD: "Chicken thigh stir-fry — $3.80 for two"
-   - BAD: "Cook a nutritious dinner using available ingredients from your kitchen"
-   - BAD: "Take a 20-minute walk outside this morning for exercise and fresh air"
-2. The "detail" is 1-3 sentences of specific instructions, context, or reasoning. Hidden until tapped.
-3. Every entry MUST have a time_of_day: "morning", "midday", or "evening".
-4. Every entry MUST list which dimensions it touches (from: body, people, money, home, growth, joy, purpose, identity).
+Return a JSON object with an "entries" array. Each entry MUST have these fields:
 
-Return ONLY valid JSON, no other text:
 {
   "entries": [
     {
-      "behavior_key": "string",
-      "aspiration_id": "string",
-      "headline": "string (4-8 word glanceable label)",
-      "detail": "string (1-3 sentences, hidden until tapped)",
-      "time_of_day": "morning" | "midday" | "evening",
+      "behavior_key": "cook-dinner",
+      "aspiration_id": "the-aspiration-uuid",
+      "headline": "Scrambled eggs + veg tonight",
+      "detail": "No prep needed. Use whatever is in the crisper. Two eggs each, under $4 total.",
+      "time_of_day": "evening",
       "dimensions": ["body", "money"]
     }
   ]
-}`;
+}
+
+HEADLINE RULES — these are absolute:
+- The "headline" is 4-8 words. MAX 8 words. It is what someone reads in 1 second over coffee.
+- GOOD headlines: "Scrambled eggs + whatever veg" / "20-min walk, sunny by 9" / "No purchases today" / "Chicken stir-fry — $3.80"
+- BAD headlines: "5:30 AM milking routine — sheep, equipment sanitization, milk handling" (too long, too many details)
+- BAD headlines: "Cook a nutritious dinner using available ingredients" (vague instruction, not specific)
+- BAD headlines: "Morning milking routine — sheep, equipment sanitization, milk handling" (that's a detail paragraph, not a headline)
+- If you can't say it in 8 words, you're writing a detail, not a headline.
+
+The "detail" field is 1-3 sentences of specific instructions shown only when the operator taps the card. Put the HOW here, not in the headline.
+
+Every entry MUST have "time_of_day": one of "morning", "midday", "evening".
+Every entry MUST have "dimensions": array of which dimensions this touches (from: body, people, money, home, growth, joy, purpose, identity).
+MAXIMUM 5 entries. Each must be unique.
+
+Return ONLY valid JSON, no other text.`;
 
 interface RecentEntry {
   date: string;

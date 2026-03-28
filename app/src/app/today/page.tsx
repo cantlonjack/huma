@@ -100,6 +100,18 @@ function capEntries(entries: SheetEntry[], max: number = 5): SheetEntry[] {
   return entries.slice(0, max);
 }
 
+// ─── Orphan Filter (remove entries from dropped/non-active aspirations) ──────
+
+function filterOrphanedEntries(entries: SheetEntry[], aspirations: Aspiration[]): SheetEntry[] {
+  if (aspirations.length === 0) return entries; // no aspiration data loaded yet — don't filter
+  const activeIds = new Set(
+    aspirations
+      .filter(a => a.status !== "dropped" && (a.stage || "active") === "active")
+      .map(a => a.id)
+  );
+  return entries.filter(e => !e.aspirationId || activeIds.has(e.aspirationId));
+}
+
 // ─── Aspiration Quick-Look Sheet ─────────────────────────────────────────────
 
 function AspirationQuickLook({
@@ -500,10 +512,18 @@ export default function TodayPage() {
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       try {
-        setEntries(capEntries(deduplicateEntries(JSON.parse(cached))));
-        setLoading(false);
-        compilingRef.current = false;
-        return;
+        const cachedEntries: SheetEntry[] = JSON.parse(cached);
+        // Legacy format detection: if no entries have headline, force recompile
+        const hasNewFormat = cachedEntries.some(e => e.headline);
+        if (!hasNewFormat && cachedEntries.length > 0) {
+          localStorage.removeItem(cacheKey);
+          // Fall through to recompilation
+        } else {
+          setEntries(capEntries(deduplicateEntries(cachedEntries)));
+          setLoading(false);
+          compilingRef.current = false;
+          return;
+        }
       } catch { /* recompile */ }
     }
 
@@ -635,6 +655,18 @@ export default function TodayPage() {
   useEffect(() => {
     compileSheet();
   }, [compileSheet]);
+
+  // Re-filter entries when aspirations change (e.g., deletion or stage change on /system)
+  useEffect(() => {
+    if (aspirations.length > 0 && entries.length > 0) {
+      const filtered = filterOrphanedEntries(entries, aspirations);
+      if (filtered.length !== entries.length) {
+        setEntries(filtered);
+        localStorage.setItem(`huma-v2-sheet-${date}`, JSON.stringify(filtered));
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aspirations]);
 
   // Toggle check-off with feedback animation
   const toggleEntry = useCallback((id: string) => {
