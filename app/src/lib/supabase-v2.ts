@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Aspiration, ChatMessage, SheetEntry, Insight } from "@/types/v2";
+import { getLocalDate, getLocalDateOffset } from "@/lib/date-utils";
 
 // ─── Context ─────────────────────────────────────────────────────────────────
 
@@ -191,14 +192,6 @@ export async function saveSheetEntries(
 ) {
   if (entries.length === 0) return;
 
-  // Delete any existing entries for this user+date first to prevent duplicates.
-  // Each compilation generates new UUIDs, so upsert-by-id doesn't deduplicate.
-  await supabase
-    .from("sheet_entries")
-    .delete()
-    .eq("user_id", userId)
-    .eq("date", date);
-
   // Validate aspiration_ids exist in DB to avoid FK constraint violations
   const aspirationIds = [...new Set(entries.map(e => e.aspirationId).filter(Boolean))];
   const validAspirationIds = new Set<string>();
@@ -230,8 +223,29 @@ export async function saveSheetEntries(
     };
   });
 
+  // Insert new entries FIRST — if this fails, old entries are still intact
   const { error } = await supabase.from("sheet_entries").insert(rows);
   if (error) throw error;
+
+  // Delete old entries that aren't in the new set (safe: new entries already saved)
+  const newIds = new Set(entries.map(e => e.id));
+  const { data: existing } = await supabase
+    .from("sheet_entries")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("date", date);
+
+  if (existing) {
+    const staleIds = existing
+      .map(r => r.id as string)
+      .filter(id => !newIds.has(id));
+    if (staleIds.length > 0) {
+      await supabase
+        .from("sheet_entries")
+        .delete()
+        .in("id", staleIds);
+    }
+  }
 }
 
 export async function updateSheetEntryCheck(
@@ -257,9 +271,7 @@ export async function getRecentSheetHistory(
   userId: string,
   days: number = 7
 ): Promise<Array<{ date: string; behaviorKey: string; checked: boolean }>> {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
-  const startStr = startDate.toISOString().split("T")[0];
+  const startStr = getLocalDateOffset(days);
 
   const { data } = await supabase
     .from("sheet_entries")
@@ -346,12 +358,12 @@ export async function logBehaviorCheckoff(
   date: string,
   completed: boolean
 ) {
-  // Upsert: one entry per user+behavior+date
+  // Upsert: one entry per user+behavior_key+date (stable slug, not display text)
   const { data: existing } = await supabase
     .from("behavior_log")
     .select("id")
     .eq("user_id", userId)
-    .eq("behavior_name", behaviorName)
+    .eq("behavior_key", behaviorKey)
     .eq("date", date)
     .limit(1)
     .maybeSingle();
@@ -360,6 +372,7 @@ export async function logBehaviorCheckoff(
     await supabase
       .from("behavior_log")
       .update({
+        behavior_name: behaviorName,
         completed,
         completed_at: completed ? new Date().toISOString() : null,
       })
@@ -368,6 +381,7 @@ export async function logBehaviorCheckoff(
     await supabase.from("behavior_log").insert({
       user_id: userId,
       behavior_id: null,
+      behavior_key: behaviorKey,
       behavior_name: behaviorName,
       date,
       completed,
@@ -379,17 +393,15 @@ export async function logBehaviorCheckoff(
 export async function getBehaviorWeekCount(
   supabase: SupabaseClient,
   userId: string,
-  behaviorName: string
+  behaviorKey: string
 ): Promise<{ completed: number; total: number }> {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - 7);
-  const startStr = startDate.toISOString().split("T")[0];
+  const startStr = getLocalDateOffset(7);
 
   const { data } = await supabase
     .from("behavior_log")
     .select("completed")
     .eq("user_id", userId)
-    .eq("behavior_name", behaviorName)
+    .eq("behavior_key", behaviorKey)
     .gte("date", startStr);
 
   if (!data) return { completed: 0, total: 0 };
@@ -403,13 +415,11 @@ export async function getBehaviorWeekCounts(
   supabase: SupabaseClient,
   userId: string
 ): Promise<Record<string, { completed: number; total: number }>> {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - 7);
-  const startStr = startDate.toISOString().split("T")[0];
+  const startStr = getLocalDateOffset(7);
 
   const { data } = await supabase
     .from("behavior_log")
-    .select("behavior_name, completed")
+    .select("behavior_key, behavior_name, completed")
     .eq("user_id", userId)
     .gte("date", startStr);
 
@@ -417,11 +427,13 @@ export async function getBehaviorWeekCounts(
 
   const counts: Record<string, { completed: number; total: number }> = {};
   for (const row of data) {
-    if (!counts[row.behavior_name]) {
-      counts[row.behavior_name] = { completed: 0, total: 0 };
+    // Key by behavior_key (stable slug); fall back to behavior_name for legacy rows
+    const key = row.behavior_key || row.behavior_name;
+    if (!counts[key]) {
+      counts[key] = { completed: 0, total: 0 };
     }
-    counts[row.behavior_name].total++;
-    if (row.completed) counts[row.behavior_name].completed++;
+    counts[key].total++;
+    if (row.completed) counts[key].completed++;
   }
   return counts;
 }
@@ -564,15 +576,17 @@ export async function migrateLocalStorageToSupabase(
     }
   } catch { /* skip */ }
 
-  // 4. Migrate today's sheet entries
+  // 4. Migrate ALL sheet entries (not just today — preserves historical check-off data)
   try {
-    const today = new Date().toISOString().split("T")[0];
-    const sheetStr = localStorage.getItem(`huma-v2-sheet-${today}`);
-    if (sheetStr) {
-      const entries = JSON.parse(sheetStr) as SheetEntry[];
-      if (entries.length > 0) {
-        await saveSheetEntries(supabase, userId, entries, today);
-      }
+    const sheetKeys = Object.keys(localStorage).filter(k => k.startsWith("huma-v2-sheet-"));
+    for (const key of sheetKeys) {
+      try {
+        const date = key.replace("huma-v2-sheet-", "");
+        const entries = JSON.parse(localStorage.getItem(key) || "[]") as SheetEntry[];
+        if (entries.length > 0) {
+          await saveSheetEntries(supabase, userId, entries, date);
+        }
+      } catch { /* skip individual date on error, continue with rest */ }
     }
   } catch { /* skip */ }
 

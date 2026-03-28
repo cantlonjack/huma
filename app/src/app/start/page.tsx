@@ -375,13 +375,16 @@ export default function StartPage() {
   const handleAuthenticated = useCallback(async () => {
     setShowAuthModal(false);
 
-    // Wait a tick for auth state to propagate
-    await new Promise(r => setTimeout(r, 500));
-
     try {
       const supabase = createClient();
       if (supabase) {
-        const { data: { user: freshUser } } = await supabase.auth.getUser();
+        // Poll for auth state instead of fixed 500ms delay
+        let freshUser = null;
+        for (let i = 0; i < 10; i++) {
+          const { data: { user: u } } = await supabase.auth.getUser();
+          if (u) { freshUser = u; break; }
+          await new Promise(r => setTimeout(r, 300));
+        }
         if (freshUser) {
           await migrateLocalStorageToSupabase(supabase, freshUser.id);
         }

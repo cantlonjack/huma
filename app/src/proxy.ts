@@ -41,13 +41,6 @@ export async function proxy(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Protected routes require auth
-  if (request.nextUrl.pathname.startsWith("/operate") && !user) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("next", request.nextUrl.pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
   // V2 protected routes: /today and /chat require auth
   if ((pathname === "/today" || pathname === "/chat") && !user) {
     return NextResponse.redirect(new URL("/start", request.url));
@@ -58,7 +51,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/operate/:path*",
     "/today",
     "/chat",
   ],

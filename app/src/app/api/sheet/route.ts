@@ -155,6 +155,7 @@ export async function POST(request: Request) {
   const knownContext = (body.knownContext || {}) as Record<string, unknown>;
   const recentHistory = (body.recentHistory || []) as RecentEntry[];
   const conversationMessages = (body.conversationMessages || []) as Array<{ role: string; content: string }>;
+  // Date should always come from the client (local timezone). UTC fallback only as last resort.
   const date = (body.date || new Date().toISOString().split("T")[0]) as string;
 
   if (aspirations.length === 0) {

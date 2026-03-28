@@ -14,6 +14,7 @@ import {
   getKnownContext,
   updateKnownContext,
 } from "@/lib/supabase-v2";
+import { getLocalDate } from "@/lib/date-utils";
 
 type RichMessage = ChatMessage & {
   options?: string[] | null;
@@ -329,7 +330,7 @@ export default function ChatPage() {
           const supabase = createClient();
           if (supabase) updateKnownContext(supabase, user.id, newContext).catch(() => {});
         }
-        const today = new Date().toISOString().split("T")[0];
+        const today = getLocalDate();
         localStorage.removeItem(`huma-v2-sheet-${today}`);
       }
 

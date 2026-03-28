@@ -14,6 +14,7 @@ import {
 } from "@/lib/supabase-v2";
 import { paletteConcepts } from "@/engine/palette-concepts";
 import { displayName } from "@/lib/display-name";
+import { getLocalDate } from "@/lib/date-utils";
 
 const ALL_DIMENSIONS: DimensionKey[] = ["body", "people", "money", "home", "growth", "joy", "purpose", "identity"];
 
@@ -874,7 +875,12 @@ export default function SystemPage() {
   const [conversationInitialMsg, setConversationInitialMsg] = useState<string | undefined>();
   const [loaded, setLoaded] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  function showToast(message: string, type: "success" | "error" = "success") {
+    setFeedback({ message, type });
+    setTimeout(() => setFeedback(null), 3000);
+  }
 
   useEffect(() => {
     async function load() {
@@ -916,63 +922,91 @@ export default function SystemPage() {
   // ─── Aspiration management functions ──────────────────────────────────────
 
   async function updateStage(aspirationId: string, newStage: "active" | "planning" | "someday") {
-    // 1. Update local state
+    // 1. Capture previous state for rollback
+    const previousAspirations = aspirations;
+    const aspiration = aspirations.find(a => a.id === aspirationId);
+    const previousStage = aspiration?.stage || "active";
+
+    // 2. Optimistic local update
     const updated = aspirations.map(a => a.id === aspirationId ? { ...a, stage: newStage } : a);
     setAspirations(updated);
     localStorage.setItem("huma-v2-aspirations", JSON.stringify(updated));
 
-    // 2. Clear cached sheet so Today page recompiles
-    const today = new Date().toISOString().split("T")[0];
+    // 3. Clear cached sheet so Today page recompiles
+    const today = getLocalDate();
     localStorage.removeItem(`huma-v2-sheet-${today}`);
 
-    // 3. Persist to Supabase + clean up sheet entries if moving away from active
+    // 4. Persist to Supabase + clean up sheet entries if moving away from active
     if (user) {
       const supabase = createClient();
       if (supabase) {
-        supabase.from("aspirations")
+        const { error } = await supabase.from("aspirations")
           .update({ stage: newStage, updated_at: new Date().toISOString() })
-          .eq("id", aspirationId)
-          .then(() => {});
+          .eq("id", aspirationId);
+
+        if (error) {
+          // Revert local state
+          setAspirations(previousAspirations);
+          localStorage.setItem("huma-v2-aspirations", JSON.stringify(previousAspirations));
+          showToast("Couldn\u2019t save \u2014 try again", "error");
+          return;
+        }
+
         if (newStage !== "active") {
-          supabase.from("sheet_entries")
+          const { error: sheetError } = await supabase.from("sheet_entries")
             .delete()
             .eq("aspiration_id", aspirationId)
-            .eq("date", today)
-            .then(() => {});
+            .eq("date", today);
+          if (sheetError) {
+            // Non-blocking: orphan filter on /today will catch it
+            showToast("Stage updated, but sheet cleanup failed", "error");
+            return;
+          }
         }
       }
     }
 
-    // 4. Visual feedback
+    // 5. Visual feedback
     if (newStage === "someday") {
-      setFeedback("Moved to someday \u2014 removed from daily sheet");
+      showToast("Moved to someday \u2014 removed from daily sheet");
     } else if (newStage === "planning") {
-      setFeedback("Moved to planning \u2014 daily tasks paused");
+      showToast("Moved to planning \u2014 daily tasks paused");
     } else {
-      setFeedback("Set to active \u2014 will appear on tomorrow\u2019s sheet");
+      showToast("Set to active \u2014 will appear on tomorrow\u2019s sheet");
     }
-    setTimeout(() => setFeedback(null), 3000);
   }
 
   async function toggleBehavior(aspirationId: string, behaviorKey: string, enabled: boolean) {
     const aspiration = aspirations.find(a => a.id === aspirationId);
     if (!aspiration) return;
+
+    // 1. Capture previous state for rollback
+    const previousAspirations = aspirations;
+
+    // 2. Optimistic local update
     const updatedBehaviors = aspiration.behaviors.map(b =>
       b.key === behaviorKey ? { ...b, enabled } : b
     );
-    setAspirations(prev => prev.map(a =>
+    const updatedAspirations = aspirations.map(a =>
       a.id === aspirationId ? { ...a, behaviors: updatedBehaviors } : a
-    ));
-    localStorage.setItem("huma-v2-aspirations", JSON.stringify(
-      aspirations.map(a => a.id === aspirationId ? { ...a, behaviors: updatedBehaviors } : a)
-    ));
+    );
+    setAspirations(updatedAspirations);
+    localStorage.setItem("huma-v2-aspirations", JSON.stringify(updatedAspirations));
+
+    // 3. Persist to Supabase
     if (user) {
       const supabase = createClient();
       if (supabase) {
-        supabase.from("aspirations")
+        const { error } = await supabase.from("aspirations")
           .update({ behaviors: updatedBehaviors, updated_at: new Date().toISOString() })
-          .eq("id", aspirationId)
-          .then(() => {});
+          .eq("id", aspirationId);
+
+        if (error) {
+          // Revert local state
+          setAspirations(previousAspirations);
+          localStorage.setItem("huma-v2-aspirations", JSON.stringify(previousAspirations));
+          showToast("Couldn\u2019t save \u2014 try again", "error");
+        }
       }
     }
   }
@@ -980,35 +1014,51 @@ export default function SystemPage() {
   async function deleteAspiration(aspirationId: string) {
     if (!confirm("Remove this aspiration and its daily items?")) return;
 
-    // 1. Update local state
+    // 1. Capture previous state for rollback
+    const previousAspirations = aspirations;
+    const previousEditingId = editingId;
+
+    // 2. Optimistic local update
     const updated = aspirations.filter(a => a.id !== aspirationId);
     setAspirations(updated);
     setEditingId(null);
     localStorage.setItem("huma-v2-aspirations", JSON.stringify(updated));
 
-    // 2. Clear cached sheet so Today page recompiles
-    const today = new Date().toISOString().split("T")[0];
+    // 3. Clear cached sheet so Today page recompiles
+    const today = getLocalDate();
     localStorage.removeItem(`huma-v2-sheet-${today}`);
 
-    // 3. Persist to Supabase + delete sheet entries
+    // 4. Persist to Supabase + delete sheet entries
     if (user) {
       const supabase = createClient();
       if (supabase) {
-        supabase.from("aspirations")
+        const { error } = await supabase.from("aspirations")
           .update({ status: "dropped", updated_at: new Date().toISOString() })
-          .eq("id", aspirationId)
-          .then(() => {});
-        supabase.from("sheet_entries")
+          .eq("id", aspirationId);
+
+        if (error) {
+          // Revert local state
+          setAspirations(previousAspirations);
+          setEditingId(previousEditingId);
+          localStorage.setItem("huma-v2-aspirations", JSON.stringify(previousAspirations));
+          showToast("Couldn\u2019t save \u2014 try again", "error");
+          return;
+        }
+
+        const { error: sheetError } = await supabase.from("sheet_entries")
           .delete()
           .eq("aspiration_id", aspirationId)
-          .eq("date", today)
-          .then(() => {});
+          .eq("date", today);
+        if (sheetError) {
+          // Non-blocking: orphan filter on /today will catch it
+          showToast("Aspiration removed, but sheet cleanup failed", "error");
+          return;
+        }
       }
     }
 
-    // 4. Visual feedback
-    setFeedback("Aspiration removed");
-    setTimeout(() => setFeedback(null), 3000);
+    // 5. Visual feedback
+    showToast("Aspiration removed");
   }
 
   // Filter dropped aspirations from display
@@ -1205,7 +1255,7 @@ export default function SystemPage() {
             left: 24,
             right: 24,
             padding: "12px 16px",
-            background: "#5C7A62",
+            background: feedback.type === "error" ? "#C45D3E" : "#5C7A62",
             color: "white",
             borderRadius: 8,
             fontSize: "0.85rem",
@@ -1214,7 +1264,7 @@ export default function SystemPage() {
             zIndex: 100,
           }}
         >
-          {feedback}
+          {feedback.message}
         </div>
       )}
     </div>

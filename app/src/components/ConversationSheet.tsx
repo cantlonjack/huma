@@ -10,6 +10,7 @@ import {
   updateKnownContext,
   saveAspiration,
 } from "@/lib/supabase-v2";
+import { getLocalDate } from "@/lib/date-utils";
 
 interface ConversationSheetProps {
   open: boolean;
@@ -194,7 +195,7 @@ export default function ConversationSheet({
         }
 
         // Invalidate sheet cache
-        const today = new Date().toISOString().split("T")[0];
+        const today = getLocalDate();
         localStorage.removeItem(`huma-v2-sheet-${today}`);
         onSheetInvalidated?.();
         setSheetToast("Tomorrow's sheet updated");

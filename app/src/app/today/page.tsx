@@ -8,6 +8,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import ConversationSheet from "@/components/ConversationSheet";
 import { displayName } from "@/lib/display-name";
+import { getLocalDate } from "@/lib/date-utils";
 import {
   getAspirations,
   getSheetEntries,
@@ -36,7 +37,7 @@ function getLocalRecentHistory(): Array<{ date: string; behaviorKey: string; che
   for (let i = 1; i <= 7; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split("T")[0];
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     try {
       const cached = localStorage.getItem(`huma-v2-sheet-${dateStr}`);
       if (cached) {
@@ -391,7 +392,7 @@ export default function TodayPage() {
   const { user } = useAuth();
   const [entries, setEntries] = useState<(SheetEntry & { _checking?: boolean })[]>([]);
   const [loading, setLoading] = useState(true);
-  const [date] = useState(() => new Date().toISOString().split("T")[0]);
+  const [date] = useState(() => getLocalDate());
   const [isFallback, setIsFallback] = useState(false);
   const compilingRef = useRef(false);
   const [aspirations, setAspirations] = useState<Aspiration[]>([]);

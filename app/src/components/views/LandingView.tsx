@@ -1,26 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { type Phase, PHASES } from "@/engine/types";
-import { type SavedConversation } from "@/lib/persistence";
 import "./landing.css";
-
-function formatTimeAgo(isoString: string): string {
-  const diff = Date.now() - new Date(isoString).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins} min ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
-}
-
-function phaseLabel(phase: Phase): string {
-  const info = PHASES.find((p) => p.id === phase);
-  const idx = PHASES.findIndex((p) => p.id === phase);
-  return info ? `${idx + 1}/6 — ${info.label}` : "";
-}
 
 // ═══ HERO SHAPE DATA ═══
 // Order: Body, People, Money, Home, Growth, Joy, Purpose, Identity
@@ -119,19 +100,10 @@ const SEC2_SHAPE_PATH = (() => {
 const SEC2_POINTS = SEC2_DIMS.map((d) => sec2Point(d.angle, d.score));
 
 interface LandingViewProps {
-  savedConvo: SavedConversation | null;
   onStart: () => void;
-  onResume: (saved: SavedConversation) => void;
-  onClearSaved: () => void;
 }
 
-export default function LandingView({
-  savedConvo,
-  onStart,
-  onResume,
-  onClearSaved,
-}: LandingViewProps) {
-  const [showSaved, setShowSaved] = useState(true);
+export default function LandingView({ onStart }: LandingViewProps) {
   const shapeRef = useRef<HTMLDivElement>(null);
   const [shapeActive, setShapeActive] = useState(false);
   const [shapeBreathing, setShapeBreathing] = useState(false);
@@ -288,9 +260,9 @@ export default function LandingView({
             </p>
             <div className="hero-cta-wrap">
               <button onClick={onStart} className="landing-cta">
-                See your shape <span className="cta-arrow">&rarr;</span>
+                Start with what&apos;s on your mind <span className="cta-arrow">&rarr;</span>
               </button>
-              <p className="hero-micro">8 questions. 90 seconds. Free.</p>
+              <p className="hero-micro">Tell HUMA what&apos;s going on. Free.</p>
             </div>
           </div>
         </div>
@@ -363,9 +335,9 @@ export default function LandingView({
           </div>
 
           <div className="shape-bottom-cta rv">
-            <p className="shape-bottom-time">This took 90 seconds to build.</p>
+            <p className="shape-bottom-time">This is what HUMA sees in 90 seconds.</p>
             <button onClick={onStart} className="landing-cta">
-              See yours <span className="cta-arrow">&rarr;</span>
+              Try it <span className="cta-arrow">&rarr;</span>
             </button>
           </div>
         </div>
@@ -376,26 +348,26 @@ export default function LandingView({
         <div className="how-inner">
           <div className="how-step rv">
             <div className="how-num">01</div>
-            <div className="how-title">Answer 8 questions</div>
+            <div className="how-title">Say what&apos;s on your mind</div>
             <p className="how-desc">
-              How does your body feel? How does money feel? Simple. Honest.
-              No wrong answers.
+              Tell HUMA what you&apos;re working on, what&apos;s weighing on you,
+              what you want to change. No forms. Just talk.
             </p>
           </div>
           <div className="how-step rv rv-d1">
             <div className="how-num">02</div>
-            <div className="how-title">See your shape</div>
+            <div className="how-title">See the system</div>
             <p className="how-desc">
-              Your answers become a shape{"\u200A"}&mdash;{"\u200A"}8 dimensions of your life, visible
-              at a glance.
+              HUMA decomposes your aspirations into behaviors and maps the
+              connections between them{"\u200A"}&mdash;{"\u200A"}across all 8 dimensions of your life.
             </p>
           </div>
           <div className="how-step rv rv-d2">
             <div className="how-num">03</div>
-            <div className="how-title">Get the one insight that connects everything</div>
+            <div className="how-title">Practice what works</div>
             <p className="how-desc">
-              HUMA reads the pattern between your dimensions and finds the one
-              lever that moves everything.
+              Every morning, 3-5 specific behaviors. Check them off. HUMA
+              learns what moves everything and what doesn&apos;t.
             </p>
           </div>
         </div>
@@ -419,24 +391,6 @@ export default function LandingView({
         <div className="footer-mark">HUMA</div>
         <div className="footer-tag">A new medium for human knowledge</div>
       </footer>
-
-      {/* ═══ SAVED CONVERSATION ═══ */}
-      {savedConvo && showSaved && (
-        <div className="saved-bar">
-          <span className="saved-bar-name">
-            Welcome back, {savedConvo.operatorName}.
-          </span>
-          <span style={{ fontSize: ".72rem", color: "var(--color-earth-400)" }}>
-            {phaseLabel(savedConvo.phase)} &middot; {formatTimeAgo(savedConvo.savedAt)}
-          </span>
-          <button className="saved-bar-resume" onClick={() => onResume(savedConvo)}>
-            Continue your map &rarr;
-          </button>
-          <button className="saved-bar-dismiss" onClick={() => setShowSaved(false)} aria-label="Dismiss">
-            &#10005;
-          </button>
-        </div>
-      )}
     </div>
   );
 }
