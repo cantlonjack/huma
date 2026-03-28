@@ -340,6 +340,7 @@ export default function StartPage() {
       behaviors: decomposedBehaviors,
       dimensionsTouched: [],
       status: "active",
+      stage: "active",
     }]));
 
     if (user) {

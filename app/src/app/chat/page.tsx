@@ -341,6 +341,7 @@ export default function ChatPage() {
           behaviors: parsedBehaviors,
           dimensionsTouched: [],
           status: "active",
+          stage: "active",
         };
         const updatedAsps = [...aspirations, newAspiration];
         setAspirations(updatedAsps);

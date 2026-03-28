@@ -66,6 +66,7 @@ export async function getAspirations(
     behaviors: (row.behaviors as Aspiration["behaviors"]) || [],
     dimensionsTouched: (row.dimensions_touched as Aspiration["dimensionsTouched"]) || [],
     status: row.status as Aspiration["status"],
+    stage: (row.stage as Aspiration["stage"]) || "active",
   }));
 }
 
@@ -85,6 +86,7 @@ export async function saveAspiration(
     behaviors: aspiration.behaviors,
     dimensions_touched: aspiration.dimensionsTouched,
     status: aspiration.status,
+    stage: aspiration.stage || "active",
   });
 
   if (error) throw error;
@@ -164,16 +166,21 @@ export async function getSheetEntries(
 
   if (!data) return [];
 
-  return data.map((row) => ({
-    id: row.id,
-    aspirationId: row.aspiration_id || "",
-    behaviorKey: row.behavior_key,
-    behaviorText: row.behavior_text,
-    detail: (row.detail as Record<string, unknown>) || {},
-    timeOfDay: row.time_of_day as SheetEntry["timeOfDay"],
-    checked: row.checked,
-    checkedAt: row.checked_at || undefined,
-  }));
+  return data.map((row) => {
+    const detail = (row.detail as Record<string, unknown>) || {};
+    return {
+      id: row.id,
+      aspirationId: row.aspiration_id || "",
+      behaviorKey: row.behavior_key,
+      behaviorText: row.behavior_text,
+      headline: row.behavior_text,
+      detail: detail,
+      timeOfDay: (row.time_of_day || "morning") as SheetEntry["timeOfDay"],
+      dimensions: Array.isArray(detail.dimensions) ? detail.dimensions as string[] : [],
+      checked: row.checked,
+      checkedAt: row.checked_at || undefined,
+    };
+  });
 }
 
 export async function saveSheetEntries(
@@ -205,18 +212,23 @@ export async function saveSheetEntries(
     }
   }
 
-  const rows = entries.map((e) => ({
-    id: e.id,
-    user_id: userId,
-    aspiration_id: validAspirationIds.has(e.aspirationId) ? e.aspirationId : null,
-    date,
-    behavior_key: e.behaviorKey,
-    behavior_text: e.behaviorText,
-    detail: e.detail,
-    time_of_day: e.timeOfDay,
-    checked: e.checked,
-    checked_at: e.checkedAt || null,
-  }));
+  const rows = entries.map((e) => {
+    const detailObj = typeof e.detail === "string"
+      ? { text: e.detail, dimensions: e.dimensions || [] }
+      : { ...(e.detail as Record<string, unknown>), dimensions: e.dimensions || (e.detail as Record<string, unknown>)?.dimensions || [] };
+    return {
+      id: e.id,
+      user_id: userId,
+      aspiration_id: validAspirationIds.has(e.aspirationId) ? e.aspirationId : null,
+      date,
+      behavior_key: e.behaviorKey,
+      behavior_text: e.headline || e.behaviorText,
+      detail: detailObj,
+      time_of_day: e.timeOfDay,
+      checked: e.checked,
+      checked_at: e.checkedAt || null,
+    };
+  });
 
   const { error } = await supabase.from("sheet_entries").insert(rows);
   if (error) throw error;

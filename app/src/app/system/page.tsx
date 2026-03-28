@@ -35,6 +35,36 @@ function normalizeDimension(d: string | { dimension: string }): string {
   return DIMENSION_NORMALIZE[key.toLowerCase()] || key;
 }
 
+// ─── Dimension Tag Colors ────────────────────────────────────────────────────
+
+const DIMENSION_TAG_STYLES: Record<string, { color: string; bg: string }> = {
+  body: { color: "#5C7A62", bg: "#EBF3EC" },
+  people: { color: "#4A7A8A", bg: "#F0F6F8" },
+  money: { color: "#B5621E", bg: "#FDF5EE" },
+  home: { color: "#8B7355", bg: "#F5F0EB" },
+  growth: { color: "#3A5A40", bg: "#EBF3EC" },
+  joy: { color: "#E8935A", bg: "#FDF5EE" },
+  purpose: { color: "#6B5B8A", bg: "#F5F0F8" },
+  identity: { color: "#6B5B4A", bg: "#F5F0EB" },
+};
+
+function DimTag({ dim }: { dim: string }) {
+  const key = dim.toLowerCase();
+  const style = DIMENSION_TAG_STYLES[key] || { color: "#4A6E50", bg: "#EBF3EC" };
+  return (
+    <span
+      className="font-sans"
+      style={{
+        fontSize: 9, fontWeight: 500, letterSpacing: "0.05em",
+        color: style.color, background: style.bg,
+        padding: "1px 6px", borderRadius: 100,
+      }}
+    >
+      {normalizeDimension(dim)}
+    </span>
+  );
+}
+
 // ─── Behavior Row ───────────────────────────────────────────────────────────
 
 function BehaviorRow({
@@ -52,6 +82,7 @@ function BehaviorRow({
   const behaviorDims = (behavior.dimensions || []).map((d: string | { dimension: string }) =>
     typeof d === "string" ? d : d.dimension
   );
+  const isDisabled = behavior.enabled === false;
 
   return (
     <div
@@ -60,6 +91,7 @@ function BehaviorRow({
         padding: "10px 16px",
         borderBottom: isLast ? "none" : "1px solid #F6F1E9",
         cursor: hasDetail ? "pointer" : "default",
+        opacity: isDisabled ? 0.4 : 1,
       }}
     >
       {/* Main row */}
@@ -72,41 +104,25 @@ function BehaviorRow({
         />
         <span
           className="font-sans"
-          style={{ flex: 1, fontSize: 13, fontWeight: 500, color: "#2A2520", lineHeight: 1.3 }}
+          style={{
+            flex: 1, fontSize: 13, fontWeight: 500, color: "#2A2520", lineHeight: 1.3,
+            textDecoration: isDisabled ? "line-through" : "none",
+          }}
         >
           {behavior.text}
         </span>
-        <span
-          className="font-sans"
-          style={{ fontSize: 12, fontWeight: 400, color: "#A8A196", whiteSpace: "nowrap" }}
-        >
-          {weekCount ? `${weekCount.completed}/${weekCount.total} days` : "not yet"}
-        </span>
+        {/* Dimension tags — right-aligned on each behavior row */}
+        <div style={{ display: "flex", gap: 3, flexShrink: 0 }}>
+          {behaviorDims.map((dim: string) => (
+            <DimTag key={dim} dim={dim} />
+          ))}
+        </div>
         {hasDetail && (
           <span style={{ fontSize: 10, color: "#A8A196", marginLeft: 4 }}>
             {detailOpen ? "\u25B4" : "\u25BE"}
           </span>
         )}
       </div>
-
-      {/* Dimension tags — smaller than card-level */}
-      {behaviorDims.length > 0 && (
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 4, marginLeft: 18 }}>
-          {behaviorDims.map((dim: string) => (
-            <span
-              key={dim}
-              className="font-sans"
-              style={{
-                fontSize: 9, fontWeight: 500, letterSpacing: "0.1em",
-                color: "#4A6E50", background: "#EBF3EC",
-                padding: "1px 6px", borderRadius: 100,
-              }}
-            >
-              {normalizeDimension(dim)}
-            </span>
-          ))}
-        </div>
-      )}
 
       {/* Expandable detail */}
       {hasDetail && (
@@ -133,18 +149,46 @@ function BehaviorRow({
   );
 }
 
+// ─── Stage Indicator ─────────────────────────────────────────────────────────
+
+const STAGE_DOT: Record<string, string> = {
+  active: "#5C7A62",
+  planning: "#D4881E",
+  someday: "#A8A196",
+};
+
+const STAGE_LABEL: Record<string, string> = {
+  active: "Active",
+  planning: "Planning",
+  someday: "Someday",
+};
+
 // ─── Aspiration Card ─────────────────────────────────────────────────────────
 
 function AspirationCard({
   aspiration,
   weekCounts,
+  knownContext,
   defaultExpanded = true,
+  editing,
+  onEditToggle,
+  onStageChange,
+  onBehaviorToggle,
+  onDelete,
 }: {
   aspiration: Aspiration;
   weekCounts: Record<string, { completed: number; total: number }>;
+  knownContext: Record<string, unknown>;
   defaultExpanded?: boolean;
+  editing: boolean;
+  onEditToggle: () => void;
+  onStageChange: (stage: "active" | "planning" | "someday") => void;
+  onBehaviorToggle: (behaviorKey: string, enabled: boolean) => void;
+  onDelete: () => void;
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
+  const stage = aspiration.stage || "active";
+  const isSomeday = stage === "someday";
 
   const dims = aspiration.dimensionsTouched?.length
     ? aspiration.dimensionsTouched
@@ -152,67 +196,205 @@ function AspirationCard({
         (b.dimensions || []).map(d => typeof d === "string" ? d : d.dimension)
       ))];
 
-  const activeCount = aspiration.behaviors.filter(b => {
-    const c = weekCounts[b.text];
-    return c && c.completed > 0;
-  }).length;
+  const enabledBehaviors = aspiration.behaviors.filter(b => b.enabled !== false);
+
+  // Context facts for "HUMA KNOWS" section
+  const contextEntries = Object.entries(knownContext).filter(([, v]) => v !== null && v !== undefined && v !== "");
 
   return (
-    <div className="bg-white border border-sand-300 overflow-hidden" style={{ borderRadius: "16px" }}>
+    <div
+      className="bg-white border border-sand-300 overflow-hidden"
+      style={{ borderRadius: "16px", opacity: isSomeday ? 0.6 : 1 }}
+    >
       {/* Card header — always visible */}
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full text-left cursor-pointer"
-        style={{ padding: "16px", borderBottom: expanded ? "1px solid #F6F1E9" : "none" }}
-      >
+      <div style={{ padding: "16px", borderBottom: (expanded || editing) ? "1px solid #F6F1E9" : "none" }}>
         <div className="flex items-start justify-between">
-          <p className="font-sans font-medium text-ink-900" style={{ fontSize: "16px", lineHeight: "1.3" }}>
-            {displayName(aspiration.clarifiedText || aspiration.rawText)}
-          </p>
-          <span style={{ color: "var(--color-ink-300)", fontSize: "12px", marginTop: "2px" }}>
-            {expanded ? "\u25B4" : "\u25BE"}
+          <div className="flex-1 min-w-0 cursor-pointer" onClick={() => !editing && setExpanded(!expanded)}>
+            <p
+              className="font-sans font-medium text-ink-900"
+              style={{ fontSize: "16px", lineHeight: "1.3", fontStyle: isSomeday ? "italic" : "normal" }}
+            >
+              {displayName(aspiration.clarifiedText || aspiration.rawText)}
+            </p>
+          </div>
+          <button
+            onClick={onEditToggle}
+            className="font-sans cursor-pointer flex-shrink-0"
+            style={{
+              fontSize: "12px", fontWeight: 500,
+              color: editing ? "#5C7A62" : "#A8A196",
+              background: "none", border: "none", padding: "2px 0 0 8px",
+            }}
+          >
+            {editing ? "done" : "edit"}
+          </button>
+        </div>
+
+        {/* Stage indicator + behavior count */}
+        <div className="flex items-center gap-1.5" style={{ marginTop: "6px" }}>
+          <span style={{
+            width: 6, height: 6, borderRadius: "50%",
+            background: STAGE_DOT[stage] || STAGE_DOT.active,
+            display: "inline-block",
+          }} />
+          <span className="font-sans" style={{ fontSize: 12, fontWeight: 500, color: "#A8A196" }}>
+            {STAGE_LABEL[stage] || "Active"} &middot; {enabledBehaviors.length} behavior{enabledBehaviors.length !== 1 ? "s" : ""}
           </span>
         </div>
 
-        {/* Collapsed summary */}
-        {!expanded && (
-          <p className="font-sans" style={{ fontSize: 13, color: "#A8A196", marginTop: 4 }}>
-            {aspiration.behaviors.length} behavior{aspiration.behaviors.length !== 1 ? "s" : ""}
-            {activeCount > 0 ? ` \u00b7 ${activeCount} active` : ""}
-          </p>
+        {/* Dimension pills */}
+        {!editing && (
+          <div className="flex flex-wrap gap-1.5" style={{ marginTop: "8px" }}>
+            {dims.map((dim) => (
+              <DimTag key={dim} dim={typeof dim === "string" ? dim : String(dim)} />
+            ))}
+          </div>
         )}
-
-        {/* Dimension pills — always visible */}
-        <div className="flex flex-wrap gap-1.5 mt-2">
-          {dims.map((dim) => (
-            <span
-              key={dim}
-              className="inline-flex rounded-full font-sans font-medium bg-sage-50 text-sage-600"
-              style={{ padding: "2px 8px", fontSize: "10px", letterSpacing: "0.1em", lineHeight: "1" }}
-            >
-              {DIMENSION_LABELS[dim as DimensionKey] || normalizeDimension(dim)}
-            </span>
-          ))}
-        </div>
-      </button>
-
-      {/* Behaviors list — animated expand/collapse */}
-      <div
-        style={{
-          maxHeight: expanded ? 2000 : 0,
-          overflow: "hidden",
-          transition: "max-height 400ms cubic-bezier(0.22, 1, 0.36, 1)",
-        }}
-      >
-        {aspiration.behaviors.map((behavior, i) => (
-          <BehaviorRow
-            key={behavior.key || i}
-            behavior={behavior}
-            weekCount={weekCounts[behavior.text]}
-            isLast={i === aspiration.behaviors.length - 1}
-          />
-        ))}
       </div>
+
+      {/* ─── EDIT MODE ─────────────────────────────────────────────── */}
+      {editing && (
+        <div style={{ padding: "16px" }}>
+          {/* Stage selector */}
+          <div>
+            <span className="font-sans" style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", color: "#A8A196" }}>
+              STAGE
+            </span>
+            <div className="flex gap-2" style={{ marginTop: "8px" }}>
+              {(["active", "planning", "someday"] as const).map((s) => {
+                const selected = stage === s;
+                const bgMap = { active: "#5C7A62", planning: "#D4881E", someday: "#A8A196" };
+                return (
+                  <button
+                    key={s}
+                    onClick={() => onStageChange(s)}
+                    className="font-sans cursor-pointer transition-all"
+                    style={{
+                      padding: "6px 14px", borderRadius: 100,
+                      fontSize: 13, fontWeight: selected ? 600 : 400,
+                      background: selected ? bgMap[s] : "white",
+                      color: selected ? "white" : "#6B6358",
+                      border: selected ? "none" : "1px solid #DDD4C0",
+                    }}
+                  >
+                    {STAGE_LABEL[s]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Behavior toggles */}
+          <div style={{ marginTop: "20px" }}>
+            <span className="font-sans" style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", color: "#A8A196" }}>
+              BEHAVIORS
+            </span>
+            <div
+              style={{
+                marginTop: "8px", borderRadius: 12,
+                border: "1px solid #F6F1E9", overflow: "hidden",
+              }}
+            >
+              {aspiration.behaviors.map((behavior, i) => {
+                const enabled = behavior.enabled !== false;
+                const behaviorDims = (behavior.dimensions || []).map((d: string | { dimension: string }) =>
+                  typeof d === "string" ? d : d.dimension
+                );
+                return (
+                  <div
+                    key={behavior.key || i}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "10px 12px",
+                      borderBottom: i < aspiration.behaviors.length - 1 ? "1px solid #F6F1E9" : "none",
+                      opacity: enabled ? 1 : 0.4,
+                    }}
+                  >
+                    <button
+                      onClick={() => onBehaviorToggle(behavior.key, !enabled)}
+                      className="flex-shrink-0 cursor-pointer"
+                      style={{
+                        width: 20, height: 20, borderRadius: 4,
+                        border: enabled ? "none" : "1.5px solid #DDD4C0",
+                        background: enabled ? "#5C7A62" : "transparent",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}
+                    >
+                      {enabled && (
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="2.5 6 5 8.5 9.5 3.5" />
+                        </svg>
+                      )}
+                    </button>
+                    <span
+                      className="font-sans"
+                      style={{
+                        flex: 1, fontSize: 13, fontWeight: 500, color: "#2A2520",
+                        textDecoration: enabled ? "none" : "line-through",
+                      }}
+                    >
+                      {behavior.text}
+                    </span>
+                    <div style={{ display: "flex", gap: 3, flexShrink: 0 }}>
+                      {behaviorDims.map((dim: string) => (
+                        <DimTag key={dim} dim={dim} />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Delete button */}
+          <button
+            onClick={onDelete}
+            className="font-sans cursor-pointer"
+            style={{
+              marginTop: 16, background: "none", border: "none", padding: 0,
+              fontSize: 13, fontWeight: 500, color: "#C45D3E",
+            }}
+          >
+            Delete this aspiration
+          </button>
+        </div>
+      )}
+
+      {/* ─── NON-EDIT: Behaviors list ──────────────────────────────── */}
+      {!editing && (
+        <div
+          style={{
+            maxHeight: expanded ? 2000 : 0,
+            overflow: "hidden",
+            transition: "max-height 400ms cubic-bezier(0.22, 1, 0.36, 1)",
+          }}
+        >
+          {aspiration.behaviors.filter(b => b.enabled !== false).map((behavior, i, arr) => (
+            <BehaviorRow
+              key={behavior.key || i}
+              behavior={behavior}
+              weekCount={weekCounts[behavior.text]}
+              isLast={i === arr.length - 1}
+            />
+          ))}
+
+          {/* HUMA KNOWS section */}
+          {contextEntries.length > 0 && (
+            <div style={{ padding: "12px 16px", borderTop: "1px solid #F6F1E9" }}>
+              <span className="font-sans" style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", color: "#A8A196" }}>
+                HUMA KNOWS
+              </span>
+              <p className="font-sans" style={{ fontSize: 12, color: "#6B6358", marginTop: 4, lineHeight: 1.5 }}>
+                {contextEntries.slice(0, 4).map(([k, v]) => {
+                  const label = k.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+                  const val = Array.isArray(v) ? v.join(", ") : String(v);
+                  return `${label}: ${val}`;
+                }).join(" \u00b7 ")}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -691,6 +873,7 @@ export default function SystemPage() {
   const [conversationSheetOpen, setConversationSheetOpen] = useState(false);
   const [conversationInitialMsg, setConversationInitialMsg] = useState<string | undefined>();
   const [loaded, setLoaded] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -729,11 +912,75 @@ export default function SystemPage() {
     load();
   }, [user]);
 
+  // ─── Aspiration management functions ──────────────────────────────────────
+
+  async function updateStage(aspirationId: string, newStage: "active" | "planning" | "someday") {
+    setAspirations(prev => prev.map(a =>
+      a.id === aspirationId ? { ...a, stage: newStage } : a
+    ));
+    localStorage.setItem("huma-v2-aspirations", JSON.stringify(
+      aspirations.map(a => a.id === aspirationId ? { ...a, stage: newStage } : a)
+    ));
+    if (user) {
+      const supabase = createClient();
+      if (supabase) {
+        supabase.from("aspirations")
+          .update({ stage: newStage, updated_at: new Date().toISOString() })
+          .eq("id", aspirationId)
+          .then(() => {});
+      }
+    }
+  }
+
+  async function toggleBehavior(aspirationId: string, behaviorKey: string, enabled: boolean) {
+    const aspiration = aspirations.find(a => a.id === aspirationId);
+    if (!aspiration) return;
+    const updatedBehaviors = aspiration.behaviors.map(b =>
+      b.key === behaviorKey ? { ...b, enabled } : b
+    );
+    setAspirations(prev => prev.map(a =>
+      a.id === aspirationId ? { ...a, behaviors: updatedBehaviors } : a
+    ));
+    localStorage.setItem("huma-v2-aspirations", JSON.stringify(
+      aspirations.map(a => a.id === aspirationId ? { ...a, behaviors: updatedBehaviors } : a)
+    ));
+    if (user) {
+      const supabase = createClient();
+      if (supabase) {
+        supabase.from("aspirations")
+          .update({ behaviors: updatedBehaviors, updated_at: new Date().toISOString() })
+          .eq("id", aspirationId)
+          .then(() => {});
+      }
+    }
+  }
+
+  async function deleteAspiration(aspirationId: string) {
+    if (!confirm("Remove this aspiration? Your history is preserved.")) return;
+    setAspirations(prev => prev.filter(a => a.id !== aspirationId));
+    setEditingId(null);
+    localStorage.setItem("huma-v2-aspirations", JSON.stringify(
+      aspirations.filter(a => a.id !== aspirationId)
+    ));
+    if (user) {
+      const supabase = createClient();
+      if (supabase) {
+        supabase.from("aspirations")
+          .update({ status: "dropped", updated_at: new Date().toISOString() })
+          .eq("id", aspirationId)
+          .then(() => {});
+      }
+    }
+  }
+
+  // Filter dropped aspirations from display
+  const visibleAspirations = aspirations.filter(a => a.status !== "dropped");
+
   // Find shared behaviors across aspirations
   const sharedBehaviors: Array<{ name: string; aspirations: string[]; dimensionCount: number }> = [];
-  if (aspirations.length > 1) {
+  if (visibleAspirations.length > 1) {
     const behaviorMap = new Map<string, { aspirations: Set<string>; dims: Set<string> }>();
-    for (const asp of aspirations) {
+    for (const asp of visibleAspirations) {
       for (const b of asp.behaviors) {
         const key = b.text.toLowerCase().trim();
         if (!behaviorMap.has(key)) behaviorMap.set(key, { aspirations: new Set(), dims: new Set() });
@@ -761,7 +1008,7 @@ export default function SystemPage() {
   );
 
   // Exclude concepts overlapping with existing aspirations
-  const existingTexts = aspirations.map(a => (a.clarifiedText || a.rawText).toLowerCase());
+  const existingTexts = visibleAspirations.map(a => (a.clarifiedText || a.rawText).toLowerCase());
   const displayPalette = filteredPalette.filter(c =>
     !existingTexts.some(t => t.includes(c.text.toLowerCase()) || c.text.toLowerCase().includes(t))
   );
@@ -794,7 +1041,7 @@ export default function SystemPage() {
             style={{ width: "8px", height: "8px", background: "var(--color-sage-400)" }}
           />
         </div>
-      ) : aspirations.length === 0 ? (
+      ) : visibleAspirations.length === 0 ? (
         <>
           {/* Empty state */}
           <div className="bg-white border border-sand-300 text-center" style={{ margin: "20px 24px 0", borderRadius: "16px", padding: "32px 24px" }}>
@@ -824,7 +1071,7 @@ export default function SystemPage() {
         <>
           {/* Aspiration cards with connection indicators */}
           <div style={{ marginTop: "20px" }}>
-            {aspirations.map((asp, idx) => (
+            {visibleAspirations.map((asp, idx) => (
               <div key={asp.id} className={`animate-entrance-${Math.min(idx + 1, 5)}`}>
                 {idx > 0 && (() => {
                   const shared = sharedBehaviors.find(s =>
@@ -842,7 +1089,17 @@ export default function SystemPage() {
                 })()}
 
                 <div className="mx-6">
-                  <AspirationCard aspiration={asp} weekCounts={weekCounts} defaultExpanded={idx === 0 || aspirations.length === 1} />
+                  <AspirationCard
+                    aspiration={asp}
+                    weekCounts={weekCounts}
+                    knownContext={knownContext}
+                    defaultExpanded={idx === 0 || visibleAspirations.length === 1}
+                    editing={editingId === asp.id}
+                    onEditToggle={() => setEditingId(editingId === asp.id ? null : asp.id)}
+                    onStageChange={(stage) => updateStage(asp.id, stage)}
+                    onBehaviorToggle={(key, enabled) => toggleBehavior(asp.id, key, enabled)}
+                    onDelete={() => deleteAspiration(asp.id)}
+                  />
                 </div>
               </div>
             ))}
@@ -851,15 +1108,23 @@ export default function SystemPage() {
           {/* Visual context card */}
           <VisualContext knownContext={knownContext} onEdit={() => openConversationWith()} />
 
-          {/* Add aspiration button */}
-          <div className="text-center" style={{ marginTop: "16px" }}>
-            <button
-              onClick={() => openConversationWith("I also want to ")}
-              className="inline-flex items-center gap-1.5 rounded-full font-sans font-medium text-sage-700 cursor-pointer hover:bg-sage-50 transition-colors"
-              style={{ padding: "10px 20px", fontSize: "14px", border: "1.5px solid var(--color-sage-300)" }}
+          {/* Add aspiration card */}
+          <div className="mx-6" style={{ marginTop: "12px" }}>
+            <Link
+              href="/start"
+              className="block border border-dashed border-sand-300 bg-sand-50 hover:border-sage-300 transition-colors"
+              style={{ borderRadius: "16px", padding: "16px" }}
             >
-              + Add aspiration
-            </button>
+              <div className="flex items-center gap-2">
+                <span className="font-sans font-medium" style={{ fontSize: 16, color: "#5C7A62" }}>+</span>
+                <span className="font-sans font-medium" style={{ fontSize: 14, color: "#6B6358" }}>
+                  Tell HUMA what&apos;s next
+                </span>
+              </div>
+              <p className="font-sans" style={{ fontSize: 12, color: "#A8A196", marginTop: 4, marginLeft: 24 }}>
+                Start a conversation about something new
+              </p>
+            </Link>
           </div>
 
           {/* Palette */}

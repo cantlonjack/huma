@@ -50,6 +50,7 @@ export interface Behavior {
   days?: string[];
   dimensions: DimensionEffect[];
   detail?: string;
+  enabled?: boolean;
 }
 
 export interface Aspiration {
@@ -59,6 +60,7 @@ export interface Aspiration {
   behaviors: Behavior[];
   dimensionsTouched: DimensionKey[];
   status: "active" | "paused" | "completed" | "dropped";
+  stage: "active" | "planning" | "someday";
 }
 
 // ─── Production Sheet ────────────────────────────────────────────────────────
@@ -68,10 +70,13 @@ export interface SheetEntry {
   aspirationId: string;
   behaviorKey: string;
   behaviorText: string;
-  detail: Record<string, unknown>;
-  timeOfDay: "morning" | "afternoon" | "evening";
+  headline?: string;
+  detail: string | Record<string, unknown>;
+  timeOfDay: "morning" | "midday" | "evening";
+  dimensions?: string[];
   checked: boolean;
   checkedAt?: string;
+  streakText?: string;
 }
 
 // ─── Insights ────────────────────────────────────────────────────────────────

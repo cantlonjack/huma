@@ -209,6 +209,7 @@ export default function ConversationSheet({
           behaviors: parsedBehaviors,
           dimensionsTouched: [],
           status: "active",
+          stage: "active",
         };
         onAspirationAdded?.(newAspiration);
 

@@ -22,15 +22,15 @@ Recent behavior history (last 7 days):
 
 Today is {day_of_week}, {date}.
 
+IMPORTANT: Only behaviors from ACTIVE aspirations are included below.
+Do NOT generate entries for aspirations the operator is still planning or dreaming about.
+These are things the operator IS doing, not things they WANT to do someday.
+
 CRITICAL RULES:
 - Generate MAXIMUM 5 entries. Not 6. Not 7. Five or fewer.
 - Each entry must have a UNIQUE behavior_key. If two aspirations share a behavior (like "cook dinner at home"), generate ONE entry for it, not two.
 - Prioritize behaviors that touch the most life dimensions — these are the highest-leverage actions.
 - Every entry must be specific to TODAY — not generic advice.
-
-For each behavior that applies to today, produce a SPECIFIC, actionable entry.
-Not "cook dinner" — instead "Beef stew: use the bone broth from Sunday, chuck from the freezer. One pot. Recipe: [basic instructions]."
-Not "morning movement" — instead "20-minute walk. Sunrise is 7:14am, 34°F. Layer up."
 
 CRITICAL: The conversation transcript contains specifics the operator told you — household size, budget constraints, dietary approach, available ingredients, schedule. USE THEM. Every entry should feel like it was written for THIS person, not a generic template. If they said "two of us" — portions are for two. If they said "save money" — suggest budget-conscious options. If they mentioned specific ingredients — use those ingredients.
 
@@ -39,15 +39,28 @@ The operator should not have to think — just execute.
 
 Voice: fence-post neighbor. Direct. Spare. No therapy-speak. No cheerleading.
 
+CRITICAL FORMATTING RULES:
+1. The "headline" is 4-8 words MAX. It is what the operator reads at a glance over morning coffee. Not a sentence. Not an instruction paragraph. A label.
+   - GOOD: "Scrambled eggs + whatever veg tonight"
+   - GOOD: "20-min walk — sunny by 9am"
+   - GOOD: "No purchases today"
+   - GOOD: "Chicken thigh stir-fry — $3.80 for two"
+   - BAD: "Cook a nutritious dinner using available ingredients from your kitchen"
+   - BAD: "Take a 20-minute walk outside this morning for exercise and fresh air"
+2. The "detail" is 1-3 sentences of specific instructions, context, or reasoning. Hidden until tapped.
+3. Every entry MUST have a time_of_day: "morning", "midday", or "evening".
+4. Every entry MUST list which dimensions it touches (from: body, people, money, home, growth, joy, purpose, identity).
+
 Return ONLY valid JSON, no other text:
 {
   "entries": [
     {
       "behavior_key": "string",
       "aspiration_id": "string",
-      "text": "string (the specific action for today)",
-      "detail": "string (expanded instructions/reasoning)",
-      "time_of_day": "morning" | "afternoon" | "evening"
+      "headline": "string (4-8 word glanceable label)",
+      "detail": "string (1-3 sentences, hidden until tapped)",
+      "time_of_day": "morning" | "midday" | "evening",
+      "dimensions": ["body", "money"]
     }
   ]
 }`;
@@ -131,6 +144,7 @@ export async function POST(request: Request) {
       frequency: string;
       days?: string[];
       detail?: string;
+      enabled?: boolean;
     }>;
   }>;
   const knownContext = (body.knownContext || {}) as Record<string, unknown>;
@@ -155,7 +169,8 @@ export async function POST(request: Request) {
   }
 
   const aspirationsStr = aspirations.map(a => {
-    const behaviorList = a.behaviors.map(b => {
+    const activeBehaviors = a.behaviors.filter(b => b.enabled !== false);
+    const behaviorList = activeBehaviors.map(b => {
       let freq = b.frequency;
       if (b.frequency === "specific-days" && b.days) {
         freq = `on ${b.days.join(", ")}`;
@@ -212,7 +227,7 @@ ${Object.entries(allSpecificityHints).map(([key, hint]) => `  ${key}: ${hint}`).
 
     const text = response.content[0].type === "text" ? response.content[0].text : "{}";
 
-    let parsed: { entries: Array<Record<string, string>> };
+    let parsed: { entries: Array<Record<string, unknown>> };
     try {
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : { entries: [] };

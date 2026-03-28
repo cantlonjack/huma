@@ -53,7 +53,9 @@ function getLocalRecentHistory(): Array<{ date: string; behaviorKey: string; che
 function buildFallbackSheet(aspirations: Aspiration[]): SheetEntry[] {
   const dayOfWeek = new Date().toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
   const entries: SheetEntry[] = [];
-  for (const aspiration of aspirations) {
+  // Only active-stage aspirations generate daily sheet items
+  const activeOnly = aspirations.filter(a => (a.stage || "active") === "active");
+  for (const aspiration of activeOnly) {
     for (const behavior of aspiration.behaviors) {
       let includeToday = false;
       if (behavior.frequency === "daily") includeToday = true;
@@ -174,6 +176,44 @@ function AspirationQuickLook({
   );
 }
 
+// ─── Dimension Tag Styles ────────────────────────────────────────────────────
+
+function getDimensionStyle(dim: string): { color: string; background: string } {
+  const styles: Record<string, { color: string; background: string }> = {
+    body: { color: "#5C7A62", background: "#F0F5F1" },
+    people: { color: "#4A7A8A", background: "#F0F6F8" },
+    money: { color: "#B5621E", background: "#FDF5EE" },
+    home: { color: "#8B7355", background: "#F5F0EB" },
+    growth: { color: "#4A6E50", background: "#F0F5F1" },
+    joy: { color: "#C4841D", background: "#FDF8EE" },
+    purpose: { color: "#6B5B8A", background: "#F5F0F8" },
+    identity: { color: "#6B5F4E", background: "#F5F0EB" },
+  };
+  return styles[dim] || { color: "#8B8178", background: "#F5F2ED" };
+}
+
+// ─── Headline Helper (legacy fallback) ──────────────────────────────────────
+
+function getHeadline(entry: SheetEntry): string {
+  if (entry.headline) return entry.headline;
+  const text = entry.behaviorText || "";
+  if (text.length <= 60) return text;
+  const lastSpace = text.slice(0, 60).lastIndexOf(" ");
+  return (lastSpace > 20 ? text.slice(0, lastSpace) : text.slice(0, 60)) + "...";
+}
+
+function getDetailText(entry: SheetEntry): string {
+  if (typeof entry.detail === "string") return entry.detail;
+  return (entry.detail as Record<string, unknown>)?.text as string || "";
+}
+
+function getEntryDimensions(entry: SheetEntry): string[] {
+  if (entry.dimensions && entry.dimensions.length > 0) return entry.dimensions;
+  const d = entry.detail as Record<string, unknown>;
+  if (d?.dimensions && Array.isArray(d.dimensions)) return d.dimensions as string[];
+  return [];
+}
+
 // ─── Sheet Card ──────────────────────────────────────────────────────────────
 
 function SheetCard({
@@ -186,134 +226,147 @@ function SheetCard({
   weekCount?: { completed: number; total: number };
 }) {
   const [expanded, setExpanded] = useState(false);
-  const detailText = typeof entry.detail === "string"
-    ? entry.detail
-    : (entry.detail as Record<string, unknown>)?.text as string || "";
-
-  const dims = (() => {
-    const d = entry.detail as Record<string, unknown>;
-    if (d?.dimensions && Array.isArray(d.dimensions)) {
-      return d.dimensions as string[];
-    }
-    return [];
-  })();
+  const headline = getHeadline(entry);
+  const detailText = getDetailText(entry);
+  const dims = getEntryDimensions(entry);
+  const streakText = entry.streakText || (
+    entry.checked && weekCount
+      ? `Done \u00b7 ${weekCount.completed > 0 ? `${weekCount.completed} of ${Math.max(weekCount.total, weekCount.completed)} days this week` : "Day 1"}`
+      : ""
+  );
 
   return (
     <div
-      className="bg-white border border-sand-300 overflow-hidden transition-all"
       style={{
-        borderRadius: "16px",
-        opacity: entry.checked ? 0.5 : 1,
-        transition: "opacity 400ms var(--huma-ease), transform 400ms var(--huma-ease)",
+        padding: "14px 16px",
+        background: entry.checked ? "#FAFAF8" : "white",
+        border: "1px solid #DDD4C0",
+        borderRadius: 12,
+        opacity: entry.checked ? 0.55 : 1,
+        transition: "opacity 300ms cubic-bezier(0.22, 1, 0.36, 1)",
       }}
     >
-      <div style={{ padding: "16px" }}>
-        <div className="flex gap-3.5">
-          {/* Checkbox */}
-          <button
-            data-checkbox
-            onClick={(e) => { e.stopPropagation(); onToggle(); }}
-            className="mt-0.5 flex-shrink-0 cursor-pointer"
-            aria-label={entry.checked ? "Mark as not done" : "Mark as done"}
-            style={{ minWidth: "22px", minHeight: "22px" }}
-          >
-            <div
-              className={`flex items-center justify-center transition-all duration-200 ${
-                entry._checking ? "animate-check-bounce" : ""
-              }`}
-              style={{
-                width: "22px",
-                height: "22px",
-                borderRadius: "4px",
-                border: entry.checked ? "none" : "1.5px solid var(--color-sand-300)",
-                background: entry.checked ? "var(--color-sage-600)" : "transparent",
-                transitionTimingFunction: "var(--huma-ease)",
-              }}
-            >
-              {entry.checked && (
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="2.5 6 5 8.5 9.5 3.5" />
-                </svg>
-              )}
-            </div>
-          </button>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+        {/* Checkbox */}
+        <button
+          data-checkbox
+          onClick={(e) => { e.stopPropagation(); onToggle(); }}
+          className={entry._checking ? "animate-check-bounce" : ""}
+          aria-label={entry.checked ? "Mark as not done" : "Mark as done"}
+          style={{
+            width: 22, height: 22, minWidth: 22,
+            borderRadius: 4,
+            border: entry.checked ? "none" : "2px solid #B0A898",
+            background: entry.checked ? "#5C7A62" : "transparent",
+            cursor: "pointer",
+            marginTop: 1,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "all 200ms ease",
+          }}
+        >
+          {entry.checked && (
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </button>
 
-          {/* Content */}
+        {/* Content */}
+        <div
+          style={{ flex: 1, cursor: "pointer" }}
+          onClick={(e) => {
+            if ((e.target as HTMLElement).closest("[data-checkbox]")) return;
+            setExpanded(!expanded);
+          }}
+        >
+          {/* Headline — the glanceable line */}
           <div
-            className="flex-1 min-w-0 cursor-pointer"
-            onClick={(e) => {
-              if ((e.target as HTMLElement).closest("[data-checkbox]")) return;
-              setExpanded(!expanded);
+            className="font-sans"
+            style={{
+              fontSize: "0.95rem",
+              fontWeight: 500,
+              color: "#3D3529",
+              lineHeight: 1.35,
+              textDecoration: entry.checked ? "line-through" : "none",
             }}
           >
-            <div className="flex items-start justify-between gap-2">
-              <p
-                className="font-sans font-medium"
-                style={{
-                  fontSize: "15px",
-                  lineHeight: "1.3",
-                  color: "var(--color-ink-900)",
-                  textDecoration: entry.checked ? "line-through" : "none",
-                }}
-              >
-                {entry.behaviorText}
-              </p>
-              {detailText && (
-                <span className="flex-shrink-0" style={{ color: "var(--color-ink-300)", fontSize: "12px", marginTop: "2px" }}>
-                  {expanded ? "▴" : "▾"}
-                </span>
-              )}
+            {headline}
+          </div>
+
+          {/* Detail preview (one line, truncated) — only if NOT expanded and not checked */}
+          {!expanded && !entry.checked && detailText && (
+            <div
+              className="font-sans"
+              style={{
+                fontSize: "0.82rem",
+                fontWeight: 300,
+                color: "#8B8178",
+                marginTop: 4,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {detailText}
             </div>
+          )}
 
-            {/* Counter line (after check) */}
-            {entry.checked && weekCount && (
-              <p
-                className="font-sans font-medium mt-1 animate-fade-in"
-                style={{ fontSize: "12px", lineHeight: "1.4", color: "var(--color-sage-500)" }}
-              >
-                Done &middot; {weekCount.completed > 0 ? `${weekCount.completed} of ${Math.max(weekCount.total, weekCount.completed)} days this week` : "Day 1"}
-              </p>
-            )}
+          {/* Expanded detail */}
+          {expanded && detailText && (
+            <div
+              className="font-sans"
+              style={{
+                fontSize: "0.85rem",
+                fontWeight: 400,
+                color: "#6B6358",
+                marginTop: 8,
+                lineHeight: 1.55,
+              }}
+            >
+              {detailText}
+            </div>
+          )}
 
-            {/* Detail text with max-height transition */}
-            {detailText && !entry.checked && (
-              <div
-                className="overflow-hidden"
-                style={{
-                  maxHeight: expanded ? "200px" : "24px",
-                  transition: "max-height 300ms var(--huma-ease)",
-                }}
-              >
-                <p
-                  className="font-sans font-light mt-1"
-                  style={{
-                    fontSize: "13px",
-                    lineHeight: expanded ? "1.6" : "1.5",
-                    color: "var(--color-ink-500)",
-                    overflowWrap: "break-word",
-                    ...(expanded ? {} : { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }),
-                  }}
-                >
-                  {detailText}
-                </p>
-              </div>
-            )}
+          {/* Streak counter (shown when checked) */}
+          {entry.checked && streakText && (
+            <div
+              className="font-sans animate-fade-in"
+              style={{
+                fontSize: "0.78rem",
+                fontWeight: 400,
+                color: "#5C7A62",
+                marginTop: 6,
+              }}
+            >
+              {streakText}
+            </div>
+          )}
 
-            {/* Dimension tags */}
-            {dims.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {dims.map((dim) => (
+          {/* Dimension tags */}
+          {dims.length > 0 && (
+            <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+              {dims.map(dim => {
+                const style = getDimensionStyle(dim);
+                return (
                   <span
                     key={dim}
-                    className="inline-flex rounded-full font-sans font-medium bg-sage-50 text-sage-600"
-                    style={{ padding: "2px 8px", fontSize: "10px", letterSpacing: "0.1em", lineHeight: "1" }}
+                    className="font-sans"
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 500,
+                      letterSpacing: "0.03em",
+                      padding: "2px 8px",
+                      borderRadius: 4,
+                      color: style.color,
+                      background: style.background,
+                    }}
                   >
-                    {DIMENSION_LABELS[dim as DimensionKey] || dim}
+                    {dim.charAt(0).toUpperCase() + dim.slice(1)}
                   </span>
-                ))}
-              </div>
-            )}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -432,8 +485,8 @@ export default function TodayPage() {
       try {
         const dbEntries = await getSheetEntries(supabase, user.id, date);
         if (dbEntries.length > 0) {
-          const order = { morning: 0, afternoon: 1, evening: 2 };
-          dbEntries.sort((a, b) => order[a.timeOfDay] - order[b.timeOfDay]);
+          const order: Record<string, number> = { morning: 0, midday: 1, evening: 2 };
+          dbEntries.sort((a, b) => (order[a.timeOfDay] ?? 1) - (order[b.timeOfDay] ?? 1));
           setEntries(capEntries(deduplicateEntries(dbEntries)));
           setLoading(false);
           compilingRef.current = false;
@@ -512,14 +565,22 @@ export default function TodayPage() {
       return;
     }
 
-    // 4. Compile via API
+    // 4. Compile via API — only active-stage aspirations generate daily sheet items
+    const activeAspirations = localAspirations.filter(a => (a.stage || "active") === "active");
+
+    if (activeAspirations.length === 0) {
+      setLoading(false);
+      compilingRef.current = false;
+      return;
+    }
+
     try {
       const res = await fetch("/api/sheet", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: localContext.name || "",
-          aspirations: localAspirations,
+          aspirations: activeAspirations,
           knownContext: localContext,
           recentHistory,
           conversationMessages,
@@ -531,13 +592,15 @@ export default function TodayPage() {
 
       const data = await res.json();
       const compiled: SheetEntry[] = (data.entries || []).map(
-        (e: Record<string, string>, i: number) => ({
+        (e: Record<string, unknown>, i: number) => ({
           id: crypto.randomUUID(),
-          aspirationId: e.aspiration_id || "",
-          behaviorKey: e.behavior_key || `behavior-${i}`,
-          behaviorText: e.text || "",
-          detail: { text: e.detail || "" },
-          timeOfDay: e.time_of_day || "morning",
+          aspirationId: (e.aspiration_id as string) || "",
+          behaviorKey: (e.behavior_key as string) || `behavior-${i}`,
+          behaviorText: (e.headline as string) || (e.text as string) || "",
+          headline: (e.headline as string) || (e.text as string) || "",
+          detail: (e.detail as string) || "",
+          timeOfDay: (e.time_of_day as string) || "morning",
+          dimensions: Array.isArray(e.dimensions) ? e.dimensions as string[] : [],
           checked: false,
         })
       );
@@ -548,8 +611,8 @@ export default function TodayPage() {
         setIsFallback(true);
         localStorage.setItem(cacheKey, JSON.stringify(fallback));
       } else {
-        const order = { morning: 0, afternoon: 1, evening: 2 };
-        compiled.sort((a, b) => order[a.timeOfDay] - order[b.timeOfDay]);
+        const order: Record<string, number> = { morning: 0, midday: 1, evening: 2 };
+        compiled.sort((a, b) => (order[a.timeOfDay] ?? 1) - (order[b.timeOfDay] ?? 1));
         const final = capEntries(deduplicateEntries(compiled));
         setEntries(final);
         localStorage.setItem(cacheKey, JSON.stringify(final));
@@ -653,18 +716,25 @@ export default function TodayPage() {
         </p>
       </div>
 
-      {/* Aspiration Ribbon */}
-      {aspirations.length > 0 ? (
+      {/* Aspiration Ribbon — active + planning only (not someday) */}
+      {aspirations.filter(a => (a.stage || "active") !== "someday").length > 0 ? (
         <div className="hide-scrollbar overflow-x-auto" style={{ marginTop: "16px", WebkitOverflowScrolling: "touch" }}>
           <div className="flex gap-2 animate-entrance-1" style={{ paddingLeft: "24px", paddingRight: "24px" }}>
-            {aspirations.map(asp => (
+            {aspirations.filter(a => (a.stage || "active") !== "someday").map(asp => (
               <button
                 key={asp.id}
                 onClick={() => setQuickLookAspiration(asp)}
-                className="flex-shrink-0 rounded-full bg-sage-100 border border-sage-200 font-sans font-medium text-sage-700 cursor-pointer hover:bg-sage-50 transition-colors"
+                className={`flex-shrink-0 rounded-full border font-sans font-medium cursor-pointer hover:bg-sage-50 transition-colors ${
+                  (asp.stage || "active") === "planning"
+                    ? "bg-sand-100 border-sand-300 text-ink-500 italic"
+                    : "bg-sage-100 border-sage-200 text-sage-700"
+                }`}
                 style={{ padding: "6px 14px", fontSize: "13px", lineHeight: "1" }}
               >
                 {displayName(asp.clarifiedText || asp.rawText)}
+                {(asp.stage || "active") === "planning" && (
+                  <span className="font-normal not-italic" style={{ fontSize: "10px", marginLeft: "4px", opacity: 0.6 }}>planning</span>
+                )}
               </button>
             ))}
           </div>
@@ -707,7 +777,7 @@ export default function TodayPage() {
       )}
 
       {/* Sheet */}
-      <div className="flex-1 px-6" style={{ marginTop: structuralInsight ? "12px" : "16px" }}>
+      <div className="flex-1" style={{ marginTop: structuralInsight ? "12px" : "16px" }}>
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <span
@@ -716,7 +786,7 @@ export default function TodayPage() {
             />
           </div>
         ) : entries.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-center">
+          <div className="flex flex-col items-center justify-center h-64 text-center px-6">
             <p className="font-serif text-ink-700" style={{ fontSize: "22px", lineHeight: "1.3" }}>
               Nothing here yet.
             </p>
@@ -732,9 +802,9 @@ export default function TodayPage() {
             </Link>
           </div>
         ) : (
-          <div className="max-w-2xl mx-auto" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div className="max-w-2xl mx-auto">
             {isFallback && (
-              <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-3 mb-2 px-6">
                 <p className="font-sans text-xs text-earth-400">Showing your behaviors for today.</p>
                 <button
                   onClick={() => {
@@ -750,15 +820,54 @@ export default function TodayPage() {
               </div>
             )}
 
-            {entries.map((entry, idx) => (
-              <div key={entry.id} className={idx <= 2 ? `animate-entrance-${idx + 3}` : ""}>
-                <SheetCard
-                  entry={entry}
-                  onToggle={() => toggleEntry(entry.id)}
-                  weekCount={entry.checked ? (weekCounts[entry.behaviorText] || { completed: 1, total: 1 }) : undefined}
-                />
-              </div>
-            ))}
+            {/* Time-of-day sections */}
+            {(() => {
+              const sections = [
+                { key: "morning", label: "MORNING" },
+                { key: "midday", label: "MIDDAY" },
+                { key: "evening", label: "EVENING" },
+              ];
+              const usedSections = sections.filter(s => entries.some(e => e.timeOfDay === s.key));
+              const hasMultipleSections = usedSections.length > 1;
+              let animIdx = 0;
+
+              return sections.map(section => {
+                const sectionEntries = entries.filter(e => e.timeOfDay === section.key);
+                if (sectionEntries.length === 0) return null;
+                return (
+                  <div key={section.key}>
+                    {hasMultipleSections && (
+                      <div
+                        className="font-sans"
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          letterSpacing: "0.18em",
+                          color: "#A8A196",
+                          padding: "16px 24px 8px",
+                        }}
+                      >
+                        {section.label}
+                      </div>
+                    )}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "0 24px" }}>
+                      {sectionEntries.map(entry => {
+                        const idx = animIdx++;
+                        return (
+                          <div key={entry.id} className={idx <= 2 ? `animate-entrance-${idx + 3}` : ""}>
+                            <SheetCard
+                              entry={entry}
+                              onToggle={() => toggleEntry(entry.id)}
+                              weekCount={entry.checked ? (weekCounts[entry.behaviorText] || weekCounts[entry.headline || ""] || { completed: 1, total: 1 }) : undefined}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
 
             {entries.length > 0 && entries.every(e => e.checked) && (
               <p className="text-center font-serif text-lg text-sage-600 mt-8 animate-fade-in">
