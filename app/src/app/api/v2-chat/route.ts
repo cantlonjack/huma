@@ -56,6 +56,8 @@ Assistant: "Two people, home cooking most nights — here's what that looks like
 KNOWN CONTEXT:
 {context}
 
+If the known context includes "paletteSelections", these are topics the operator indicated resonate with them (e.g. "Always tired", "No time for myself"). Incorporate these into your understanding of their situation — they're background context that should shape your clarification options and decomposition. Don't address each one separately or ask about them individually.
+
 ACTIVE ASPIRATIONS:
 {aspirations}
 

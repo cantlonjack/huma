@@ -8,13 +8,34 @@ import { useAuth } from "@/components/AuthProvider";
 import AuthModal from "@/components/AuthModal";
 import { createClient } from "@/lib/supabase";
 import { migrateLocalStorageToSupabase } from "@/lib/supabase-v2";
+import DecompositionPreview from "@/components/DecompositionPreview";
+
+// ─── Palette Acknowledgments ─────────────────────────────────────────────────
+
+const PALETTE_ACKS = {
+  pain: [
+    (t: string) => `Noted — "${t}" is part of the picture.`,
+    (t: string) => `"${t}" — that connects. We'll factor it in.`,
+    (t: string) => `Got it. "${t}" goes on the list.`,
+  ],
+  aspiration: [
+    (t: string) => `"${t}" — good. That shapes things.`,
+    (t: string) => `Noted. "${t}" will factor in.`,
+    (t: string) => `"${t}" — we'll build that into the system.`,
+  ],
+};
+
+function getPaletteAcknowledgment(concept: PaletteConcept): string {
+  const options = PALETTE_ACKS[concept.category] || PALETTE_ACKS.pain;
+  return options[Math.floor(Math.random() * options.length)](concept.text);
+}
 
 // ─── Message Component ──────────────────────────────────────────────────────
 
 function MessageBubble({
   message,
   onOptionTap,
-  onActionTap,
+  onConfirmBehaviors,
 }: {
   message: ChatMessage & {
     options?: string[] | null;
@@ -22,7 +43,7 @@ function MessageBubble({
     actions?: string[] | null;
   };
   onOptionTap?: (option: string) => void;
-  onActionTap?: (action: string) => void;
+  onConfirmBehaviors?: (behaviors: Behavior[]) => void;
 }) {
   const isUser = message.role === "user";
 
@@ -53,8 +74,13 @@ function MessageBubble({
           </div>
         )}
 
-        {/* Decomposed Behaviors */}
-        {message.behaviors && message.behaviors.length > 0 && (
+        {/* Decomposition Preview (behaviors + actions handled together) */}
+        {message.behaviors && message.behaviors.length > 0 && onConfirmBehaviors ? (
+          <DecompositionPreview
+            behaviors={message.behaviors}
+            onConfirm={onConfirmBehaviors}
+          />
+        ) : message.behaviors && message.behaviors.length > 0 ? (
           <div className="mt-4 space-y-2">
             {message.behaviors.map((b, i) => (
               <div key={i} className="flex items-start gap-3 px-4 py-3 rounded-xl bg-sand-50 border border-sand-200">
@@ -73,26 +99,7 @@ function MessageBubble({
               </div>
             ))}
           </div>
-        )}
-
-        {/* Action Buttons */}
-        {message.actions && message.actions.length > 0 && (
-          <div className="mt-4 flex gap-3">
-            {message.actions.map((action, i) => (
-              <button
-                key={i}
-                onClick={() => onActionTap?.(action)}
-                className={`px-5 py-2.5 rounded-xl font-sans text-sm font-medium transition-all duration-200 cursor-pointer ${
-                  i === 0
-                    ? "bg-sage-700 text-white hover:bg-sage-800"
-                    : "border border-sand-300 text-earth-600 hover:border-sage-400"
-                }`}
-              >
-                {action}
-              </button>
-            ))}
-          </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -137,7 +144,7 @@ export default function StartPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [messages, setMessages] = useState<
-    (ChatMessage & { options?: string[] | null; behaviors?: Behavior[] | null; actions?: string[] | null })[]
+    (ChatMessage & { options?: string[] | null; behaviors?: Behavior[] | null; actions?: string[] | null; contextNote?: boolean })[]
   >([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -233,7 +240,7 @@ export default function StartPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: newMessages.map(m => ({ role: m.role === "huma" ? "assistant" : m.role, content: m.content })),
+          messages: newMessages.filter(m => !(m as typeof messages[number]).contextNote).map(m => ({ role: m.role === "huma" ? "assistant" : m.role, content: m.content })),
           knownContext,
           aspirations: [],
         }),
@@ -324,20 +331,21 @@ export default function StartPage() {
   };
 
   // Save aspiration to localStorage and trigger auth or redirect
-  const saveAndProceed = useCallback(async () => {
+  const saveAndProceed = useCallback(async (filteredBehaviors?: Behavior[]) => {
+    const behaviorsToSave = filteredBehaviors || decomposedBehaviors;
     const userMessages = messages.filter(m => m.role === "user").map(m => m.content);
     const rawText = userMessages[0] || "";
     // Use Claude-extracted short name, fall back to first user message
     const clarifiedText = aspirationName || rawText;
 
     // Always save to localStorage first (fallback)
-    localStorage.setItem("huma-v2-behaviors", JSON.stringify(decomposedBehaviors));
+    localStorage.setItem("huma-v2-behaviors", JSON.stringify(behaviorsToSave));
     localStorage.setItem("huma-v2-known-context", JSON.stringify(knownContext));
     localStorage.setItem("huma-v2-aspirations", JSON.stringify([{
       id: crypto.randomUUID(),
       rawText,
       clarifiedText,
-      behaviors: decomposedBehaviors,
+      behaviors: behaviorsToSave,
       dimensionsTouched: [],
       status: "active",
       stage: "active",
@@ -386,21 +394,44 @@ export default function StartPage() {
     setTimeout(() => router.push("/today"), 2200);
   }, [router]);
 
-  // Handle action button
-  const handleActionTap = (action: string) => {
-    if (action === "Start tomorrow" || action.toLowerCase().includes("start")) {
-      saveAndProceed();
-    } else {
-      // "Adjust these first" — just let them keep chatting
-      sendMessage(action);
-    }
-  };
+  // Handle decomposition confirm (from DecompositionPreview)
+  const handleConfirmBehaviors = useCallback((behaviors: Behavior[]) => {
+    saveAndProceed(behaviors);
+  }, [saveAndProceed]);
 
-  // Handle palette tap
+  // Handle palette tap — accumulate context, don't send as chat message
   const handlePaletteTap = (concept: PaletteConcept) => {
+    // 1. Track selection ID (for palette API filtering)
     setSelectedConcepts(prev => [...prev, concept.id]);
+
+    // 2. Remove from displayed palette
     setPaletteConcepts(prev => prev.filter(c => c.id !== concept.id));
-    sendMessage(concept.text);
+
+    // 3. Add to known context so it influences decomposition
+    setKnownContext(prev => ({
+      ...prev,
+      paletteSelections: [
+        ...((prev.paletteSelections as string[]) || []),
+        concept.text,
+      ],
+    }));
+
+    // 4. Show brief acknowledgment (not a full AI response)
+    const ack = getPaletteAcknowledgment(concept);
+    setMessages(prev => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        role: "huma" as const,
+        content: ack,
+        createdAt: new Date().toISOString(),
+        contextNote: true,
+      },
+    ]);
+
+    // 5. Refresh palette with new related concepts
+    const userTexts = messages.filter(m => m.role === "user").map(m => m.content);
+    fetchPalette(userTexts);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -454,14 +485,23 @@ export default function StartPage() {
             </div>
           )}
 
-          {messages.map((msg) => (
-            <MessageBubble
-              key={msg.id}
-              message={msg}
-              onOptionTap={handleOptionTap}
-              onActionTap={handleActionTap}
-            />
-          ))}
+          {messages.map((msg) =>
+            msg.contextNote ? (
+              <div
+                key={msg.id}
+                className="mb-3 ml-2 font-sans text-[0.82rem] text-sage-600 italic animate-fade-in"
+              >
+                {msg.content}
+              </div>
+            ) : (
+              <MessageBubble
+                key={msg.id}
+                message={msg}
+                onOptionTap={handleOptionTap}
+                onConfirmBehaviors={handleConfirmBehaviors}
+              />
+            )
+          )}
 
           {streaming && messages[messages.length - 1]?.content === "" && (
             <div className="flex justify-start mb-4">
