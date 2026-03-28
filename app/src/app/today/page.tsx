@@ -7,6 +7,7 @@ import { DIMENSION_LABELS, type DimensionKey } from "@/types/v2";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import ConversationSheet from "@/components/ConversationSheet";
+import { displayName } from "@/lib/display-name";
 import {
   getAspirations,
   getSheetEntries,
@@ -76,6 +77,27 @@ function buildFallbackSheet(aspirations: Aspiration[]): SheetEntry[] {
   return entries;
 }
 
+// ─── Sheet Deduplication + Cap ───────────────────────────────────────────────
+
+function deduplicateEntries(entries: SheetEntry[]): SheetEntry[] {
+  const seen = new Map<string, SheetEntry>();
+  for (const entry of entries) {
+    const key = entry.behaviorKey
+      .toLowerCase()
+      .replace(/tonight|today|this morning|this evening/g, "")
+      .trim();
+    if (!seen.has(key)) {
+      seen.set(key, entry);
+    }
+  }
+  return Array.from(seen.values());
+}
+
+function capEntries(entries: SheetEntry[], max: number = 5): SheetEntry[] {
+  if (entries.length <= max) return entries;
+  return entries.slice(0, max);
+}
+
 // ─── Aspiration Quick-Look Sheet ─────────────────────────────────────────────
 
 function AspirationQuickLook({
@@ -118,7 +140,7 @@ function AspirationQuickLook({
         <div className="px-6 pb-6 overflow-y-auto" style={{ maxHeight: "calc(40dvh - 40px)" }}>
           <div className="flex items-start justify-between">
             <h3 className="font-sans font-medium text-ink-900" style={{ fontSize: "18px", lineHeight: "1.3" }}>
-              {aspiration.clarifiedText || aspiration.rawText}
+              {displayName(aspiration.clarifiedText || aspiration.rawText)}
             </h3>
             <button className="font-sans text-sage-400 cursor-pointer" style={{ fontSize: "12px" }}>edit</button>
           </div>
@@ -412,7 +434,7 @@ export default function TodayPage() {
         if (dbEntries.length > 0) {
           const order = { morning: 0, afternoon: 1, evening: 2 };
           dbEntries.sort((a, b) => order[a.timeOfDay] - order[b.timeOfDay]);
-          setEntries(dbEntries);
+          setEntries(capEntries(deduplicateEntries(dbEntries)));
           setLoading(false);
           compilingRef.current = false;
           return;
@@ -425,7 +447,7 @@ export default function TodayPage() {
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       try {
-        setEntries(JSON.parse(cached));
+        setEntries(capEntries(deduplicateEntries(JSON.parse(cached))));
         setLoading(false);
         compilingRef.current = false;
         return;
@@ -521,22 +543,23 @@ export default function TodayPage() {
       );
 
       if (compiled.length === 0) {
-        const fallback = buildFallbackSheet(localAspirations);
+        const fallback = capEntries(deduplicateEntries(buildFallbackSheet(localAspirations)));
         setEntries(fallback);
         setIsFallback(true);
         localStorage.setItem(cacheKey, JSON.stringify(fallback));
       } else {
         const order = { morning: 0, afternoon: 1, evening: 2 };
         compiled.sort((a, b) => order[a.timeOfDay] - order[b.timeOfDay]);
-        setEntries(compiled);
-        localStorage.setItem(cacheKey, JSON.stringify(compiled));
+        const final = capEntries(deduplicateEntries(compiled));
+        setEntries(final);
+        localStorage.setItem(cacheKey, JSON.stringify(final));
 
         if (supabase && user) {
-          try { await saveSheetEntries(supabase, user.id, compiled, date); } catch { /* ok */ }
+          try { await saveSheetEntries(supabase, user.id, final, date); } catch { /* ok */ }
         }
       }
     } catch {
-      const fallback = buildFallbackSheet(localAspirations);
+      const fallback = capEntries(deduplicateEntries(buildFallbackSheet(localAspirations)));
       setEntries(fallback);
       setIsFallback(true);
       localStorage.setItem(cacheKey, JSON.stringify(fallback));
@@ -641,7 +664,7 @@ export default function TodayPage() {
                 className="flex-shrink-0 rounded-full bg-sage-100 border border-sage-200 font-sans font-medium text-sage-700 cursor-pointer hover:bg-sage-50 transition-colors"
                 style={{ padding: "6px 14px", fontSize: "13px", lineHeight: "1" }}
               >
-                {asp.clarifiedText || asp.rawText}
+                {displayName(asp.clarifiedText || asp.rawText)}
               </button>
             ))}
           </div>

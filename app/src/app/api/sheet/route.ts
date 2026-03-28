@@ -22,6 +22,12 @@ Recent behavior history (last 7 days):
 
 Today is {day_of_week}, {date}.
 
+CRITICAL RULES:
+- Generate MAXIMUM 5 entries. Not 6. Not 7. Five or fewer.
+- Each entry must have a UNIQUE behavior_key. If two aspirations share a behavior (like "cook dinner at home"), generate ONE entry for it, not two.
+- Prioritize behaviors that touch the most life dimensions — these are the highest-leverage actions.
+- Every entry must be specific to TODAY — not generic advice.
+
 For each behavior that applies to today, produce a SPECIFIC, actionable entry.
 Not "cook dinner" — instead "Beef stew: use the bone broth from Sunday, chuck from the freezer. One pot. Recipe: [basic instructions]."
 Not "morning movement" — instead "20-minute walk. Sunrise is 7:14am, 34°F. Layer up."

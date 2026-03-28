@@ -13,21 +13,9 @@ import {
   getBehaviorWeekCounts,
 } from "@/lib/supabase-v2";
 import { paletteConcepts } from "@/engine/palette-concepts";
+import { displayName } from "@/lib/display-name";
 
 const ALL_DIMENSIONS: DimensionKey[] = ["body", "people", "money", "home", "growth", "joy", "purpose", "identity"];
-
-// Truncate long aspiration names (legacy data) to a readable label
-function displayName(name: string): string {
-  if (name.length <= 60) return name;
-  const splits = [". ", " so ", " because ", " — ", " - "];
-  for (const split of splits) {
-    const idx = name.toLowerCase().indexOf(split);
-    if (idx > 10 && idx < 80) return name.slice(0, idx);
-  }
-  const truncated = name.slice(0, 60);
-  const lastSpace = truncated.lastIndexOf(" ");
-  return (lastSpace > 20 ? truncated.slice(0, lastSpace) : truncated) + "...";
-}
 
 // ─── Dimension Normalizer ────────────────────────────────────────────────────
 

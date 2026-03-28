@@ -62,18 +62,75 @@ function ContextCard({
   );
 }
 
-// ─── Past Exchange (collapsed) ───────────────────────────────────────────────
+// ─── Conversation Grouping ───────────────────────────────────────────────────
 
-function PastExchange({
-  userMsg,
-  humaMsg,
-}: {
-  userMsg: ChatMessage;
-  humaMsg: ChatMessage | null;
-}) {
+interface ConversationGroup {
+  id: string;
+  startTime: Date;
+  messages: ChatMessage[];
+  summary: string;
+  messageCount: number;
+}
+
+function summarizeText(text: string, maxLen: number = 60): string {
+  if (text.length <= maxLen) return text;
+  const truncated = text.slice(0, maxLen);
+  const lastSpace = truncated.lastIndexOf(" ");
+  return (lastSpace > 20 ? truncated.slice(0, lastSpace) : truncated) + "...";
+}
+
+function relativeDate(date: Date): string {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.round((today.getTime() - target.getTime()) / 86400000);
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function groupIntoConversations(messages: ChatMessage[], gapMinutes: number = 10): ConversationGroup[] {
+  if (messages.length === 0) return [];
+
+  const sorted = [...messages].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+
+  const groups: ConversationGroup[] = [];
+  let current: ChatMessage[] = [sorted[0]];
+
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = new Date(sorted[i - 1].createdAt).getTime();
+    const curr = new Date(sorted[i].createdAt).getTime();
+    if (curr - prev > gapMinutes * 60 * 1000) {
+      groups.push(buildGroup(current));
+      current = [sorted[i]];
+    } else {
+      current.push(sorted[i]);
+    }
+  }
+  if (current.length > 0) groups.push(buildGroup(current));
+
+  return groups;
+}
+
+function buildGroup(messages: ChatMessage[]): ConversationGroup {
+  const userMessages = messages.filter(m => m.role === "user");
+  const firstUserMsg = userMessages[0]?.content || "";
+
+  return {
+    id: messages[0].id || String(Date.now()),
+    startTime: new Date(messages[0].createdAt),
+    messages,
+    summary: summarizeText(firstUserMsg),
+    messageCount: messages.length,
+  };
+}
+
+// ─── Past Conversation (collapsed) ──────────────────────────────────────────
+
+function PastConversation({ group }: { group: ConversationGroup }) {
   const [expanded, setExpanded] = useState(false);
-  const dateStr = new Date(userMsg.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  const summary = userMsg.content.length > 60 ? userMsg.content.slice(0, 60) + "..." : userMsg.content;
 
   return (
     <div className="mx-6 mb-2">
@@ -81,34 +138,42 @@ function PastExchange({
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center gap-3 p-3 bg-white border border-sand-300 rounded-xl cursor-pointer hover:border-sage-300 transition-colors text-left"
       >
-        <span className="font-sans text-xs font-medium text-ink-300 flex-shrink-0">{dateStr}</span>
-        <span className="font-sans text-[13px] text-ink-500 truncate">{summary}</span>
+        <span className="font-sans text-xs font-medium text-ink-300 flex-shrink-0">
+          {relativeDate(group.startTime)}
+        </span>
+        <span className="font-sans text-[13px] text-ink-500 flex-1 truncate">
+          {group.summary}
+        </span>
+        <span className="font-sans text-ink-300 flex-shrink-0" style={{ fontSize: "11px" }}>
+          ({group.messageCount})
+        </span>
       </button>
 
       {expanded && (
         <div className="mt-2 px-1 animate-fade-in">
-          {/* User message */}
-          <div className="flex justify-end mb-3">
-            <div className="ml-auto" style={{ maxWidth: "80%", background: "var(--color-sand-200)", borderRadius: "12px", padding: "12px 16px" }}>
-              <p className="font-sans text-ink-600" style={{ fontSize: "14px", lineHeight: "1.6" }}>
-                {userMsg.content}
-              </p>
-            </div>
-          </div>
-          {/* HUMA response */}
-          {humaMsg && (
-            <div className="mb-3" style={{ maxWidth: "680px" }}>
-              <p className="font-serif text-ink-700 whitespace-pre-wrap" style={{ fontSize: "16px", lineHeight: "1.7" }}>
-                {humaMsg.content}
-              </p>
-              {humaMsg.contextExtracted && Object.keys(humaMsg.contextExtracted).length > 0 && (
-                <div className="mt-2 inline-flex items-center rounded-full bg-sage-50" style={{ padding: "4px 12px" }}>
-                  <span className="font-sans font-medium text-sage-600" style={{ fontSize: "12px" }}>
-                    Context added: {Object.entries(humaMsg.contextExtracted).map(([k, v]) => `${k}: ${v}`).join(", ")}
-                  </span>
+          {group.messages.map(msg =>
+            msg.role === "user" ? (
+              <div key={msg.id} className="flex justify-end mb-3">
+                <div className="ml-auto" style={{ maxWidth: "80%", background: "var(--color-sand-200)", borderRadius: "12px", padding: "12px 16px" }}>
+                  <p className="font-sans text-ink-600" style={{ fontSize: "14px", lineHeight: "1.6" }}>
+                    {msg.content}
+                  </p>
                 </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div key={msg.id} className="mb-3" style={{ maxWidth: "680px" }}>
+                <p className="font-serif text-ink-700 whitespace-pre-wrap" style={{ fontSize: "16px", lineHeight: "1.7" }}>
+                  {msg.content}
+                </p>
+                {msg.contextExtracted && Object.keys(msg.contextExtracted).length > 0 && (
+                  <div className="mt-2 inline-flex items-center rounded-full bg-sage-50" style={{ padding: "4px 12px" }}>
+                    <span className="font-sans font-medium text-sage-600" style={{ fontSize: "12px" }}>
+                      Context added: {Object.entries(msg.contextExtracted).map(([k, v]) => `${k}: ${v}`).join(", ")}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )
           )}
         </div>
       )}
@@ -311,22 +376,10 @@ export default function ChatPage() {
     }
   };
 
-  // Group messages into exchanges (user + huma pairs)
-  const exchanges: Array<{ user: ChatMessage; huma: ChatMessage | null }> = [];
-  for (let i = 0; i < messages.length; i++) {
-    const msg = messages[i];
-    if (msg.role === "user") {
-      const next = messages[i + 1];
-      exchanges.push({
-        user: msg,
-        huma: next?.role === "huma" ? next : null,
-      });
-      if (next?.role === "huma") i++;
-    }
-  }
-
-  const latestExchange = exchanges.length > 0 ? exchanges[exchanges.length - 1] : null;
-  const pastExchanges = exchanges.slice(0, -1).reverse(); // most recent first
+  // Group messages into conversations (by 10-minute time gap)
+  const conversations = groupIntoConversations(messages);
+  const latestConversation = conversations.length > 0 ? conversations[conversations.length - 1] : null;
+  const pastConversations = conversations.slice(0, -1).reverse(); // most recent first
 
   const behaviorCount = aspirations.reduce((sum, a) => sum + a.behaviors.length, 0);
   const dayNum = (() => {
@@ -369,7 +422,7 @@ export default function ChatPage() {
               style={{ width: "8px", height: "8px", background: "var(--color-sage-400)" }}
             />
           </div>
-        ) : exchanges.length === 0 ? (
+        ) : conversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-center">
             <p className="font-serif text-ink-700" style={{ fontSize: "22px", lineHeight: "1.3" }}>
               What&apos;s on your mind?
@@ -377,60 +430,66 @@ export default function ChatPage() {
           </div>
         ) : (
           <>
-            {/* Latest exchange (fully expanded) */}
-            {latestExchange && (
+            {/* Latest conversation (fully expanded) */}
+            {latestConversation && (
               <div className="mx-6 mb-6">
-                {/* User message */}
-                <div className="flex justify-end mb-3">
-                  <div className="ml-auto" style={{ maxWidth: "80%", background: "var(--color-sand-200)", borderRadius: "12px", padding: "12px 16px" }}>
-                    <p className="font-sans text-ink-600" style={{ fontSize: "14px", lineHeight: "1.6" }}>
-                      {latestExchange.user.content}
-                    </p>
-                  </div>
-                </div>
-                {/* HUMA response */}
-                {latestExchange.huma && (
-                  <div style={{ maxWidth: "680px" }}>
-                    <p className="font-serif text-ink-700 whitespace-pre-wrap" style={{ fontSize: "16px", lineHeight: "1.7" }}>
-                      {latestExchange.huma.content}
-                    </p>
-
-                    {/* Context extraction indicator */}
-                    {latestExchange.huma.contextExtracted && Object.keys(latestExchange.huma.contextExtracted).length > 0 && (
-                      <div className="mt-2 inline-flex items-center rounded-full bg-sage-50 animate-fade-in" style={{ padding: "4px 12px" }}>
-                        <span className="font-sans font-medium text-sage-600" style={{ fontSize: "12px" }}>
-                          Context added: {Object.entries(latestExchange.huma.contextExtracted).map(([k, v]) => `${k}: ${v}`).join(", ")}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Tappable options */}
-                    {(latestExchange.huma as RichMessage).options?.map((opt, i) => (
-                      <button
-                        key={i}
-                        onClick={() => sendMessage(opt)}
-                        className="mt-2 mr-2 text-left rounded-xl border border-sand-300 bg-sand-50 font-sans hover:border-sage-400 hover:bg-sage-50 transition-all duration-200 cursor-pointer"
-                        style={{ padding: "12px 16px", fontSize: "14px", color: "var(--color-ink-700)" }}
-                      >
-                        {opt}
-                      </button>
-                    ))}
-
-                    {/* Behaviors */}
-                    {(latestExchange.huma as RichMessage).behaviors?.map((b, i) => (
-                      <div key={i} className="mt-2 flex items-start gap-3 rounded-xl bg-sand-50 border border-sand-200" style={{ padding: "12px 16px" }}>
-                        <span className="mt-0.5 flex-shrink-0 rounded-full" style={{ width: "20px", height: "20px", border: "2px solid var(--color-sand-300)" }} />
-                        <div>
-                          <p className="font-sans font-medium" style={{ fontSize: "14px", color: "var(--color-ink-700)" }}>{b.text}</p>
-                          {b.detail && <p className="font-sans" style={{ fontSize: "12px", color: "var(--color-ink-400)", marginTop: "2px" }}>{b.detail}</p>}
+                {latestConversation.messages.map((msg, idx) => {
+                  const isLast = idx === latestConversation.messages.length - 1;
+                  if (msg.role === "user") {
+                    return (
+                      <div key={msg.id} className="flex justify-end mb-3">
+                        <div className="ml-auto" style={{ maxWidth: "80%", background: "var(--color-sand-200)", borderRadius: "12px", padding: "12px 16px" }}>
+                          <p className="font-sans text-ink-600" style={{ fontSize: "14px", lineHeight: "1.6" }}>
+                            {msg.content}
+                          </p>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    );
+                  }
+                  const rich = msg as RichMessage;
+                  return (
+                    <div key={msg.id} className="mb-3" style={{ maxWidth: "680px" }}>
+                      <p className="font-serif text-ink-700 whitespace-pre-wrap" style={{ fontSize: "16px", lineHeight: "1.7" }}>
+                        {msg.content}
+                      </p>
+
+                      {msg.contextExtracted && Object.keys(msg.contextExtracted).length > 0 && (
+                        <div className="mt-2 inline-flex items-center rounded-full bg-sage-50 animate-fade-in" style={{ padding: "4px 12px" }}>
+                          <span className="font-sans font-medium text-sage-600" style={{ fontSize: "12px" }}>
+                            Context added: {Object.entries(msg.contextExtracted).map(([k, v]) => `${k}: ${v}`).join(", ")}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Tappable options (only on last HUMA message) */}
+                      {isLast && rich.options?.map((opt, i) => (
+                        <button
+                          key={i}
+                          onClick={() => sendMessage(opt)}
+                          className="mt-2 mr-2 text-left rounded-xl border border-sand-300 bg-sand-50 font-sans hover:border-sage-400 hover:bg-sage-50 transition-all duration-200 cursor-pointer"
+                          style={{ padding: "12px 16px", fontSize: "14px", color: "var(--color-ink-700)" }}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+
+                      {/* Behaviors (only on last HUMA message) */}
+                      {isLast && rich.behaviors?.map((b, i) => (
+                        <div key={i} className="mt-2 flex items-start gap-3 rounded-xl bg-sand-50 border border-sand-200" style={{ padding: "12px 16px" }}>
+                          <span className="mt-0.5 flex-shrink-0 rounded-full" style={{ width: "20px", height: "20px", border: "2px solid var(--color-sand-300)" }} />
+                          <div>
+                            <p className="font-sans font-medium" style={{ fontSize: "14px", color: "var(--color-ink-700)" }}>{b.text}</p>
+                            {b.detail && <p className="font-sans" style={{ fontSize: "12px", color: "var(--color-ink-400)", marginTop: "2px" }}>{b.detail}</p>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
 
                 {/* Streaming indicator */}
-                {streaming && latestExchange.huma?.content === "" && (
+                {streaming && latestConversation.messages[latestConversation.messages.length - 1]?.role === "huma" &&
+                  latestConversation.messages[latestConversation.messages.length - 1]?.content === "" && (
                   <div style={{ paddingTop: "12px" }}>
                     <span
                       className="rounded-full animate-dot-pulse"
@@ -441,12 +500,12 @@ export default function ChatPage() {
               </div>
             )}
 
-            {/* Past exchanges (collapsed) */}
-            {pastExchanges.length > 0 && (
+            {/* Past conversations (collapsed) */}
+            {pastConversations.length > 0 && (
               <div className="mt-2">
                 <p className="mx-6 mb-2 font-sans text-ink-300" style={{ fontSize: "11px", fontWeight: "600", letterSpacing: "0.18em" }}>EARLIER</p>
-                {pastExchanges.map((ex) => (
-                  <PastExchange key={ex.user.id} userMsg={ex.user} humaMsg={ex.huma} />
+                {pastConversations.map((group) => (
+                  <PastConversation key={group.id} group={group} />
                 ))}
               </div>
             )}
