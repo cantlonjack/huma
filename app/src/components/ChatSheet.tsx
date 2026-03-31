@@ -1,0 +1,479 @@
+"use client";
+
+import { useState, useRef, useEffect, useCallback } from "react";
+import type { ChatMessage, Behavior, Aspiration } from "@/types/v2";
+import { parseMarkersV2 as parseMarkers } from "@/lib/parse-markers-v2";
+import { useAuth } from "@/components/AuthProvider";
+import { createClient } from "@/lib/supabase";
+import {
+  getChatMessages,
+  saveChatMessage,
+  getAspirations,
+  saveAspiration,
+  getKnownContext,
+  updateKnownContext,
+} from "@/lib/supabase-v2";
+import { getLocalDate } from "@/lib/date-utils";
+
+type RichMessage = ChatMessage & {
+  options?: string[] | null;
+  behaviors?: Behavior[] | null;
+  actions?: string[] | null;
+};
+
+interface ChatSheetProps {
+  open: boolean;
+  onClose: () => void;
+  contextPrompt?: string;
+}
+
+export default function ChatSheet({ open, onClose, contextPrompt }: ChatSheetProps) {
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<RichMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [streaming, setStreaming] = useState(false);
+  const [knownContext, setKnownContext] = useState<Record<string, unknown>>({});
+  const [aspirations, setAspirations] = useState<Aspiration[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const dragStartY = useRef<number | null>(null);
+  const dragCurrentY = useRef(0);
+
+  // Auto-scroll on new messages
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, streaming]);
+
+  // Load state when sheet opens
+  useEffect(() => {
+    if (!open || loaded) return;
+
+    async function loadState() {
+      let foundMessages = false;
+
+      if (user) {
+        const supabase = createClient();
+        if (supabase) {
+          try {
+            const [dbMessages, dbAspirations, dbContext] = await Promise.all([
+              getChatMessages(supabase, user.id),
+              getAspirations(supabase, user.id),
+              getKnownContext(supabase, user.id),
+            ]);
+            if (dbMessages.length > 0) { setMessages(dbMessages); foundMessages = true; }
+            if (dbAspirations.length > 0) setAspirations(dbAspirations);
+            if (Object.keys(dbContext).length > 0) setKnownContext(dbContext);
+          } catch { /* fallback */ }
+        }
+      }
+
+      if (!foundMessages) {
+        try {
+          const savedMessages = localStorage.getItem("huma-v2-chat-messages");
+          const startMessages = localStorage.getItem("huma-v2-start-messages");
+          if (savedMessages) setMessages(JSON.parse(savedMessages));
+          else if (startMessages) setMessages(JSON.parse(startMessages));
+        } catch { /* fresh */ }
+      }
+
+      if (!user) {
+        try {
+          const ctx = localStorage.getItem("huma-v2-known-context");
+          if (ctx) setKnownContext(JSON.parse(ctx));
+          const asp = localStorage.getItem("huma-v2-aspirations");
+          if (asp) setAspirations(JSON.parse(asp));
+        } catch { /* fresh */ }
+      }
+
+      setLoaded(true);
+    }
+    loadState();
+  }, [open, loaded, user]);
+
+  // Persist to localStorage
+  useEffect(() => {
+    if (!loaded) return;
+    if (messages.length > 0) {
+      localStorage.setItem("huma-v2-chat-messages", JSON.stringify(messages));
+      localStorage.setItem("huma-v2-known-context", JSON.stringify(knownContext));
+    }
+  }, [messages, knownContext, loaded]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [open, onClose]);
+
+  // Send message
+  const sendMessage = useCallback(async (text: string) => {
+    if (!text.trim() || streaming) return;
+
+    const userMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content: text.trim(),
+      createdAt: new Date().toISOString(),
+    };
+
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages as RichMessage[]);
+    setInput("");
+    setStreaming(true);
+
+    if (user) {
+      const supabase = createClient();
+      if (supabase) saveChatMessage(supabase, user.id, userMsg).catch(() => {});
+    }
+
+    try {
+      const res = await fetch("/api/v2-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: newMessages.map(m => ({ role: m.role === "huma" ? "assistant" : m.role, content: m.content })),
+          knownContext,
+          aspirations: aspirations.map(a => ({ rawText: a.rawText, clarifiedText: a.clarifiedText, status: a.status })),
+        }),
+      });
+
+      if (!res.ok) throw new Error("Chat API error");
+
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No body");
+
+      const decoder = new TextDecoder();
+      let fullResponse = "";
+
+      const humaMsg: RichMessage = {
+        id: crypto.randomUUID(),
+        role: "huma",
+        content: "",
+        createdAt: new Date().toISOString(),
+      };
+      setMessages([...newMessages, humaMsg] as RichMessage[]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        fullResponse += decoder.decode(value, { stream: true });
+        const { cleanText } = parseMarkers(fullResponse);
+        setMessages(prev => {
+          const updated = [...prev];
+          const last = updated[updated.length - 1];
+          if (last.role === "huma") updated[updated.length - 1] = { ...last, content: cleanText };
+          return updated;
+        });
+      }
+
+      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext } = parseMarkers(fullResponse);
+
+      const finalHumaMsg: ChatMessage = { ...humaMsg, content: cleanText, contextExtracted: parsedContext || undefined };
+      if (user) {
+        const supabase = createClient();
+        if (supabase) saveChatMessage(supabase, user.id, finalHumaMsg).catch(() => {});
+      }
+
+      if (parsedContext) {
+        const newContext = { ...knownContext, ...parsedContext };
+        setKnownContext(newContext);
+        if (user) {
+          const supabase = createClient();
+          if (supabase) updateKnownContext(supabase, user.id, newContext).catch(() => {});
+        }
+        const today = getLocalDate();
+        localStorage.removeItem(`huma-v2-sheet-${today}`);
+      }
+
+      if (parsedBehaviors) {
+        const newAspiration: Aspiration = {
+          id: crypto.randomUUID(),
+          rawText: text,
+          clarifiedText: "",
+          behaviors: parsedBehaviors,
+          dimensionsTouched: [],
+          status: "active",
+          stage: "active",
+        };
+        const updatedAsps = [...aspirations, newAspiration];
+        setAspirations(updatedAsps);
+        localStorage.setItem("huma-v2-aspirations", JSON.stringify(updatedAsps));
+        if (user) {
+          const supabase = createClient();
+          if (supabase) saveAspiration(supabase, user.id, newAspiration).catch(() => {});
+        }
+      }
+
+      setMessages(prev => {
+        const updated = [...prev];
+        const last = updated[updated.length - 1];
+        if (last.role === "huma") {
+          updated[updated.length - 1] = { ...last, content: cleanText, options: parsedOptions, behaviors: parsedBehaviors, actions: parsedActions };
+        }
+        return updated;
+      });
+    } catch {
+      setMessages(prev => [
+        ...prev.filter(m => m.content !== ""),
+        { id: crypto.randomUUID(), role: "huma" as const, content: "Something went wrong. Try again in a moment.", createdAt: new Date().toISOString() },
+      ]);
+    } finally {
+      setStreaming(false);
+    }
+  }, [messages, streaming, knownContext, aspirations, user]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(input);
+    }
+  };
+
+  // Drag-to-dismiss handlers
+  const handleDragStart = (e: React.TouchEvent | React.MouseEvent) => {
+    const y = "touches" in e ? e.touches[0].clientY : e.clientY;
+    dragStartY.current = y;
+    dragCurrentY.current = 0;
+  };
+
+  const handleDragMove = (e: React.TouchEvent | React.MouseEvent) => {
+    if (dragStartY.current === null) return;
+    const y = "touches" in e ? e.touches[0].clientY : e.clientY;
+    const delta = Math.max(0, y - dragStartY.current);
+    dragCurrentY.current = delta;
+    if (sheetRef.current) {
+      sheetRef.current.style.transform = `translateY(${delta}px)`;
+    }
+  };
+
+  const handleDragEnd = () => {
+    if (dragCurrentY.current > 100) {
+      onClose();
+    } else if (sheetRef.current) {
+      sheetRef.current.style.transform = "translateY(0)";
+    }
+    dragStartY.current = null;
+    dragCurrentY.current = 0;
+  };
+
+  // Render the latest messages (most recent conversation)
+  const recentMessages = messages.slice(-50);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[60]">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: "rgba(0,0,0,0.3)",
+          animation: "chatsheet-backdrop-in 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
+        }}
+        onClick={onClose}
+      />
+
+      {/* Sheet */}
+      <div
+        ref={sheetRef}
+        className="absolute bottom-0 left-0 right-0 flex flex-col"
+        style={{
+          maxHeight: "85vh",
+          background: "#FAF8F3",
+          borderRadius: "20px 20px 0 0",
+          animation: "chatsheet-slide-up 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
+        }}
+      >
+        {/* Drag handle */}
+        <div
+          className="flex items-center justify-center cursor-grab"
+          style={{ padding: "12px 0 0" }}
+          onTouchStart={handleDragStart}
+          onTouchMove={handleDragMove}
+          onTouchEnd={handleDragEnd}
+          onMouseDown={handleDragStart}
+          onMouseMove={handleDragMove}
+          onMouseUp={handleDragEnd}
+        >
+          <div
+            style={{
+              width: "36px",
+              height: "4px",
+              borderRadius: "2px",
+              background: "#DDD4C0",
+            }}
+          />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between" style={{ padding: "8px 20px 12px" }}>
+          <span
+            className="font-sans font-medium"
+            style={{ fontSize: "11px", letterSpacing: "0.4em", color: "#6B8F71" }}
+          >
+            HUMA
+          </span>
+          <button
+            onClick={onClose}
+            className="cursor-pointer"
+            style={{
+              width: "28px",
+              height: "28px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "none",
+              border: "none",
+              fontSize: "18px",
+              color: "#8C8274",
+            }}
+            aria-label="Close chat"
+          >
+            &times;
+          </button>
+        </div>
+
+        {/* Messages */}
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto"
+          style={{ padding: "0 20px 12px" }}
+        >
+          {!loaded ? (
+            <div className="flex items-center justify-center" style={{ height: "120px" }}>
+              <span
+                className="rounded-full animate-dot-pulse"
+                style={{ width: "8px", height: "8px", background: "#6B8F71" }}
+              />
+            </div>
+          ) : recentMessages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center text-center" style={{ height: "120px" }}>
+              <p className="font-serif text-ink-700" style={{ fontSize: "18px", lineHeight: "1.4" }}>
+                What&apos;s on your mind?
+              </p>
+            </div>
+          ) : (
+            recentMessages.map((msg, idx) => {
+              const isLast = idx === recentMessages.length - 1;
+              if (msg.role === "user") {
+                return (
+                  <div key={msg.id} className="flex justify-end mb-3">
+                    <div style={{ maxWidth: "80%", background: "#F0EDE4", borderRadius: "12px", padding: "12px 16px" }}>
+                      <p className="font-sans" style={{ fontSize: "14px", lineHeight: "1.6", color: "#52504A" }}>
+                        {msg.content}
+                      </p>
+                    </div>
+                  </div>
+                );
+              }
+              const rich = msg as RichMessage;
+              return (
+                <div key={msg.id} className="mb-3" style={{ maxWidth: "680px" }}>
+                  <p className="font-serif whitespace-pre-wrap" style={{ fontSize: "16px", lineHeight: "1.7", color: "#3D3B36" }}>
+                    {msg.content}
+                  </p>
+
+                  {msg.contextExtracted && Object.keys(msg.contextExtracted).length > 0 && (
+                    <div className="mt-2 inline-flex items-center rounded-full" style={{ padding: "4px 12px", background: "#EDF3ED" }}>
+                      <span className="font-sans font-medium" style={{ fontSize: "12px", color: "#3A5A40" }}>
+                        Context added: {Object.entries(msg.contextExtracted).map(([k, v]) => `${k}: ${v}`).join(", ")}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Tappable options */}
+                  {isLast && rich.options?.map((opt, i) => (
+                    <button
+                      key={i}
+                      onClick={() => sendMessage(opt)}
+                      className="mt-2 mr-2 text-left font-sans cursor-pointer"
+                      style={{
+                        padding: "12px 16px",
+                        fontSize: "14px",
+                        color: "#3D3B36",
+                        borderRadius: "12px",
+                        border: "1px solid #DDD4C0",
+                        background: "#FAF8F3",
+                      }}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+
+                  {/* Behaviors */}
+                  {isLast && rich.behaviors?.map((b, i) => (
+                    <div key={i} className="mt-2 flex items-start gap-3" style={{ padding: "12px 16px", borderRadius: "12px", border: "1px solid #E8E2D6", background: "#FAF8F3" }}>
+                      <span className="mt-0.5 flex-shrink-0 rounded-full" style={{ width: "20px", height: "20px", border: "2px solid #DDD4C0" }} />
+                      <div>
+                        <p className="font-sans font-medium" style={{ fontSize: "14px", color: "#3D3B36" }}>{b.text}</p>
+                        {b.detail && <p className="font-sans" style={{ fontSize: "12px", color: "#8C8274", marginTop: "2px" }}>{b.detail}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })
+          )}
+
+          {/* Streaming indicator */}
+          {streaming && recentMessages.length > 0 &&
+            recentMessages[recentMessages.length - 1]?.role === "huma" &&
+            recentMessages[recentMessages.length - 1]?.content === "" && (
+            <div style={{ paddingTop: "12px" }}>
+              <span
+                className="rounded-full animate-dot-pulse"
+                style={{ width: "8px", height: "8px", background: "#6B8F71", display: "block" }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Input bar */}
+        <div style={{ padding: "8px 16px", paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))", borderTop: "1px solid #E8E2D6" }}>
+          <div className="flex items-center gap-3" style={{ background: "white", borderRadius: "16px", padding: "12px 16px", border: "1px solid #DDD4C0" }}>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={contextPrompt || "What's on your mind?"}
+              disabled={streaming}
+              className="flex-1 font-sans bg-transparent focus:outline-none disabled:opacity-50"
+              style={{ fontSize: "14px", lineHeight: "1.4", color: "#3D3B36" }}
+            />
+            <button
+              onClick={() => sendMessage(input)}
+              disabled={streaming || !input.trim()}
+              className="p-1 cursor-pointer disabled:opacity-30 transition-opacity"
+              aria-label="Send"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={input.trim() ? "#3A5A40" : "#8BAF8E"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="19" x2="12" y2="5" />
+                <polyline points="5 12 12 5 19 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Keyframe animations injected via style tag */}
+      <style>{`
+        @keyframes chatsheet-slide-up {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+        @keyframes chatsheet-backdrop-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
+    </div>
+  );
+}

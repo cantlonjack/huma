@@ -1,0 +1,525 @@
+"use client";
+
+import { useState, useEffect, useCallback, useRef } from "react";
+import TabShell from "@/components/TabShell";
+import WholeShape, { type HolonNode, type HolonLayer, type HolonStatus } from "@/components/whole/WholeShape";
+import HolonExpandPanel from "@/components/whole/HolonExpandPanel";
+import ProfileBanner from "@/components/whole/ProfileBanner";
+import InsightCard from "@/components/whole/InsightCard";
+import ArchetypeSelector from "@/components/whole/ArchetypeSelector";
+import { useAuth } from "@/components/AuthProvider";
+import { createClient } from "@/lib/supabase";
+import { displayName } from "@/lib/display-name";
+import type { Aspiration, Insight, Principle, KnownContext } from "@/types/v2";
+import {
+  getAllAspirations,
+  getKnownContext,
+  getUndeliveredInsight,
+  markInsightDelivered,
+  getWhyStatement,
+  updateWhyStatement,
+  updateKnownContext,
+  getPrinciples,
+} from "@/lib/supabase-v2";
+
+// ─── Data → Nodes ──────────────────────────────────────────────────────────
+
+function mapAspirationStatus(asp: Aspiration): HolonStatus {
+  const vs = asp.funnel?.validationStatus;
+  if (vs === "working") return "working";
+  if (vs === "finding") return "finding";
+  if (vs === "no_path") return "no_path";
+  if (vs === "adjusting") return "adjusting";
+  if (asp.stage === "someday") return "no_path";
+  return "active";
+}
+
+function aspirationLayer(asp: Aspiration): HolonLayer {
+  const status = mapAspirationStatus(asp);
+  if (status === "no_path" || asp.stage === "someday") return "vision";
+  return "patterns";
+}
+
+function aspirationRadius(asp: Aspiration): number {
+  const status = mapAspirationStatus(asp);
+  if (status === "working") return 28;
+  if (status === "active") return 24;
+  if (status === "finding") return 20;
+  return 18;
+}
+
+function buildNodes(
+  aspirations: Aspiration[],
+  context: KnownContext,
+  principles: Principle[],
+  operatorName: string,
+): HolonNode[] {
+  const nodes: HolonNode[] = [];
+
+  // Identity nucleus
+  nodes.push({
+    id: "__identity__",
+    label: operatorName || "You",
+    layer: "identity",
+    status: "active",
+    r: 36,
+    type: "identity",
+  });
+
+  // Aspirations → Patterns or Vision
+  for (const asp of aspirations) {
+    const status = mapAspirationStatus(asp);
+    const dims = asp.dimensionsTouched || [];
+    const behaviorDims = asp.behaviors?.flatMap((b) => b.dimensions?.map((d) => d.dimension) || []) || [];
+    const allDims = [...new Set([...dims, ...behaviorDims])];
+
+    nodes.push({
+      id: asp.id,
+      label: displayName(asp.clarifiedText || asp.rawText),
+      layer: aspirationLayer(asp),
+      status,
+      r: aspirationRadius(asp),
+      type: "aspiration",
+      description: asp.rawText,
+      dimensions: allDims,
+    });
+  }
+
+  // Principles
+  for (const p of principles) {
+    if (!p.active) continue;
+    nodes.push({
+      id: `principle-${p.id}`,
+      label: displayName(p.text),
+      layer: "principles",
+      status: "active",
+      r: 20,
+      type: "principle",
+      description: p.text,
+    });
+  }
+
+  // Foundation items from context
+  if (context.place?.name) {
+    nodes.push({
+      id: "ctx-place",
+      label: context.place.name,
+      layer: "foundation",
+      status: "working",
+      r: 22,
+      type: "context",
+      description: context.place.detail || context.place.name,
+    });
+  }
+  if (context.work?.title) {
+    nodes.push({
+      id: "ctx-work",
+      label: context.work.title,
+      layer: "foundation",
+      status: "working",
+      r: 20,
+      type: "context",
+      description: context.work.detail || context.work.title,
+    });
+  }
+  if (context.stage?.label) {
+    nodes.push({
+      id: "ctx-stage",
+      label: context.stage.label,
+      layer: "foundation",
+      status: "active",
+      r: 18,
+      type: "context",
+      description: context.stage.detail || context.stage.label,
+    });
+  }
+  if (context.health?.detail) {
+    nodes.push({
+      id: "ctx-health",
+      label: "Health",
+      layer: "foundation",
+      status: "active",
+      r: 16,
+      type: "context",
+      description: context.health.detail,
+    });
+  }
+
+  return nodes;
+}
+
+// Serialize context for AI prompt
+function serializeContext(
+  ctx: Record<string, unknown>,
+  aspirations: Aspiration[],
+): string {
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(ctx)) {
+    if (v && typeof v === "object") parts.push(`${k}: ${JSON.stringify(v)}`);
+    else if (v) parts.push(`${k}: ${v}`);
+  }
+  if (aspirations.length > 0) {
+    parts.push("Aspirations: " + aspirations.map((a) => a.clarifiedText || a.rawText).join("; "));
+  }
+  return parts.join("\n") || "";
+}
+
+// ─── Page ──────────────────────────────────────────────────────────────────
+
+export default function WholePage() {
+  const { user } = useAuth();
+  const [aspirations, setAspirations] = useState<Aspiration[]>([]);
+  const [context, setContext] = useState<KnownContext>({});
+  const [rawContext, setRawContext] = useState<Record<string, unknown>>({});
+  const [principles, setPrinciples] = useState<Principle[]>([]);
+  const [insight, setInsight] = useState<Insight | null>(null);
+  const [whyStatement, setWhyStatement] = useState<string | null>(null);
+  const [archetypes, setArchetypes] = useState<string[]>([]);
+  const [operatorName, setOperatorName] = useState("");
+  const [loaded, setLoaded] = useState(false);
+  const [computing, setComputing] = useState(false);
+  const [selectedNode, setSelectedNode] = useState<HolonNode | null>(null);
+  const [archetypeSelectorOpen, setArchetypeSelectorOpen] = useState(false);
+  const [chatShellOpen, setChatShellOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [shapeWidth, setShapeWidth] = useState(340);
+  const computeCalledRef = useRef(false);
+
+  // Measure container width
+  useEffect(() => {
+    const measure = () => {
+      if (containerRef.current) {
+        const w = Math.min(containerRef.current.clientWidth * 0.9, 400);
+        setShapeWidth(w);
+      }
+    };
+    requestAnimationFrame(measure);
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  useEffect(() => {
+    if (loaded && containerRef.current) {
+      const w = Math.min(containerRef.current.clientWidth * 0.9, 400);
+      setShapeWidth(w);
+    }
+  }, [loaded]);
+
+  // Load data
+  useEffect(() => {
+    async function load() {
+      let localAspirations: Aspiration[] = [];
+      let localContext: KnownContext = {};
+      let localRawContext: Record<string, unknown> = {};
+
+      try {
+        const asp = localStorage.getItem("huma-v2-aspirations");
+        if (asp) localAspirations = JSON.parse(asp);
+        const ctx = localStorage.getItem("huma-v2-known-context");
+        if (ctx) {
+          localRawContext = JSON.parse(ctx);
+          localContext = localRawContext as KnownContext;
+        }
+      } catch { /* fresh */ }
+
+      if (user) {
+        const supabase = createClient();
+        if (supabase) {
+          try {
+            const [dbAspirations, dbContext, dbInsight, dbWhy, dbPrinciples] = await Promise.all([
+              getAllAspirations(supabase, user.id),
+              getKnownContext(supabase, user.id),
+              getUndeliveredInsight(supabase, user.id),
+              getWhyStatement(supabase, user.id),
+              getPrinciples(supabase, user.id),
+            ]);
+
+            if (dbAspirations.length > 0) setAspirations(dbAspirations);
+            else setAspirations(localAspirations);
+
+            const typedCtx = dbContext as KnownContext;
+            setRawContext(dbContext);
+            if (Object.keys(dbContext).length > 0) setContext(typedCtx);
+            else { setContext(localContext); setRawContext(localRawContext); }
+
+            setInsight(dbInsight);
+            setWhyStatement(dbWhy.whyStatement);
+            setPrinciples(dbPrinciples);
+
+            const nameFromCtx = (dbContext as Record<string, unknown>).operator_name as string
+              || (dbContext as Record<string, unknown>).name as string;
+            if (nameFromCtx) setOperatorName(nameFromCtx);
+            else if (user.email) setOperatorName(user.email.split("@")[0]);
+
+            // Load saved archetypes
+            const saved = (dbContext as Record<string, unknown>).archetypes as string[] | undefined;
+            if (saved && Array.isArray(saved) && saved.length > 0) setArchetypes(saved);
+          } catch {
+            setAspirations(localAspirations);
+            setContext(localContext);
+            setRawContext(localRawContext);
+          }
+        }
+      } else {
+        setAspirations(localAspirations);
+        setContext(localContext);
+        setRawContext(localRawContext);
+
+        // Load saved archetypes from localStorage
+        const saved = localRawContext.archetypes as string[] | undefined;
+        if (saved && Array.isArray(saved) && saved.length > 0) setArchetypes(saved);
+      }
+
+      setLoaded(true);
+    }
+    load();
+  }, [user]);
+
+  // Compute archetype + WHY suggestions when data is loaded
+  useEffect(() => {
+    if (!loaded || computeCalledRef.current) return;
+
+    const contextStr = serializeContext(rawContext, aspirations);
+    // Only compute if there's meaningful context and nothing is already set
+    const needsArchetype = archetypes.length === 0;
+    const needsWhy = !whyStatement;
+    if (!contextStr || contextStr.length < 20 || (!needsArchetype && !needsWhy)) return;
+
+    computeCalledRef.current = true;
+    setComputing(true);
+
+    let compute = "both";
+    if (!needsArchetype) compute = "why";
+    else if (!needsWhy) compute = "archetypes";
+
+    fetch("/api/whole-compute", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contextData: contextStr, compute }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.archetypes?.suggested && needsArchetype) {
+          setArchetypes(data.archetypes.suggested);
+        }
+        if (data.why && needsWhy) {
+          setWhyStatement(data.why);
+        }
+      })
+      .catch(() => { /* silent fallback */ })
+      .finally(() => setComputing(false));
+  }, [loaded, rawContext, aspirations, archetypes.length, whyStatement]);
+
+  // Day number
+  const dayNum = (() => {
+    try {
+      const start = localStorage.getItem("huma-v2-start-date");
+      if (start) {
+        const diff = Math.ceil((Date.now() - new Date(start).getTime()) / 86400000);
+        return diff > 0 ? diff : 1;
+      }
+    } catch { /* */ }
+    return 1;
+  })();
+
+  const hasContext = Object.keys(rawContext).length > 0 || aspirations.length > 0;
+
+  // Build nodes
+  const nodes = buildNodes(aspirations, context, principles, operatorName);
+  const isEmpty = aspirations.length === 0 && Object.keys(context).length === 0 && principles.length === 0;
+
+  const shapeHeight = Math.round(shapeWidth * 0.75);
+
+  const handleNodeTap = useCallback((node: HolonNode) => {
+    setSelectedNode((prev) => (prev?.id === node.id ? null : node));
+  }, []);
+
+  const handleDismissInsight = useCallback(async () => {
+    if (!insight || !user) return;
+    setInsight(null);
+    const supabase = createClient();
+    if (supabase) {
+      try { await markInsightDelivered(supabase, insight.id, user.id); } catch { /* */ }
+    }
+  }, [insight, user]);
+
+  // Save archetypes
+  const handleArchetypeSave = useCallback(async (selected: string[]) => {
+    setArchetypes(selected);
+    const updated = { ...rawContext, archetypes: selected };
+    setRawContext(updated);
+    localStorage.setItem("huma-v2-known-context", JSON.stringify(updated));
+    if (user) {
+      const supabase = createClient();
+      if (supabase) {
+        try { await updateKnownContext(supabase, user.id, updated); } catch { /* */ }
+      }
+    }
+  }, [rawContext, user]);
+
+  // Save WHY statement
+  const handleWhySave = useCallback(async (value: string) => {
+    setWhyStatement(value);
+    if (user) {
+      const supabase = createClient();
+      if (supabase) {
+        try { await updateWhyStatement(supabase, user.id, value); } catch { /* */ }
+      }
+    }
+    // Also persist to localStorage
+    const updated = { ...rawContext, why_statement: value };
+    setRawContext(updated);
+    localStorage.setItem("huma-v2-known-context", JSON.stringify(updated));
+  }, [rawContext, user]);
+
+  // Save foundation value to context
+  const handleFoundationSave = useCallback(async (nodeId: string, value: string) => {
+    const updated = { ...rawContext };
+    if (nodeId === "ctx-place") {
+      updated.place = { ...(context.place || { name: "", detail: "" }), detail: value };
+    } else if (nodeId === "ctx-work") {
+      updated.work = { ...(context.work || { title: "", detail: "" }), detail: value };
+    } else if (nodeId === "ctx-stage") {
+      updated.stage = { ...(context.stage || { label: "", detail: "" }), detail: value };
+    } else if (nodeId === "ctx-health") {
+      updated.health = { detail: value };
+    }
+    setRawContext(updated);
+    setContext(updated as KnownContext);
+    localStorage.setItem("huma-v2-known-context", JSON.stringify(updated));
+    if (user) {
+      const supabase = createClient();
+      if (supabase) {
+        try { await updateKnownContext(supabase, user.id, updated); } catch { /* */ }
+      }
+    }
+  }, [rawContext, context, user]);
+
+  // WHY tap when no context — open chat with pre-filled prompt
+  const handleWhyTapNoContext = useCallback(() => {
+    setChatShellOpen(true);
+  }, []);
+
+  const selectedFullNode = selectedNode ? nodes.find((n) => n.id === selectedNode.id) : null;
+
+  return (
+    <TabShell
+      contextPrompt={chatShellOpen ? "Tell me what you're building and why it matters to you." : "What would you like to explore or change?"}
+      forceOpen={chatShellOpen}
+      onChatClose={() => setChatShellOpen(false)}
+    >
+      <div className="min-h-dvh bg-sand-50 flex flex-col" style={{ paddingBottom: "80px" }}>
+        {/* Header */}
+        <div className="px-6 flex items-center justify-between" style={{ paddingTop: "20px" }}>
+          <span
+            className="font-sans font-medium text-sage-500"
+            style={{ fontSize: "11px", letterSpacing: "0.4em", lineHeight: "1" }}
+          >
+            HUMA
+          </span>
+          <span
+            className="font-sans font-medium"
+            style={{ fontSize: "11px", color: "#A8C4AA", letterSpacing: "0.1em" }}
+          >
+            Day {dayNum}
+          </span>
+        </div>
+
+        {/* Section label */}
+        <div className="px-6" style={{ marginTop: "8px" }}>
+          <span
+            className="font-sans font-medium"
+            style={{ fontSize: "11px", letterSpacing: "0.18em", textTransform: "uppercase", color: "#A8C4AA" }}
+          >
+            WHOLE
+          </span>
+        </div>
+
+        {!loaded ? (
+          <div className="flex items-center justify-center" style={{ height: "300px" }}>
+            <span
+              className="rounded-full animate-dot-pulse"
+              style={{ width: "8px", height: "8px", background: "#6B8F71" }}
+            />
+          </div>
+        ) : (
+          <>
+            {/* Profile banner */}
+            <div style={{ marginTop: "16px" }}>
+              <ProfileBanner
+                name={operatorName}
+                archetypes={archetypes.length > 0 ? archetypes : undefined}
+                whyStatement={whyStatement || undefined}
+                computing={computing}
+                onArchetypeTap={() => setArchetypeSelectorOpen(true)}
+                onWhySave={handleWhySave}
+                onWhyTapNoContext={handleWhyTapNoContext}
+                hasContext={hasContext}
+              />
+            </div>
+
+            {/* Shape */}
+            <div
+              ref={containerRef}
+              className="flex items-center justify-center"
+              style={{ marginTop: "16px", width: "100%" }}
+            >
+              <WholeShape
+                nodes={nodes}
+                width={shapeWidth}
+                height={shapeHeight}
+                onNodeTap={handleNodeTap}
+                selectedNodeId={selectedNode?.id}
+                isEmpty={isEmpty}
+              />
+            </div>
+
+            {/* Empty state message */}
+            {isEmpty && (
+              <p
+                className="font-serif text-center"
+                style={{ fontSize: "16px", fontStyle: "italic", color: "#A8C4AA", margin: "12px 24px 0" }}
+              >
+                Your shape builds as you use HUMA.
+              </p>
+            )}
+
+            {/* Expand panel */}
+            {selectedFullNode && (
+              <HolonExpandPanel
+                id={selectedFullNode.id}
+                label={selectedFullNode.label}
+                description={selectedFullNode.description}
+                status={selectedFullNode.status}
+                type={selectedFullNode.type}
+                dimensions={selectedFullNode.dimensions}
+                onClose={() => setSelectedNode(null)}
+                archetype={archetypes.join(" · ") || undefined}
+                whyStatement={whyStatement || undefined}
+                onArchetypeSave={() => setArchetypeSelectorOpen(true)}
+                onWhySave={handleWhySave}
+                value={selectedFullNode.description}
+                onValueSave={selectedFullNode.type === "context" ? (v) => handleFoundationSave(selectedFullNode.id, v) : undefined}
+              />
+            )}
+
+            {/* Insight card */}
+            {insight && (
+              <div style={{ marginTop: "16px" }}>
+                <InsightCard insight={insight} onDismiss={handleDismissInsight} />
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Archetype selector bottom sheet */}
+      <ArchetypeSelector
+        open={archetypeSelectorOpen}
+        onClose={() => setArchetypeSelectorOpen(false)}
+        onSave={handleArchetypeSave}
+        initialSelected={archetypes}
+      />
+    </TabShell>
+  );
+}

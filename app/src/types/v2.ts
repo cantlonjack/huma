@@ -53,6 +53,25 @@ export interface Behavior {
   enabled?: boolean;
 }
 
+export interface AspirationFunnel {
+  stage: number; // 0-7
+  patternsRemaining: number;
+  selectedPatternId: string | null;
+  validationStatus:
+    | "working"
+    | "active"
+    | "finding"
+    | "adjusting"
+    | "no_path"
+    | null;
+}
+
+export interface AspirationTrigger {
+  behavior: string;
+  window: string;
+  failureNote: string;
+}
+
 export interface Aspiration {
   id: string;
   rawText: string;
@@ -61,6 +80,37 @@ export interface Aspiration {
   dimensionsTouched: DimensionKey[];
   status: "active" | "paused" | "completed" | "dropped";
   stage: "active" | "planning" | "someday";
+  funnel?: AspirationFunnel;
+  triggerData?: AspirationTrigger;
+}
+
+// ─── Principles ─────────────────────────────────────────────────────────────
+
+export interface Principle {
+  id: string;
+  text: string;
+  active: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─── Known Context (Structured) ─────────────────────────────────────────────
+
+export interface KnownContextPerson {
+  name: string;
+  role: string;
+}
+
+export interface KnownContext {
+  people?: KnownContextPerson[];
+  place?: { name: string; detail: string };
+  work?: { title: string; detail: string };
+  time?: { detail: string };
+  stage?: { label: string; detail: string };
+  health?: { detail: string };
+  resources?: string[];
+  [key: string]: unknown;
 }
 
 // ─── Production Sheet ────────────────────────────────────────────────────────
@@ -112,8 +162,10 @@ export interface OperatorContextV2 {
   userId?: string;
   rawStatements: string[];
   aspirations: Aspiration[];
-  knownContext: Record<string, unknown>;
+  knownContext: KnownContext;
   dimensionalState: Record<DimensionKey, number>;
+  whyStatement?: string;
+  whyDate?: string;
   createdAt: string;
   updatedAt: string;
 }

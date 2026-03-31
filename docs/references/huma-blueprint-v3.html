@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HUMA — Blueprint v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bp:#2A5A8A;--bp-l:#4A8ABE;--bp-bg:#F8FAFC;--bp-line:#D0DEE8;
+  --bp-zone:rgba(42,90,138,0.04);--bp-zone-h:rgba(42,90,138,0.07);
+  --bp-accent:#E8913A;--bp-green:#4A8A5C;
+  --sage:#5C7A62;--amber:#C4841D;--sky:#4A7A8A;--earth:#8B7355;
+  --w:#fff;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+body{font-family:'Source Sans 3',sans-serif;background:#EEF2F6;color:#3D3529}
+
+.bp{max-width:1200px;margin:0 auto;padding:40px 24px 80px}
+.bp h1{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:400;color:var(--bp);text-align:center}
+.bp>p{font-size:12px;color:var(--bp-l);text-align:center;margin-top:4px;line-height:1.6}
+
+/* Sections */
+.sec{margin:48px 0 20px;text-align:center;position:relative}
+.sec::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:var(--bp-line)}
+.sec span{position:relative;background:#EEF2F6;padding:0 16px;font-size:10px;font-weight:600;letter-spacing:0.3em;color:var(--bp-l)}
+
+/* Screens */
+.screens{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;align-items:flex-start}
+.sw{display:flex;flex-direction:column;align-items:center;gap:4px}
+.sw-label{font-size:11px;font-weight:700;letter-spacing:0.25em;color:var(--bp)}
+.sw-tagline{font-size:9px;color:var(--bp-l);font-style:italic;margin-bottom:6px}
+
+/* Phone */
+.ph{width:300px;background:var(--bp-bg);border-radius:24px;border:2px solid var(--bp-line);overflow:hidden;position:relative}
+.ph-top{height:36px;border-bottom:1px solid var(--bp-line);display:flex;justify-content:space-between;align-items:center;padding:0 14px;background:var(--w)}
+.ph-logo{font-size:7px;font-weight:600;letter-spacing:0.4em;color:var(--bp-l)}
+.ph-r{font-size:7px;color:var(--bp-line)}
+.ph-title{padding:6px 14px;border-bottom:1px dashed var(--bp-line)}
+.ph-title span{font-size:8px;font-weight:600;letter-spacing:0.15em;color:var(--bp)}
+
+/* Zones */
+.z{margin:5px 8px;border:1.5px dashed var(--bp-l);border-radius:10px;padding:8px;background:var(--bp-zone);transition:background 0.15s}
+.z:hover{background:var(--bp-zone-h)}
+.z.p{border-color:var(--bp-accent);background:rgba(232,145,58,0.04)}
+.z.p .zl{color:var(--bp-accent)}
+.z.s{border-color:var(--bp-green);background:rgba(74,138,92,0.03)}
+.z.s .zl{color:var(--bp-green)}
+.z.t{border-color:var(--bp-l);border-style:dotted;background:rgba(42,90,138,0.02)}
+.z.ghost{opacity:0.5;border-style:dotted}
+.zl{font-size:6.5px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--bp);margin-bottom:3px}
+.zd{font-size:7.5px;color:var(--bp-l);line-height:1.5}
+.zd em{color:var(--bp);font-style:normal;font-weight:600}
+
+/* Sub-zone */
+.zs{margin-top:4px;padding:4px 6px;border:1px dotted var(--bp-line);border-radius:6px;background:rgba(255,255,255,0.5)}
+.zs-l{font-size:5.5px;font-weight:700;letter-spacing:0.1em;color:var(--bp-l);margin-bottom:1px}
+.zs-d{font-size:6.5px;color:var(--bp-l);line-height:1.4}
+
+/* Tiles grid */
+.zt{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-top:4px}
+.zt-i{border:1px dashed var(--bp-line);border-radius:6px;padding:5px;text-align:center;font-size:6.5px;color:var(--bp-l)}
+.zt-i b{display:block;font-size:7px;color:var(--bp);margin-bottom:1px}
+
+/* Placeholder */
+.zp{height:28px;border:1px dashed var(--bp-line);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:6px;color:var(--bp-line);margin-top:3px}
+
+/* Chip row */
+.zr{display:flex;gap:3px;margin-top:3px}
+.zc{font-size:5.5px;color:var(--bp-l);border:1px dashed var(--bp-line);padding:2px 5px;border-radius:3px;flex:1;text-align:center}
+
+/* Nav */
+.nav{height:40px;border-top:2px solid var(--bp-line);display:flex;justify-content:space-around;align-items:center;background:var(--w)}
+.nav span{font-size:8px;font-weight:600;letter-spacing:0.06em;padding:3px 10px;border-radius:5px}
+.nav .a{background:var(--bp);color:var(--w)}
+.nav .i{color:var(--bp-l)}
+
+/* Chat bubble */
+.cb{position:absolute;bottom:48px;right:10px;width:32px;height:32px;border-radius:50%;background:var(--bp-accent);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.12);z-index:10;border:2px solid var(--w)}
+.cb svg{width:14px;height:14px}
+
+/* Flow diagrams */
+.fc{background:var(--w);border:1.5px solid var(--bp-line);border-radius:16px;padding:20px}
+.ft{font-size:10px;font-weight:600;letter-spacing:0.2em;color:var(--bp);margin-bottom:12px;text-align:center}
+.fl{font-size:7.5px;font-weight:600;letter-spacing:0.15em;color:var(--bp);margin:14px 0 3px}
+.fr{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.fb{padding:5px 8px;border:1.5px solid var(--bp-line);border-radius:6px;font-size:7.5px;color:var(--bp);background:var(--bp-bg);text-align:center}
+.fb.sc{border-color:var(--bp);background:rgba(42,90,138,0.06);font-weight:600}
+.fb.ac{border-color:var(--bp-accent);background:rgba(232,145,58,0.06);color:var(--bp-accent)}
+.fb.ov{border-color:var(--bp-green);background:rgba(74,138,92,0.04);color:var(--bp-green);border-style:dashed}
+.fa{font-size:9px;color:var(--bp-line)}
+.fn{font-size:6px;color:var(--bp-l);margin-top:2px}
+.co{margin:6px 0;padding:6px 10px;background:rgba(232,145,58,0.06);border-left:3px solid var(--bp-accent);border-radius:0 6px 6px 0;font-size:7.5px;color:var(--bp);line-height:1.5}
+.co strong{color:var(--bp-accent)}
+
+/* Density grid */
+.dg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.dg-col{font-size:7.5px}
+.dg-h{font-size:8px;font-weight:600;color:var(--bp);text-align:center;margin-bottom:6px}
+
+/* Cross-screen grid */
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+@media(max-width:960px){.screens{flex-direction:column;align-items:center}}
+</style>
+</head>
+<body>
+<div class="bp">
+
+<h1>HUMA — Blueprint v3</h1>
+<p>Today | Whole | Grow · Chat overlay from anywhere<br>Today = execute. Whole = mirror. Grow = window. Chat = voice.</p>
+
+<!-- ═══════════════════════════════════════
+     THE THREE SCREENS
+     ═══════════════════════════════════════ -->
+<div class="sec"><span>THE THREE SCREENS</span></div>
+
+<div class="screens">
+
+<!-- ═══ TODAY ═══ -->
+<div class="sw">
+  <div class="sw-label">TODAY</div>
+  <div class="sw-tagline">Execute. Follow the route.</div>
+  <div class="ph">
+    <div class="ph-top"><div class="ph-logo">H U M A</div><div class="ph-r">Day N</div></div>
+    <div class="ph-title"><span>TODAY · DATE</span></div>
+
+    <div class="z t">
+      <div class="zl">Status Line</div>
+      <div class="zd"><em>Date</em> in display font. Route status: "● On route · 2 patterns active" or "● 1 needs attention"</div>
+    </div>
+
+    <div class="z p">
+      <div class="zl">Pattern Route Card (×N active patterns)</div>
+      <div class="zs">
+        <div class="zs-l">HEADER</div>
+        <div class="zs-d">Pattern name · icon · estimated time</div>
+      </div>
+      <div class="zs">
+        <div class="zs-l">GOLDEN PATHWAY</div>
+        <div class="zs-d">
+          Vertical steps on gold line. <em>Trigger</em>: gold bg + "THE DECISION" badge.
+          Done: sage + strikethrough. Upcoming: hollow. <em>Each tappable to check off.</em>
+        </div>
+      </div>
+      <div class="zs">
+        <div class="zs-l">WINDOW + VALIDATION</div>
+        <div class="zs-d">"5:15–5:45. After 6:00 breaks." Bar + "26/30 · working"</div>
+      </div>
+    </div>
+
+    <div class="z">
+      <div class="zl">Standalone Behaviors</div>
+      <div class="zd">Pre-pattern behaviors. Checkbox + text + dimension dots. Seeds for future patterns.</div>
+    </div>
+
+    <div class="z s">
+      <div class="zl">Reroute (conditional)</div>
+      <div class="zd">When pattern stalls. Italic why + <em>"Reroute →"</em> opens chat overlay.</div>
+    </div>
+
+    <div class="z s">
+      <div class="zl">Insight (conditional · max 1/week)</div>
+      <div class="zd">Discovered pattern. Gradient top. Cormorant text. <em>"See full pattern →"</em> links to Whole.</div>
+    </div>
+
+    <div class="cb"><svg viewBox="0 0 16 16" fill="none"><path d="M3 3h10v7H6l-3 3V3z" fill="white"/></svg></div>
+    <div class="nav"><span class="a">Today</span><span class="i">Whole</span><span class="i">Grow</span></div>
+  </div>
+</div>
+
+<!-- ═══ WHOLE ═══ -->
+<div class="sw">
+  <div class="sw-label">WHOLE</div>
+  <div class="sw-tagline">See. Your context in one living form.</div>
+  <div class="ph">
+    <div class="ph-top"><div class="ph-logo">H U M A</div><div class="ph-r">Day N</div></div>
+    <div class="ph-title"><span>WHOLE</span></div>
+
+    <div class="z t">
+      <div class="zl">Profile Banner</div>
+      <div class="zd"><em>Name</em> display font · <em>Archetype</em> sage · <em>WHY</em> italic. Tappable to edit.</div>
+    </div>
+
+    <div class="z p" style="min-height:200px">
+      <div class="zl">The Shape — Single Organic Form</div>
+      <div class="zd" style="margin-bottom:6px">
+        <em>One living holonic form.</em> Gravity inside: Foundation dense at bottom, Patterns float at top, Principles and Vision between. Identity at center. NOT four bands. One membrane. All tappable.
+      </div>
+      <svg viewBox="0 0 260 180" style="width:100%">
+        <path d="M130 8 C178 6, 240 36, 248 86 C256 136, 232 166, 198 176 C164 186, 96 186, 62 176 C28 166, 6 134, 10 86 C14 38, 72 10, 130 8Z"
+          fill="rgba(42,90,138,0.03)" stroke="var(--bp-l)" stroke-width="1.2" stroke-dasharray="4 3"/>
+        <!-- Interior zones labeled -->
+        <text x="130" y="32" text-anchor="middle" font-family="Source Sans 3" font-size="6" font-weight="700" fill="var(--sage)" letter-spacing="0.08em">PATTERNS</text>
+        <text x="130" y="40" text-anchor="middle" font-family="Source Sans 3" font-size="4.5" fill="var(--bp-l)">dense=validated · dashed=finding</text>
+        <ellipse cx="130" cy="65" rx="60" ry="12" fill="none" stroke="var(--amber)" stroke-width="0.5" stroke-dasharray="2 2" opacity="0.4"/>
+        <text x="130" y="68" text-anchor="middle" font-family="Source Sans 3" font-size="5.5" font-weight="700" fill="var(--amber)" letter-spacing="0.06em">VISION</text>
+        <ellipse cx="130" cy="90" rx="18" ry="12" fill="none" stroke="var(--bp-accent)" stroke-width="0.5" stroke-dasharray="2 2" opacity="0.3"/>
+        <text x="130" y="93" text-anchor="middle" font-family="Source Sans 3" font-size="4.5" fill="var(--bp-accent)">IDENTITY</text>
+        <ellipse cx="130" cy="115" rx="65" ry="12" fill="none" stroke="var(--sky)" stroke-width="0.5" stroke-dasharray="2 2" opacity="0.35"/>
+        <text x="130" y="118" text-anchor="middle" font-family="Source Sans 3" font-size="5.5" font-weight="700" fill="var(--sky)" letter-spacing="0.06em">PRINCIPLES</text>
+        <text x="130" y="148" text-anchor="middle" font-family="Source Sans 3" font-size="6" font-weight="700" fill="var(--earth)" letter-spacing="0.08em">FOUNDATION</text>
+        <text x="130" y="156" text-anchor="middle" font-family="Source Sans 3" font-size="4.5" fill="var(--bp-l)">people · place · work · time · densest mass</text>
+      </svg>
+    </div>
+
+    <div class="z ghost">
+      <div class="zl">Expand Panel (on holon tap)</div>
+      <div class="zd">Tapping any region → panel slides in showing contents. <em>Edit, toggle, add, remove.</em> One at a time. Close restores shape view.</div>
+    </div>
+
+    <div class="z s">
+      <div class="zl">HUMA Sees (conditional)</div>
+      <div class="zd">One structural observation. Rare. <em>"Your market runs your weekend."</em></div>
+    </div>
+
+    <div class="cb"><svg viewBox="0 0 16 16" fill="none"><path d="M3 3h10v7H6l-3 3V3z" fill="white"/></svg></div>
+    <div class="nav"><span class="i">Today</span><span class="a">Whole</span><span class="i">Grow</span></div>
+  </div>
+</div>
+
+<!-- ═══ GROW ═══ -->
+<div class="sw">
+  <div class="sw-label">GROW</div>
+  <div class="sw-tagline">What's next. What's possible.</div>
+  <div class="ph">
+    <div class="ph-top"><div class="ph-logo">H U M A</div><div class="ph-r">Day N</div></div>
+    <div class="ph-title"><span>GROW</span></div>
+
+    <div class="z p">
+      <div class="zl">Context Gaps</div>
+      <div class="zd">Auto-detected undeveloped areas. Each <em>tappable tile</em> → opens chat overlay with pre-filled prompt.</div>
+      <div class="zt">
+        <div class="zt-i"><b>♡ Health</b>Foundation gap</div>
+        <div class="zt-i"><b>⟡ Principles</b>2 of 5+ suggested</div>
+        <div class="zt-i"><b>◇ Dairy sheep</b>3 prerequisites</div>
+        <div class="zt-i"><b>↻ Meal prep</b>Stalled · reroute?</div>
+      </div>
+    </div>
+
+    <div class="z p">
+      <div class="zl">Suggested Patterns</div>
+      <div class="zd"><em>Browsable tiles</em> from RPPL commons matched to context. Name, match %, stick rate, time, dimensions. Tap → chat starts narrowing. Gallery energy.</div>
+      <div class="zt">
+        <div class="zt-i"><b>🌅 Morning threshold</b>94% stick · 5 min/day</div>
+        <div class="zt-i"><b>📊 Weekly budget</b>87% stick · 15 min/wk</div>
+        <div class="zt-i"><b>🥬 Market greens</b>92% match · spring</div>
+        <div class="zt-i"><b>+ Browse all</b>RPPL commons</div>
+      </div>
+    </div>
+
+    <div class="z">
+      <div class="zl">In Progress</div>
+      <div class="zd">Aspirations mid-narrowing. <em>"Continue →"</em> resumes in chat overlay.</div>
+      <div class="zp">Morning routine · 45 match · 1 question left · Continue →</div>
+    </div>
+
+    <div class="z">
+      <div class="zl">Principles Workshop</div>
+      <div class="zd">Principles emerging from behavior data + commons. <em>"You cook 4/5 weeknights — formalize?"</em> Tap to adopt or customize.</div>
+      <div class="zr">
+        <div class="zc">From your data</div>
+        <div class="zc">From commons</div>
+        <div class="zc">Write your own</div>
+      </div>
+    </div>
+
+    <div class="z t">
+      <div class="zl">Past Conversations</div>
+      <div class="zd">Collapsed. Date + summary + outcome. Tap to expand. Grouped by week.</div>
+      <div class="zp">Mar 15 · Eating better → pattern selected</div>
+      <div class="zp">Mar 28 · Evening system → validated</div>
+    </div>
+
+    <div class="cb"><svg viewBox="0 0 16 16" fill="none"><path d="M3 3h10v7H6l-3 3V3z" fill="white"/></svg></div>
+    <div class="nav"><span class="i">Today</span><span class="i">Whole</span><span class="a">Grow</span></div>
+  </div>
+</div>
+
+</div>
+
+<!-- ═══ CHAT OVERLAY ═══ -->
+<div class="sec"><span>CHAT OVERLAY · FROM ANY SCREEN</span></div>
+
+<div class="screens">
+<div class="sw">
+  <div class="sw-label">CHAT</div>
+  <div class="sw-tagline">Bottom sheet. Context-aware. Always available.</div>
+  <div class="ph">
+    <div class="ph-top" style="opacity:0.25"><div class="ph-logo">H U M A</div></div>
+    <div style="height:50px;background:rgba(0,0,0,0.03);margin:0 8px;border-radius:10px 10px 0 0;opacity:0.2"></div>
+    <div style="margin:0 5px;background:var(--w);border:2px solid var(--bp-line);border-radius:14px 14px 0 0;flex:1">
+      <div style="display:flex;justify-content:center;padding:6px 0 3px">
+        <div style="width:28px;height:3px;border-radius:2px;background:var(--bp-line)"></div>
+      </div>
+      <div class="z t" style="margin:0 6px 3px;border-radius:6px">
+        <div class="zl">Context Banner</div>
+        <div class="zd">Shape mini + name + route count. Draggable to resize.</div>
+      </div>
+      <div class="z" style="margin:3px 6px;border-radius:6px">
+        <div class="zl">Context-Aware Prompt</div>
+        <div class="zd">
+          Changes per <em>entry point</em>:<br>
+          • Bubble: "What's going on?"<br>
+          • Gap tile: "Tell me about your health"<br>
+          • Narrowing: "1 question left — morning routine"<br>
+          • Pattern tile: "Start Morning threshold?"<br>
+          • Reroute: "Meal prep stalled — adjust?"
+        </div>
+      </div>
+      <div class="z" style="margin:3px 6px;border-radius:6px">
+        <div class="zl">Messages</div>
+        <div class="zd">HUMA: Cormorant serif. Operator: Source Sans bubbles. <em>Inline interactive</em>: landscape tiles, pills, pattern cards within message flow.</div>
+        <div style="height:50px;border:1px dashed var(--bp-line);border-radius:6px;margin-top:3px;display:flex;align-items:center;justify-content:center;font-size:6px;color:var(--bp-line)">Scrollable messages</div>
+      </div>
+      <div class="z t" style="margin:3px 6px 6px;border-radius:6px">
+        <div class="zl">Input</div>
+        <div class="zd">Text + send. Context-aware placeholder. Voice (future).</div>
+      </div>
+    </div>
+    <div class="nav" style="opacity:0.25"><span class="i">Today</span><span class="i">Whole</span><span class="i">Grow</span></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ NAVIGATION FLOWS ═══ -->
+<div class="sec"><span>NAVIGATION FLOWS</span></div>
+
+<div class="fc">
+  <div class="ft">HOW THE OPERATOR MOVES</div>
+
+  <div class="co"><strong>Default:</strong> App opens to <em>Today</em>.</div>
+
+  <div class="fl">DAILY (80% of usage · 15 sec – 2 min)</div>
+  <div class="fr">
+    <div class="fb sc">Today</div><div class="fa">→</div>
+    <div class="fb ac">Check off trigger</div><div class="fa">→</div>
+    <div class="fb ac">Cascade completes</div><div class="fa">→</div>
+    <div class="fb">Done</div>
+  </div>
+
+  <div class="fl">INSIGHT (weekly)</div>
+  <div class="fr">
+    <div class="fb sc">Today</div><div class="fa">→</div>
+    <div class="fb ac">See insight</div><div class="fa">→</div>
+    <div class="fb ac">"See full pattern"</div><div class="fa">→</div>
+    <div class="fb sc">Whole</div>
+  </div>
+
+  <div class="fl">GROWING (weekly/monthly)</div>
+  <div class="fr">
+    <div class="fb sc">Grow</div><div class="fa">→</div>
+    <div class="fb ac">Browse / tap gap</div><div class="fa">→</div>
+    <div class="fb ov">Chat overlay</div><div class="fa">→</div>
+    <div class="fb ac">Narrowing</div><div class="fa">→</div>
+    <div class="fb ac">Pattern selected</div><div class="fa">→</div>
+    <div class="fb sc">Today (next AM)</div>
+  </div>
+
+  <div class="fl">EDITING</div>
+  <div class="fr">
+    <div class="fb sc">Whole</div><div class="fa">→</div>
+    <div class="fb ac">Tap shape region</div><div class="fa">→</div>
+    <div class="fb ac">Expand panel</div><div class="fa">→</div>
+    <div class="fb ac">Edit</div><div class="fa">→</div>
+    <div class="fb">Close</div>
+  </div>
+
+  <div class="fl">REROUTING</div>
+  <div class="fr">
+    <div class="fb sc">Today</div><div class="fa">→</div>
+    <div class="fb ac">Reroute card</div><div class="fa">→</div>
+    <div class="fb ov">Chat overlay</div><div class="fa">→</div>
+    <div class="fb ac">Adjusted</div><div class="fa">→</div>
+    <div class="fb sc">Today (updated)</div>
+  </div>
+
+  <div class="fl">CHAT FROM ANYWHERE</div>
+  <div class="fr">
+    <div class="fb sc">Any screen</div><div class="fa">→</div>
+    <div class="fb ac">Tap bubble</div><div class="fa">→</div>
+    <div class="fb ov">Chat overlay</div><div class="fa">→</div>
+    <div class="fb ac">Conversation</div><div class="fa">→</div>
+    <div class="fb">Dismiss → same screen</div>
+  </div>
+  <div class="fn">Results propagate to relevant screens. Underlying screen preserved.</div>
+</div>
+
+<!-- ═══ CROSS-SCREEN TRIGGERS ═══ -->
+<div class="sec"><span>WHAT MOVES YOU BETWEEN SCREENS</span></div>
+
+<div class="fc">
+  <div class="cg">
+    <div class="z" style="margin:0"><div class="zl">TODAY → WHOLE</div><div class="zd">• "See full pattern" on insight<br>• Tap pattern name<br>• Nav</div></div>
+    <div class="z" style="margin:0"><div class="zl">TODAY → GROW</div><div class="zd">• All routes done<br>• "Where do you want to go?"<br>• Nav</div></div>
+    <div class="z" style="margin:0"><div class="zl">WHOLE → TODAY</div><div class="zd">• Tap working pattern → route<br>• Nav</div></div>
+    <div class="z" style="margin:0"><div class="zl">WHOLE → GROW</div><div class="zd">• Tap empty holon<br>• Tap "no path" aspiration<br>• Nav</div></div>
+    <div class="z" style="margin:0"><div class="zl">GROW → TODAY</div><div class="zd">• Pattern selected (next AM)<br>• Nav</div></div>
+    <div class="z" style="margin:0"><div class="zl">GROW → WHOLE</div><div class="zd">• Principle added<br>• Context gap filled<br>• Nav</div></div>
+    <div class="z" style="margin:0;grid-column:1/-1"><div class="zl">CHAT OVERLAY → ALL</div><div class="zd">Narrowing → new pattern on Today. Context → Foundation on Whole. Principle → Whole. Gap → Grow updates. <em>Dismisses to origin.</em></div></div>
+  </div>
+</div>
+
+<!-- ═══ WHAT EACH SCREEN SHOWS ═══ -->
+<div class="sec"><span>INFORMATION DENSITY</span></div>
+
+<div class="fc">
+  <div class="dg">
+    <div>
+      <div class="dg-h">TODAY</div>
+      <div class="z" style="margin:0 0 4px"><div class="zl" style="color:var(--bp-accent)">SHOWS</div><div class="zd">Pattern steps + triggers<br>Validation progress<br>Reroute / insight cards</div></div>
+      <div class="z t" style="margin:0"><div class="zl">ABSENT</div><div class="zd">Foundation, principles, vision, recommendations, history</div></div>
+    </div>
+    <div>
+      <div class="dg-h">WHOLE</div>
+      <div class="z" style="margin:0 0 4px"><div class="zl" style="color:var(--bp-accent)">SHOWS</div><div class="zd">The shape (all 4 layers)<br>Identity + WHY<br>Expand panels for editing<br>HUMA sees</div></div>
+      <div class="z t" style="margin:0"><div class="zl">ABSENT</div><div class="zd">Step-by-step, recommendations, history, gap tiles</div></div>
+    </div>
+    <div>
+      <div class="dg-h">GROW</div>
+      <div class="z" style="margin:0 0 4px"><div class="zl" style="color:var(--bp-accent)">SHOWS</div><div class="zd">Context gaps · Suggested patterns<br>In-progress narrowing<br>Principles workshop<br>Past conversations</div></div>
+      <div class="z t" style="margin:0"><div class="zl">ABSENT</div><div class="zd">Daily routes, full shape, step-by-step execution</div></div>
+    </div>
+  </div>
+  <div class="co" style="margin-top:12px"><strong>The rule:</strong> <em>Today = execute. Whole = see + manage. Grow = discover + build.</em> Chat handles conversation from anywhere.</div>
+</div>
+
+<!-- ═══ TIME SPLIT ═══ -->
+<div class="sec"><span>OPERATOR TIME</span></div>
+
+<div class="fc">
+  <div style="display:flex;gap:12px;align-items:flex-end;justify-content:center;height:110px;padding-bottom:6px">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+      <div style="width:100px;height:88px;background:rgba(42,90,138,0.12);border-radius:8px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px">
+        <span style="font-size:20px;font-weight:700;color:var(--bp)">80%</span>
+      </div>
+      <span style="font-size:9px;font-weight:600;color:var(--bp)">Today</span>
+      <span style="font-size:7px;color:var(--bp-l)">15 sec – 2 min · daily</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+      <div style="width:100px;height:32px;background:rgba(42,90,138,0.08);border-radius:8px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px">
+        <span style="font-size:14px;font-weight:700;color:var(--bp)">10%</span>
+      </div>
+      <span style="font-size:9px;font-weight:600;color:var(--bp)">Whole</span>
+      <span style="font-size:7px;color:var(--bp-l)">Weekly glance + edit</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+      <div style="width:100px;height:20px;background:rgba(42,90,138,0.06);border-radius:8px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px">
+        <span style="font-size:12px;font-weight:700;color:var(--bp)">10%</span>
+      </div>
+      <span style="font-size:9px;font-weight:600;color:var(--bp)">Grow</span>
+      <span style="font-size:7px;color:var(--bp-l)">When ready for more</span>
+    </div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Aspiration, ChatMessage, SheetEntry, Insight } from "@/types/v2";
+import type { Aspiration, AspirationFunnel, AspirationTrigger, ChatMessage, SheetEntry, Insight, Principle } from "@/types/v2";
 import { getLocalDate, getLocalDateOffset } from "@/lib/date-utils";
 
 // ─── Context ─────────────────────────────────────────────────────────────────
@@ -68,6 +68,8 @@ export async function getAspirations(
     dimensionsTouched: (row.dimensions_touched as Aspiration["dimensionsTouched"]) || [],
     status: row.status as Aspiration["status"],
     stage: (row.stage as Aspiration["stage"]) || "active",
+    funnel: (row.funnel as AspirationFunnel) || undefined,
+    triggerData: (row.trigger_data as AspirationTrigger) || undefined,
   }));
 }
 
@@ -88,6 +90,8 @@ export async function saveAspiration(
     dimensions_touched: aspiration.dimensionsTouched,
     status: aspiration.status,
     stage: aspiration.stage || "active",
+    funnel: aspiration.funnel || {},
+    trigger_data: aspiration.triggerData || {},
   });
 
   if (error) throw error;
@@ -616,4 +620,141 @@ export async function migrateLocalStorageToSupabase(
   for (const key of sheetKeys) {
     localStorage.removeItem(key);
   }
+}
+
+// ─── WHY Statement ──────────────────────────────────────────────────────────
+
+export async function getWhyStatement(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<{ whyStatement: string | null; whyDate: string | null }> {
+  const ctx = await getOrCreateContext(supabase, userId);
+  return {
+    whyStatement: ctx.why_statement ?? null,
+    whyDate: ctx.why_date ?? null,
+  };
+}
+
+export async function updateWhyStatement(
+  supabase: SupabaseClient,
+  userId: string,
+  whyStatement: string
+) {
+  const ctx = await getOrCreateContext(supabase, userId);
+  const { error } = await supabase
+    .from("contexts")
+    .update({
+      why_statement: whyStatement,
+      why_date: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", ctx.id);
+  if (error) throw error;
+}
+
+// ─── Principles ─────────────────────────────────────────────────────────────
+
+export async function getPrinciples(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<Principle[]> {
+  const { data } = await supabase
+    .from("principles")
+    .select("*")
+    .eq("user_id", userId)
+    .order("sort_order", { ascending: true });
+
+  if (!data) return [];
+
+  return data.map((row) => ({
+    id: row.id,
+    text: row.text,
+    active: row.active,
+    sortOrder: row.sort_order,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }));
+}
+
+export async function savePrinciple(
+  supabase: SupabaseClient,
+  userId: string,
+  text: string,
+  sortOrder?: number
+): Promise<Principle> {
+  const { data, error } = await supabase
+    .from("principles")
+    .insert({
+      user_id: userId,
+      text,
+      sort_order: sortOrder ?? 0,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return {
+    id: data.id,
+    text: data.text,
+    active: data.active,
+    sortOrder: data.sort_order,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
+}
+
+export async function updatePrinciple(
+  supabase: SupabaseClient,
+  principleId: string,
+  updates: { text?: string; active?: boolean; sortOrder?: number }
+) {
+  const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (updates.text !== undefined) payload.text = updates.text;
+  if (updates.active !== undefined) payload.active = updates.active;
+  if (updates.sortOrder !== undefined) payload.sort_order = updates.sortOrder;
+
+  const { error } = await supabase
+    .from("principles")
+    .update(payload)
+    .eq("id", principleId);
+  if (error) throw error;
+}
+
+export async function deletePrinciple(
+  supabase: SupabaseClient,
+  principleId: string
+) {
+  const { error } = await supabase
+    .from("principles")
+    .delete()
+    .eq("id", principleId);
+  if (error) throw error;
+}
+
+// ─── All Aspirations (any status) ───────────────────────────────────────────
+
+export async function getAllAspirations(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<Aspiration[]> {
+  const { data } = await supabase
+    .from("aspirations")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: true });
+
+  if (!data) return [];
+
+  return data.map((row) => ({
+    id: row.id,
+    rawText: row.raw_text,
+    clarifiedText: row.clarified_text || "",
+    behaviors: (row.behaviors as Aspiration["behaviors"]) || [],
+    dimensionsTouched: (row.dimensions_touched as Aspiration["dimensionsTouched"]) || [],
+    status: row.status as Aspiration["status"],
+    stage: (row.stage as Aspiration["stage"]) || "active",
+    funnel: (row.funnel as AspirationFunnel) || undefined,
+    triggerData: (row.trigger_data as AspirationTrigger) || undefined,
+  }));
 }

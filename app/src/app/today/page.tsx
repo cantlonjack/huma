@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase";
 import ConversationSheet from "@/components/ConversationSheet";
 import { displayName } from "@/lib/display-name";
 import { getLocalDate } from "@/lib/date-utils";
+import TabShell from "@/components/TabShell";
 import {
   getAspirations,
   getSheetEntries,
@@ -730,6 +731,7 @@ export default function TodayPage() {
   })();
 
   return (
+    <TabShell contextPrompt="What's on your mind about today?">
     <div className="min-h-dvh bg-sand-50 flex flex-col" style={{ paddingBottom: "160px" }}>
       {/* Header */}
       <div className="px-6" style={{ paddingTop: "20px" }}>
@@ -957,5 +959,6 @@ export default function TodayPage() {
         />
       )}
     </div>
+    </TabShell>
   );
 }
