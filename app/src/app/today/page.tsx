@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import type { Aspiration, Insight } from "@/types/v2";
+import type { Aspiration, Behavior, Insight } from "@/types/v2";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { displayName } from "@/lib/display-name";
@@ -72,9 +72,10 @@ function getBehaviorChain(aspiration: Aspiration): BehaviorStep[] {
   const triggerBehavior = aspiration.triggerData?.behavior?.toLowerCase().trim();
 
   return aspiration.behaviors.map((b, i) => {
-    const isTrigger = triggerBehavior
-      ? b.text.toLowerCase().trim() === triggerBehavior
-      : i === 0; // default: first behavior is trigger
+    // Check is_trigger from decomposition data (stored as extra property)
+    const behaviorAny = b as Behavior & { is_trigger?: boolean };
+    const isTrigger = behaviorAny.is_trigger === true
+      || (triggerBehavior ? b.text.toLowerCase().trim() === triggerBehavior : i === 0);
 
     const dim = b.dimensions?.[0];
     const dimension = dim

@@ -10,11 +10,11 @@ export async function GET(request: Request) {
     const supabase = await createServerSupabase();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      // Redirect to /begin which will detect the pending shape and save it
+      // Auth succeeded — redirect to /today (or wherever 'next' points)
       return NextResponse.redirect(new URL(next, request.url));
     }
   }
 
-  // Auth code missing or exchange failed — redirect to login
-  return NextResponse.redirect(new URL("/login?error=auth", request.url));
+  // Auth code missing or exchange failed — redirect to start
+  return NextResponse.redirect(new URL("/start?error=auth", request.url));
 }

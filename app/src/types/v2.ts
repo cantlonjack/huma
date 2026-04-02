@@ -72,11 +72,27 @@ export interface AspirationTrigger {
   failureNote: string;
 }
 
+export interface FutureAction {
+  name: string;
+  detail: string;
+  timeframe: string;
+}
+
+export interface FuturePhase {
+  phase: string;
+  detail: string;
+  timeframe: string;
+}
+
 export interface Aspiration {
   id: string;
   rawText: string;
   clarifiedText: string;
-  behaviors: Behavior[];
+  title?: string;             // Short name (3-5 words) from decomposition
+  summary?: string;           // One sentence — what this is for this person
+  behaviors: Behavior[];      // this_week behaviors (go to production sheet)
+  comingUp?: FutureAction[];  // Next 2-4 weeks (stored, not on /today)
+  longerArc?: FuturePhase[];  // Seasonal/multi-month picture (stored, not on /today)
   dimensionsTouched: DimensionKey[];
   status: "active" | "paused" | "completed" | "dropped";
   stage: "active" | "planning" | "someday";

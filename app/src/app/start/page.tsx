@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { PaletteConcept, ChatMessage, Behavior } from "@/types/v2";
-import { parseMarkersV2 as parseMarkers } from "@/lib/parse-markers-v2";
+import { parseMarkersV2 as parseMarkers, type DecompositionData } from "@/lib/parse-markers-v2";
 import { useAuth } from "@/components/AuthProvider";
 import AuthModal from "@/components/AuthModal";
 import { createClient } from "@/lib/supabase";
@@ -41,6 +41,7 @@ function MessageBubble({
     options?: string[] | null;
     behaviors?: Behavior[] | null;
     actions?: string[] | null;
+    decomposition?: DecompositionData | null;
   };
   onOptionTap?: (option: string) => void;
   onConfirmBehaviors?: (behaviors: Behavior[]) => void;
@@ -78,6 +79,7 @@ function MessageBubble({
         {message.behaviors && message.behaviors.length > 0 && onConfirmBehaviors ? (
           <DecompositionPreview
             behaviors={message.behaviors}
+            decomposition={message.decomposition}
             onConfirm={onConfirmBehaviors}
           />
         ) : message.behaviors && message.behaviors.length > 0 ? (
@@ -144,7 +146,7 @@ export default function StartPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [messages, setMessages] = useState<
-    (ChatMessage & { options?: string[] | null; behaviors?: Behavior[] | null; actions?: string[] | null; contextNote?: boolean })[]
+    (ChatMessage & { options?: string[] | null; behaviors?: Behavior[] | null; actions?: string[] | null; decomposition?: DecompositionData | null; contextNote?: boolean })[]
   >([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -153,6 +155,7 @@ export default function StartPage() {
   const [paletteLoading, setPaletteLoading] = useState(false);
   const [knownContext, setKnownContext] = useState<Record<string, unknown>>({});
   const [decomposedBehaviors, setDecomposedBehaviors] = useState<Behavior[]>([]);
+  const [decompositionData, setDecompositionData] = useState<DecompositionData | null>(null);
   const [aspirationName, setAspirationName] = useState<string | null>(null);
   const [showPaletteMobile, setShowPaletteMobile] = useState(false);
   const [showTransition, setShowTransition] = useState(false);
@@ -274,7 +277,7 @@ export default function StartPage() {
       let fullResponse = "";
 
       // Add placeholder for streaming
-      const humaMsg: ChatMessage & { options?: string[] | null; behaviors?: Behavior[] | null; actions?: string[] | null } = {
+      const humaMsg: ChatMessage & { options?: string[] | null; behaviors?: Behavior[] | null; actions?: string[] | null; decomposition?: DecompositionData | null } = {
         id: crypto.randomUUID(),
         role: "huma",
         content: "",
@@ -300,7 +303,7 @@ export default function StartPage() {
       }
 
       // Final parse with all markers
-      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName } = parseMarkers(fullResponse);
+      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName, parsedDecomposition } = parseMarkers(fullResponse);
 
       if (parsedContext) {
         setKnownContext(prev => ({ ...prev, ...parsedContext }));
@@ -308,6 +311,10 @@ export default function StartPage() {
 
       if (parsedBehaviors) {
         setDecomposedBehaviors(parsedBehaviors);
+      }
+
+      if (parsedDecomposition) {
+        setDecompositionData(parsedDecomposition);
       }
 
       if (parsedAspirationName) {
@@ -324,6 +331,7 @@ export default function StartPage() {
             options: parsedOptions,
             behaviors: parsedBehaviors,
             actions: parsedActions,
+            decomposition: parsedDecomposition,
           };
         }
         return updated;
@@ -367,7 +375,11 @@ export default function StartPage() {
       id: crypto.randomUUID(),
       rawText,
       clarifiedText,
+      title: decompositionData?.aspiration_title || clarifiedText,
+      summary: decompositionData?.summary || "",
       behaviors: behaviorsToSave,
+      comingUp: decompositionData?.coming_up || [],
+      longerArc: decompositionData?.longer_arc || [],
       dimensionsTouched: [],
       status: "active",
       stage: "active",
@@ -391,7 +403,7 @@ export default function StartPage() {
       setPendingAspiration({ rawText, clarifiedText });
       setShowAuthModal(true);
     }
-  }, [messages, decomposedBehaviors, knownContext, aspirationName, user, router]);
+  }, [messages, decomposedBehaviors, decompositionData, knownContext, aspirationName, user, router]);
 
   // Called when auth completes (from AuthModal or magic link return)
   const handleAuthenticated = useCallback(async () => {

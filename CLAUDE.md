@@ -2,11 +2,166 @@
 
 ## Read This First
 
-HUMA is infrastructure for running your life as one connected system. Not a wellness app. Not a life design tool. Infrastructure — like Google Maps is infrastructure for navigation. You use it because your life runs better with it than without it.
+HUMA is infrastructure for running your life as one connected system. Not a wellness app. Not a life design tool. Infrastructure -- like Google Maps is infrastructure for navigation. You use it because your life runs better with it than without it.
 
-**What HUMA does that no other app can:** Show you how the different parts of your life are connected — and which specific daily behaviors are the leverage points that hold everything together.
+**What HUMA does that no other app can:** Show you how the different parts of your life are connected -- and which specific daily behaviors are the leverage points that hold everything together.
 
-**Current state:** V2.1 in development. The artifact-first redesign. Three screens: Today (production sheet, home), System (visible life map), Talk (conversation tool). Entry flow at `/start` works. Decomposition engine works. Sheet compilation works. Session 8 builds the structural redesign.
+**Current state:** V2.1 in development. Three-tab app: Today (production sheet, home), Whole (holonic life map), Grow (placeholder). Entry flow at `/start` works. Conversation engine gathers deep context before decomposing into phased behaviors. Sheet compilation works. Whole page has force-directed holon visualization with archetypes and WHY statement. Chat overlay available from any tab.
+
+**Deployed:** huma-two.vercel.app
+
+---
+
+## Current State
+
+_Last updated: 2026-04-02_
+
+### What Works
+- `/start` conversation flow: context gathering -> reflect-back -> phased decomposition (this_week / coming_up / longer_arc)
+- `/today` production sheet: behaviors render, check-offs persist, streaks tracked
+- `/whole` holonic visualization: aspirations, principles, context nodes, archetype selector, WHY statement
+- Auth: magic link sign-in, localStorage -> Supabase migration
+- Chat overlay (ChatSheet) accessible from any tab via floating button
+- Living Canvas map generation and sharing (`/map/[id]`)
+
+### What Doesn't Work Yet
+- `/grow` is a placeholder ("coming next")
+- `/system` exists but is not in the bottom nav (accessible via direct URL or "see all" from chat)
+- Behavioral insights (`/api/insight`) require 7+ days of data -- untestable on fresh accounts
+- No push notifications or morning briefing delivery
+
+### Known Architectural Notes
+- Pre-auth data lives in localStorage; migrated to Supabase on sign-in
+- Conversation engine uses `[[MARKER:...]]` protocol in streamed responses, parsed client-side
+- Production sheet compiled daily by Claude (`/api/sheet`), cached in localStorage by date
+
+---
+
+## Routes
+
+### Pages
+
+| Route | File | Status | What It Does |
+|-------|------|--------|-------------|
+| `/` | `app/page.tsx` | Working | Landing page. Redirects authed users with aspirations to `/today`. Shows `LandingView` otherwise. |
+| `/start` | `app/start/page.tsx` | Working | Conversation entry. Context gathering -> decomposition -> auth -> redirect to `/today`. Palette panel on desktop. |
+| `/today` | `app/today/page.tsx` | Working | Production sheet (HOME). Daily behaviors from aspirations, check-off tracking, dimension dots, streak counts. |
+| `/whole` | `app/whole/page.tsx` | Working | Holonic life map. Force-directed D3 visualization, archetype selector, WHY statement, insight card. |
+| `/grow` | `app/grow/page.tsx` | Placeholder | "Grow - coming next." Wrapped in TabShell. |
+| `/chat` | `app/chat/page.tsx` | Working | Conversation hub. Messages grouped by time into expandable cards. Context card with aspiration/behavior summary. |
+| `/system` | `app/system/page.tsx` | Working | All aspirations and behaviors in list view. Not in bottom nav. Linked from chat context card ("see all"). |
+| `/map/[id]` | `app/map/[id]/page.tsx` | Working | Dynamic Living Canvas renderer. Server-side OG metadata. Public/shareable. |
+| `/map/sample` | `app/map/sample/page.tsx` | Working | Two example Living Canvas maps (Sarah Chen, Maya Okafor). |
+
+### Navigation
+
+Bottom tab bar: **Today | Whole | Grow**. Hidden on `/` and `/start`. Chat overlay (floating button + bottom sheet) available on all tab pages.
+
+### API Routes
+
+| Route | Method | Status | What It Does | Called By |
+|-------|--------|--------|-------------|----------|
+| `/api/v2-chat` | POST | Working | Core conversation engine. Adaptive system prompt, streamed responses with `[[MARKER:...]]` protocol. | `/start`, `/chat`, `ChatSheet` |
+| `/api/chat` | POST | Working | Legacy multi-phase conversation (ikigai -> operational design). Canvas/document generation. | Map generation flow |
+| `/api/palette` | POST | Working | Suggests related concept chips for `/start` sidebar. Uses Haiku model. | `/start` |
+| `/api/sheet` | POST | Working | Compiles daily production sheet. Claude generates 5 headline+detail entries from aspirations + history. | `/today` |
+| `/api/sheet/check` | POST | Working | Records behavior check-off. Updates `sheet_entries` table. Requires auth. | `/today` |
+| `/api/insight` | POST | Working | Generates cross-aspiration behavioral insights from 7+ days of data. | `/whole` |
+| `/api/whole-compute` | POST | Working | Suggests archetypes and WHY statement from context data. | `/whole` |
+| `/api/maps` | POST | Working | Stores Living Canvas document to Supabase + Redis cache. | Map generation |
+| `/api/maps/[id]` | GET | Working | Retrieves map by ID. Supabase -> Redis fallback. | `/map/[id]` |
+| `/api/og` | GET | Working | Dynamic OG image generation for map sharing. | `/map/[id]` metadata |
+| `/auth/callback` | GET | Working | OAuth callback. Exchanges code for session, redirects to `/today`. | Supabase auth redirect |
+
+---
+
+## Components
+
+### Layout & Navigation
+- **BottomNav** -- Fixed bottom tab bar (Today, Whole, Grow). Hidden on `/` and `/start`.
+- **TabShell** -- Wraps tab pages with ChatBubble + ChatSheet overlay.
+
+### Conversation & Chat
+- **Chat** -- Core chat interface with streaming, phase-specific placeholders, error handling.
+- **ChatBubble** -- Floating action button to open ChatSheet.
+- **ChatSheet** -- Draggable bottom sheet chat overlay for tab pages.
+- **ConversationSheet** -- Alternative chat interface for `/system` page.
+- **DecompositionPreview** -- Phased behavior preview (This Week / Coming Up / Longer Arc) with trigger highlighting and edit mode.
+
+### Views
+- **LandingView** -- Homepage hero with asymmetric life-balance shape visualization.
+- **ConversationView** -- Multi-phase conversation (Chat + PhaseIndicator + ProgressiveCanvas).
+- **MapView** -- Living Canvas display container with canvas/document toggle.
+- **WelcomeView** -- Name/location collection form (V1 flow).
+- **GeneratingView** -- Loading screen during map generation.
+
+### Whole Tab
+- **WholeShape** -- Force-directed D3 holon visualization (patterns, vision, identity, principles, foundation).
+- **ProfileBanner** -- Operator name, archetypes, editable WHY statement.
+- **ArchetypeSelector** -- Modal for selecting primary/secondary archetypes.
+- **HolonExpandPanel** -- Expandable details panel for holon nodes.
+- **InsightCard** -- Displays behavioral insight with dismiss.
+
+### Living Canvas (SVG)
+- **SpatialCanvas** -- Main SVG container. Center-outward layout: Essence -> QoL -> Production -> Resource -> CapitalRadar.
+- **SpatialEssence** -- Center SVG: operator name, land affinity, breathing glow.
+- **SpatialRing** / **SpatialPill** -- Ring layout with text pill elements.
+- **CapitalRadar** -- 8-axis radar chart of capital scores.
+- **LivingCanvas** -- Combines SpatialCanvas with scrolling HTML detail sections.
+- **FieldLayers**, **EnterpriseCards**, **NodalActions**, **WeeklyRhythm**, **ValidationProtocol**, **CanvasClosing** -- Detail sections.
+
+### Shared
+- **AuthProvider** -- Supabase auth context (magic link sign-in, session management).
+- **AuthModal** -- Email input modal for magic link auth.
+- **ErrorBoundary** -- Catches render errors with context-specific fallback UI.
+- **MapToolbar** -- Sticky toolbar for map view (toggle, print, share).
+- **ShareButton** -- Map sharing dropdown (link, image, social).
+- **MapDocument** -- Renders map data as styled markdown with embedded charts.
+- **ShapeChart** -- SVG radar/spider chart for capital scores.
+
+---
+
+## Data Layer
+
+### Supabase Tables
+
+| Table | Purpose | Key Columns |
+|-------|---------|-------------|
+| `contexts` | One per user. Structured context container. | `user_id`, `known_context` (jsonb), `aspirations` (jsonb[]), `why_statement` |
+| `aspirations` | Individual aspirations with behaviors. | `user_id`, `raw_text`, `clarified_text`, `behaviors` (jsonb), `dimensions_touched`, `status`, `stage` |
+| `chat_messages` | All conversation history. | `user_id`, `role`, `content`, `context_extracted` (jsonb) |
+| `sheet_entries` | Daily production sheet (time-series). | `user_id`, `date`, `behavior_key`, `behavior_text`, `detail` (jsonb), `time_of_day`, `checked`, `checked_at` |
+| `behavior_log` | Behavior completion tracking for analytics. | `user_id`, `behavior_key`, `date`, `completed` |
+| `insights` | Generated behavioral insights. | `user_id`, `insight_text`, `dimensions_involved`, `behaviors_involved`, `data_basis` (jsonb), `delivered` |
+| `principles` | User-defined guiding principles. | `user_id`, `text`, `active`, `sort_order` |
+| `maps` | Living Canvas documents. | `user_id`, `document_markdown`, `canvas_data` (jsonb), `name`, `location`, `is_public` |
+
+### localStorage Keys (Pre-Auth)
+
+| Key | What It Stores |
+|-----|---------------|
+| `huma-v2-known-context` | Structured context dict |
+| `huma-v2-start-messages` | Chat messages from `/start` |
+| `huma-v2-chat-messages` | Chat messages from `/chat` |
+| `huma-v2-aspirations` | Aspirations with behaviors, comingUp, longerArc |
+| `huma-v2-behaviors` | Derived behavior metadata (transient) |
+| `huma-v2-start-date` | When operator first started |
+| `huma-v2-sheet-YYYY-MM-DD` | Daily sheet entries (one key per date) |
+| `huma-v2-pending-insight` | Undelivered insight |
+| `huma-conversation` | V1 conversation state (legacy) |
+
+### Data Flow
+
+Pre-auth: all data in localStorage. On auth: `migrateLocalStorageToSupabase()` moves everything to Supabase, clears localStorage after verified save. Post-auth: Supabase is source of truth. Maps also cached in Redis (Upstash KV, 90-day TTL).
+
+### Key Functions (`lib/supabase-v2.ts`)
+
+- `getAspirations` / `saveAspiration` -- CRUD for aspirations
+- `getSheetEntries` / `saveSheetEntries` / `updateSheetEntryCheck` -- Daily sheet management
+- `logBehaviorCheckoff` / `getBehaviorWeekCounts` -- Behavior tracking
+- `getUndeliveredInsight` / `markInsightDelivered` -- Insight lifecycle
+- `computeStructuralInsight` -- Day 1 insight from decomposition data
+- `migrateLocalStorageToSupabase` -- Auth migration (safe: preserves localStorage on failure)
 
 ---
 
@@ -18,104 +173,28 @@ HUMA is infrastructure for running your life as one connected system. Not a well
 
 | Document | What It Governs |
 |----------|----------------|
-| **V2 Foundation** (`HUMA_V2_FOUNDATION.md`) | **PRIMARY.** The three layers (Conversation → Computation → Output), product surface (three screens), entry flow, production sheet, insight engine, growth model. **Read FIRST for any product or build decision.** |
+| **V2 Foundation** (`HUMA_V2_FOUNDATION.md`) | The three layers (Conversation -> Computation -> Output), product surface, entry flow, production sheet, insight engine, growth model. **Read FIRST for any product or build decision.** |
 
 ### Foundational Documents
 
-| # | Document | Authoritative For | Consult When... |
-|---|----------|-------------------|-----------------|
-| 1 | **Vision & Strategy** (`HUMA_VISION_AND_STRATEGY.md`) | What HUMA is, why it exists, sovereignty principles, five capacities, pattern economy, strategic phases, multiple mediums, naming hierarchy | Strategic direction, what HUMA must never violate |
-| 2 | **Design System** (`HUMA_DESIGN_SYSTEM.md`) | Colors, fonts, spacing, components, warmth system, animation, dark mode | Any visual decision, any CSS, any component styling |
-| 3 | **Voice Bible** (`HUMA_VOICE_BIBLE.md`) | How HUMA speaks, banned phrases, vocabulary, tone arc, response lengths, dimension naming | Any AI prompt, any user-facing copy, any system prompt |
-| 4 | **Ethical Framework** (`HUMA_ETHICAL_FRAMEWORK.md`) | Dependency test, graduation imperative, distress protocol, data principles, sovereignty | Handling operator data, distress responses, any feature touching sensitive information |
-| 5 | **Pattern Library** (`HUMA_PATTERN_LIBRARY.md`) | RPPL pattern schema (v0.1), 12 seed patterns, pattern evolution mechanics | Working on patterns, insight engine, template system |
-| 6 | **Intellectual Lineage** (`HUMA_INTELLECTUAL_LINEAGE.md`) | Source traditions (Adrià, Sanford, Savory, Perkins, Palmer, Alexander, Satoshi, Fuller, Socrates), convergence architecture | Deep context on WHY decisions were made |
+| # | Document | Authoritative For |
+|---|----------|-------------------|
+| 1 | **Vision & Strategy** (`HUMA_VISION_AND_STRATEGY.md`) | What HUMA is, why it exists, sovereignty principles, pattern economy, strategic phases |
+| 2 | **Design System** (`HUMA_DESIGN_SYSTEM.md`) | Colors, fonts, spacing, components, warmth system, animation |
+| 3 | **Voice Bible** (`HUMA_VOICE_BIBLE.md`) | How HUMA speaks, banned phrases, vocabulary, tone arc, response lengths |
+| 4 | **Ethical Framework** (`HUMA_ETHICAL_FRAMEWORK.md`) | Dependency test, graduation imperative, distress protocol, data principles |
+| 5 | **Pattern Library** (`HUMA_PATTERN_LIBRARY.md`) | RPPL pattern schema, 12 seed patterns, pattern evolution mechanics |
+| 6 | **Intellectual Lineage** (`HUMA_INTELLECTUAL_LINEAGE.md`) | Source traditions, convergence architecture |
+| 7 | **Conversation Architecture** (`HUMA_CONVERSATION_ARCHITECTURE.md`) | How the conversation engine works: context gathering, decomposition phases, message count rules |
 
 ### Archived (do not consult for current build decisions)
 
-These documents describe V1 architecture (Lotus Flow, workspace with petals, Shape Builder, three-tab "Your Map/Your Day/Your Journey") or V2 MVP architecture (chat-first, /start → /today → /chat without System screen). They are superseded by the V2 Foundation.
-
-- `HUMA_PRODUCT_SURFACE.md` — V1 product surface. Superseded.
-- `HUMA_TECHNICAL_SPECIFICATION.md` — V1 tech spec. Superseded.
-- `HUMA_USER_JOURNEY.md` — V1 journey stages. Superseded.
-- `HUMA_COMPLETE_CONTEXT.md` — Outdated portable summary. Superseded.
-- `cc-prompt-onboarding-v2.md` — Lotus Flow build spec. Retired.
-- `cc-prompt-huma-v2-mvp.md` — V2 MVP build prompt. Superseded by Session 8.
-
----
-
-## The Product in Brief
-
-### The Core Loop
-
-1. **Conversation:** Operator says what's going on. HUMA structures it, clarifies through tappable options, decomposes into behaviors with dimensional mappings.
-2. **Computation:** RPPL decomposes aspirations into behavior chains. Maps dimensions. Finds connections between aspirations through shared behaviors. Cross-references behavior data for correlations. All invisible.
-3. **System:** The visible artifact — aspirations, behaviors, connections, context — growing and editable. The thing the operator is building without having to design it.
-4. **Production Sheet:** Daily output. 3-5 specific, actionable behaviors for today. Check off as you go. Checking IS the data collection.
-5. **Insight:** Structural (Day 1, from decomposition) and behavioral (Week 2+, from check-off data). Cross-dimensional connections the operator didn't see.
-
-### Three Screens
-
-| Screen | Route | What It Is | When They Use It |
-|--------|-------|-----------|-----------------|
-| **Today** | `/today` | Production sheet. Home screen. | 10 seconds every morning |
-| **System** | `/system` | Visible life map. Aspirations, behaviors, connections, context, palette. | 2-5 minutes when adding/exploring |
-| **Talk** | `/chat` | Conversation tool. Context card + exchanges. | When they want to tell HUMA something |
-
-Navigation: Today | System | Talk (bottom tab bar). Today is home. Tab bar hidden on `/start`.
-
-### Entry Point
-
-`/start` → "What's going on?" → conversation → clarification → decomposition → "Start this Sunday" → auth → redirect to `/today`.
-
-The conversation produces structured data: aspiration record, behavior records with dimensional mappings, extracted context. This data populates the System screen immediately.
-
-### Context Model
-
-Context enters through conversation and use, not forms:
-1. **Conversation** — operator says what's on their mind, HUMA structures and stores it
-2. **Production Sheet Usage** — check-offs, skips, and patterns become behavioral data
-3. **Quick Additions** — conversation sheet overlay from any screen for fast context updates
-4. **Community Wisdom** — anonymized aggregate patterns from all operators (future)
-
-No external data harvesting. Every piece of context is a voluntary gift.
-
-### Dimension Mapping
-
-| Internal (8 Forms of Capital) | User-Facing |
-|-------------------------------|-------------|
-| Financial | Money |
-| Material | Home |
-| Living/Natural | Body |
-| Social | People |
-| Intellectual | Growth |
-| Experiential | Joy |
-| Spiritual | Purpose |
-| Cultural | Identity |
-
-Dimensions are COMPUTED from behavior data through decomposition chains, NOT self-reported.
-
-### Route Structure
-
-```
-/               Landing page
-/start          Conversation entry point (first-time flow)
-/today          Daily production sheet (HOME for authed users)
-/system         Life system view (aspirations, behaviors, connections, palette)
-/chat           Conversation tool (context card + history)
-/api/decompose  Decomposition endpoint
-/api/sheet      Production sheet compilation
-/api/insight    Insight computation
-/api/context    Context extraction
-```
-
-### Pricing
-
-**Free forever:** Up to 3 aspirations. Basic production sheet. One insight when data supports it. Template browsing.
-
-**$29/month Operate:** Unlimited aspirations. Full cross-dimensional computation. Deep production sheet. Pattern commons access. Canvas view. Template publishing.
-
-**$99/month Professional:** Multi-context management. Professional dashboard. API access.
+- `HUMA_PRODUCT_SURFACE.md` -- V1 product surface. Superseded.
+- `HUMA_TECHNICAL_SPECIFICATION.md` -- V1 tech spec. Superseded.
+- `HUMA_USER_JOURNEY.md` -- V1 journey stages. Superseded.
+- `HUMA_COMPLETE_CONTEXT.md` -- Outdated portable summary. Superseded.
+- `cc-prompt-onboarding-v2.md` -- Lotus Flow build spec. Retired.
+- `cc-prompt-huma-v2-mvp.md` -- V2 MVP build prompt. Superseded.
 
 ---
 
@@ -125,29 +204,17 @@ Dimensions are COMPUTED from behavior data through decomposition chains, NOT sel
 |----------|-----------|
 | Entry experience | Open conversation: "What's going on?" NOT guided onboarding. |
 | Home screen | Production sheet (`/today`). NOT a chat page. |
-| Visible artifact | System screen (`/system`) with aspirations, behaviors, connections, context. |
-| Conversation model | Ephemeral input → structured output. NOT a growing chat log. |
+| Visible artifact | Whole page (`/whole`) with holonic visualization, archetypes, WHY. |
+| Conversation model | Ephemeral input -> structured output. NOT a growing chat log. |
 | Capital scores | COMPUTED from behavior through decomposition chains. NOT self-reported. |
 | Context building | Through conversation and use over time. NOT forms. |
 | Product model | Life operating system / infrastructure. NOT self-improvement tool. |
-| Palette function | PrepBoard model — browse, tap to add to system. NOT chat injection. |
+| Palette function | PrepBoard model -- browse, tap to add context. NOT chat injection. |
 | Insight timing | Structural insight on Day 1 (from decomposition). Behavioral insights Week 2+. |
+| Decomposition output | Phased: this_week (max 4, one trigger) / coming_up / longer_arc. NOT flat list. |
+| Navigation | Today / Whole / Grow (bottom tab bar). Chat is overlay, not a tab. |
 | V1 architecture | Archived. Lotus Flow, petals, workspace may return in evolved form. |
 | V2 MVP architecture | Superseded by V2.1 artifact-first redesign. |
-
----
-
-## RPPL Primitives (Reality Pattern Protocol Layer)
-
-Internal/developer-facing only — users see "HUMA."
-
-| Primitive | What It Is | The Capacity |
-|-----------|------------|--------------|
-| **Essences** | Irreducible identity | See what something IS |
-| **Patterns** | Structured, validated units of practical wisdom | See recurring structures |
-| **Fields** | Total context within which patterns express | See total context |
-| **Nodes** | Points of maximum leverage | See leverage |
-| **Transformers** | Cross-domain bridges | See across domains |
 
 ---
 
@@ -161,7 +228,7 @@ Read `HUMA_VOICE_BIBLE.md` for the full specification.
 
 **Vocabulary:** USE: "what's working," "where the leverage is," "that's a design problem, not a discipline problem." NEVER: optimize, productivity, hack, goals, accountability, mindset, journey, empower, wellness, actionable, transformative.
 
-**Response lengths:** Conversation clarification: tappable options + 1 sentence. Decomposition: behavior list + 1 sentence framing. Production sheet items: specific action + brief detail. Insight: 3 sentences max. One question per message.
+**Response lengths:** Conversation clarification: tappable options + 1 sentence. Decomposition: phased behavior list + 1 sentence framing. Production sheet items: specific action + brief detail. Insight: 3 sentences max. One question per message.
 
 ---
 
@@ -189,7 +256,7 @@ Read `HUMA_ETHICAL_FRAMEWORK.md` for the full specification.
 
 **When behaviors don't stick:** Look at the system, never at the person. "What changed?" not "Try harder."
 
-**The graduation metric:** If an operator stops using HUMA after 2 years because they've internalized the thinking — that's success.
+**The graduation metric:** If an operator stops using HUMA after 2 years because they've internalized the thinking -- that's success.
 
 ---
 
@@ -197,10 +264,11 @@ Read `HUMA_ETHICAL_FRAMEWORK.md` for the full specification.
 
 - **Frontend:** Next.js 14+ (App Router) + TypeScript
 - **Styling:** Tailwind CSS with custom design tokens from Design System
-- **AI:** Claude API via AIProvider abstraction
-- **Database:** PostgreSQL via Supabase. Tables: aspirations, behaviors, behavior_log, contexts, sheet_entries, chat_messages, insights
+- **AI:** Claude API (Anthropic SDK). Sonnet for conversation/sheet/insight. Haiku for palette.
+- **Database:** PostgreSQL via Supabase. Tables: contexts, aspirations, chat_messages, sheet_entries, behavior_log, insights, principles, maps
+- **Cache:** Upstash Redis (KV) for map caching
 - **Hosting:** Vercel + Supabase
-- **Auth:** Email magic links. Pre-auth state in localStorage, migrated to Supabase on auth.
+- **Auth:** Email magic links via Supabase. Pre-auth state in localStorage, migrated on auth.
 
 ---
 
@@ -236,8 +304,13 @@ Does this feature help the operator's life run better? Does it surface a connect
 - Use the operator's own language when reflecting back
 - Leave space after insights (silence is a feature)
 - Make the shared insight beautiful enough to screenshot and send
-- Deliver specific, actionable outputs — not plans, not advice, but "here's your tomorrow"
+- Deliver specific, actionable outputs -- not plans, not advice, but "here's your tomorrow"
 
 ---
 
-*This file is the router. The documents it points to are the architecture. Read them.*
+## Session Protocol
+
+At the END of every CC session, before the final commit:
+1. Update `docs/CURRENT_STATE.md` with current state of every route and known bugs.
+2. Commit it with the session's other changes.
+This file is the bridge between CC and the strategic Claude instance.

@@ -443,53 +443,15 @@ When the operator prints or exports to PDF:
 
 ---
 
-## 12 — Lotus Flow Components
+## 12 — Archived: Lotus Flow Components
 
-### Spectrum Slider
-The capital assessment input. NOT a standard range input.
-
-- Container: 100% width, height 28px, rounded-lg, sand-200 background
-- 10 tappable segments, each 10% width
-- Color gradient when filled: red/rose-600 → orange/amber-600 → yellow/amber-300 → green/sage-500
-- Unfilled: sand-200
-- Transition: 200ms fill, HUMA easing
-- Each segment is a button with aria-label
-
-### Regenerative Wealth Flower
-The capital profile visualization. 8 petals + TIME center.
-
-- Petals: organic bezier curves (not pie wedges), sized proportionally to capital value
-- Petal colors: Financial=amber-600, Material=ink-500, Living=sage-500, Social=sage-300, Experiential=amber-400, Intellectual=sky-600, Spiritual=sage-700, Cultural=rose-600
-- TIME at center: hourglass icon, ink-400, subtle pulse animation
-- Entrance: petals unfurl from center, staggered 100ms each, 1-1.5s total
-- SVG implementation, organic irregular edges
-
-### WHOLE Visualization
-The operator's living context form. Persistent, evolving.
-
-- Phase 1: Animated SVG parametric curves (rose/Lissajous). Fine stroke, sage-400/500. Draw-on via stroke-dashoffset.
-- Phase 2: SVG path morphing (CSS transitions). More complex topology.
-- Phase 3: SVG + CSS filters (blur + opacity layers + gradient). Organic, glowing.
-- Future phases: Three.js procedural mesh.
-- Always visible in upper-right when user is past Screen 5.
-- Subtle breathing animation (scale 1.0 to 1.01, 6s, infinite).
-
-### Lotus Navigation
-Left sidebar, 12 petals.
-
-- Each petal: icon (24px SVG) + label (Source Sans 3, 0.8rem, weight 500)
-- Active petal: sage-500 text, progress bar visible (sage-500 fill, sand-200 track)
-- Completed petal: sage-400 text, full progress bar
-- Inactive/future: ink-300 text, no progress bar
-- Mobile: collapses to horizontal scroll of icons at top
+_This section describes V1 Lotus Flow components (spectrum slider, wealth flower, lotus navigation). These are retired. The current architecture uses the Whole page holonic visualization (WholeShape, force-directed D3) and the /start conversation flow. Retained for historical reference only._
 
 ---
 
-## 13 — Context Dashboard (Workspace Home)
+## 13 — Archived: Context Dashboard
 
-**Desktop:** Lotus nav sidebar + context area organized by petal + WHOLE upper-right + recommendation panel. Cards follow warmth system.
-
-**Mobile:** WHOLE at top (120px), archetype badge, compact flower. Below: recommendation card (pattern card styling). Below: petal progress. Tap any element to edit. Quick capture FAB lower-right.
+_This section describes the V1 workspace home layout (lotus nav sidebar, petal progress, WHOLE upper-right). Retired. The current architecture uses the three-tab layout (Today / Whole / Grow) with chat overlay. Retained for historical reference only._
 
 ---
 

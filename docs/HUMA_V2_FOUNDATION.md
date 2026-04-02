@@ -102,7 +102,7 @@ The artifact (the life system) is visible and central. Conversation is one input
 
 ### Three Screens
 
-**Screen 1: YOUR DAY** (home screen — `/today`)
+**Screen 1: TODAY** (home screen — `/today`)
 The bakery production sheet. What you see when you open HUMA.
 - Date header, aspiration ribbon (scrollable pills showing active aspirations)
 - Insight card (structural or behavioral, when available)
@@ -110,35 +110,38 @@ The bakery production sheet. What you see when you open HUMA.
 - Check-off feedback: counters showing behavioral accumulation ("Day 3 of cooking at home")
 - Prompt bar: persistent input that opens a conversation sheet overlay for quick context additions
 
-**Screen 2: YOUR SYSTEM** (the visible artifact — `/system`)
-The structured map of your life. The PrepBoard/Obsidian/Bullipedia hybrid.
-- Aspiration cards with nested behavior lists, dimensional tags, activity indicators
-- Connection indicators between aspirations sharing behaviors (with insight text)
-- "HUMA KNOWS" context card: editable summary of everything HUMA has extracted
-- Palette: browseable by the 8 dimensions, showing aspirations and possibilities
-- Tapping a palette item triggers a quick conversation → decomposition → new aspiration appears
-- The system grows as context accumulates — proof that HUMA is learning
+**Screen 2: WHOLE** (the visible artifact — `/whole`)
+The holonic life map. Force-directed visualization of your life as a connected system.
+- Identity nucleus with archetypes and WHY statement
+- Aspiration nodes (patterns/vision layer) with dimensional coloring
+- Principle nodes (guiding values)
+- Foundation context nodes (place, work, stage, health)
+- Expandable detail panels for each node
+- Insight card when behavioral data supports it
 
-**Screen 3: TALK** (the conversation tool — `/chat`)
+**Screen 3: GROW** (coming — `/grow`)
+The growth and pattern commons space. Not yet implemented.
+
+**Chat** (conversation tool — `/chat`, accessible via overlay)
 For longer conversations that don't fit a quick bottom-sheet exchange.
 - Context card at top (what HUMA knows)
 - Latest exchange displayed fully, with "Context added: [fact]" when context was extracted
 - Past exchanges as collapsed one-line summaries with dates (not a chat log)
 - Input field at bottom
 
-**Conversation Sheet** (bottom sheet overlay — available from any screen)
-- Slides up from the prompt bar on Today or System
+**Conversation Sheet** (bottom sheet overlay — available from any tab)
+- Slides up from the floating chat button on Today or Whole
 - Quick context additions: "We got a chest freezer" / "I'm off Wednesdays now"
 - HUMA responds, extracts context, the sheet dismisses
 - Ephemeral interaction that produces structured output
 
-**Navigation:** Today | System | Talk (bottom tab bar). Today is home. Tab bar hidden during the entry flow at `/start`.
+**Navigation:** Today | Whole | Grow (bottom tab bar). Today is home. Chat is a floating overlay, not a tab. Tab bar hidden during the entry flow at `/start`.
 
 ### The Entry Flow (`/start`)
 
 "What's going on?" → conversation → clarification (tappable options) → decomposition into behaviors → "Start this Sunday" → auth (magic link) → redirect to `/today`.
 
-The conversation produces structured data: an aspiration record, behavior records with dimensional mappings, and extracted context. This data populates the System screen immediately — the operator's first visit shows their life system already taking shape.
+The conversation produces structured data: an aspiration record, behavior records with dimensional mappings, and extracted context. This data populates the Whole screen immediately — the operator's first visit shows their life system already taking shape.
 
 ---
 
@@ -247,7 +250,7 @@ The product works when someone:
 2. Sees their system materialize — aspiration, behaviors, connections, dimensions
 3. Gets a production sheet that feels personal
 4. Checks things off and sees the data accumulate visibly
-5. Opens the System tab and sees their life becoming structured — without having designed anything
+5. Opens the Whole tab and sees their life becoming structured — without having designed anything
 6. Browses the palette and discovers something they didn't know they wanted
 7. Receives an insight that connects two parts of their life they didn't know were related
 8. Screenshots that insight and texts it to a friend

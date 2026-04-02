@@ -1,4 +1,21 @@
-import type { Behavior } from "@/types/v2";
+import type { Behavior, FutureAction, FuturePhase } from "@/types/v2";
+
+export interface DecompositionData {
+  aspiration_title: string;
+  summary: string;
+  this_week: Array<{
+    key: string;
+    name: string;
+    text: string;
+    detail: string;
+    is_trigger: boolean;
+    dimensions: string[];
+    frequency: "daily" | "weekly" | "specific-days";
+    days?: string[];
+  }>;
+  coming_up: FutureAction[];
+  longer_arc: FuturePhase[];
+}
 
 export interface ParsedMarkers {
   cleanText: string;
@@ -7,9 +24,10 @@ export interface ParsedMarkers {
   parsedActions: string[] | null;
   parsedContext: Record<string, unknown> | null;
   parsedAspirationName: string | null;
+  parsedDecomposition: DecompositionData | null;
 }
 
-const MARKER_TYPES = ["OPTIONS", "BEHAVIORS", "ACTIONS", "CONTEXT", "ASPIRATION_NAME"] as const;
+const MARKER_TYPES = ["OPTIONS", "BEHAVIORS", "ACTIONS", "CONTEXT", "ASPIRATION_NAME", "DECOMPOSITION"] as const;
 
 /**
  * Extract a single marker from text by finding [[TYPE: then scanning forward
@@ -91,6 +109,7 @@ export function parseMarkersV2(text: string): ParsedMarkers {
   let parsedActions: string[] | null = null;
   let parsedContext: Record<string, unknown> | null = null;
   let parsedAspirationName: string | null = null;
+  let parsedDecomposition: DecompositionData | null = null;
 
   let cleanText = text;
 
@@ -118,15 +137,36 @@ export function parseMarkersV2(text: string): ParsedMarkers {
         case "CONTEXT":
           parsedContext = result.json as Record<string, unknown>;
           break;
+        case "DECOMPOSITION":
+          parsedDecomposition = result.json as DecompositionData;
+          break;
       }
       cleanText = cleanText.replace(result.fullMatch, "");
     }
   }
 
-  // Strip incomplete markers at end of stream (e.g. "[[OPTIONS:" without closing "]]")
+  // If we got a DECOMPOSITION marker, extract this_week behaviors for backwards compat
+  if (parsedDecomposition && !parsedBehaviors) {
+    parsedBehaviors = parsedDecomposition.this_week.map(item => ({
+      key: item.key || item.name.toLowerCase().replace(/\s+/g, "-"),
+      text: item.text || item.name,
+      detail: item.detail,
+      frequency: item.frequency || "weekly" as const,
+      days: item.days,
+      dimensions: (item.dimensions || []).map(d => ({
+        dimension: d as Behavior["dimensions"][0]["dimension"],
+        direction: "builds" as const,
+        reasoning: "",
+      })),
+      enabled: true,
+      is_trigger: item.is_trigger,
+    })) as (Behavior & { is_trigger?: boolean })[];
+  }
+
+  // Strip incomplete markers at end of stream
   cleanText = cleanText
-    .replace(/\[\[(?:OPTIONS|BEHAVIORS|ACTIONS|CONTEXT|ASPIRATION_NAME):?[\s\S]*$/g, "")
+    .replace(/\[\[(?:OPTIONS|BEHAVIORS|ACTIONS|CONTEXT|ASPIRATION_NAME|DECOMPOSITION):?[\s\S]*$/g, "")
     .trim();
 
-  return { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName };
+  return { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName, parsedDecomposition };
 }

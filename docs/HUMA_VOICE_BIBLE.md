@@ -259,8 +259,8 @@ The transition between tones should be gradual, not abrupt. Phase 2 doesn't sudd
 
 | Context | Hard Maximum | Target |
 |---------|-------------|--------|
-| Lotus Flow synthesis (Screen 9) | 4 lines | Archetype, stage, strengths, growth areas. Direct. No hedging. |
-| Lotus Flow first insight (Screen 12) | 3 sentences | Connection + first move + invitation. Compiled pattern recommendation. |
+| Decomposition framing | 2 sentences | Brief intro to phased behavior output. Specific to operator's context. |
+| Reflect-back confirmation | 3 sentences | Restate what you heard in operator's words. Fence-post neighbor, not AI summary. |
 | Workspace recommendation | 2 sentences | One pattern noticed. Specific, not generic. |
 | One-thing card copy | 1 action + 1 connection | "Batch your harvest." "This connects to: evenings free." |
 | Weekly insight card | 3 sentences | One connection noticed + coherence number. |
@@ -332,33 +332,33 @@ The voice that does this well sounds like someone who has earned the right to be
 
 ---
 
-## 09 — Lotus Flow Voice
+## 09 — Conversation Entry Voice
 
-The Lotus Flow onboarding screens are the operator's first encounter with HUMA's voice. Every word matters. The voice is spare, warm, and direct — the fence-post neighbor meeting you for the first time.
+The `/start` conversation is the operator's first encounter with HUMA's voice. Every word matters. The voice is spare, warm, and direct — the fence-post neighbor meeting you for the first time.
 
-### Screen copy examples
+### Conversation copy examples
 
-**Good:** "What should we call you?" / "Quick snapshot of your resources." / "Here's what I see, Jack." / "Your WHOLE is changing."
+**Good:** "What's going on?" / "Two of you, right? What's the main thing that's not working?" / "Trial batch of shiitake on your oak — 10 to 15 logs, personal supply first. That the right picture?"
 
-**Bad:** "Welcome to HUMA! Let's get started on your journey!" / "Congratulations, you just completed your first step!" / "Wow, your WHOLE is evolving — amazing!" / "Based on what you've shared, here's a summary..."
+**Bad:** "Welcome to HUMA! Let's get started on your journey!" / "Based on what you've shared, it sounds like you want to..." / "That's a really great aspiration!"
 
-### Maximum lengths for Lotus Flow
+### Maximum lengths for conversation phases
 
-| Screen | Max copy |
-|--------|----------|
-| Question screens (1-2, 5-6) | 1-2 sentences |
-| Instruction screens (3-4, 7) | 2 sentences |
-| Synthesis (9) | 4 lines: archetype, stage, strengths, growth |
-| Evolution (10-11) | 0-1 sentences (visual does the work) |
-| First insight (12) | 3 sentences max |
+| Phase | Max copy |
+|-------|----------|
+| Context questions | 1 sentence + tappable options |
+| Reflect-back | 3 sentences + confirmation options |
+| Decomposition framing | 2 sentences before phased behavior output |
 
-### The synthesis voice
+### The reflect-back voice
 
-Screen 9 is the most important voice moment in the entire product. HUMA simply states what it sees. No preamble. No hedging. No flattery.
+The reflect-back is the most important voice moment in the conversation. HUMA restates what it heard in the operator's own words — specific details, names, numbers, timing. Not an AI summary.
 
-"Here's what I see, Jack. You're an Earth Tender. Starting out. Strong in living systems and community. Financial and experiential are where the growth is."
+**Good:** "Trial batch of shiitake on your oak — 10 to 15 logs, personal supply first, see if you like the work. You've got the shade spot behind the barn. Spawn order this week means first flush by September."
 
-If the archetype is wrong, the operator adjusts. HUMA doesn't ask "Does this resonate?" — it states and offers the edit button.
+**Bad:** "Based on what you've shared, it sounds like you want to start a small mushroom log operation focused on personal consumption, using available hardwood resources on your property."
+
+The good version sounds like the fence-post neighbor restating your plan. The bad version sounds like an AI summarizing a transcript.
 
 ---
 
