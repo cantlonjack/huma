@@ -8,12 +8,11 @@ _Last updated: 2026-04-02_
 | Route | Status | Notes |
 |-------|--------|-------|
 | `/` | Working | Landing page. Redirects authed users with aspirations to `/today`. |
-| `/start` | Working | Conversation entry. Deep context gathering (2-6 exchanges by category), reflect-back confirmation, phased decomposition. |
+| `/start` | Working | Conversation entry. Deep context gathering, reflect-back, phased decomposition. Now auto-extracts patterns from trigger behaviors. |
 | `/today` | Working | Production sheet. Shows only this_week behaviors. Check-off tracking, dimension dots, streak counts. |
 | `/whole` | Working | Holonic life map. Force-directed D3 visualization, archetype selector, WHY statement, insight card. |
 | `/grow` | Placeholder | "Grow - coming next." |
-| `/chat` | Working | Conversation hub with grouped message cards and context summary. |
-| `/system` | Working | List view of all aspirations/behaviors. Not in bottom nav. |
+| `/chat` | Working | Conversation hub with grouped message cards and context summary. "See all" now links to `/whole`. |
 | `/map/[id]` | Working | Living Canvas renderer with OG metadata. |
 | `/map/sample` | Working | Two example canvases. |
 | `/api/v2-chat` | Working | Conversation engine with adaptive prompts and [[MARKER:...]] protocol. |
@@ -28,58 +27,59 @@ _Last updated: 2026-04-02_
 | `/api/og` | Working | Dynamic OG image generation for maps. |
 | `/auth/callback` | Working | Magic link auth callback. |
 
+## Removed Routes
+
+| Route | Removed In | Reason |
+|-------|-----------|--------|
+| `/system` | Session 14 | Function moves to Whole tab's expand panels (Phase 4). ConversationSheet component also removed. |
+
 ## Known Bugs
 
-- None currently identified after Session 13 fixes.
-- **Migration required:** Run `009_aspiration_phases.sql` in Supabase to add `title`, `summary`, `coming_up`, `longer_arc` columns to the `aspirations` table. Code handles missing columns gracefully (inserts null), but data won't persist until migration runs.
+- None currently identified.
+- **Migrations required:** Run `009_aspiration_phases.sql` AND `010_patterns.sql` in Supabase. Code handles missing tables/columns gracefully (patterns won't persist to DB until migration runs, but localStorage works).
 
-## Last Session (Session 13 -- 2026-04-02)
+## Last Session (Session 14 -- 2026-04-02)
 
 ### What Changed
-1. **Conversation engine rewrite** (`app/api/v2-chat/route.ts`):
-   - Replaced flat 3-message decomposition with adaptive context gathering
-   - HUMA now categorizes aspirations internally (daily practice / seasonal project / life system / vague)
-   - Asks 2-6 context questions based on complexity
-   - Reflects back operator's own words before decomposing
-   - Confirmation flow: "That the right picture?" with [That's it] / [Close, but...] / [Let me rethink]
-   - Today's date injected into decomposition prompt
 
-2. **Phased decomposition output**:
-   - New `[[DECOMPOSITION:{...}]]` marker with `this_week`, `coming_up`, `longer_arc`
-   - `this_week`: max 4 items, one marked `is_trigger: true` (The Decision)
-   - `coming_up`: 1-3 items for next 2-4 weeks
-   - `longer_arc`: 1-3 phases for seasonal/multi-month picture
-   - Parser updated (`lib/parse-markers-v2.ts`) with backwards compat
+1. **Pattern data model introduced** (`types/v2.ts`):
+   - New `Pattern` interface: id, aspirationId, name, trigger, steps (PatternStep[]), timeWindow, validationMetric, validationCount, validationTarget, status (finding/working/validated)
+   - New `PatternStep` interface: behaviorKey, text, order, isTrigger
+   - New `PatternStatus` type: "finding" | "working" | "validated"
 
-3. **Data model extended** (`types/v2.ts`):
-   - `Aspiration` gains `title?`, `summary?`, `comingUp?`, `longerArc?`
-   - New `FutureAction` and `FuturePhase` interfaces
+2. **Patterns table migration** (`supabase/migrations/010_patterns.sql`):
+   - New `patterns` table with user_id, aspiration_id FK, name, trigger, steps (JSONB), time_window, validation_count/target, status
+   - RLS policies for user-scoped access
+   - Indexes on user_id, aspiration_id, user_id+status
 
-4. **DecompositionPreview redesigned** (`components/DecompositionPreview.tsx`):
-   - Shows "This Week" with trigger labeled "The Decision"
-   - Shows "Coming Up" and "The Longer Arc" as non-checkable context
-   - Edit mode still works (toggle behaviors on/off)
+3. **Pattern CRUD functions** (`lib/supabase-v2.ts`):
+   - `getPatterns`, `getPatternsByAspiration`, `savePattern`, `updatePattern`, `deletePattern`
+   - Pattern migration step added to `migrateLocalStorageToSupabase` (step 4)
 
-5. **Today page** (`app/today/page.tsx`):
-   - Now detects `is_trigger` from decomposition data
-   - Only renders `this_week` behaviors (by design -- they're what's stored in `behaviors`)
+4. **Pattern extraction logic** (`lib/pattern-extraction.ts`):
+   - `extractPatternFromAspiration`: when an aspiration has a behavior with `is_trigger: true`, auto-creates a Pattern with that behavior as The Decision and remaining behaviors as the Golden Pathway
+   - `extractPatternsFromAspirations`: batch extraction across multiple aspirations
+   - Integrated into `/start` save flow (patterns saved to localStorage alongside aspirations)
+   - Integrated into migration flow (patterns extracted and saved to Supabase)
 
-6. **CLAUDE.md regenerated** from actual codebase:
-   - All routes verified against actual files
-   - Navigation corrected: Today | Whole | Grow (not "Today | System | Talk")
-   - Components cataloged by functional area
-   - Data layer fully mapped (8 Supabase tables, 9 localStorage keys)
-   - Session Protocol added
+5. **`/system` route removed**:
+   - Deleted `app/system/page.tsx` and `components/ConversationSheet.tsx`
+   - Chat page "see all" link now points to `/whole`
+   - Function will move to Whole tab's expand panels in Phase 4
 
 ### What Was Verified
 - TypeScript: 0 errors
-- Production build: passes clean
-- Dev server: `/start` and `/today` load without errors
-- Existing tests: unaffected (test V1 parser only)
+- Production build: passes clean (20 routes, no `/system`)
+- saveAspiration already persists title/summary/comingUp/longerArc (confirmed from Session 13)
+
+## Data Layer: New localStorage Key
+
+| Key | What It Stores |
+|-----|---------------|
+| `huma-v2-patterns` | Extracted patterns from decomposition (migrated to Supabase on auth) |
 
 ## Next Priority
 
-- Conversation Architecture doc references a "System" screen at `/system` -- the actual implementation is at `/whole`. The `/system` route exists but isn't in the nav. Consider whether `/system` should be removed or repurposed.
-- `/grow` page needs implementation (pattern commons, template browsing).
-- Behavioral insights need 7+ days of data to test -- needs either seed data or a test harness.
-- Morning briefing / push notification delivery not yet implemented.
+- Run migrations `009_aspiration_phases.sql` and `010_patterns.sql` in Supabase
+- Session 15: Error states + loading UX (skeleton loaders, error recovery, empty states)
+- Session 16: Mobile audit + chat context awareness

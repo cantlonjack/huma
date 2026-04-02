@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Aspiration, AspirationFunnel, AspirationTrigger, ChatMessage, SheetEntry, Insight, Principle } from "@/types/v2";
+import type { Aspiration, AspirationFunnel, AspirationTrigger, ChatMessage, SheetEntry, Insight, Principle, Pattern, PatternStep } from "@/types/v2";
 import { getLocalDate, getLocalDateOffset } from "@/lib/date-utils";
+import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
 
 // ─── Context ─────────────────────────────────────────────────────────────────
 
@@ -605,7 +606,33 @@ export async function migrateLocalStorageToSupabase(
     }
   } catch { /* skip — localStorage preserved as fallback */ }
 
-  // 4. Migrate ALL sheet entries (not just today — preserves historical check-off data)
+  // 4. Migrate patterns (from localStorage or extract from aspirations)
+  try {
+    const patStr = localStorage.getItem("huma-v2-patterns");
+    let patterns: Pattern[] = [];
+
+    if (patStr) {
+      patterns = JSON.parse(patStr) as Pattern[];
+    } else {
+      // No pre-extracted patterns — try extracting from aspirations
+      const aspStr = localStorage.getItem("huma-v2-aspirations");
+      if (aspStr) {
+        const aspirations = JSON.parse(aspStr) as Aspiration[];
+        patterns = extractPatternsFromAspirations(aspirations);
+      }
+    }
+
+    if (patterns.length > 0) {
+      for (const pattern of patterns) {
+        try {
+          await savePattern(supabase, userId, pattern);
+        } catch { /* may already exist */ }
+      }
+      migratedKeys.push("huma-v2-patterns");
+    }
+  } catch { /* skip */ }
+
+  // 5. Migrate ALL sheet entries
   try {
     const sheetKeys = Object.keys(localStorage).filter(k => k.startsWith("huma-v2-sheet-"));
     for (const key of sheetKeys) {
@@ -619,7 +646,7 @@ export async function migrateLocalStorageToSupabase(
     }
   } catch { /* skip */ }
 
-  // 5. Migrate pending insight
+  // 6. Migrate pending insight
   try {
     const insStr = localStorage.getItem("huma-v2-pending-insight");
     if (insStr) {
@@ -629,7 +656,7 @@ export async function migrateLocalStorageToSupabase(
     }
   } catch { /* skip */ }
 
-  // 6. Only clear keys that were successfully migrated to Supabase
+  // 7. Only clear keys that were successfully migrated to Supabase
   migratedKeys.push("huma-v2-behaviors"); // always safe to clear (derived data)
   for (const key of migratedKeys) {
     localStorage.removeItem(key);
@@ -754,6 +781,114 @@ export async function deletePrinciple(
     .from("principles")
     .delete()
     .eq("id", principleId);
+  if (error) throw error;
+}
+
+// ─── Patterns ──────────────────────────────────────────────────────────────
+
+function mapPatternRow(row: Record<string, unknown>): Pattern {
+  return {
+    id: row.id as string,
+    aspirationId: (row.aspiration_id as string) || "",
+    name: row.name as string,
+    trigger: row.trigger as string,
+    steps: (row.steps as PatternStep[]) || [],
+    timeWindow: (row.time_window as string) || undefined,
+    validationMetric: (row.validation_metric as string) || undefined,
+    validationCount: (row.validation_count as number) || 0,
+    validationTarget: (row.validation_target as number) || 30,
+    status: (row.status as Pattern["status"]) || "finding",
+    createdAt: row.created_at as string,
+    updatedAt: row.updated_at as string,
+  };
+}
+
+export async function getPatterns(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<Pattern[]> {
+  const { data } = await supabase
+    .from("patterns")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: true });
+
+  if (!data) return [];
+  return data.map(mapPatternRow);
+}
+
+export async function getPatternsByAspiration(
+  supabase: SupabaseClient,
+  userId: string,
+  aspirationId: string
+): Promise<Pattern[]> {
+  const { data } = await supabase
+    .from("patterns")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("aspiration_id", aspirationId)
+    .order("created_at", { ascending: true });
+
+  if (!data) return [];
+  return data.map(mapPatternRow);
+}
+
+export async function savePattern(
+  supabase: SupabaseClient,
+  userId: string,
+  pattern: Pattern
+) {
+  const { error } = await supabase.from("patterns").insert({
+    id: pattern.id,
+    user_id: userId,
+    aspiration_id: pattern.aspirationId || null,
+    name: pattern.name,
+    trigger: pattern.trigger,
+    steps: pattern.steps,
+    time_window: pattern.timeWindow || null,
+    validation_metric: pattern.validationMetric || null,
+    validation_count: pattern.validationCount,
+    validation_target: pattern.validationTarget,
+    status: pattern.status,
+  });
+
+  if (error) throw error;
+}
+
+export async function updatePattern(
+  supabase: SupabaseClient,
+  patternId: string,
+  userId: string,
+  updates: Partial<Pick<Pattern, "name" | "trigger" | "steps" | "timeWindow" | "validationMetric" | "validationCount" | "validationTarget" | "status">>
+) {
+  const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (updates.name !== undefined) payload.name = updates.name;
+  if (updates.trigger !== undefined) payload.trigger = updates.trigger;
+  if (updates.steps !== undefined) payload.steps = updates.steps;
+  if (updates.timeWindow !== undefined) payload.time_window = updates.timeWindow;
+  if (updates.validationMetric !== undefined) payload.validation_metric = updates.validationMetric;
+  if (updates.validationCount !== undefined) payload.validation_count = updates.validationCount;
+  if (updates.validationTarget !== undefined) payload.validation_target = updates.validationTarget;
+  if (updates.status !== undefined) payload.status = updates.status;
+
+  const { error } = await supabase
+    .from("patterns")
+    .update(payload)
+    .eq("id", patternId)
+    .eq("user_id", userId);
+  if (error) throw error;
+}
+
+export async function deletePattern(
+  supabase: SupabaseClient,
+  patternId: string,
+  userId: string
+) {
+  const { error } = await supabase
+    .from("patterns")
+    .delete()
+    .eq("id", patternId)
+    .eq("user_id", userId);
   if (error) throw error;
 }
 

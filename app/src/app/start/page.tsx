@@ -8,6 +8,7 @@ import { useAuth } from "@/components/AuthProvider";
 import AuthModal from "@/components/AuthModal";
 import { createClient } from "@/lib/supabase";
 import { migrateLocalStorageToSupabase } from "@/lib/supabase-v2";
+import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
 import DecompositionPreview from "@/components/DecompositionPreview";
 
 // ─── Palette Acknowledgments ─────────────────────────────────────────────────
@@ -371,7 +372,7 @@ export default function StartPage() {
     }
     localStorage.setItem("huma-v2-behaviors", JSON.stringify(behaviorsToSave));
     localStorage.setItem("huma-v2-known-context", JSON.stringify(knownContext));
-    localStorage.setItem("huma-v2-aspirations", JSON.stringify([{
+    const aspirations = [{
       id: crypto.randomUUID(),
       rawText,
       clarifiedText,
@@ -381,9 +382,16 @@ export default function StartPage() {
       comingUp: decompositionData?.coming_up || [],
       longerArc: decompositionData?.longer_arc || [],
       dimensionsTouched: [],
-      status: "active",
-      stage: "active",
-    }]));
+      status: "active" as const,
+      stage: "active" as const,
+    }];
+    localStorage.setItem("huma-v2-aspirations", JSON.stringify(aspirations));
+
+    // Extract patterns from aspirations that have a trigger behavior
+    const patterns = extractPatternsFromAspirations(aspirations);
+    if (patterns.length > 0) {
+      localStorage.setItem("huma-v2-patterns", JSON.stringify(patterns));
+    }
 
     if (user) {
       // Already authed → migrate to Supabase and go to /today

@@ -55,7 +55,7 @@ function ContextCard({
         <p className="font-sans text-[13px] text-ink-500 leading-relaxed">
           {parts.join(" · ")}
         </p>
-        <Link href="/system" className="font-sans text-xs font-medium text-sage-500 whitespace-nowrap ml-2">
+        <Link href="/whole" className="font-sans text-xs font-medium text-sage-500 whitespace-nowrap ml-2">
           see all &rarr;
         </Link>
       </div>

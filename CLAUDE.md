@@ -6,7 +6,7 @@ HUMA is infrastructure for running your life as one connected system. Not a well
 
 **What HUMA does that no other app can:** Show you how the different parts of your life are connected -- and which specific daily behaviors are the leverage points that hold everything together.
 
-**Current state:** V2.1 in development. Three-tab app: Today (production sheet, home), Whole (holonic life map), Grow (placeholder). Entry flow at `/start` works. Conversation engine gathers deep context before decomposing into phased behaviors. Sheet compilation works. Whole page has force-directed holon visualization with archetypes and WHY statement. Chat overlay available from any tab.
+**Current state:** V2.1 in development. Three-tab app: Today (production sheet, home), Whole (holonic life map), Grow (placeholder). Entry flow at `/start` works. Conversation engine gathers deep context before decomposing into phased behaviors. Pattern data model introduced — patterns auto-extracted from decompositions with triggers. Sheet compilation works. Whole page has force-directed holon visualization with archetypes and WHY statement. Chat overlay available from any tab.
 
 **Deployed:** huma-two.vercel.app
 
@@ -49,7 +49,7 @@ _Last updated: 2026-04-02_
 | `/whole` | `app/whole/page.tsx` | Working | Holonic life map. Force-directed D3 visualization, archetype selector, WHY statement, insight card. |
 | `/grow` | `app/grow/page.tsx` | Placeholder | "Grow - coming next." Wrapped in TabShell. |
 | `/chat` | `app/chat/page.tsx` | Working | Conversation hub. Messages grouped by time into expandable cards. Context card with aspiration/behavior summary. |
-| `/system` | `app/system/page.tsx` | Working | All aspirations and behaviors in list view. Not in bottom nav. Linked from chat context card ("see all"). |
+| `/system` | _(removed Session 14)_ | Removed | Function moves to Whole tab's expand panels in Phase 4. |
 | `/map/[id]` | `app/map/[id]/page.tsx` | Working | Dynamic Living Canvas renderer. Server-side OG metadata. Public/shareable. |
 | `/map/sample` | `app/map/sample/page.tsx` | Working | Two example Living Canvas maps (Sarah Chen, Maya Okafor). |
 
@@ -134,6 +134,7 @@ Bottom tab bar: **Today | Whole | Grow**. Hidden on `/` and `/start`. Chat overl
 | `behavior_log` | Behavior completion tracking for analytics. | `user_id`, `behavior_key`, `date`, `completed` |
 | `insights` | Generated behavioral insights. | `user_id`, `insight_text`, `dimensions_involved`, `behaviors_involved`, `data_basis` (jsonb), `delivered` |
 | `principles` | User-defined guiding principles. | `user_id`, `text`, `active`, `sort_order` |
+| `patterns` | First-class pattern entities (Golden Pathway). | `user_id`, `aspiration_id`, `name`, `trigger`, `steps` (jsonb), `time_window`, `validation_count`, `validation_target`, `status` |
 | `maps` | Living Canvas documents. | `user_id`, `document_markdown`, `canvas_data` (jsonb), `name`, `location`, `is_public` |
 
 ### localStorage Keys (Pre-Auth)
@@ -147,6 +148,7 @@ Bottom tab bar: **Today | Whole | Grow**. Hidden on `/` and `/start`. Chat overl
 | `huma-v2-behaviors` | Derived behavior metadata (transient) |
 | `huma-v2-start-date` | When operator first started |
 | `huma-v2-sheet-YYYY-MM-DD` | Daily sheet entries (one key per date) |
+| `huma-v2-patterns` | Extracted patterns from decomposition (migrated to Supabase on auth) |
 | `huma-v2-pending-insight` | Undelivered insight |
 | `huma-conversation` | V1 conversation state (legacy) |
 
@@ -161,7 +163,9 @@ Pre-auth: all data in localStorage. On auth: `migrateLocalStorageToSupabase()` m
 - `logBehaviorCheckoff` / `getBehaviorWeekCounts` -- Behavior tracking
 - `getUndeliveredInsight` / `markInsightDelivered` -- Insight lifecycle
 - `computeStructuralInsight` -- Day 1 insight from decomposition data
-- `migrateLocalStorageToSupabase` -- Auth migration (safe: preserves localStorage on failure)
+- `getPatterns` / `savePattern` / `updatePattern` / `deletePattern` -- Pattern CRUD
+- `extractPatternFromAspiration` / `extractPatternsFromAspirations` -- Auto-create patterns from decompositions (`lib/pattern-extraction.ts`)
+- `migrateLocalStorageToSupabase` -- Auth migration (safe: preserves localStorage on failure, includes patterns)
 
 ---
 

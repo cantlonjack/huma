@@ -100,6 +100,35 @@ export interface Aspiration {
   triggerData?: AspirationTrigger;
 }
 
+// ─── Patterns ───────────────────────────────────────────────────────────────
+// A pattern is a validated sequence of behaviors with a trigger, golden pathway,
+// time window, and validation metric. Patterns emerge from aspirations when
+// behaviors have a trigger + sequence + window.
+
+export type PatternStatus = "finding" | "working" | "validated";
+
+export interface PatternStep {
+  behaviorKey: string;
+  text: string;
+  order: number;
+  isTrigger: boolean;
+}
+
+export interface Pattern {
+  id: string;
+  aspirationId: string;
+  name: string;
+  trigger: string;              // The Decision — the behavior that starts the chain
+  steps: PatternStep[];         // Golden Pathway — ordered behavior sequence
+  timeWindow?: string;          // e.g. "5:15-5:45 AM"
+  validationMetric?: string;    // What counts as validated (e.g. "completed 26/30 days")
+  validationCount: number;      // Days completed in current 30-day window
+  validationTarget: number;     // Target days (default 30)
+  status: PatternStatus;        // finding (<50%), working (50-90%), validated (>90%)
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ─── Principles ─────────────────────────────────────────────────────────────
 
 export interface Principle {
