@@ -12,13 +12,19 @@ interface TabShellProps {
   forceOpen?: boolean;
   /** Called when the chat sheet closes (for programmatic open tracking) */
   onChatClose?: () => void;
+  /** Hide the floating chat bubble (e.g. when page has its own prompt bar) */
+  hideBubble?: boolean;
+  /** Which tab this shell is rendered on — passed to ChatSheet for context awareness */
+  sourceTab?: "today" | "whole" | "grow";
+  /** Structured context data from the current tab to pass to the conversation engine */
+  tabContext?: Record<string, unknown>;
 }
 
 /**
  * Wraps a tab page with the ChatBubble + ChatSheet overlay.
  * BottomNav is rendered in the root layout — this only adds the chat layer.
  */
-export default function TabShell({ contextPrompt, children, forceOpen, onChatClose }: TabShellProps) {
+export default function TabShell({ contextPrompt, children, forceOpen, onChatClose, hideBubble, sourceTab, tabContext }: TabShellProps) {
   const [chatOpen, setChatOpen] = useState(false);
   const online = useNetworkStatus();
 
@@ -55,11 +61,13 @@ export default function TabShell({ contextPrompt, children, forceOpen, onChatClo
         </div>
       )}
       {children}
-      <ChatBubble onClick={() => setChatOpen(true)} />
+      {!hideBubble && <ChatBubble onClick={() => setChatOpen(true)} />}
       <ChatSheet
         open={chatOpen}
         onClose={handleClose}
         contextPrompt={contextPrompt}
+        sourceTab={sourceTab}
+        tabContext={tabContext}
       />
     </>
   );

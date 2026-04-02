@@ -408,6 +408,17 @@ export default function WholePage() {
       contextPrompt={chatShellOpen ? "Tell me what you're building and why it matters to you." : "What would you like to explore or change?"}
       forceOpen={chatShellOpen}
       onChatClose={() => setChatShellOpen(false)}
+      sourceTab="whole"
+      tabContext={{
+        archetypes,
+        whyStatement: whyStatement || undefined,
+        aspirations: aspirations.map(a => ({
+          id: a.id,
+          name: a.clarifiedText || a.rawText,
+          status: mapAspirationStatus(a),
+        })),
+        principles: principles.filter(p => p.active).map(p => p.text),
+      }}
     >
       <div className="min-h-dvh bg-sand-50 flex flex-col" style={{ paddingBottom: "80px" }}>
         {/* Header */}

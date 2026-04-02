@@ -19,13 +19,12 @@ export default function BottomNav() {
     <nav
       className="fixed bottom-0 left-0 right-0 z-50"
       style={{
-        height: "56px",
         background: "#FAF8F3",
         borderTop: "1px solid #DDD4C0",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
     >
-      <div className="flex items-center justify-around h-full max-w-lg mx-auto">
+      <div className="flex items-center justify-around max-w-lg mx-auto" style={{ height: "56px" }}>
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href;
 
@@ -33,7 +32,8 @@ export default function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center justify-center flex-1 h-full"
+              className="flex items-center justify-center flex-1"
+              style={{ minHeight: "44px", height: "56px" }}
             >
               <span
                 className="font-sans"

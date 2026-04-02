@@ -113,11 +113,58 @@ RULES:
 Before the JSON markers, write a brief conversational intro (1-2 sentences) framing
 what you've designed. Do NOT write a long explanation.`;
 
+// ─── Tab Context Layer ────────────────────────────────────────────────────
+function buildTabContextBlock(
+  sourceTab?: string,
+  tabContext?: Record<string, unknown>,
+): string {
+  if (!sourceTab) return "";
+
+  const parts: string[] = [];
+
+  if (sourceTab === "today") {
+    parts.push(`The operator opened chat from their TODAY tab (production sheet).
+Tone: operational, specific, present-tense. They're in "doing" mode.
+If they mention a specific aspiration or behavior, reference what you know about it.`);
+
+    if (tabContext?.aspirations && Array.isArray(tabContext.aspirations)) {
+      const aspList = (tabContext.aspirations as Array<{ name: string; behaviors?: string[]; status?: string }>)
+        .map(a => `- ${a.name} (${a.status || "active"})${a.behaviors?.length ? `: ${a.behaviors.join(", ")}` : ""}`)
+        .join("\n");
+      parts.push(`Their active patterns today:\n${aspList}`);
+    }
+  } else if (sourceTab === "whole") {
+    parts.push(`The operator opened chat from their WHOLE tab (holonic life map).
+Tone: reflective, connecting, wider-view. They're in "seeing" mode.
+Help them see connections between parts, not just individual items.`);
+
+    if (tabContext?.archetypes && Array.isArray(tabContext.archetypes) && tabContext.archetypes.length > 0) {
+      parts.push(`Their archetypes: ${(tabContext.archetypes as string[]).join(", ")}`);
+    }
+    if (tabContext?.whyStatement) {
+      parts.push(`Their WHY statement: "${tabContext.whyStatement}"`);
+    }
+    if (tabContext?.principles && Array.isArray(tabContext.principles) && tabContext.principles.length > 0) {
+      parts.push(`Their principles: ${(tabContext.principles as string[]).join("; ")}`);
+    }
+  } else if (sourceTab === "grow") {
+    parts.push(`The operator opened chat from the GROW tab.
+Tone: forward-looking, aspirational. They're thinking about what's next.
+Help them articulate new aspirations or evolve existing ones.`);
+  }
+
+  return parts.length > 0
+    ? `\n\nTAB CONTEXT (${sourceTab.toUpperCase()}):\n${parts.join("\n")}`
+    : "";
+}
+
 function buildSystemPrompt(
   knownContext: Record<string, unknown>,
   aspirations: Array<{ rawText: string; clarifiedText: string; status: string }>,
   conversationTexts: string[],
-  userMessageCount: number
+  userMessageCount: number,
+  sourceTab?: string,
+  tabContext?: Record<string, unknown>,
 ): string {
   const contextStr = Object.keys(knownContext).length > 0
     ? JSON.stringify(knownContext, null, 2)
@@ -181,6 +228,8 @@ and ask your FIRST context question with 3-4 tappable [[OPTIONS:[...]]].
 Do NOT decompose yet. Do NOT give advice. Just receive and begin asking.`;
   }
 
+  const tabContextBlock = buildTabContextBlock(sourceTab, tabContext);
+
   return `${BASE_IDENTITY}
 
 ${phasePrompt}
@@ -196,7 +245,7 @@ ACTIVE ASPIRATIONS:
 ${aspirationStr}
 
 TODAY'S DATE: ${today}
-${messageCountRule}`;
+${messageCountRule}${tabContextBlock}`;
 }
 
 export async function POST(request: Request) {
@@ -221,6 +270,8 @@ export async function POST(request: Request) {
   const messages = body.messages as Array<{ role: string; content: string }>;
   const knownContext = (body.knownContext || {}) as Record<string, unknown>;
   const aspirations = (body.aspirations || []) as Array<{ rawText: string; clarifiedText: string; status: string }>;
+  const sourceTab = body.sourceTab as string | undefined;
+  const tabContext = (body.tabContext || undefined) as Record<string, unknown> | undefined;
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return badRequest("Messages array required.");
@@ -231,7 +282,7 @@ export async function POST(request: Request) {
     // Extract user message texts for template matching and count
     const userTexts = messages.filter(m => m.role === "user").map(m => m.content);
     const userMessageCount = userTexts.length;
-    const systemPrompt = buildSystemPrompt(knownContext, aspirations, userTexts, userMessageCount);
+    const systemPrompt = buildSystemPrompt(knownContext, aspirations, userTexts, userMessageCount, sourceTab, tabContext);
 
     const stream = anthropic.messages.stream({
       model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514",

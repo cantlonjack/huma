@@ -25,9 +25,13 @@ interface ChatSheetProps {
   open: boolean;
   onClose: () => void;
   contextPrompt?: string;
+  /** Which tab the chat was opened from */
+  sourceTab?: "today" | "whole" | "grow";
+  /** Structured context from the current tab */
+  tabContext?: Record<string, unknown>;
 }
 
-export default function ChatSheet({ open, onClose, contextPrompt }: ChatSheetProps) {
+export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tabContext }: ChatSheetProps) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<RichMessage[]>([]);
   const [input, setInput] = useState("");
@@ -38,15 +42,52 @@ export default function ChatSheet({ open, onClose, contextPrompt }: ChatSheetPro
   const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const dragStartY = useRef<number | null>(null);
   const dragCurrentY = useRef(0);
+  const dragStartTime = useRef(0);
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
 
-  // Auto-scroll on new messages
+  // Track whether user is near bottom of scroll
+  const isNearBottom = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return true;
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+  }, []);
+
+  // Auto-scroll on new messages — only if already near bottom
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (scrollRef.current && isNearBottom()) {
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
     }
-  }, [messages, streaming]);
+  }, [messages, streaming, isNearBottom]);
+
+  // Handle virtual keyboard on mobile via visualViewport API
+  useEffect(() => {
+    if (!open) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const handleResize = () => {
+      // Calculate keyboard height from viewport difference
+      const offset = window.innerHeight - vv.height - vv.offsetTop;
+      setKeyboardOffset(Math.max(0, offset));
+      // Keep scroll at bottom when keyboard opens
+      if (offset > 0 && scrollRef.current) {
+        requestAnimationFrame(() => {
+          scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
+        });
+      }
+    };
+
+    vv.addEventListener("resize", handleResize);
+    vv.addEventListener("scroll", handleResize);
+    return () => {
+      vv.removeEventListener("resize", handleResize);
+      vv.removeEventListener("scroll", handleResize);
+      setKeyboardOffset(0);
+    };
+  }, [open]);
 
   // Load state when sheet opens
   useEffect(() => {
@@ -143,6 +184,8 @@ export default function ChatSheet({ open, onClose, contextPrompt }: ChatSheetPro
           messages: newMessages.map(m => ({ role: m.role === "huma" ? "assistant" : m.role, content: m.content })),
           knownContext,
           aspirations: aspirations.map(a => ({ rawText: a.rawText, clarifiedText: a.clarifiedText, status: a.status })),
+          sourceTab,
+          tabContext,
         }),
       });
 
@@ -246,11 +289,13 @@ export default function ChatSheet({ open, onClose, contextPrompt }: ChatSheetPro
     }
   };
 
-  // Drag-to-dismiss handlers
+  // Drag-to-dismiss handlers (velocity-aware)
   const handleDragStart = (e: React.TouchEvent | React.MouseEvent) => {
     const y = "touches" in e ? e.touches[0].clientY : e.clientY;
     dragStartY.current = y;
     dragCurrentY.current = 0;
+    dragStartTime.current = Date.now();
+    if (sheetRef.current) sheetRef.current.style.transition = "none";
   };
 
   const handleDragMove = (e: React.TouchEvent | React.MouseEvent) => {
@@ -264,7 +309,15 @@ export default function ChatSheet({ open, onClose, contextPrompt }: ChatSheetPro
   };
 
   const handleDragEnd = () => {
-    if (dragCurrentY.current > 100) {
+    if (sheetRef.current) {
+      sheetRef.current.style.transition = "transform 200ms cubic-bezier(0.22, 1, 0.36, 1)";
+    }
+
+    const elapsed = Date.now() - dragStartTime.current;
+    const velocity = dragCurrentY.current / Math.max(elapsed, 1); // px/ms
+
+    // Dismiss if dragged far enough OR fast swipe down
+    if (dragCurrentY.current > 100 || (velocity > 0.5 && dragCurrentY.current > 30)) {
       onClose();
     } else if (sheetRef.current) {
       sheetRef.current.style.transform = "translateY(0)";
@@ -293,9 +346,10 @@ export default function ChatSheet({ open, onClose, contextPrompt }: ChatSheetPro
       {/* Sheet */}
       <div
         ref={sheetRef}
-        className="absolute bottom-0 left-0 right-0 flex flex-col"
+        className="absolute left-0 right-0 flex flex-col"
         style={{
-          maxHeight: "85vh",
+          bottom: keyboardOffset > 0 ? `${keyboardOffset}px` : "0",
+          maxHeight: keyboardOffset > 0 ? `calc(100vh - ${keyboardOffset}px)` : "85vh",
           background: "#FAF8F3",
           borderRadius: "20px 20px 0 0",
           animation: "chatsheet-slide-up 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
@@ -304,7 +358,7 @@ export default function ChatSheet({ open, onClose, contextPrompt }: ChatSheetPro
         {/* Drag handle */}
         <div
           className="flex items-center justify-center cursor-grab"
-          style={{ padding: "12px 0 0" }}
+          style={{ padding: "16px 0 4px", minHeight: "44px" }}
           onTouchStart={handleDragStart}
           onTouchMove={handleDragMove}
           onTouchEnd={handleDragEnd}
@@ -334,8 +388,8 @@ export default function ChatSheet({ open, onClose, contextPrompt }: ChatSheetPro
             onClick={onClose}
             className="cursor-pointer"
             style={{
-              width: "28px",
-              height: "28px",
+              width: "44px",
+              height: "44px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -343,6 +397,7 @@ export default function ChatSheet({ open, onClose, contextPrompt }: ChatSheetPro
               border: "none",
               fontSize: "18px",
               color: "#8C8274",
+              marginRight: "-8px",
             }}
             aria-label="Close chat"
           >
@@ -478,17 +533,20 @@ export default function ChatSheet({ open, onClose, contextPrompt }: ChatSheetPro
         </div>
 
         {/* Input bar */}
-        <div style={{ padding: "8px 16px", paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))", borderTop: "1px solid #E8E2D6" }}>
+        <div style={{ padding: "8px 16px", paddingBottom: keyboardOffset > 0 ? "8px" : "calc(12px + env(safe-area-inset-bottom, 0px))", borderTop: "1px solid #E8E2D6" }}>
           <div className="flex items-center gap-3" style={{ background: "white", borderRadius: "16px", padding: "12px 16px", border: "1px solid #DDD4C0" }}>
             <input
+              ref={inputRef}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={contextPrompt || "What's on your mind?"}
               disabled={streaming}
+              enterKeyHint="send"
+              autoComplete="off"
               className="flex-1 font-sans bg-transparent focus:outline-none disabled:opacity-50"
-              style={{ fontSize: "14px", lineHeight: "1.4", color: "#3D3B36" }}
+              style={{ fontSize: "16px", lineHeight: "1.4", color: "#3D3B36" }}
             />
             <button
               onClick={() => sendMessage(input)}

@@ -115,17 +115,20 @@ function AspirationQuickLook({
         className="fixed bottom-0 left-0 right-0 z-[56] bg-sand-50 rounded-t-2xl border-t border-sand-300 animate-slide-up"
         style={{ height: "40dvh" }}
       >
-        <div className="flex justify-center" style={{ paddingTop: "12px", paddingBottom: "8px" }}>
+        <div
+          className="flex justify-center items-center cursor-pointer"
+          style={{ paddingTop: "8px", paddingBottom: "4px", minHeight: "44px" }}
+          onClick={onClose}
+        >
           <div
-            className="bg-sand-300 cursor-pointer"
+            className="bg-sand-300"
             style={{ width: "36px", height: "4px", borderRadius: "2px" }}
-            onClick={onClose}
           />
         </div>
         <div className="px-6 pb-6 overflow-y-auto" style={{ maxHeight: "calc(40dvh - 40px)" }}>
           <h3
             className="font-serif text-sage-700"
-            style={{ fontSize: "20px", lineHeight: "1.3" }}
+            style={{ fontSize: "20px", lineHeight: "1.3", wordBreak: "break-word" }}
           >
             {displayName(aspiration.clarifiedText || aspiration.rawText)}
           </h3>
@@ -217,7 +220,7 @@ function PatternRouteCard({
         }}
       >
         <div style={{ padding: "14px 16px 10px", borderBottom: "1px solid #F0EBE3" }}>
-          <span className="font-serif text-sage-700" style={{ fontSize: "18px" }}>
+          <span className="font-serif text-sage-700" style={{ fontSize: "18px", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {displayName(aspiration.clarifiedText || aspiration.rawText)}
           </span>
         </div>
@@ -281,11 +284,14 @@ function PatternRouteCard({
           alignItems: "baseline",
         }}
       >
-        <span className="font-serif text-sage-700" style={{ fontSize: "18px" }}>
+        <span
+          className="font-serif text-sage-700"
+          style={{ fontSize: "18px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0, flex: 1 }}
+        >
           {displayName(aspiration.clarifiedText || aspiration.rawText)}
         </span>
         {estimatedMinutes && (
-          <span className="font-sans text-sage-400" style={{ fontSize: "12px" }}>
+          <span className="font-sans text-sage-400 flex-shrink-0" style={{ fontSize: "12px", marginLeft: "8px" }}>
             ~{estimatedMinutes} min
           </span>
         )}
@@ -510,7 +516,7 @@ function RerouteCard({
         >
           REROUTE NEEDED
         </span>
-        <span className="font-sans text-sage-600" style={{ fontSize: "13px" }}>{name}</span>
+        <span className="font-sans text-sage-600" style={{ fontSize: "13px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "60%" }}>{name}</span>
       </div>
       <p className="font-sans italic text-sage-500" style={{ fontSize: "13px", marginTop: "6px" }}>
         {reason}
@@ -518,7 +524,7 @@ function RerouteCard({
       <button
         onClick={() => onOpenChat(`Let's look at ${name}. It's been stalling — what's getting in the way?`)}
         className="font-sans cursor-pointer"
-        style={{ fontSize: "13px", color: "#B5621E", marginTop: "8px", background: "none", border: "none", padding: 0 }}
+        style={{ fontSize: "13px", color: "#B5621E", marginTop: "4px", background: "none", border: "none", padding: "8px 0", minHeight: "44px" }}
       >
         Adjust route &rarr;
       </button>
@@ -555,14 +561,14 @@ function InsightCard({
         <button
           onClick={onTellMore}
           className="font-sans font-medium text-sage-500 cursor-pointer hover:text-sage-700 transition-colors"
-          style={{ fontSize: "13px", background: "none", border: "none", padding: 0 }}
+          style={{ fontSize: "13px", background: "none", border: "none", padding: "8px 0", minHeight: "44px" }}
         >
           Tell me more &rarr;
         </button>
         <button
           onClick={onDismiss}
           className="font-sans text-sage-300 cursor-pointer hover:text-sage-500 transition-colors"
-          style={{ fontSize: "16px", background: "none", border: "none", padding: "0 4px", lineHeight: 1 }}
+          style={{ fontSize: "16px", background: "none", border: "none", padding: "8px", minHeight: "44px", minWidth: "44px", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}
           aria-label="Dismiss insight"
         >
           &times;
@@ -993,9 +999,19 @@ export default function TodayPage() {
   // ─── Render ───────────────────────────────────────────────────────────
   return (
     <TabShell
-      contextPrompt="Tell HUMA something..."
+      contextPrompt={chatContext || "Tell HUMA something..."}
       forceOpen={chatOpen}
       onChatClose={() => { setChatOpen(false); setChatContext(null); }}
+      hideBubble={aspirations.length > 0}
+      sourceTab="today"
+      tabContext={{
+        aspirations: aspirations.map(a => ({
+          id: a.id,
+          name: a.clarifiedText || a.rawText,
+          behaviors: a.behaviors?.map(b => b.text) || [],
+          status: a.funnel?.validationStatus || "working",
+        })),
+      }}
     >
       <div className="min-h-dvh bg-sand-50 flex flex-col" style={{ paddingBottom: "140px" }}>
         {/* Header bar — 44px */}
@@ -1118,11 +1134,14 @@ export default function TodayPage() {
                       background: "var(--color-sand-100)",
                       border: "1px solid #DDD4C0",
                       borderRadius: "20px",
-                      padding: "6px 12px",
-                      fontSize: "12px",
+                      padding: "10px 14px",
+                      fontSize: "13px",
                       fontFamily: "var(--font-sans)",
                       color: "var(--color-sage-600)",
                       whiteSpace: "nowrap",
+                      minHeight: "44px",
+                      display: "flex",
+                      alignItems: "center",
                     }}
                   >
                     {displayName(asp.clarifiedText || asp.rawText)}
