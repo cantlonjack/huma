@@ -182,9 +182,28 @@ export default function StartPage() {
     }
   }, [messages, knownContext, decomposedBehaviors]);
 
-  // Restore from localStorage
+  // Restore from localStorage (unless fresh start requested or conversation already completed)
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const isFresh = params.get("fresh") === "1";
+    if (isFresh) {
+      // Clear stale conversation state for a clean start
+      localStorage.removeItem("huma-v2-start-messages");
+      localStorage.removeItem("huma-v2-behaviors");
+      return;
+    }
     try {
+      // Check if aspirations already exist (conversation was completed before)
+      const existingAspirations = localStorage.getItem("huma-v2-aspirations");
+      if (existingAspirations) {
+        const parsed = JSON.parse(existingAspirations);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Conversation was already completed — start fresh
+          localStorage.removeItem("huma-v2-start-messages");
+          localStorage.removeItem("huma-v2-behaviors");
+          return;
+        }
+      }
       const saved = localStorage.getItem("huma-v2-start-messages");
       if (saved) setMessages(JSON.parse(saved));
       const ctx = localStorage.getItem("huma-v2-known-context");
@@ -339,6 +358,9 @@ export default function StartPage() {
     const clarifiedText = aspirationName || rawText;
 
     // Always save to localStorage first (fallback)
+    if (!localStorage.getItem("huma-v2-start-date")) {
+      localStorage.setItem("huma-v2-start-date", new Date().toISOString());
+    }
     localStorage.setItem("huma-v2-behaviors", JSON.stringify(behaviorsToSave));
     localStorage.setItem("huma-v2-known-context", JSON.stringify(knownContext));
     localStorage.setItem("huma-v2-aspirations", JSON.stringify([{

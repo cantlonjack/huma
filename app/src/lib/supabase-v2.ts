@@ -566,19 +566,36 @@ export async function migrateLocalStorageToSupabase(
     }
   } catch { /* skip — localStorage preserved as fallback */ }
 
-  // 3. Migrate aspirations
+  // 3. Migrate aspirations — only clear localStorage after verified save
   try {
     const aspStr = localStorage.getItem("huma-v2-aspirations");
     if (aspStr) {
       const aspirations = JSON.parse(aspStr) as Aspiration[];
+      let anySaved = false;
       for (const asp of aspirations) {
         try {
           await saveAspiration(supabase, userId, asp);
-        } catch { /* may already exist */ }
+          anySaved = true;
+        } catch { /* may already exist — verify below */ }
       }
-      migratedKeys.push("huma-v2-aspirations");
+      // Verify data actually exists in Supabase before clearing localStorage
+      if (anySaved) {
+        migratedKeys.push("huma-v2-aspirations");
+      } else {
+        // All inserts failed (duplicates?) — verify at least one exists in Supabase
+        const { data: existing } = await supabase
+          .from("aspirations")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("status", "active")
+          .limit(1);
+        if (existing && existing.length > 0) {
+          migratedKeys.push("huma-v2-aspirations");
+        }
+        // If nothing in Supabase either, do NOT clear localStorage
+      }
     }
-  } catch { /* skip */ }
+  } catch { /* skip — localStorage preserved as fallback */ }
 
   // 4. Migrate ALL sheet entries (not just today — preserves historical check-off data)
   try {

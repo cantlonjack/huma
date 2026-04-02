@@ -48,7 +48,19 @@ export default function Home() {
         }
       } catch { /* fall through */ }
 
-      // Authenticated but no aspirations — go to /start
+      // Supabase empty or failed — check localStorage as fallback
+      try {
+        const saved = localStorage.getItem("huma-v2-aspirations");
+        if (saved) {
+          const aspirations = JSON.parse(saved);
+          if (Array.isArray(aspirations) && aspirations.length > 0) {
+            router.push("/today");
+            return;
+          }
+        }
+      } catch { /* continue to /start */ }
+
+      // No aspirations anywhere — go to /start
       router.push("/start");
     })();
   }, [user, authLoading, router]);
