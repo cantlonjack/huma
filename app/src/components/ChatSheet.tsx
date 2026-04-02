@@ -35,6 +35,7 @@ export default function ChatSheet({ open, onClose, contextPrompt }: ChatSheetPro
   const [knownContext, setKnownContext] = useState<Record<string, unknown>>({});
   const [aspirations, setAspirations] = useState<Aspiration[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const dragStartY = useRef<number | null>(null);
@@ -127,6 +128,7 @@ export default function ChatSheet({ open, onClose, contextPrompt }: ChatSheetPro
     setMessages(newMessages as RichMessage[]);
     setInput("");
     setStreaming(true);
+    setLastFailedMessage(null);
 
     if (user) {
       const supabase = createClient();
@@ -220,9 +222,17 @@ export default function ChatSheet({ open, onClose, contextPrompt }: ChatSheetPro
         return updated;
       });
     } catch {
+      setLastFailedMessage(text);
       setMessages(prev => [
         ...prev.filter(m => m.content !== ""),
-        { id: crypto.randomUUID(), role: "huma" as const, content: "Something went wrong. Try again in a moment.", createdAt: new Date().toISOString() },
+        {
+          id: crypto.randomUUID(),
+          role: "huma" as const,
+          content: navigator.onLine
+            ? "Something went wrong. Try again in a moment."
+            : "You seem to be offline. Check your connection and try again.",
+          createdAt: new Date().toISOString(),
+        },
       ]);
     } finally {
       setStreaming(false);
@@ -432,6 +442,38 @@ export default function ChatSheet({ open, onClose, contextPrompt }: ChatSheetPro
                 style={{ width: "8px", height: "8px", background: "#6B8F71", display: "block" }}
               />
             </div>
+          )}
+
+          {/* Retry button after error */}
+          {!streaming && lastFailedMessage && (
+            <button
+              onClick={() => {
+                const msg = lastFailedMessage;
+                setLastFailedMessage(null);
+                // Remove the error message before retrying
+                setMessages(prev => prev.filter((m, i) => !(i === prev.length - 1 && m.role === "huma" && m.content.includes("went wrong" ))));
+                sendMessage(msg);
+              }}
+              className="font-sans cursor-pointer"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                marginTop: "8px",
+                padding: "8px 16px",
+                fontSize: "13px",
+                color: "#B5621E",
+                background: "var(--color-amber-100)",
+                border: "1px solid #F5D4B3",
+                borderRadius: "20px",
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 4 23 10 17 10" />
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+              </svg>
+              Try again
+            </button>
           )}
         </div>
 

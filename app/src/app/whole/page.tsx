@@ -7,6 +7,7 @@ import HolonExpandPanel from "@/components/whole/HolonExpandPanel";
 import ProfileBanner from "@/components/whole/ProfileBanner";
 import InsightCard from "@/components/whole/InsightCard";
 import ArchetypeSelector from "@/components/whole/ArchetypeSelector";
+import WholeSkeleton from "@/components/WholeSkeleton";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { displayName } from "@/lib/display-name";
@@ -436,12 +437,7 @@ export default function WholePage() {
         </div>
 
         {!loaded ? (
-          <div className="flex items-center justify-center" style={{ height: "300px" }}>
-            <span
-              className="rounded-full animate-dot-pulse"
-              style={{ width: "8px", height: "8px", background: "#6B8F71" }}
-            />
-          </div>
+          <WholeSkeleton />
         ) : (
           <>
             {/* Profile banner */}

@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { badRequest, serviceUnavailable, internalError } from "@/lib/api-error";
 
 interface BehaviorEntry {
   date: string;
@@ -117,14 +118,14 @@ Return ONLY the 3-sentence insight text. Nothing else.`;
 
 export async function POST(request: Request) {
   if (!process.env.ANTHROPIC_API_KEY) {
-    return Response.json({ error: "Service temporarily unavailable" }, { status: 503 });
+    return serviceUnavailable();
   }
 
   let body: Record<string, unknown>;
   try {
     body = await request.json() as Record<string, unknown>;
   } catch {
-    return Response.json({ error: "Invalid JSON" }, { status: 400 });
+    return badRequest("Invalid JSON.");
   }
 
   const name = (body.name || "there") as string;
@@ -187,6 +188,6 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     console.error("Insight generation error:", err);
-    return Response.json({ error: "Failed to generate insight" }, { status: 500 });
+    return internalError("Failed to generate insight.");
   }
 }

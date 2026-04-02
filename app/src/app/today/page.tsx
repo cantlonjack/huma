@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase";
 import { displayName } from "@/lib/display-name";
 import { getLocalDate, getLocalDateOffset } from "@/lib/date-utils";
 import TabShell from "@/components/TabShell";
+import TodaySkeleton from "@/components/TodaySkeleton";
 import {
   getAspirations,
   getKnownContext,
@@ -1036,14 +1037,7 @@ export default function TodayPage() {
 
         {/* Loading state */}
         {loading ? (
-          <div style={{ padding: "24px 16px" }}>
-            <span
-              className="font-sans text-sage-400 animate-dot-pulse"
-              style={{ fontSize: "13px", opacity: 0.5 }}
-            >
-              Loading your day...
-            </span>
-          </div>
+          <TodaySkeleton />
         ) : aspirations.length === 0 ? (
           /* ─── Empty State ─── */
           <div

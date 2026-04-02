@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { isRateLimited } from "@/lib/rate-limit";
 import { matchTemplate, getSpecificityHints } from "@/lib/template-matcher";
+import { rateLimited, badRequest, serviceUnavailable, internalError } from "@/lib/api-error";
 
 const SHEET_PROMPT = `You are compiling today's production sheet for {name}.
 
@@ -121,21 +122,21 @@ ${insights.join("\n")}`;
 
 export async function POST(request: Request) {
   if (!process.env.ANTHROPIC_API_KEY) {
-    return Response.json({ error: "Service temporarily unavailable" }, { status: 503 });
+    return serviceUnavailable();
   }
 
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
     || request.headers.get("x-real-ip")
     || "unknown";
   if (await isRateLimited(ip)) {
-    return Response.json({ error: "Too many requests" }, { status: 429 });
+    return rateLimited();
   }
 
   let body: Record<string, unknown>;
   try {
     body = await request.json() as Record<string, unknown>;
   } catch {
-    return Response.json({ error: "Invalid JSON" }, { status: 400 });
+    return badRequest("Invalid JSON.");
   }
 
   const name = (body.name || "there") as string;
@@ -244,6 +245,6 @@ ${Object.entries(allSpecificityHints).map(([key, hint]) => `  ${key}: ${hint}`).
     return Response.json({ entries: parsed.entries || [], date });
   } catch (err) {
     console.error("Sheet compilation error:", err);
-    return Response.json({ error: "Failed to compile sheet" }, { status: 500 });
+    return internalError("Failed to compile sheet.");
   }
 }

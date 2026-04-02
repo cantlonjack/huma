@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import ChatBubble from "@/components/ChatBubble";
 import ChatSheet from "@/components/ChatSheet";
+import { useNetworkStatus } from "@/lib/use-network-status";
 
 interface TabShellProps {
   contextPrompt?: string;
@@ -19,6 +20,7 @@ interface TabShellProps {
  */
 export default function TabShell({ contextPrompt, children, forceOpen, onChatClose }: TabShellProps) {
   const [chatOpen, setChatOpen] = useState(false);
+  const online = useNetworkStatus();
 
   // Sync forceOpen from parent
   useEffect(() => {
@@ -32,6 +34,26 @@ export default function TabShell({ contextPrompt, children, forceOpen, onChatClo
 
   return (
     <>
+      {!online && (
+        <div
+          role="alert"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 100,
+            background: "var(--color-amber-100)",
+            borderBottom: "1px solid #F5D4B3",
+            padding: "8px 16px",
+            textAlign: "center",
+          }}
+        >
+          <span className="font-sans" style={{ fontSize: "13px", color: "#B5621E" }}>
+            You&apos;re offline. Some features won&apos;t work until you reconnect.
+          </span>
+        </div>
+      )}
       {children}
       <ChatBubble onClick={() => setChatOpen(true)} />
       <ChatSheet

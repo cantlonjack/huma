@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { badRequest, internalError } from "@/lib/api-error";
 
 const client = new Anthropic();
 
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
     const { contextData, compute } = await request.json();
 
     if (!contextData || typeof contextData !== "string") {
-      return Response.json({ error: "No context data provided" }, { status: 400 });
+      return badRequest("No context data provided.");
     }
 
     const results: { archetypes?: { suggested: string[]; reasoning: string }; why?: string } = {};
@@ -83,6 +84,6 @@ export async function POST(request: Request) {
     return Response.json(results);
   } catch (error) {
     console.error("whole-compute error:", error);
-    return Response.json({ error: "Computation failed" }, { status: 500 });
+    return internalError("Computation failed.");
   }
 }

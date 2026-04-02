@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { isRateLimited } from "@/lib/rate-limit";
+import { rateLimited, badRequest, serviceUnavailable, internalError } from "@/lib/api-error";
 
 // ─── Base Identity ─────────────────────────────────────────────────────────
 const BASE_IDENTITY = `You are HUMA. You help people run their lives as one connected system.
@@ -200,30 +201,21 @@ ${messageCountRule}`;
 
 export async function POST(request: Request) {
   if (!process.env.ANTHROPIC_API_KEY) {
-    return new Response(
-      JSON.stringify({ error: "Service temporarily unavailable" }),
-      { status: 503, headers: { "Content-Type": "application/json" } }
-    );
+    return serviceUnavailable();
   }
 
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
     || request.headers.get("x-real-ip")
     || "unknown";
   if (await isRateLimited(ip)) {
-    return new Response(
-      JSON.stringify({ error: "Too many requests. Please wait a moment." }),
-      { status: 429, headers: { "Content-Type": "application/json" } }
-    );
+    return rateLimited();
   }
 
   let body: Record<string, unknown>;
   try {
     body = await request.json() as Record<string, unknown>;
   } catch {
-    return new Response(
-      JSON.stringify({ error: "Invalid JSON" }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
-    );
+    return badRequest("Invalid JSON.");
   }
 
   const messages = body.messages as Array<{ role: string; content: string }>;
@@ -231,10 +223,7 @@ export async function POST(request: Request) {
   const aspirations = (body.aspirations || []) as Array<{ rawText: string; clarifiedText: string; status: string }>;
 
   if (!Array.isArray(messages) || messages.length === 0) {
-    return new Response(
-      JSON.stringify({ error: "Messages array required" }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
-    );
+    return badRequest("Messages array required.");
   }
 
   try {
@@ -282,9 +271,6 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     console.error("V2 chat API error:", err);
-    return new Response(
-      JSON.stringify({ error: "Something went wrong. Please try again." }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return internalError("Something went wrong. Please try again.");
   }
 }
