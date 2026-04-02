@@ -6,7 +6,7 @@ HUMA is infrastructure for running your life as one connected system. Not a well
 
 **What HUMA does that no other app can:** Show you how the different parts of your life are connected -- and which specific daily behaviors are the leverage points that hold everything together.
 
-**Current state:** V2.1 in development. Three-tab app: Today (production sheet, home), Whole (holonic life map), Grow (placeholder). Entry flow at `/start` works. Conversation engine gathers deep context before decomposing into phased behaviors. Pattern data model introduced — patterns auto-extracted from decompositions with triggers. Sheet compilation works. Whole page has force-directed holon visualization with archetypes and WHY statement. Chat overlay available from any tab.
+**Current state:** V2.1 in development. Three-tab app: Today (production sheet, home), Whole (holonic life map), Grow (patterns view). Entry flow at `/start` works. Conversation engine gathers deep context before decomposing into phased behaviors. Patterns auto-extracted from decompositions with triggers, displayed on Grow tab grouped by status with validation progress. Sheet compilation works. Whole page has force-directed holon visualization with archetypes and WHY statement. Chat overlay available from any tab with tab-specific context awareness.
 
 **Deployed:** huma-two.vercel.app
 
@@ -47,7 +47,7 @@ _Last updated: 2026-04-02_
 | `/start` | `app/start/page.tsx` | Working | Conversation entry. Context gathering -> decomposition -> auth -> redirect to `/today`. Palette panel on desktop. |
 | `/today` | `app/today/page.tsx` | Working | Production sheet (HOME). Daily behaviors from aspirations, check-off tracking, dimension dots, streak counts. |
 | `/whole` | `app/whole/page.tsx` | Working | Holonic life map. Force-directed D3 visualization, archetype selector, WHY statement, insight card. |
-| `/grow` | `app/grow/page.tsx` | Placeholder | "Grow - coming next." Wrapped in TabShell. |
+| `/grow` | `app/grow/page.tsx` | Working | Patterns view. Patterns grouped by status (finding/working/validated) with trigger, golden pathway, validation progress. Empty state. |
 | `/chat` | `app/chat/page.tsx` | Working | Conversation hub. Messages grouped by time into expandable cards. Context card with aspiration/behavior summary. |
 | `/system` | _(removed Session 14)_ | Removed | Function moves to Whole tab's expand panels in Phase 4. |
 | `/map/[id]` | `app/map/[id]/page.tsx` | Working | Dynamic Living Canvas renderer. Server-side OG metadata. Public/shareable. |
@@ -94,6 +94,9 @@ Bottom tab bar: **Today | Whole | Grow**. Hidden on `/` and `/start`. Chat overl
 - **MapView** -- Living Canvas display container with canvas/document toggle.
 - **WelcomeView** -- Name/location collection form (V1 flow).
 - **GeneratingView** -- Loading screen during map generation.
+
+### Grow Tab
+- **GrowSkeleton** -- Skeleton loader for pattern cards.
 
 ### Whole Tab
 - **WholeShape** -- Force-directed D3 holon visualization (patterns, vision, identity, principles, foundation).

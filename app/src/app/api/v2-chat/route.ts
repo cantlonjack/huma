@@ -148,9 +148,16 @@ Help them see connections between parts, not just individual items.`);
       parts.push(`Their principles: ${(tabContext.principles as string[]).join("; ")}`);
     }
   } else if (sourceTab === "grow") {
-    parts.push(`The operator opened chat from the GROW tab.
-Tone: forward-looking, aspirational. They're thinking about what's next.
-Help them articulate new aspirations or evolve existing ones.`);
+    parts.push(`The operator opened chat from the GROW tab (patterns view).
+Tone: forward-looking, pattern-aware. They're looking at how their behaviors connect.
+Help them see which patterns are forming, what triggers are working, and where the leverage is.`);
+
+    if (tabContext?.patterns && Array.isArray(tabContext.patterns)) {
+      const patList = (tabContext.patterns as Array<{ name: string; trigger: string; status: string; validationCount: number; validationTarget: number }>)
+        .map(p => `- ${p.name} [${p.status}] — trigger: "${p.trigger}" (${p.validationCount}/${p.validationTarget} days)`)
+        .join("\n");
+      parts.push(`Their patterns:\n${patList}`);
+    }
   }
 
   return parts.length > 0
