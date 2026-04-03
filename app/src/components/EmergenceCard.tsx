@@ -22,19 +22,28 @@ export default function EmergenceCard({
   if (behaviors.length === 0) return null;
 
   return (
-    <div style={{ marginBottom: "24px" }}>
-      {/* Section header — italic Cormorant Garamond */}
-      <p
-        className="font-serif"
+    <div style={{ marginBottom: "32px" }}>
+      {/* Section header — italic Cormorant Garamond on sand-100 */}
+      <div
         style={{
-          fontSize: "16px",
-          fontStyle: "italic",
-          color: "var(--color-sage-500)",
-          marginBottom: "12px",
+          background: "#F6F1E9",
+          borderRadius: "10px",
+          padding: "12px 16px",
+          marginBottom: "16px",
         }}
       >
-        Something forming&hellip;
-      </p>
+        <p
+          className="font-serif"
+          style={{
+            fontSize: "17px",
+            fontStyle: "italic",
+            color: "var(--color-sage-500)",
+            lineHeight: "1.3",
+          }}
+        >
+          Something forming&hellip;
+        </p>
+      </div>
 
       {behaviors.map((b) => {
         const isRevealed = revealedKey === b.behaviorKey;
