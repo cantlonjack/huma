@@ -832,33 +832,40 @@ function StandaloneBehaviorRow({
 function CompiledEntryRow({
   entry,
   isChecked,
-  isLast,
+  isTrigger,
   onToggle,
 }: {
   entry: SheetEntry;
   isChecked: boolean;
-  isLast: boolean;
+  isTrigger: boolean;
   onToggle: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const hasDetail = entry.detail && typeof entry.detail === "string" && entry.detail.length > 0;
 
   return (
     <div
       style={{
-        borderBottom: isLast ? "none" : "1px solid #F0EBE3",
+        borderLeft: isTrigger ? "3px solid #B5621E" : "3px solid transparent",
+        background: isTrigger
+          ? "var(--color-sand-100)"
+          : "transparent",
+        borderRadius: isTrigger ? "0 8px 8px 0" : "0",
+        padding: isTrigger ? "20px 20px" : "18px 20px 18px 23px",
+        transition: "background 200ms cubic-bezier(0.22, 1, 0.36, 1)",
       }}
     >
-      <button
+      {/* Check row — div with onClick instead of button to allow nested interactive */}
+      <div
+        role="button"
+        tabIndex={0}
         onClick={onToggle}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(); } }}
         className="w-full text-left cursor-pointer"
         style={{
           display: "flex",
           alignItems: "flex-start",
-          gap: "12px",
-          padding: "14px 16px",
-          background: isChecked
-            ? "linear-gradient(135deg, #F8F6F1, #F4F1EB)"
-            : "transparent",
+          gap: "14px",
         }}
       >
         {/* Check circle */}
@@ -867,13 +874,17 @@ function CompiledEntryRow({
             width: "22px",
             height: "22px",
             borderRadius: "50%",
-            border: isChecked ? "none" : "1.5px solid #DDD4C0",
-            background: isChecked ? "#5C7A62" : "transparent",
+            border: isChecked
+              ? "none"
+              : `1.5px solid ${isTrigger ? "#E8935A" : "#DDD4C0"}`,
+            background: isChecked
+              ? (isTrigger ? "#B5621E" : "#5C7A62")
+              : "transparent",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
-            marginTop: "1px",
+            marginTop: "2px",
             transition: "all 200ms cubic-bezier(0.22, 1, 0.36, 1)",
           }}
         >
@@ -886,23 +897,68 @@ function CompiledEntryRow({
 
         {/* Content */}
         <div style={{ flex: 1, minWidth: 0 }}>
+          {/* Headline — Cormorant Garamond */}
           <span
-            className="font-serif text-sage-700"
+            className="font-serif"
             style={{
-              fontSize: "16px",
-              lineHeight: "1.35",
+              fontSize: isTrigger ? "19px" : "17px",
+              lineHeight: "1.3",
+              fontWeight: isTrigger ? 600 : 500,
               display: "block",
+              color: isChecked
+                ? "var(--color-ink-200)"
+                : (isTrigger ? "var(--color-ink-900)" : "var(--color-ink-800)"),
               textDecoration: isChecked ? "line-through" : "none",
-              color: isChecked ? "var(--color-sage-300)" : undefined,
-              transition: "color 200ms ease",
+              textDecorationColor: isChecked ? "var(--color-ink-200)" : undefined,
+              transition: "color 200ms cubic-bezier(0.22, 1, 0.36, 1)",
             }}
           >
             {entry.headline || entry.behaviorText}
           </span>
 
-          {/* Dimension dots */}
+          {/* Detail preview — Source Sans 3, visible without tap */}
+          {hasDetail && !isChecked && (
+            <p
+              className="font-sans"
+              style={{
+                fontSize: "14px",
+                lineHeight: "1.5",
+                color: "var(--color-ink-500)",
+                marginTop: "4px",
+                maxHeight: expanded ? "200px" : "1.5em",
+                overflow: "hidden",
+                transition: "max-height 250ms cubic-bezier(0.22, 1, 0.36, 1)",
+              }}
+            >
+              {entry.detail as string}
+            </p>
+          )}
+
+          {/* Expand hint */}
+          {hasDetail && !expanded && !isChecked && (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); setExpanded(true); } }}
+              className="cursor-pointer"
+              style={{
+                padding: "4px 0 0",
+                display: "block",
+              }}
+            >
+              <span
+                className="font-sans"
+                style={{ fontSize: "12px", color: "var(--color-ink-300)" }}
+              >
+                more &darr;
+              </span>
+            </span>
+          )}
+
+          {/* Dimension dots — inline below text */}
           {entry.dimensions && entry.dimensions.length > 0 && (
-            <div style={{ display: "flex", gap: "5px", marginTop: "6px" }}>
+            <div style={{ display: "flex", gap: "5px", marginTop: "8px" }}>
               {entry.dimensions.map(dim => (
                 <div
                   key={dim}
@@ -911,59 +967,15 @@ function CompiledEntryRow({
                     height: "6px",
                     borderRadius: "50%",
                     background: DIMENSION_DOT_COLORS[dim] || "#8BAF8E",
-                    opacity: isChecked ? 0.4 : 1,
-                    transition: "opacity 200ms ease",
+                    opacity: isChecked ? 0.35 : 1,
+                    transition: "opacity 200ms cubic-bezier(0.22, 1, 0.36, 1)",
                   }}
                 />
               ))}
             </div>
           )}
         </div>
-      </button>
-
-      {/* Detail — tap headline area to expand */}
-      {entry.detail && typeof entry.detail === "string" && entry.detail.length > 0 && (
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="w-full text-left cursor-pointer"
-          style={{
-            padding: expanded ? "0 16px 12px 50px" : "0",
-            maxHeight: expanded ? "200px" : "0",
-            overflow: "hidden",
-            transition: "all 250ms cubic-bezier(0.22, 1, 0.36, 1)",
-            opacity: expanded ? 1 : 0,
-          }}
-        >
-          <p
-            className="font-sans text-sage-500"
-            style={{
-              fontSize: "13px",
-              lineHeight: "1.5",
-            }}
-          >
-            {entry.detail as string}
-          </p>
-        </button>
-      )}
-
-      {/* Tap-to-expand hint — subtle chevron */}
-      {entry.detail && typeof entry.detail === "string" && entry.detail.length > 0 && !expanded && !isChecked && (
-        <button
-          onClick={() => setExpanded(true)}
-          className="w-full cursor-pointer"
-          style={{
-            padding: "0 16px 8px 50px",
-            textAlign: "left",
-          }}
-        >
-          <span
-            className="font-sans text-sage-300"
-            style={{ fontSize: "12px" }}
-          >
-            how &darr;
-          </span>
-        </button>
-      )}
+      </div>
     </div>
   );
 }
@@ -1626,15 +1638,17 @@ export default function TodayPage() {
               <div
                 className="animate-entrance-2"
                 style={{
-                  padding: "0 16px 12px",
+                  padding: "0 20px 20px",
                 }}
               >
                 <p
-                  className="font-serif italic text-sage-600"
+                  className="font-serif italic"
                   style={{
-                    fontSize: "15px",
-                    lineHeight: "1.5",
+                    fontSize: "16px",
+                    lineHeight: "1.55",
+                    color: "var(--color-ink-600)",
                     maxWidth: "480px",
+                    letterSpacing: "0.01em",
                   }}
                 >
                   {throughLine}
@@ -1647,10 +1661,9 @@ export default function TodayPage() {
               <div style={{ margin: "0 16px 16px" }}>
                 <div
                   style={{
-                    background: "white",
-                    border: "1px solid #DDD4C0",
-                    borderRadius: "16px",
-                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "6px",
                   }}
                 >
                   {compiledEntries.map((entry, i) => {
@@ -1660,7 +1673,7 @@ export default function TodayPage() {
                         key={entry.behaviorKey}
                         entry={entry}
                         isChecked={isChecked}
-                        isLast={i === compiledEntries.length - 1}
+                        isTrigger={i === 0}
                         onToggle={() =>
                           handleToggleStep(
                             entry.aspirationId,
