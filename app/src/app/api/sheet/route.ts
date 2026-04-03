@@ -89,72 +89,84 @@ function formatKnownContext(ctx: KnownContext): string {
 }
 
 const SHEET_PROMPT = `You are compiling today's production sheet for {name}.
+Today is {day_of_week}, {date}. Season: {season}. Day {day_count} with HUMA.
 
-Active aspirations and behaviors:
+{identity_section}
+
+── WHO THIS PERSON IS ──────────────────────────────────────────────
+{known_context}
+
+── WHAT THEY ACTUALLY SAID (use their words, their details) ────────
+{conversation_transcript}
+
+── ACTIVE ASPIRATIONS & BEHAVIORS ──────────────────────────────────
 {aspirations_with_behaviors}
 
 {specificity_section}
 
-CONVERSATION TRANSCRIPT (this is what the operator actually said — use their exact details):
-{conversation_transcript}
-
-Known context:
-{known_context}
-
-Recent behavior history (last 7 days):
+── RECENT HISTORY (last 7 days) ────────────────────────────────────
 {recent_history}
 
 {history_analysis}
 
-Today is {day_of_week}, {date}. Season: {season}.
+═══════════════════════════════════════════════════════════════════
+YOUR JOB: Write TODAY'S actions, not behaviors.
 
-IMPORTANT: Only behaviors from ACTIVE aspirations are included below.
-Do NOT generate entries for aspirations the operator is still planning or dreaming about.
-These are things the operator IS doing, not things they WANT to do someday.
+A behavior is "Cook dinner." An action is "Stew night — chuck in freezer + Sunday broth."
+A behavior is "Go for a walk." An action is "20-min loop before the rain hits at 2."
+A behavior is "Track spending." An action is "Log yesterday's $47 groceries."
+A behavior is "Meal plan." An action is "Plan 4 dinners around the pork shoulder in the freezer."
 
-CRITICAL RULES:
-- Generate MAXIMUM 5 entries. Not 6. Not 7. Five or fewer.
-- Each entry must have a UNIQUE behavior_key. If two aspirations share a behavior (like "cook dinner at home"), generate ONE entry for it, not two.
-- Prioritize behaviors that touch the most life dimensions — these are the highest-leverage actions.
-- Every entry must be specific to TODAY — not generic advice.
+The operator should read the headline and KNOW WHAT TO DO without tapping for details. The headline is the action. The detail is the how-to.
 
-CRITICAL: The conversation transcript contains specifics the operator told you — household size, budget constraints, dietary approach, available ingredients, schedule. USE THEM. Every entry should feel like it was written for THIS person, not a generic template. If they said "two of us" — portions are for two. If they said "save money" — suggest budget-conscious options. If they mentioned specific ingredients — use those ingredients.
+EVERY ENTRY must use specifics from the context above:
+- Names of people they live with → portion sizes, who's involved
+- Budget or financial situation → cost-conscious suggestions, no luxury assumptions
+- Foods they mentioned, dietary approach → those exact foods, not generic "healthy meal"
+- Their schedule, work hours → timing that fits their actual day
+- Season and location → what's available, what the weather's like
+- What they checked off (or skipped) recently → build on momentum or simplify what's not sticking
 
-Be specific. Use the known context and conversation details. Reference leftovers, inventory, schedules.
-The operator should not have to think — just execute.
+If context is thin, use the season, day of week, and aspiration details to be as specific as you can. NEVER fall back to generic behavior names as headlines.
 
-Voice: fence-post neighbor. Direct. Spare. No therapy-speak. No cheerleading.
+═══════════════════════════════════════════════════════════════════
+RULES:
 
-Return a JSON object with an "entries" array. Each entry MUST have these fields:
+1. MAXIMUM 5 entries. Five or fewer.
+2. Each entry has a UNIQUE behavior_key. One entry per behavior, even if shared across aspirations.
+3. Prioritize behaviors touching the most dimensions — highest leverage first.
+4. Only active aspirations. Nothing they're planning or dreaming about.
+
+HEADLINE (4-8 words, MAX 8):
+- This is what they read in 1 second over coffee. It names the specific action for today.
+- GOOD: "Stew night — chuck in freezer" / "20-min walk, sunny by 9" / "No purchases today" / "$3.80 chicken stir-fry for two"
+- BAD: "Cook a nutritious dinner" (that's a behavior, not an action)
+- BAD: "Go for a healthy walk outside" (vague, no specifics)
+- BAD: "5:30 AM milking routine — sheep, equipment sanitization" (too long, that's a paragraph)
+
+DETAIL (1-3 sentences, shown on tap):
+- The HOW. Specific steps, quantities, timing, cost.
+- "Pull chuck from freezer now. Brown + slow cook by 4pm. Use Sunday's broth as the base. Enough for two nights — leftovers Thursday."
+
+VOICE: fence-post neighbor. Direct. Spare. No therapy-speak. No cheerleading. No "consider" or "try to" — just tell them what to do today.
+
+Return ONLY this JSON, no other text:
 
 {
   "entries": [
     {
       "behavior_key": "cook-dinner",
       "aspiration_id": "the-aspiration-uuid",
-      "headline": "Scrambled eggs + veg tonight",
-      "detail": "No prep needed. Use whatever is in the crisper. Two eggs each, under $4 total.",
+      "headline": "Stew night — chuck from freezer",
+      "detail": "Pull chuck now, brown at 4. Use Sunday's broth. Enough for two nights.",
       "time_of_day": "evening",
-      "dimensions": ["body", "money"]
+      "dimensions": ["body", "money", "home"]
     }
   ]
 }
 
-HEADLINE RULES — these are absolute:
-- The "headline" is 4-8 words. MAX 8 words. It is what someone reads in 1 second over coffee.
-- GOOD headlines: "Scrambled eggs + whatever veg" / "20-min walk, sunny by 9" / "No purchases today" / "Chicken stir-fry — $3.80"
-- BAD headlines: "5:30 AM milking routine — sheep, equipment sanitization, milk handling" (too long, too many details)
-- BAD headlines: "Cook a nutritious dinner using available ingredients" (vague instruction, not specific)
-- BAD headlines: "Morning milking routine — sheep, equipment sanitization, milk handling" (that's a detail paragraph, not a headline)
-- If you can't say it in 8 words, you're writing a detail, not a headline.
-
-The "detail" field is 1-3 sentences of specific instructions shown only when the operator taps the card. Put the HOW here, not in the headline.
-
-Every entry MUST have "time_of_day": one of "morning", "midday", "evening".
-Every entry MUST have "dimensions": array of which dimensions this touches (from: body, people, money, home, growth, joy, purpose, identity).
-MAXIMUM 5 entries. Each must be unique.
-
-Return ONLY valid JSON, no other text.`;
+Every entry MUST have: behavior_key, aspiration_id, headline, detail, time_of_day (morning/midday/evening), dimensions (from: body, people, money, home, growth, joy, purpose, identity).
+MAXIMUM 5 entries. Return ONLY valid JSON.`;
 
 interface RecentEntry {
   date: string;
@@ -287,8 +299,21 @@ ${Object.entries(allSpecificityHints).map(([key, hint]) => `  ${key}: ${hint}`).
     ? recentConvo.map(m => `${m.role === "user" ? "Operator" : "HUMA"}: ${m.content}`).join("\n\n")
     : "No conversation yet.";
 
+  // Build identity section from archetypes + WHY statement
+  const identityParts: string[] = [];
+  if (archetypes.length > 0) {
+    identityParts.push(`Archetypes: ${archetypes.join(" + ")}`);
+  }
+  if (whyStatement) {
+    identityParts.push(`WHY: "${whyStatement}"`);
+  }
+  const identitySection = identityParts.length > 0
+    ? identityParts.join("\n")
+    : "";
+
   const prompt = SHEET_PROMPT
     .replace("{name}", name)
+    .replace("{identity_section}", identitySection)
     .replace("{aspirations_with_behaviors}", aspirationsStr)
     .replace("{specificity_section}", specificitySection)
     .replace("{conversation_transcript}", conversationStr)
@@ -297,7 +322,8 @@ ${Object.entries(allSpecificityHints).map(([key, hint]) => `  ${key}: ${hint}`).
     .replace("{history_analysis}", historyAnalysis)
     .replace("{day_of_week}", dayOfWeek)
     .replace("{date}", date)
-    .replace("{season}", season);
+    .replace("{season}", season)
+    .replace("{day_count}", String(dayCount));
 
   try {
     const anthropic = new Anthropic();
@@ -305,7 +331,7 @@ ${Object.entries(allSpecificityHints).map(([key, hint]) => `  ${key}: ${hint}`).
     const response = await anthropic.messages.create({
       model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514",
       max_tokens: 2048,
-      system: "You compile daily production sheets. Return ONLY valid JSON. No markdown, no explanation. Voice: fence-post neighbor — direct, specific, warm without soft.",
+      system: "You compile daily production sheets — specific actions, not generic behaviors. Return ONLY valid JSON. No markdown, no explanation. Voice: fence-post neighbor — direct, specific, warm without soft. Every headline names what to do today, not what the behavior is.",
       messages: [{ role: "user", content: prompt }],
     });
 
