@@ -129,6 +129,20 @@ export interface Pattern {
   updatedAt: string;
 }
 
+// ─── Emerging Behaviors ────────────────────────────────────────────────────
+// An unnamed behavior that has appeared consistently (12+ of last 14 days)
+// without being part of an existing pattern. Surfaced on the Grow tab as
+// "something forming..." for the operator to name/formalize or dismiss.
+
+export interface EmergingBehavior {
+  behaviorKey: string;
+  behaviorName: string;             // Display text from behavior_log
+  completedDays: number;            // Number of completed days in 14-day window
+  totalDays: number;                // Always 14
+  dimensions: DimensionKey[];       // From source aspiration behavior, if matched
+  aspirationId?: string;            // Source aspiration, if identifiable
+}
+
 // ─── Principles ─────────────────────────────────────────────────────────────
 
 export interface Principle {

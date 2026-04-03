@@ -1,16 +1,17 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Pattern, Aspiration, DimensionKey, FutureAction, FuturePhase, SparklineData } from "@/types/v2";
+import type { Pattern, Aspiration, DimensionKey, FutureAction, FuturePhase, SparklineData, EmergingBehavior } from "@/types/v2";
 import { DIMENSION_COLORS, DIMENSION_LABELS } from "@/types/v2";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { displayName } from "@/lib/display-name";
 import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
-import { getPatterns, getAspirations, getPatternSparklines } from "@/lib/supabase-v2";
+import { getPatterns, getAspirations, getPatternSparklines, detectEmergingBehaviors, savePattern } from "@/lib/supabase-v2";
 import TabShell from "@/components/TabShell";
 import GrowSkeleton from "@/components/GrowSkeleton";
 import Sparkline from "@/components/Sparkline";
+import EmergenceCard from "@/components/EmergenceCard";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -682,6 +683,7 @@ export default function GrowPage() {
   const [archetypes, setArchetypes] = useState<string[]>([]);
   const [whyStatement, setWhyStatement] = useState<string | null>(null);
   const [sparklines, setSparklines] = useState<Map<string, SparklineData>>(new Map());
+  const [emergingBehaviors, setEmergingBehaviors] = useState<EmergingBehavior[]>([]);
   const [investigatePatternId, setInvestigatePatternId] = useState<string | null>(null);
 
   const handleToggleExpand = useCallback((id: string) => {
@@ -694,6 +696,60 @@ export default function GrowPage() {
 
   const handleChatClose = useCallback(() => {
     setInvestigatePatternId(null);
+  }, []);
+
+  const handleFormalize = useCallback(async (behavior: EmergingBehavior, name: string) => {
+    const newPattern: Pattern = {
+      id: crypto.randomUUID(),
+      aspirationId: behavior.aspirationId || "",
+      name,
+      trigger: behavior.behaviorName,
+      steps: [{
+        behaviorKey: behavior.behaviorKey,
+        text: behavior.behaviorName,
+        order: 0,
+        isTrigger: true,
+      }],
+      validationCount: 0,
+      validationTarget: 30,
+      status: "finding",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Save to Supabase if authenticated
+    if (user) {
+      try {
+        const sb = createClient();
+        if (sb) await savePattern(sb, user.id, newPattern);
+      } catch { /* fall through to localStorage */ }
+    }
+
+    // Save to localStorage as fallback
+    try {
+      const saved = localStorage.getItem("huma-v2-patterns");
+      const all = saved ? JSON.parse(saved) : [];
+      all.push(newPattern);
+      localStorage.setItem("huma-v2-patterns", JSON.stringify(all));
+    } catch { /* non-critical */ }
+
+    // Update local state
+    setPatterns(prev => [...prev, newPattern]);
+    setEmergingBehaviors(prev => prev.filter(b => b.behaviorKey !== behavior.behaviorKey));
+  }, [user]);
+
+  const handleDismissEmergence = useCallback((behaviorKey: string) => {
+    // Persist dismissal so it doesn't reappear this session
+    try {
+      const saved = localStorage.getItem("huma-v2-dismissed-emergences");
+      const dismissed: string[] = saved ? JSON.parse(saved) : [];
+      if (!dismissed.includes(behaviorKey)) {
+        dismissed.push(behaviorKey);
+        localStorage.setItem("huma-v2-dismissed-emergences", JSON.stringify(dismissed));
+      }
+    } catch { /* non-critical */ }
+
+    setEmergingBehaviors(prev => prev.filter(b => b.behaviorKey !== behaviorKey));
   }, []);
 
   // ─── Data Loading ───────────────────────────────────────────────────────
@@ -793,6 +849,23 @@ export default function GrowPage() {
         } catch { /* non-critical — sparklines are a progressive enhancement */ }
       }
 
+      // Detect emerging behaviors (requires auth + behavior_log data)
+      if (supabase && user) {
+        try {
+          const emerging = await detectEmergingBehaviors(
+            supabase, user.id, loadedPatterns, loadedAspirations
+          );
+          // Filter out previously dismissed emergences
+          let dismissed: string[] = [];
+          try {
+            const saved = localStorage.getItem("huma-v2-dismissed-emergences");
+            if (saved) dismissed = JSON.parse(saved);
+          } catch { /* fresh */ }
+          const filtered = emerging.filter(b => !dismissed.includes(b.behaviorKey));
+          setEmergingBehaviors(filtered);
+        } catch { /* non-critical */ }
+      }
+
       setLoading(false);
     }
 
@@ -829,6 +902,12 @@ export default function GrowPage() {
   tabContext.dayCount = dayCount;
   if (archetypes.length > 0) tabContext.archetypes = archetypes;
   if (whyStatement) tabContext.whyStatement = whyStatement;
+  if (emergingBehaviors.length > 0) {
+    tabContext.emergingBehaviors = emergingBehaviors.map(b => ({
+      name: b.behaviorName,
+      completedDays: b.completedDays,
+    }));
+  }
   if (sparklines.size > 0) {
     const trends: Record<string, string> = {};
     sparklines.forEach((s) => { if (s.trend !== "stable") trends[s.patternId] = s.trend; });
@@ -920,10 +999,19 @@ export default function GrowPage() {
         {/* Content */}
         {loading ? (
           <GrowSkeleton />
-        ) : patterns.length === 0 ? (
+        ) : patterns.length === 0 && emergingBehaviors.length === 0 ? (
           <EmptyState />
         ) : (
           <div style={{ padding: "0 16px" }}>
+            {/* Emerging behaviors — "Something forming..." */}
+            {emergingBehaviors.length > 0 && (
+              <EmergenceCard
+                behaviors={emergingBehaviors}
+                onFormalize={handleFormalize}
+                onDismiss={handleDismissEmergence}
+              />
+            )}
+
             {/* Validated patterns */}
             {validated.length > 0 && (
               <PatternSection

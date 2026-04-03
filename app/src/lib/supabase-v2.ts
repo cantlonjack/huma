@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Aspiration, AspirationFunnel, AspirationTrigger, ChatMessage, SheetEntry, Insight, Principle, Pattern, PatternStep, SparklineData, SparklinePoint } from "@/types/v2";
+import type { Aspiration, AspirationFunnel, AspirationTrigger, ChatMessage, SheetEntry, Insight, Principle, Pattern, PatternStep, SparklineData, SparklinePoint, EmergingBehavior, DimensionKey } from "@/types/v2";
 import { getLocalDate, getLocalDateOffset } from "@/lib/date-utils";
 import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
 
@@ -541,6 +541,89 @@ export async function getPatternSparklines(
   }
 
   return results;
+}
+
+// ─── Emerging Behavior Detection ────────────────────────────────────────────
+
+/**
+ * Detect behaviors that have been consistently completed (12+ of last 14 days)
+ * but are NOT already part of an existing pattern. These are unnamed patterns
+ * forming organically — surfaced as "something forming..." on the Grow tab.
+ *
+ * Algorithm:
+ * 1. Query all behavior_log completions in the 14-day window
+ * 2. Group by behavior_key, count completed days
+ * 3. Filter to 12+ completed days
+ * 4. Exclude any behavior_key already present in an existing pattern's steps
+ * 5. Enrich with dimension data from aspirations if available
+ */
+export async function detectEmergingBehaviors(
+  supabase: SupabaseClient,
+  userId: string,
+  existingPatterns: Pattern[],
+  aspirations: Aspiration[]
+): Promise<EmergingBehavior[]> {
+  const startStr = getLocalDateOffset(13); // 14 days including today
+  const todayStr = getLocalDate();
+
+  const { data: rows } = await supabase
+    .from("behavior_log")
+    .select("behavior_key, behavior_name, date, completed")
+    .eq("user_id", userId)
+    .eq("completed", true)
+    .gte("date", startStr)
+    .lte("date", todayStr);
+
+  if (!rows || rows.length === 0) return [];
+
+  // Group by behavior_key: count distinct completed dates
+  const keyMap = new Map<string, { name: string; dates: Set<string> }>();
+  for (const row of rows) {
+    const key = (row.behavior_key || row.behavior_name) as string;
+    const name = (row.behavior_name || row.behavior_key) as string;
+    if (!keyMap.has(key)) keyMap.set(key, { name, dates: new Set() });
+    keyMap.get(key)!.dates.add(row.date as string);
+  }
+
+  // Collect all behavior_keys already in existing patterns
+  const patternKeys = new Set<string>();
+  for (const p of existingPatterns) {
+    for (const step of p.steps) {
+      patternKeys.add(step.behaviorKey);
+    }
+  }
+
+  // Filter: 12+ completed days AND not in any existing pattern
+  const emerging: EmergingBehavior[] = [];
+  for (const [key, { name, dates }] of keyMap) {
+    if (dates.size < 12) continue;
+    if (patternKeys.has(key)) continue;
+
+    // Try to find dimension data from aspirations
+    let dimensions: DimensionKey[] = [];
+    let aspirationId: string | undefined;
+    for (const asp of aspirations) {
+      const behavior = asp.behaviors?.find(b => b.key === key);
+      if (behavior) {
+        aspirationId = asp.id;
+        dimensions = (behavior.dimensions || [])
+          .map(d => typeof d === "string" ? d : d.dimension)
+          .filter(Boolean) as DimensionKey[];
+        break;
+      }
+    }
+
+    emerging.push({
+      behaviorKey: key,
+      behaviorName: name,
+      completedDays: dates.size,
+      totalDays: 14,
+      dimensions,
+      aspirationId,
+    });
+  }
+
+  return emerging;
 }
 
 // ─── Day-of-Week Rhythm Counts ──────────────────────────────────────────────
