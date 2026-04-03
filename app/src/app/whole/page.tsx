@@ -433,6 +433,7 @@ export default function WholePage() {
           status: mapAspirationStatus(a),
         })),
         principles: principles.filter(p => p.active).map(p => p.text),
+        dayCount: dayNum,
       }}
     >
       <div className="min-h-dvh bg-sand-50 flex flex-col" style={{ paddingBottom: "80px" }}>

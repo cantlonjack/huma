@@ -177,6 +177,16 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
     }
 
     try {
+      // Compute dayCount from start date
+      let dayCount: number | undefined;
+      try {
+        const start = localStorage.getItem("huma-v2-start-date");
+        if (start) {
+          const diff = Math.ceil((Date.now() - new Date(start).getTime()) / 86400000);
+          dayCount = diff > 0 ? diff : 1;
+        }
+      } catch { /* fresh operator */ }
+
       const res = await fetch("/api/v2-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -186,6 +196,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
           aspirations: aspirations.map(a => ({ rawText: a.rawText, clarifiedText: a.clarifiedText, status: a.status })),
           sourceTab,
           tabContext,
+          dayCount,
         }),
       });
 

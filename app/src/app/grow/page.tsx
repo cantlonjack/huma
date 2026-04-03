@@ -621,6 +621,18 @@ export default function GrowPage() {
     loadData();
   }, [user, authLoading]);
 
+  // ─── Day count ─────────────────────────────────────────────────────────
+  const dayCount = (() => {
+    try {
+      const start = localStorage.getItem("huma-v2-start-date");
+      if (start) {
+        const diff = Math.ceil((Date.now() - new Date(start).getTime()) / 86400000);
+        return diff > 0 ? diff : 1;
+      }
+    } catch { /* fresh */ }
+    return 1;
+  })();
+
   // ─── Chat context for Grow tab ──────────────────────────────────────────
   const tabContext: Record<string, unknown> = {};
   if (patterns.length > 0) {
@@ -636,6 +648,7 @@ export default function GrowPage() {
   if (aspirations.length > 0) {
     tabContext.aspirationCount = aspirations.length;
   }
+  tabContext.dayCount = dayCount;
 
   // ─── Group patterns by status ──────────────────────────────────────────
   const validated = patterns.filter(p => p.status === "validated");

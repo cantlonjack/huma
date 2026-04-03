@@ -113,6 +113,79 @@ RULES:
 Before the JSON markers, write a brief conversational intro (1-2 sentences) framing
 what you've designed. Do NOT write a long explanation.`;
 
+// ─── Behavioral Context Builder ──────────────────────────────────────────
+function buildBehavioralContext(
+  dayCount: number,
+  tabContext?: Record<string, unknown>,
+  aspirations?: Array<{ rawText: string; clarifiedText: string; status: string }>,
+): string {
+  if (dayCount <= 7) return "";
+
+  const parts: string[] = [];
+  parts.push(`Operator has been using HUMA for ${dayCount} days.`);
+
+  // Extract validation metrics from tabContext
+  const weekCounts = tabContext?.weekCounts as Record<string, { completed: number; total: number }> | undefined;
+  const stalledAspirations = tabContext?.stalledAspirations as string[] | undefined;
+
+  // Compute per-aspiration completion rates from tabContext aspirations
+  const tabAspirations = tabContext?.aspirations as Array<{
+    id: string;
+    name: string;
+    behaviors?: string[];
+    status?: string;
+    completionRate?: number;
+  }> | undefined;
+
+  const struggling: string[] = [];
+  const working: string[] = [];
+
+  if (tabAspirations && weekCounts && dayCount >= 14) {
+    for (const asp of tabAspirations) {
+      if (!asp.behaviors || asp.behaviors.length === 0) continue;
+      const totalCompleted = asp.behaviors.reduce((sum, b) => sum + (weekCounts[b]?.completed || 0), 0);
+      const totalPossible = asp.behaviors.reduce((sum, b) => sum + (weekCounts[b]?.total || 7), 0);
+      if (totalPossible === 0) continue;
+      const rate = Math.round((totalCompleted / totalPossible) * 100);
+      if (rate < 50) {
+        struggling.push(`${asp.name} (${rate}% completion)`);
+      } else if (rate > 70) {
+        working.push(`${asp.name} (${rate}% completion)`);
+      }
+    }
+  }
+
+  if (struggling.length > 0) {
+    parts.push(`Struggling patterns (below 50% after 14+ days): ${struggling.join("; ")}.`);
+  }
+  if (working.length > 0) {
+    parts.push(`Working patterns (above 70%): ${working.join("; ")}.`);
+  }
+
+  // Strongest trigger — highest week count
+  if (weekCounts) {
+    let strongest: { text: string; count: number } | null = null;
+    for (const [text, wc] of Object.entries(weekCounts)) {
+      if (wc.completed > (strongest?.count || 0)) {
+        strongest = { text, count: wc.completed };
+      }
+    }
+    if (strongest && strongest.count >= 3) {
+      parts.push(`Their strongest trigger is "${strongest.text}" at ${strongest.count}/7 days this week.`);
+    }
+  }
+
+  // Stalled / adjusting patterns
+  if (stalledAspirations && stalledAspirations.length > 0) {
+    parts.push(`These have been flagged for rerouting: ${stalledAspirations.join(", ")}.`);
+  }
+
+  // Only return if we have more than just the day count
+  return parts.length > 1
+    ? `\n\nBEHAVIORAL DATA:\n${parts.join("\n")}`
+    : "";
+}
+
 // ─── Tab Context Layer ────────────────────────────────────────────────────
 function buildTabContextBlock(
   sourceTab?: string,
@@ -172,6 +245,7 @@ function buildSystemPrompt(
   userMessageCount: number,
   sourceTab?: string,
   tabContext?: Record<string, unknown>,
+  dayCount?: number,
 ): string {
   const contextStr = Object.keys(knownContext).length > 0
     ? JSON.stringify(knownContext, null, 2)
@@ -194,7 +268,10 @@ function buildSystemPrompt(
   let phasePrompt: string;
   let messageCountRule: string;
 
-  if (isConfirmation && userMessageCount >= 3) {
+  // Adaptive minimum: operators with 30+ days of data get deeper conversations
+  const minExchangesForDecomposition = (dayCount && dayCount >= 30) ? 4 : 3;
+
+  if (isConfirmation && userMessageCount >= minExchangesForDecomposition) {
     // Operator confirmed — decompose now
     phasePrompt = DECOMPOSITION_PHASE_PROMPT;
     messageCountRule = `\n\nCRITICAL: The operator just confirmed with "${lastUserMessage}". DECOMPOSE NOW.
@@ -236,6 +313,11 @@ Do NOT decompose yet. Do NOT give advice. Just receive and begin asking.`;
   }
 
   const tabContextBlock = buildTabContextBlock(sourceTab, tabContext);
+  const behavioralContextBlock = buildBehavioralContext(dayCount || 0, tabContext, aspirations);
+
+  const depthNote = (dayCount && dayCount >= 30)
+    ? `\n\nThis operator has ${dayCount} days of behavioral data. Ask deeper, more specific questions. Reference their existing patterns when relevant.`
+    : "";
 
   return `${BASE_IDENTITY}
 
@@ -252,7 +334,7 @@ ACTIVE ASPIRATIONS:
 ${aspirationStr}
 
 TODAY'S DATE: ${today}
-${messageCountRule}${tabContextBlock}`;
+${messageCountRule}${tabContextBlock}${behavioralContextBlock}${depthNote}`;
 }
 
 export async function POST(request: Request) {
@@ -279,6 +361,7 @@ export async function POST(request: Request) {
   const aspirations = (body.aspirations || []) as Array<{ rawText: string; clarifiedText: string; status: string }>;
   const sourceTab = body.sourceTab as string | undefined;
   const tabContext = (body.tabContext || undefined) as Record<string, unknown> | undefined;
+  const dayCount = (body.dayCount as number) || undefined;
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return badRequest("Messages array required.");
@@ -289,7 +372,7 @@ export async function POST(request: Request) {
     // Extract user message texts for template matching and count
     const userTexts = messages.filter(m => m.role === "user").map(m => m.content);
     const userMessageCount = userTexts.length;
-    const systemPrompt = buildSystemPrompt(knownContext, aspirations, userTexts, userMessageCount, sourceTab, tabContext);
+    const systemPrompt = buildSystemPrompt(knownContext, aspirations, userTexts, userMessageCount, sourceTab, tabContext, dayCount);
 
     const stream = anthropic.messages.stream({
       model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514",

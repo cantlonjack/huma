@@ -1208,6 +1208,11 @@ export default function TodayPage() {
           behaviors: a.behaviors?.map(b => b.text) || [],
           status: a.funnel?.validationStatus || "working",
         })),
+        weekCounts,
+        dayCount,
+        stalledAspirations: aspirations
+          .filter(a => a.funnel?.validationStatus === "adjusting")
+          .map(a => a.clarifiedText || a.rawText),
       }}
     >
       <div className="min-h-dvh bg-sand-50 flex flex-col" style={{ paddingBottom: "140px" }}>
