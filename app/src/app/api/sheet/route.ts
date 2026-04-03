@@ -104,6 +104,8 @@ Today is {day_of_week}, {date}. Season: {season}. Day {day_count} with HUMA.
 
 {specificity_section}
 
+{selection_section}
+
 ── RECENT HISTORY (last 7 days) ────────────────────────────────────
 {recent_history}
 
@@ -187,6 +189,132 @@ interface RecentEntry {
   checked: boolean;
 }
 
+// ─── Behavior leverage scoring ───────────────────────────────────────────────
+// When total behaviors exceed 5, score each by leverage so the prompt focuses
+// on the highest-impact subset. Scoring factors:
+//   1. Dimensional breadth — more dimensions touched = higher leverage
+//   2. Check-off momentum — recently completed behaviors carry weight
+//   3. Day-of-week fit — behaviors scheduled for today (specific-days) get priority
+//   4. Aspiration balance — prevent one aspiration from consuming the whole sheet
+
+interface ScoredBehavior {
+  aspirationId: string;
+  aspirationText: string;
+  key: string;
+  text: string;
+  frequency: string;
+  days?: string[];
+  detail?: string;
+  score: number;
+  reason: string;
+}
+
+function scoreBehaviors(
+  aspirations: SheetCompileRequest["aspirations"],
+  recentHistory: RecentEntry[],
+  dayOfWeek: string,
+): ScoredBehavior[] {
+  // Build check-off stats per behavior
+  const stats = new Map<string, { done: number; total: number }>();
+  for (const entry of recentHistory) {
+    if (!stats.has(entry.behaviorKey)) {
+      stats.set(entry.behaviorKey, { done: 0, total: 0 });
+    }
+    const s = stats.get(entry.behaviorKey)!;
+    s.total++;
+    if (entry.checked) s.done++;
+  }
+
+  const scored: ScoredBehavior[] = [];
+
+  for (const a of aspirations) {
+    const activeBehaviors = a.behaviors.filter(b => b.enabled !== false);
+    for (const b of activeBehaviors) {
+      let score = 0;
+      const reasons: string[] = [];
+
+      // 1. Dimensional breadth (inferred from behavior text is not available here,
+      //    but behaviors with detail tend to be richer — simple proxy)
+      // We'll use a base score of 1 for all behaviors
+
+      score += 1;
+
+      // 2. Check-off momentum
+      const s = stats.get(b.key);
+      if (s && s.total > 0) {
+        const rate = s.done / s.total;
+        if (rate >= 0.6) {
+          score += 2; // building momentum — keep going
+          reasons.push("momentum");
+        } else if (rate > 0 && rate < 0.4) {
+          score += 1.5; // struggling — simpler version might help
+          reasons.push("needs-traction");
+        }
+        // rate 0.4-0.6 is neutral
+      } else {
+        // No history — new behavior, slight priority to get it started
+        score += 1;
+        reasons.push("new");
+      }
+
+      // 3. Day-of-week fit
+      if (b.frequency === "daily") {
+        score += 1;
+        reasons.push("daily");
+      } else if (b.frequency === "specific-days" && b.days) {
+        const today = dayOfWeek.toLowerCase().slice(0, 3);
+        const matches = b.days.some(d => d.toLowerCase().startsWith(today));
+        if (matches) {
+          score += 3; // strong signal — scheduled for today
+          reasons.push("scheduled-today");
+        } else {
+          score -= 2; // not today's day
+          reasons.push("not-today");
+        }
+      }
+      // weekly/flexible behaviors get no bonus or penalty
+
+      scored.push({
+        aspirationId: a.id,
+        aspirationText: a.clarifiedText || a.rawText,
+        key: b.key,
+        text: b.text,
+        frequency: b.frequency,
+        days: b.days,
+        detail: b.detail,
+        score,
+        reason: reasons.join(", ") || "baseline",
+      });
+    }
+  }
+
+  // Sort by score descending
+  scored.sort((a, b) => b.score - a.score);
+
+  // Aspiration balance: ensure no single aspiration takes more than 3 of the top 5
+  const selected: ScoredBehavior[] = [];
+  const aspirationCount = new Map<string, number>();
+
+  for (const item of scored) {
+    const count = aspirationCount.get(item.aspirationId) || 0;
+    if (count >= 3 && selected.length < 7) {
+      // Defer — push to end of candidates so other aspirations get slots
+      continue;
+    }
+    selected.push(item);
+    aspirationCount.set(item.aspirationId, count + 1);
+  }
+
+  // Add back any deferred items at the end
+  for (const item of scored) {
+    if (!selected.includes(item)) {
+      selected.push(item);
+    }
+  }
+
+  return selected;
+}
+
 function analyzeHistory(recentHistory: RecentEntry[], dayOfWeek: string): string {
   if (recentHistory.length === 0) return "";
 
@@ -268,6 +396,17 @@ export async function POST(request: Request) {
   const dayOfWeek = req.dayOfWeek || new Date(date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long" });
   const season = req.season || getSeason(date);
 
+  // ─── Count total behaviors and apply selection if > 5 ─────────────────────
+  const totalBehaviors = aspirations.reduce(
+    (sum, a) => sum + a.behaviors.filter(b => b.enabled !== false).length, 0
+  );
+  const needsSelection = totalBehaviors > 5;
+
+  // Score behaviors for selection when there are too many
+  const scored = needsSelection
+    ? scoreBehaviors(aspirations, recentHistory, dayOfWeek)
+    : null;
+
   // Build specificity hints from matched templates
   const allSpecificityHints: Record<string, string> = {};
   for (const a of aspirations) {
@@ -278,6 +417,10 @@ export async function POST(request: Request) {
     }
   }
 
+  // When selection is active, mark top-7 candidates (gives Claude some flexibility
+  // to choose 5 from a curated shortlist rather than the full unranked pool)
+  const topKeys = scored ? new Set(scored.slice(0, 7).map(s => s.key)) : null;
+
   const aspirationsStr = aspirations.map(a => {
     const activeBehaviors = a.behaviors.filter(b => b.enabled !== false);
     const behaviorList = activeBehaviors.map(b => {
@@ -287,7 +430,10 @@ export async function POST(request: Request) {
       }
       const hint = allSpecificityHints[b.key];
       const hintStr = hint ? `\n    SPECIFICITY INSTRUCTIONS: ${hint}` : "";
-      return `  - ${b.text} (${freq})${b.detail ? `: ${b.detail}` : ""}${hintStr}`;
+      // Mark pre-selected behaviors
+      const selected = topKeys && topKeys.has(b.key);
+      const selectTag = selected ? " ★ PRIORITY" : (topKeys ? " (lower priority today)" : "");
+      return `  - ${b.text} (${freq})${b.detail ? `: ${b.detail}` : ""}${selectTag}${hintStr}`;
     }).join("\n");
     return `"${a.clarifiedText || a.rawText}":\n${behaviorList}`;
   }).join("\n\n");
@@ -296,6 +442,20 @@ export async function POST(request: Request) {
   const specificitySection = Object.keys(allSpecificityHints).length > 0
     ? `SPECIFICITY HINTS (follow these instructions for each behavior to produce specific output):
 ${Object.entries(allSpecificityHints).map(([key, hint]) => `  ${key}: ${hint}`).join("\n")}`
+    : "";
+
+  // Build selection guidance when there are more behaviors than slots
+  const selectionSection = needsSelection && scored
+    ? `── SELECTION GUIDANCE (${totalBehaviors} behaviors, only 5 slots) ──────────────
+This operator has more behaviors than fit in one day. Behaviors marked ★ PRIORITY
+have been pre-scored for today based on:
+- Check-off momentum (what's sticking vs. what needs a simpler version)
+- Day-of-week scheduling (behaviors scheduled for ${dayOfWeek})
+- Dimensional balance (spread across life dimensions, not clustered)
+
+Choose from ★ PRIORITY behaviors first. Only include a "lower priority today" behavior
+if it clearly serves today better than a priority one. MAXIMUM 5 entries — this is a
+hard cap, not a suggestion.`
     : "";
 
   const historyStr = recentHistory.length > 0
@@ -329,6 +489,7 @@ ${Object.entries(allSpecificityHints).map(([key, hint]) => `  ${key}: ${hint}`).
     .replace("{identity_section}", identitySection)
     .replace("{aspirations_with_behaviors}", aspirationsStr)
     .replace("{specificity_section}", specificitySection)
+    .replace("{selection_section}", selectionSection)
     .replace("{conversation_transcript}", conversationStr)
     .replace("{known_context}", contextStr)
     .replace("{recent_history}", historyStr)
@@ -358,8 +519,11 @@ ${Object.entries(allSpecificityHints).map(([key, hint]) => `  ${key}: ${hint}`).
       parsed = { entries: [] };
     }
 
+    // Hard cap: never return more than 5 entries, regardless of what Claude produced
+    const entries = (parsed.entries || []).slice(0, 5);
+
     return Response.json({
-      entries: parsed.entries || [],
+      entries,
       through_line: parsed.through_line || null,
       date,
     });

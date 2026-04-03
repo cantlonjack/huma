@@ -180,7 +180,8 @@ export async function compileSheet(
   }
 
   const data = await res.json();
-  const rawEntries = (data.entries || []) as Array<Record<string, unknown>>;
+  // Hard cap: maximum 5 entries (server enforces too, but belt-and-suspenders)
+  const rawEntries = ((data.entries || []) as Array<Record<string, unknown>>).slice(0, 5);
   const entries: SheetEntry[] = rawEntries.map((e) => ({
     id: (e.behavior_key as string) || `entry-${date}`,
     aspirationId: (e.aspiration_id as string) || "",

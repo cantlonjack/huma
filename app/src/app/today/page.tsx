@@ -1142,7 +1142,7 @@ export default function TodayPage() {
       if (cached) {
         const parsed = JSON.parse(cached) as CompiledSheet;
         if (parsed.entries?.length > 0) {
-          setCompiledEntries(parsed.entries.map(e => ({
+          setCompiledEntries(parsed.entries.slice(0, 5).map(e => ({
             id: e.id || `${e.behaviorKey}-${date}`,
             aspirationId: e.aspirationId || "",
             behaviorKey: e.behaviorKey,
@@ -1186,7 +1186,7 @@ export default function TodayPage() {
     })
       .then((result) => {
         if (result.entries.length > 0) {
-          setCompiledEntries(result.entries);
+          setCompiledEntries(result.entries.slice(0, 5));
           setThroughLine(result.throughLine || null);
 
           // Cache for today
