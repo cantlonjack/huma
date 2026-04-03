@@ -363,11 +363,18 @@ export async function POST(request: Request) {
     return serviceUnavailable();
   }
 
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-    || request.headers.get("x-real-ip")
-    || "unknown";
-  if (await isRateLimited(ip)) {
-    return rateLimited();
+  // Cron jobs send the secret to bypass rate limiting
+  const cronSecret = process.env.CRON_SECRET;
+  const authHeader = request.headers.get("authorization");
+  const isCron = cronSecret && authHeader === `Bearer ${cronSecret}`;
+
+  if (!isCron) {
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      || request.headers.get("x-real-ip")
+      || "unknown";
+    if (await isRateLimited(ip)) {
+      return rateLimited();
+    }
   }
 
   let body: Record<string, unknown>;

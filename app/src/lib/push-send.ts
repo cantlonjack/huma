@@ -1,5 +1,6 @@
 import webpush from "web-push";
 import { createServerSupabase } from "@/lib/supabase-server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Configure VAPID keys from environment
 const VAPID_PUBLIC = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
@@ -10,7 +11,7 @@ if (VAPID_PUBLIC && VAPID_PRIVATE) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
 }
 
-interface PushPayload {
+export interface PushPayload {
   title: string;
   body: string;
   url?: string;
@@ -21,14 +22,19 @@ interface PushPayload {
 /**
  * Send a push notification to all of a user's subscribed devices.
  * Automatically cleans up expired/invalid subscriptions.
+ * Pass a supabase client for contexts without cookies (e.g. cron jobs).
  */
-export async function sendPushToUser(userId: string, payload: PushPayload): Promise<number> {
+export async function sendPushToUser(
+  userId: string,
+  payload: PushPayload,
+  externalSupabase?: SupabaseClient,
+): Promise<number> {
   if (!VAPID_PUBLIC || !VAPID_PRIVATE) {
     console.warn("Push: VAPID keys not configured, skipping");
     return 0;
   }
 
-  const supabase = await createServerSupabase();
+  const supabase = externalSupabase ?? await createServerSupabase();
 
   const { data: subscriptions, error } = await supabase
     .from("push_subscriptions")
