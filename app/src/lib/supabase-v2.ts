@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Aspiration, AspirationFunnel, AspirationTrigger, ChatMessage, SheetEntry, Insight, Principle, Pattern, PatternStep, SparklineData, SparklinePoint, EmergingBehavior, DimensionKey } from "@/types/v2";
+import type { Aspiration, AspirationFunnel, AspirationTrigger, ChatMessage, SheetEntry, Insight, Principle, Pattern, PatternStep, SparklineData, SparklinePoint, EmergingBehavior, DimensionKey, MergeSuggestion } from "@/types/v2";
 import { getLocalDate, getLocalDateOffset } from "@/lib/date-utils";
 import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
 
@@ -1179,6 +1179,110 @@ export async function deletePattern(
     .eq("id", patternId)
     .eq("user_id", userId);
   if (error) throw error;
+}
+
+// ─── Cross-Aspiration Merge ─────────────────────────────────────────────────
+
+/**
+ * Detect pairs of patterns from different aspirations that share behaviors.
+ * Compares all step texts (case-insensitive). Returns at most one suggestion
+ * per pattern (the strongest overlap).
+ */
+export function detectMergeCandidates(patterns: Pattern[]): MergeSuggestion[] {
+  const suggestions: MergeSuggestion[] = [];
+  const claimed = new Set<string>(); // one suggestion per pattern
+
+  for (let i = 0; i < patterns.length; i++) {
+    if (claimed.has(patterns[i].id)) continue;
+    const a = patterns[i];
+    const aTexts = a.steps.map(s => s.text.toLowerCase().trim());
+
+    let bestMatch: { idx: number; shared: string[] } | null = null;
+
+    for (let j = i + 1; j < patterns.length; j++) {
+      if (claimed.has(patterns[j].id)) continue;
+      const b = patterns[j];
+      // Only merge across different aspirations
+      if (a.aspirationId === b.aspirationId) continue;
+
+      const bTexts = b.steps.map(s => s.text.toLowerCase().trim());
+      const shared = aTexts.filter(t => bTexts.includes(t));
+      if (shared.length === 0) continue;
+
+      if (!bestMatch || shared.length > bestMatch.shared.length) {
+        bestMatch = { idx: j, shared };
+      }
+    }
+
+    if (bestMatch) {
+      const b = patterns[bestMatch.idx];
+      // Map back to original-cased text
+      const sharedOriginal = a.steps
+        .filter(s => bestMatch!.shared.includes(s.text.toLowerCase().trim()))
+        .map(s => s.text);
+
+      suggestions.push({
+        patternId: a.id,
+        otherPatternId: b.id,
+        otherPatternName: b.name,
+        sharedBehaviors: sharedOriginal,
+      });
+      suggestions.push({
+        patternId: b.id,
+        otherPatternId: a.id,
+        otherPatternName: a.name,
+        sharedBehaviors: sharedOriginal,
+      });
+      claimed.add(a.id);
+      claimed.add(b.id);
+    }
+  }
+
+  return suggestions;
+}
+
+/**
+ * Merge two patterns: keep the primary (higher validation), absorb steps
+ * from the secondary, deduplicate, delete the secondary.
+ * Returns the updated primary pattern.
+ */
+export async function mergePatterns(
+  supabase: SupabaseClient,
+  userId: string,
+  primaryId: string,
+  secondaryId: string,
+  patterns: Pattern[],
+): Promise<Pattern> {
+  const primary = patterns.find(p => p.id === primaryId);
+  const secondary = patterns.find(p => p.id === secondaryId);
+  if (!primary || !secondary) throw new Error("Pattern not found");
+
+  // Deduplicate: add secondary steps not already in primary
+  const existingTexts = new Set(primary.steps.map(s => s.text.toLowerCase().trim()));
+  const newSteps = secondary.steps.filter(
+    s => !s.isTrigger && !existingTexts.has(s.text.toLowerCase().trim())
+  );
+
+  const mergedSteps = [
+    ...primary.steps,
+    ...newSteps.map((s, i) => ({
+      ...s,
+      order: primary.steps.length + i,
+      isTrigger: false,
+    })),
+  ];
+
+  // Update primary with merged steps
+  await updatePattern(supabase, primaryId, userId, { steps: mergedSteps });
+
+  // Delete secondary
+  await deletePattern(supabase, secondaryId, userId);
+
+  return {
+    ...primary,
+    steps: mergedSteps,
+    updatedAt: new Date().toISOString(),
+  };
 }
 
 // ─── All Aspirations (any status) ───────────────────────────────────────────

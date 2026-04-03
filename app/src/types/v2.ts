@@ -129,6 +129,18 @@ export interface Pattern {
   updatedAt: string;
 }
 
+// ─── Merge Suggestions ────────────────────────────────────────────────────
+// When two patterns from different aspirations share one or more behaviors,
+// HUMA surfaces a merge suggestion on the pattern card. The operator can
+// merge (combining golden pathways) or dismiss (keep separate).
+
+export interface MergeSuggestion {
+  patternId: string;            // The pattern this suggestion appears on
+  otherPatternId: string;       // The pattern it could merge with
+  otherPatternName: string;     // Display name of the other pattern
+  sharedBehaviors: string[];    // Behavior texts that overlap
+}
+
 // ─── Emerging Behaviors ────────────────────────────────────────────────────
 // An unnamed behavior that has appeared consistently (12+ of last 14 days)
 // without being part of an existing pattern. Surfaced on the Grow tab as

@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Pattern, Aspiration, DimensionKey, FutureAction, FuturePhase, SparklineData, EmergingBehavior } from "@/types/v2";
+import type { Pattern, Aspiration, DimensionKey, FutureAction, FuturePhase, SparklineData, EmergingBehavior, MergeSuggestion } from "@/types/v2";
 import { DIMENSION_COLORS, DIMENSION_LABELS } from "@/types/v2";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { displayName } from "@/lib/display-name";
 import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
-import { getPatterns, getAspirations, getPatternSparklines, detectEmergingBehaviors, savePattern } from "@/lib/supabase-v2";
+import { getPatterns, getAspirations, getPatternSparklines, detectEmergingBehaviors, savePattern, detectMergeCandidates, mergePatterns } from "@/lib/supabase-v2";
 import TabShell from "@/components/TabShell";
 import GrowSkeleton from "@/components/GrowSkeleton";
 import Sparkline from "@/components/Sparkline";
@@ -171,6 +171,9 @@ function PatternCard({
   primaryArchetype,
   sparkline,
   onInvestigate,
+  mergeSuggestion,
+  onMerge,
+  onDismissMerge,
 }: {
   pattern: Pattern;
   aspirations: Aspiration[];
@@ -180,6 +183,9 @@ function PatternCard({
   sparkline?: SparklineData;
   /** Called when operator taps "something changed" on a dropping pattern */
   onInvestigate?: (patternId: string) => void;
+  mergeSuggestion?: MergeSuggestion;
+  onMerge?: (primaryId: string, secondaryId: string) => void;
+  onDismissMerge?: (patternId: string, otherPatternId: string) => void;
 }) {
   const colors = statusColor(pattern.status);
   const percent = validationPercent(pattern);
@@ -619,6 +625,65 @@ function PatternCard({
           </span>
         </div>
       )}
+
+      {/* Merge suggestion */}
+      {mergeSuggestion && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            padding: "12px 16px",
+            borderTop: "1px solid #F0EBE3",
+            background: "#FDFAF5",
+          }}
+        >
+          <p
+            className="font-serif"
+            style={{
+              fontSize: "13px",
+              fontStyle: "italic",
+              color: "var(--color-sage-600)",
+              lineHeight: "1.4",
+              marginBottom: "8px",
+            }}
+          >
+            {mergeSuggestion.sharedBehaviors.length === 1
+              ? `\u201c${mergeSuggestion.sharedBehaviors[0]}\u201d also lives in ${displayName(mergeSuggestion.otherPatternName)}.`
+              : `${mergeSuggestion.sharedBehaviors.length} shared behaviors with ${displayName(mergeSuggestion.otherPatternName)}.`
+            }
+          </p>
+          <div style={{ display: "flex", gap: "12px" }}>
+            <button
+              onClick={() => onMerge?.(pattern.id, mergeSuggestion.otherPatternId)}
+              className="font-sans cursor-pointer"
+              style={{
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "#B5621E",
+                background: "none",
+                border: "1px solid #B5621E",
+                borderRadius: "8px",
+                padding: "5px 14px",
+              }}
+            >
+              Merge
+            </button>
+            <button
+              onClick={() => onDismissMerge?.(pattern.id, mergeSuggestion.otherPatternId)}
+              className="font-sans cursor-pointer"
+              style={{
+                fontSize: "12px",
+                fontWeight: 500,
+                color: "var(--color-sage-400)",
+                background: "none",
+                border: "none",
+                padding: "5px 8px",
+              }}
+            >
+              Keep separate
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -685,6 +750,7 @@ export default function GrowPage() {
   const [sparklines, setSparklines] = useState<Map<string, SparklineData>>(new Map());
   const [emergingBehaviors, setEmergingBehaviors] = useState<EmergingBehavior[]>([]);
   const [investigatePatternId, setInvestigatePatternId] = useState<string | null>(null);
+  const [dismissedMerges, setDismissedMerges] = useState<Set<string>>(new Set());
 
   const handleToggleExpand = useCallback((id: string) => {
     setExpandedId(prev => prev === id ? null : id);
@@ -751,6 +817,60 @@ export default function GrowPage() {
 
     setEmergingBehaviors(prev => prev.filter(b => b.behaviorKey !== behaviorKey));
   }, []);
+
+  const handleMerge = useCallback(async (primaryId: string, secondaryId: string) => {
+    if (!user) return;
+    try {
+      const sb = createClient();
+      if (!sb) return;
+      const merged = await mergePatterns(sb, user.id, primaryId, secondaryId, patterns);
+      // Update local state: replace primary, remove secondary
+      setPatterns(prev =>
+        prev.filter(p => p.id !== secondaryId).map(p => p.id === primaryId ? merged : p)
+      );
+    } catch {
+      // Fallback: just dismiss the suggestion
+      setDismissedMerges(prev => new Set(prev).add(`${primaryId}:${secondaryId}`));
+    }
+  }, [user, patterns]);
+
+  const handleDismissMerge = useCallback((patternId: string, otherPatternId: string) => {
+    // Dismiss both directions
+    setDismissedMerges(prev => {
+      const next = new Set(prev);
+      next.add(`${patternId}:${otherPatternId}`);
+      next.add(`${otherPatternId}:${patternId}`);
+      return next;
+    });
+    // Persist dismissals
+    try {
+      const key = "huma-v2-dismissed-merges";
+      const saved = localStorage.getItem(key);
+      const list: string[] = saved ? JSON.parse(saved) : [];
+      list.push(`${patternId}:${otherPatternId}`, `${otherPatternId}:${patternId}`);
+      localStorage.setItem(key, JSON.stringify(list));
+    } catch { /* non-critical */ }
+  }, []);
+
+  // ─── Merge suggestions (computed from current patterns) ─────────────────
+  const mergeSuggestions = (() => {
+    if (patterns.length < 2) return new Map<string, MergeSuggestion>();
+    const all = detectMergeCandidates(patterns);
+    // Load persisted dismissals on first render
+    let persisted: string[] = [];
+    try {
+      const saved = localStorage.getItem("huma-v2-dismissed-merges");
+      if (saved) persisted = JSON.parse(saved);
+    } catch { /* fresh */ }
+    const dismissed = new Set([...dismissedMerges, ...persisted]);
+    const map = new Map<string, MergeSuggestion>();
+    for (const s of all) {
+      if (!dismissed.has(`${s.patternId}:${s.otherPatternId}`)) {
+        map.set(s.patternId, s);
+      }
+    }
+    return map;
+  })();
 
   // ─── Data Loading ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -1025,6 +1145,9 @@ export default function GrowPage() {
                 primaryArchetype={archetypes[0]}
                 sparklines={sparklines}
                 onInvestigate={handleInvestigate}
+                mergeSuggestions={mergeSuggestions}
+                onMerge={handleMerge}
+                onDismissMerge={handleDismissMerge}
               />
             )}
 
@@ -1040,6 +1163,9 @@ export default function GrowPage() {
                 primaryArchetype={archetypes[0]}
                 sparklines={sparklines}
                 onInvestigate={handleInvestigate}
+                mergeSuggestions={mergeSuggestions}
+                onMerge={handleMerge}
+                onDismissMerge={handleDismissMerge}
               />
             )}
 
@@ -1055,6 +1181,9 @@ export default function GrowPage() {
                 onToggleExpand={handleToggleExpand}
                 sparklines={sparklines}
                 onInvestigate={handleInvestigate}
+                mergeSuggestions={mergeSuggestions}
+                onMerge={handleMerge}
+                onDismissMerge={handleDismissMerge}
               />
             )}
           </div>
@@ -1077,6 +1206,9 @@ function PatternSection({
   primaryArchetype,
   sparklines,
   onInvestigate,
+  mergeSuggestions,
+  onMerge,
+  onDismissMerge,
 }: {
   title: string;
   subtitle: string;
@@ -1088,6 +1220,9 @@ function PatternSection({
   primaryArchetype?: string;
   sparklines?: Map<string, SparklineData>;
   onInvestigate?: (patternId: string) => void;
+  mergeSuggestions?: Map<string, MergeSuggestion>;
+  onMerge?: (primaryId: string, secondaryId: string) => void;
+  onDismissMerge?: (patternId: string, otherPatternId: string) => void;
 }) {
   return (
     <div style={{ marginBottom: "24px" }}>
@@ -1124,6 +1259,9 @@ function PatternSection({
           primaryArchetype={primaryArchetype}
           sparkline={sparklines?.get(p.id)}
           onInvestigate={onInvestigate}
+          mergeSuggestion={mergeSuggestions?.get(p.id)}
+          onMerge={onMerge}
+          onDismissMerge={onDismissMerge}
         />
       ))}
     </div>
