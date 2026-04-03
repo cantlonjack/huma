@@ -227,7 +227,6 @@ function PatternRouteCard({
 }) {
   const [showCompletion, setShowCompletion] = useState(false);
   const [microCounters, setMicroCounters] = useState<Set<string>>(new Set());
-  const [bouncingStep, setBouncingStep] = useState<string | null>(null);
   const [glowingStep, setGlowingStep] = useState<string | null>(null);
 
   const allChecked = steps.length > 0 && steps.every(s => checkedSteps.has(s.text));
@@ -244,10 +243,6 @@ function PatternRouteCard({
 
   const handleToggle = (stepText: string) => {
     const wasChecked = checkedSteps.has(stepText);
-
-    // Bounce animation
-    setBouncingStep(stepText);
-    setTimeout(() => setBouncingStep(null), 200);
 
     if (!wasChecked) {
       // Glow dimension dots
@@ -287,19 +282,7 @@ function PatternRouteCard({
           </span>
         </div>
         <div style={{ padding: "14px 16px" }}>
-          <div style={{ padding: "10px 14px 10px 48px", position: "relative" }}>
-            <div
-              style={{
-                position: "absolute",
-                left: "16px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                width: "20px",
-                height: "20px",
-                borderRadius: "50%",
-                border: "1.5px solid #DDD4C0",
-              }}
-            />
+          <div style={{ padding: "10px 16px" }}>
             <span className="font-sans text-sage-600" style={{ fontSize: "14px" }}>
               {displayName(aspiration.clarifiedText || aspiration.rawText)}
             </span>
@@ -309,7 +292,7 @@ function PatternRouteCard({
               onOpenChat(`Let's map out ${displayName(aspiration.clarifiedText || aspiration.rawText)}. What does doing this actually look like day to day?`)
             }
             className="cursor-pointer"
-            style={{ padding: "4px 14px 10px 48px" }}
+            style={{ padding: "4px 16px 10px" }}
           >
             <span
               className="font-serif italic text-sage-400"
@@ -378,33 +361,7 @@ function PatternRouteCard({
           </span>
         </button>
       ) : (
-        <div style={{ position: "relative" }}>
-          {/* Connector line */}
-          {steps.length > 1 && (
-            <div
-              style={{
-                position: "absolute",
-                left: "25px",
-                top: "0",
-                bottom: "0",
-                width: "1px",
-                background: "#DDD4C0",
-                zIndex: 0,
-              }}
-            >
-              {/* Clip to only run between checkbox centers */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: triggerIdx >= 0 ? "20px" : "20px",
-                  bottom: "20px",
-                  width: "1px",
-                  background: "#DDD4C0",
-                }}
-              />
-            </div>
-          )}
-
+        <div>
           {steps.map((step, i) => {
             const isChecked = checkedSteps.has(step.text);
             const isTrigger = step.is_trigger;
@@ -417,59 +374,28 @@ function PatternRouteCard({
                 onClick={() => handleToggle(step.text)}
                 className="w-full text-left cursor-pointer"
                 style={{
-                  position: "relative",
-                  padding: isTrigger ? "10px 14px 10px 48px" : "9px 14px 9px 48px",
-                  borderBottom: i < steps.length - 1 ? `1px solid ${isTrigger ? "#F0EBE3" : "#F8F5F0"}` : "none",
-                  background: isTrigger ? "linear-gradient(135deg, #FFFAF4, #FFF4E6)" : "transparent",
+                  padding: isTrigger ? "12px 16px" : "10px 16px",
+                  borderBottom: i < steps.length - 1 ? "1px solid #F0EBE3" : "none",
+                  background: isTrigger && !isChecked ? "linear-gradient(135deg, #FFFAF4, #FFF4E6)" : "transparent",
                   display: "flex",
                   alignItems: "flex-start",
                   gap: "8px",
+                  transition: "background 300ms cubic-bezier(0.22, 1, 0.36, 1)",
                 }}
               >
-                {/* Checkbox */}
-                <div
-                  className={bouncingStep === step.text ? "animate-check-bounce" : ""}
-                  style={{
-                    position: "absolute",
-                    left: "16px",
-                    top: isTrigger ? "50%" : "50%",
-                    transform: "translateY(-50%)",
-                    width: "20px",
-                    height: "20px",
-                    borderRadius: "50%",
-                    border: isChecked
-                      ? "none"
-                      : `1.5px solid ${isTrigger ? "#E8935A" : "#DDD4C0"}`,
-                    background: isChecked
-                      ? (isTrigger ? "#B5621E" : "#5C7A62")
-                      : "transparent",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    zIndex: 1,
-                    transition: "all 200ms cubic-bezier(0.22, 1, 0.36, 1)",
-                  }}
-                >
-                  {isChecked && (
-                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                      <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                </div>
-
                 {/* Text content */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   {/* Trigger badge */}
                   {isTrigger && (
                     <span
-                      className="font-sans"
+                      className={`font-sans ${isChecked ? "text-ink-200" : "text-amber-600"}`}
                       style={{
                         display: "block",
                         fontSize: "9px",
                         fontWeight: 600,
                         letterSpacing: "0.18em",
-                        color: "#B5621E",
                         marginBottom: "2px",
+                        transition: "color 300ms cubic-bezier(0.22, 1, 0.36, 1)",
                       }}
                     >
                       THE DECISION
@@ -478,16 +404,16 @@ function PatternRouteCard({
 
                   {/* Step text */}
                   <span
-                    className="font-sans"
+                    className={`font-sans ${isChecked ? "text-ink-200" : (isTrigger ? "text-sage-700" : "text-sage-600")}`}
                     style={{
                       fontSize: isTrigger ? "15px" : "14px",
                       fontWeight: isTrigger ? 500 : 400,
-                      color: isChecked
-                        ? "var(--color-sage-300)"
-                        : (isTrigger ? "var(--color-sage-700)" : "var(--color-sage-600)"),
-                      textDecoration: isChecked ? "line-through" : "none",
+                      textDecorationLine: isChecked ? "line-through" : "none",
+                      textDecorationColor: "#C4BAA8",
+                      textDecorationThickness: "1px",
                       display: "block",
                       lineHeight: "1.4",
+                      transition: "color 300ms cubic-bezier(0.22, 1, 0.36, 1)",
                     }}
                   >
                     {step.text}
@@ -498,12 +424,11 @@ function PatternRouteCard({
                     const caption = triggerCaption(step, allAspirations, aspiration.id);
                     return caption ? (
                       <span
-                        className="font-sans"
+                        className={`font-sans ${isChecked ? "text-ink-200" : "text-sage-400"}`}
                         style={{
                           display: "block",
                           fontSize: "11px",
                           fontStyle: "italic",
-                          color: isChecked ? "var(--color-sage-300)" : "var(--color-sage-400)",
                           marginTop: "2px",
                           transition: "color 300ms cubic-bezier(0.22, 1, 0.36, 1)",
                         }}
@@ -539,8 +464,6 @@ function PatternRouteCard({
                       alignItems: "center",
                       flexShrink: 0,
                       marginTop: isTrigger ? "10px" : "2px",
-                      opacity: isChecked ? 0.4 : 1,
-                      transition: "opacity 300ms cubic-bezier(0.22, 1, 0.36, 1)",
                     }}
                   >
                     {step.dimensions.map(dim => (
@@ -553,6 +476,8 @@ function PatternRouteCard({
                           height: "6px",
                           borderRadius: "50%",
                           background: DIMENSION_DOT_COLORS[dim] || "#8BAF8E",
+                          opacity: isChecked && glowingStep !== step.text ? 0.35 : 1,
+                          transition: "opacity 300ms cubic-bezier(0.22, 1, 0.36, 1)",
                         }}
                       />
                     ))}
@@ -766,42 +691,24 @@ function StandaloneBehaviorRow({
         background: "white",
         border: "1px solid #DDD4C0",
         borderRadius: "10px",
-        padding: "10px 14px",
+        padding: "10px 16px",
         margin: "0 16px 6px",
         display: "flex",
         alignItems: "center",
         gap: "12px",
         maxWidth: "calc(100% - 32px)",
+        transition: "background 300ms cubic-bezier(0.22, 1, 0.36, 1)",
       }}
     >
-      {/* Checkbox */}
-      <div
-        style={{
-          width: "20px",
-          height: "20px",
-          minWidth: "20px",
-          borderRadius: "50%",
-          border: isChecked ? "none" : "1.5px solid #DDD4C0",
-          background: isChecked ? "#5C7A62" : "transparent",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {isChecked && (
-          <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-            <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        )}
-      </div>
-
       {/* Text */}
       <span
-        className="font-sans text-sage-600 flex-1 text-left"
+        className={`font-sans flex-1 text-left ${isChecked ? "text-ink-200" : "text-sage-600"}`}
         style={{
           fontSize: "14px",
-          textDecoration: isChecked ? "line-through" : "none",
-          color: isChecked ? "var(--color-sage-300)" : undefined,
+          textDecorationLine: isChecked ? "line-through" : "none",
+          textDecorationColor: "#C4BAA8",
+          textDecorationThickness: "1px",
+          transition: "color 300ms cubic-bezier(0.22, 1, 0.36, 1)",
         }}
       >
         {entry.behavior_text}
@@ -818,6 +725,8 @@ function StandaloneBehaviorRow({
                 height: "6px",
                 borderRadius: "50%",
                 background: DIMENSION_DOT_COLORS[dim] || "#8BAF8E",
+                opacity: isChecked ? 0.35 : 1,
+                transition: "opacity 300ms cubic-bezier(0.22, 1, 0.36, 1)",
               }}
             />
           ))}
@@ -855,126 +764,89 @@ function CompiledEntryRow({
         transition: "background 200ms cubic-bezier(0.22, 1, 0.36, 1)",
       }}
     >
-      {/* Check row — div with onClick instead of button to allow nested interactive */}
+      {/* Tap row */}
       <div
         role="button"
         tabIndex={0}
         onClick={onToggle}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(); } }}
         className="w-full text-left cursor-pointer"
-        style={{
-          display: "flex",
-          alignItems: "flex-start",
-          gap: "14px",
-        }}
       >
-        {/* Check circle */}
-        <div
+        {/* Headline — Cormorant Garamond */}
+        <span
+          className={`font-serif ${isChecked ? "text-ink-200" : (isTrigger ? "text-ink-900" : "text-ink-800")}`}
           style={{
-            width: "22px",
-            height: "22px",
-            borderRadius: "50%",
-            border: isChecked
-              ? "none"
-              : `1.5px solid ${isTrigger ? "#E8935A" : "#DDD4C0"}`,
-            background: isChecked
-              ? (isTrigger ? "#B5621E" : "#5C7A62")
-              : "transparent",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            marginTop: "2px",
-            transition: "all 200ms cubic-bezier(0.22, 1, 0.36, 1)",
+            fontSize: isTrigger ? "19px" : "17px",
+            lineHeight: "1.3",
+            fontWeight: isTrigger ? 600 : 500,
+            display: "block",
+            textDecorationLine: isChecked ? "line-through" : "none",
+            textDecorationColor: "#C4BAA8",
+            textDecorationThickness: "1px",
+            transition: "color 300ms cubic-bezier(0.22, 1, 0.36, 1)",
           }}
         >
-          {isChecked && (
-            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-              <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          )}
-        </div>
+          {entry.headline || entry.behaviorText}
+        </span>
 
-        {/* Content */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {/* Headline — Cormorant Garamond */}
-          <span
-            className="font-serif"
+        {/* Detail preview — Source Sans 3, visible without tap */}
+        {hasDetail && !isChecked && (
+          <p
+            className="font-sans"
             style={{
-              fontSize: isTrigger ? "19px" : "17px",
-              lineHeight: "1.3",
-              fontWeight: isTrigger ? 600 : 500,
-              display: "block",
-              color: isChecked
-                ? "var(--color-ink-200)"
-                : (isTrigger ? "var(--color-ink-900)" : "var(--color-ink-800)"),
-              textDecoration: isChecked ? "line-through" : "none",
-              textDecorationColor: isChecked ? "var(--color-ink-200)" : undefined,
-              transition: "color 200ms cubic-bezier(0.22, 1, 0.36, 1)",
+              fontSize: "14px",
+              lineHeight: "1.5",
+              color: "var(--color-ink-500)",
+              marginTop: "4px",
+              maxHeight: expanded ? "200px" : "1.5em",
+              overflow: "hidden",
+              transition: "max-height 250ms cubic-bezier(0.22, 1, 0.36, 1)",
             }}
           >
-            {entry.headline || entry.behaviorText}
-          </span>
+            {entry.detail as string}
+          </p>
+        )}
 
-          {/* Detail preview — Source Sans 3, visible without tap */}
-          {hasDetail && !isChecked && (
-            <p
-              className="font-sans"
-              style={{
-                fontSize: "14px",
-                lineHeight: "1.5",
-                color: "var(--color-ink-500)",
-                marginTop: "4px",
-                maxHeight: expanded ? "200px" : "1.5em",
-                overflow: "hidden",
-                transition: "max-height 250ms cubic-bezier(0.22, 1, 0.36, 1)",
-              }}
-            >
-              {entry.detail as string}
-            </p>
-          )}
-
-          {/* Expand hint */}
-          {hasDetail && !expanded && !isChecked && (
+        {/* Expand hint */}
+        {hasDetail && !expanded && !isChecked && (
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); setExpanded(true); } }}
+            className="cursor-pointer"
+            style={{
+              padding: "4px 0 0",
+              display: "block",
+            }}
+          >
             <span
-              role="button"
-              tabIndex={0}
-              onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); setExpanded(true); } }}
-              className="cursor-pointer"
-              style={{
-                padding: "4px 0 0",
-                display: "block",
-              }}
+              className="font-sans"
+              style={{ fontSize: "12px", color: "var(--color-ink-300)" }}
             >
-              <span
-                className="font-sans"
-                style={{ fontSize: "12px", color: "var(--color-ink-300)" }}
-              >
-                more &darr;
-              </span>
+              more &darr;
             </span>
-          )}
+          </span>
+        )}
 
-          {/* Dimension dots — inline below text */}
-          {entry.dimensions && entry.dimensions.length > 0 && (
-            <div style={{ display: "flex", gap: "5px", marginTop: "8px" }}>
-              {entry.dimensions.map(dim => (
-                <div
-                  key={dim}
-                  style={{
-                    width: "6px",
-                    height: "6px",
-                    borderRadius: "50%",
-                    background: DIMENSION_DOT_COLORS[dim] || "#8BAF8E",
-                    opacity: isChecked ? 0.35 : 1,
-                    transition: "opacity 200ms cubic-bezier(0.22, 1, 0.36, 1)",
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Dimension dots — inline below text */}
+        {entry.dimensions && entry.dimensions.length > 0 && (
+          <div style={{ display: "flex", gap: "5px", marginTop: "8px" }}>
+            {entry.dimensions.map(dim => (
+              <div
+                key={dim}
+                style={{
+                  width: "6px",
+                  height: "6px",
+                  borderRadius: "50%",
+                  background: DIMENSION_DOT_COLORS[dim] || "#8BAF8E",
+                  opacity: isChecked ? 0.35 : 1,
+                  transition: "opacity 300ms cubic-bezier(0.22, 1, 0.36, 1)",
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
