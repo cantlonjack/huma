@@ -316,7 +316,8 @@ export async function saveInsight(
     dimensions_involved: insight.dimensionsInvolved,
     behaviors_involved: insight.behaviorsInvolved,
     data_basis: insight.dataBasis,
-    delivered: false,
+    delivered: insight.delivered ?? false,
+    ...(insight.deliveredAt ? { delivered_at: insight.deliveredAt } : {}),
   });
 
   if (error) throw error;

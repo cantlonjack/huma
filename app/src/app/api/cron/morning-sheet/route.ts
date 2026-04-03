@@ -1,6 +1,7 @@
 import { createAdminSupabase } from "@/lib/supabase-admin";
 import { sendPushToUser } from "@/lib/push-send";
-import type { KnownContext } from "@/types/v2";
+import { saveInsight, getUndeliveredInsight, markInsightDelivered } from "@/lib/supabase-v2";
+import type { KnownContext, Insight } from "@/types/v2";
 
 export const runtime = "nodejs";
 export const maxDuration = 300; // 5 minutes — compiles sheets for all subscribed users
@@ -53,6 +54,22 @@ function getSeason(dateStr: string): string {
   return `${qualifier} ${season}`;
 }
 
+// ─── Insight scheduling ─────────────────────────────────────────────────────
+
+/**
+ * Deterministic ~2/7 probability per user per day.
+ * Uses a simple string hash of userId+date, mod 7, check < 2.
+ * Same user+date always produces the same result.
+ */
+function shouldDeliverInsight(userId: string, dateStr: string): boolean {
+  const input = `${userId}:${dateStr}:insight`;
+  let hash = 0;
+  for (let i = 0; i < input.length; i++) {
+    hash = ((hash << 5) - hash + input.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash) % 7 < 2;
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function getDateStr(): string {
@@ -96,6 +113,7 @@ export async function GET(request: Request) {
 
   let totalSent = 0;
   let totalSkipped = 0;
+  let totalInsights = 0;
 
   for (const userId of userIds) {
     try {
@@ -228,12 +246,109 @@ export async function GET(request: Request) {
       const triggerEntry = morningEntry || sheet.entries[0];
       const headline = triggerEntry.headline || "Your sheet is ready";
 
-      // 8. Send push — "Your day: [headline]"
+      // 7b. Insight delivery — ~2x/week for users with 7+ days of data
+      let insightLine: string | null = null;
+
+      if (shouldDeliverInsight(userId, date)) {
+        const uniqueDates = new Set(recentHistory.map(h => h.date));
+
+        if (uniqueDates.size >= 7) {
+          try {
+            // Check for existing undelivered insight first
+            let insight: Insight | null = await getUndeliveredInsight(supabase, userId);
+
+            if (insight) {
+              // Use existing undelivered insight — mark as delivered
+              await markInsightDelivered(supabase, insight.id, userId);
+              insightLine = insight.text.split(/\.\s+/)[0] + ".";
+              totalInsights++;
+            } else {
+              // Generate new insight via /api/insight with 14-day data
+              const twoWeeksAgo = new Date();
+              twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+              const twoWeeksAgoStr = twoWeeksAgo.toISOString().split("T")[0];
+
+              const { data: extendedHistory } = await supabase
+                .from("sheet_entries")
+                .select("date, behavior_key, checked")
+                .eq("user_id", userId)
+                .gte("date", twoWeeksAgoStr);
+
+              // Build behaviorMeta from aspirations
+              const behaviorToAspiration = new Map<string, string>();
+              const behaviorMeta: Array<{
+                key: string; text: string; aspirationId: string;
+                aspirationText: string; dimensions: string[];
+              }> = [];
+
+              for (const asp of activeAspirations) {
+                for (const b of asp.behaviors) {
+                  behaviorToAspiration.set(b.key, asp.id);
+                  behaviorMeta.push({
+                    key: b.key,
+                    text: b.text,
+                    aspirationId: asp.id,
+                    aspirationText: asp.clarifiedText || asp.rawText,
+                    dimensions: ((b as Record<string, unknown>).dimensions as Array<{ dimension: string }> || [])
+                      .map(d => typeof d === "string" ? d : d.dimension),
+                  });
+                }
+              }
+
+              const entries = (extendedHistory || []).map(r => ({
+                date: r.date as string,
+                behaviorKey: r.behavior_key as string,
+                aspirationId: behaviorToAspiration.get(r.behavior_key as string) || "",
+                checked: r.checked as boolean,
+              }));
+
+              if (entries.length > 0 && behaviorMeta.length > 0) {
+                const insightRes = await fetch(`${baseUrl}/api/insight`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ name: operatorName, entries, behaviorMeta }),
+                });
+
+                if (insightRes.ok) {
+                  const insightData = await insightRes.json() as {
+                    insight: { text: string; dimensionsInvolved: string[]; behaviorsInvolved: string[]; dataBasis: Record<string, unknown> } | null;
+                  };
+
+                  if (insightData.insight) {
+                    // Save as delivered (delivered via push)
+                    const newInsight: Insight = {
+                      id: crypto.randomUUID(),
+                      text: insightData.insight.text,
+                      dimensionsInvolved: insightData.insight.dimensionsInvolved as Insight["dimensionsInvolved"],
+                      behaviorsInvolved: insightData.insight.behaviorsInvolved,
+                      dataBasis: insightData.insight.dataBasis as Insight["dataBasis"],
+                      delivered: true,
+                      deliveredAt: new Date().toISOString(),
+                    };
+                    await saveInsight(supabase, userId, newInsight);
+                    insightLine = insightData.insight.text.split(/\.\s+/)[0] + ".";
+                    totalInsights++;
+                  }
+                }
+              }
+            }
+          } catch (insightErr) {
+            // Insight failure is non-fatal — sheet push still goes out
+            console.error(`Morning insight: error for ${userId.slice(0, 8)}:`, insightErr);
+          }
+        }
+      }
+
+      // 8. Send push — "Your day: [headline]" + optional insight
+      const pushBody = insightLine
+        ? `Your day: ${headline}\n\n${insightLine}`
+        : `Your day: ${headline}`;
+
       const sent = await sendPushToUser(
         userId,
         {
           title: "HUMA",
-          body: `Your day: ${headline}`,
+          body: pushBody,
           url: "/today",
           tag: `morning-sheet-${date}`,
           renotify: false,
@@ -253,5 +368,6 @@ export async function GET(request: Request) {
     users: userIds.length,
     sent: totalSent,
     skipped: totalSkipped,
+    insights: totalInsights,
   });
 }
