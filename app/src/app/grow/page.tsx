@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Pattern, Aspiration, DimensionKey, FutureAction, FuturePhase } from "@/types/v2";
+import type { Pattern, Aspiration, DimensionKey, FutureAction, FuturePhase, SparklineData } from "@/types/v2";
 import { DIMENSION_COLORS, DIMENSION_LABELS } from "@/types/v2";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { displayName } from "@/lib/display-name";
 import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
-import { getPatterns, getAspirations } from "@/lib/supabase-v2";
+import { getPatterns, getAspirations, getPatternSparklines } from "@/lib/supabase-v2";
 import TabShell from "@/components/TabShell";
 import GrowSkeleton from "@/components/GrowSkeleton";
 
@@ -143,12 +143,14 @@ function PatternCard({
   expanded,
   onToggle,
   primaryArchetype,
+  sparkline,
 }: {
   pattern: Pattern;
   aspirations: Aspiration[];
   expanded: boolean;
   onToggle: () => void;
   primaryArchetype?: string;
+  sparkline?: SparklineData;
 }) {
   const colors = statusColor(pattern.status);
   const percent = validationPercent(pattern);
@@ -519,7 +521,18 @@ function PatternCard({
           }}
         >
           <span>{pattern.validationCount} of {pattern.validationTarget} days</span>
-          <span>{percent}%</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            {sparkline && sparkline.trend !== "stable" && (
+              <span style={{
+                fontSize: "10px",
+                color: sparkline.trend === "rising" ? "#3A5A40" : "#B5621E",
+                fontStyle: "italic",
+              }}>
+                {sparkline.trend === "rising" ? "momentum" : "something changed"}
+              </span>
+            )}
+            <span>{percent}%</span>
+          </div>
         </div>
       </div>
 
@@ -601,6 +614,7 @@ export default function GrowPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [archetypes, setArchetypes] = useState<string[]>([]);
   const [whyStatement, setWhyStatement] = useState<string | null>(null);
+  const [sparklines, setSparklines] = useState<Map<string, SparklineData>>(new Map());
 
   const handleToggleExpand = useCallback((id: string) => {
     setExpandedId(prev => prev === id ? null : id);
@@ -693,6 +707,16 @@ export default function GrowPage() {
       setArchetypes(loadedArchetypes);
       setWhyStatement(loadedWhy);
 
+      // Load sparkline data for all patterns (requires auth + behavior_log)
+      if (supabase && user && loadedPatterns.length > 0) {
+        try {
+          const sparklineData = await getPatternSparklines(supabase, user.id, loadedPatterns);
+          const map = new Map<string, SparklineData>();
+          for (const s of sparklineData) map.set(s.patternId, s);
+          setSparklines(map);
+        } catch { /* non-critical — sparklines are a progressive enhancement */ }
+      }
+
       setLoading(false);
     }
 
@@ -729,6 +753,11 @@ export default function GrowPage() {
   tabContext.dayCount = dayCount;
   if (archetypes.length > 0) tabContext.archetypes = archetypes;
   if (whyStatement) tabContext.whyStatement = whyStatement;
+  if (sparklines.size > 0) {
+    const trends: Record<string, string> = {};
+    sparklines.forEach((s) => { if (s.trend !== "stable") trends[s.patternId] = s.trend; });
+    if (Object.keys(trends).length > 0) tabContext.patternTrends = trends;
+  }
 
   // ─── Group patterns by status ──────────────────────────────────────────
   const validated = patterns.filter(p => p.status === "validated");
@@ -795,6 +824,7 @@ export default function GrowPage() {
                 expandedId={expandedId}
                 onToggleExpand={handleToggleExpand}
                 primaryArchetype={archetypes[0]}
+                sparklines={sparklines}
               />
             )}
 
@@ -808,6 +838,7 @@ export default function GrowPage() {
                 expandedId={expandedId}
                 onToggleExpand={handleToggleExpand}
                 primaryArchetype={archetypes[0]}
+                sparklines={sparklines}
               />
             )}
 
@@ -821,6 +852,7 @@ export default function GrowPage() {
                 expandedId={expandedId}
                 primaryArchetype={archetypes[0]}
                 onToggleExpand={handleToggleExpand}
+                sparklines={sparklines}
               />
             )}
           </div>
@@ -841,6 +873,7 @@ function PatternSection({
   expandedId,
   onToggleExpand,
   primaryArchetype,
+  sparklines,
 }: {
   title: string;
   subtitle: string;
@@ -850,6 +883,7 @@ function PatternSection({
   expandedId: string | null;
   onToggleExpand: (id: string) => void;
   primaryArchetype?: string;
+  sparklines?: Map<string, SparklineData>;
 }) {
   return (
     <div style={{ marginBottom: "24px" }}>
@@ -884,6 +918,7 @@ function PatternSection({
           expanded={expandedId === p.id}
           onToggle={() => onToggleExpand(p.id)}
           primaryArchetype={primaryArchetype}
+          sparkline={sparklines?.get(p.id)}
         />
       ))}
     </div>

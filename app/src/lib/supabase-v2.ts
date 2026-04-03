@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Aspiration, AspirationFunnel, AspirationTrigger, ChatMessage, SheetEntry, Insight, Principle, Pattern, PatternStep } from "@/types/v2";
+import type { Aspiration, AspirationFunnel, AspirationTrigger, ChatMessage, SheetEntry, Insight, Principle, Pattern, PatternStep, SparklineData, SparklinePoint } from "@/types/v2";
 import { getLocalDate, getLocalDateOffset } from "@/lib/date-utils";
 import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
 
@@ -450,6 +450,97 @@ export async function getBehaviorWeekCounts(
     if (row.completed) counts[key].completed++;
   }
   return counts;
+}
+
+// ─── Sparkline Computation ──────────────────────────────────────────────────
+
+/**
+ * Compute 14-day sparkline data for a set of patterns.
+ *
+ * For each pattern, queries behavior_log for all behavior_keys in its steps.
+ * Each day's ratio = (completed steps) / (total steps in pattern).
+ * Days with no log entries get ratio 0.
+ *
+ * Trend is derived by comparing the second-half average to the first-half average:
+ *   rising:   second half > first half + 0.1
+ *   dropping: second half < first half - 0.1
+ *   stable:   otherwise
+ *
+ * Single DB query for all patterns — efficient regardless of pattern count.
+ */
+export async function getPatternSparklines(
+  supabase: SupabaseClient,
+  userId: string,
+  patterns: Pattern[]
+): Promise<SparklineData[]> {
+  if (patterns.length === 0) return [];
+
+  const startStr = getLocalDateOffset(13); // 14 days including today
+  const todayStr = getLocalDate();
+
+  // Collect all unique behavior_keys across all patterns
+  const allKeys = new Set<string>();
+  for (const p of patterns) {
+    for (const step of p.steps) {
+      allKeys.add(step.behaviorKey);
+    }
+  }
+
+  if (allKeys.size === 0) return [];
+
+  // Single query: all completions for all relevant behavior_keys in the 14-day window
+  const { data: rows } = await supabase
+    .from("behavior_log")
+    .select("behavior_key, date, completed")
+    .eq("user_id", userId)
+    .gte("date", startStr)
+    .lte("date", todayStr)
+    .in("behavior_key", Array.from(allKeys));
+
+  // Index: behavior_key -> date -> completed
+  const completionMap = new Map<string, Map<string, boolean>>();
+  if (rows) {
+    for (const row of rows) {
+      const key = row.behavior_key as string;
+      if (!completionMap.has(key)) completionMap.set(key, new Map());
+      completionMap.get(key)!.set(row.date as string, row.completed as boolean);
+    }
+  }
+
+  // Build the 14-day date array (oldest first)
+  const dates: string[] = [];
+  for (let i = 13; i >= 0; i--) {
+    dates.push(getLocalDateOffset(i));
+  }
+
+  // Compute sparkline for each pattern
+  const results: SparklineData[] = [];
+  for (const pattern of patterns) {
+    const stepKeys = pattern.steps.map(s => s.behaviorKey);
+    const stepCount = stepKeys.length;
+    if (stepCount === 0) continue;
+
+    const points: SparklinePoint[] = [];
+    for (const date of dates) {
+      let completed = 0;
+      for (const key of stepKeys) {
+        const dayMap = completionMap.get(key);
+        if (dayMap?.get(date)) completed++;
+      }
+      points.push({ date, ratio: completed / stepCount });
+    }
+
+    // Trend: compare first 7 days average vs last 7 days average
+    const firstHalf = points.slice(0, 7).reduce((s, p) => s + p.ratio, 0) / 7;
+    const secondHalf = points.slice(7).reduce((s, p) => s + p.ratio, 0) / 7;
+    const diff = secondHalf - firstHalf;
+    const trend: SparklineData["trend"] =
+      diff > 0.1 ? "rising" : diff < -0.1 ? "dropping" : "stable";
+
+    results.push({ patternId: pattern.id, points, trend });
+  }
+
+  return results;
 }
 
 // ─── Day-of-Week Rhythm Counts ──────────────────────────────────────────────

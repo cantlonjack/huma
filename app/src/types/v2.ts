@@ -197,6 +197,21 @@ export interface Insight {
   deliveredAt?: string;
 }
 
+// ─── Sparkline Data ─────────────────────────────────────────────────────────
+
+/** Daily completion ratio for a pattern over a 14-day window. */
+export interface SparklinePoint {
+  date: string;       // YYYY-MM-DD
+  ratio: number;      // 0–1 (completions / total behaviors in pattern)
+}
+
+/** Sparkline data for one pattern: 14 daily points + trend direction. */
+export interface SparklineData {
+  patternId: string;
+  points: SparklinePoint[];       // 14 entries, oldest first
+  trend: "rising" | "stable" | "dropping";
+}
+
 // ─── Chat Messages ───────────────────────────────────────────────────────────
 
 export interface ChatMessage {
