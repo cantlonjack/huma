@@ -7,6 +7,7 @@ import HolonExpandPanel from "@/components/whole/HolonExpandPanel";
 import ProfileBanner from "@/components/whole/ProfileBanner";
 import InsightCard from "@/components/whole/InsightCard";
 import ArchetypeSelector from "@/components/whole/ArchetypeSelector";
+import ContextPortrait from "@/components/ContextPortrait";
 import WholeSkeleton from "@/components/WholeSkeleton";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
@@ -373,6 +374,20 @@ export default function WholePage() {
     localStorage.setItem("huma-v2-known-context", JSON.stringify(updated));
   }, [rawContext, user]);
 
+  // Save full context (from ContextPortrait)
+  const handleContextSave = useCallback(async (updated: KnownContext) => {
+    const merged = { ...rawContext, ...updated };
+    setRawContext(merged);
+    setContext(merged as KnownContext);
+    localStorage.setItem("huma-v2-known-context", JSON.stringify(merged));
+    if (user) {
+      const supabase = createClient();
+      if (supabase) {
+        try { await updateKnownContext(supabase, user.id, merged); } catch { /* */ }
+      }
+    }
+  }, [rawContext, user]);
+
   // Save foundation value to context
   const handleFoundationSave = useCallback(async (nodeId: string, value: string) => {
     const updated = { ...rawContext };
@@ -509,6 +524,11 @@ export default function WholePage() {
                 onValueSave={selectedFullNode.type === "context" ? (v) => handleFoundationSave(selectedFullNode.id, v) : undefined}
               />
             )}
+
+            {/* Context portrait */}
+            <div className="animate-entrance-3" style={{ marginTop: "16px" }}>
+              <ContextPortrait context={context} onSave={handleContextSave} />
+            </div>
 
             {/* Insight card */}
             {insight && (
