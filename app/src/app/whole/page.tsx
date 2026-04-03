@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import TabShell from "@/components/TabShell";
-import WholeShape, { type HolonNode, type HolonLayer, type HolonStatus } from "@/components/whole/WholeShape";
+import WholeShape, { type HolonNode, type HolonLink, type HolonLayer, type HolonStatus } from "@/components/whole/WholeShape";
 import HolonExpandPanel from "@/components/whole/HolonExpandPanel";
 import ProfileBanner from "@/components/whole/ProfileBanner";
 import InsightCard from "@/components/whole/InsightCard";
@@ -22,6 +22,8 @@ import {
   updateWhyStatement,
   updateKnownContext,
   getPrinciples,
+  getAspirationCorrelations,
+  type AspirationCorrelation,
 } from "@/lib/supabase-v2";
 
 // ─── Data → Nodes ──────────────────────────────────────────────────────────
@@ -150,6 +152,32 @@ function buildNodes(
   return nodes;
 }
 
+// Compute dimension-overlap links as fallback when no behavioral data exists
+function computeDimensionLinks(aspirations: Aspiration[]): HolonLink[] {
+  const links: HolonLink[] = [];
+  for (let i = 0; i < aspirations.length; i++) {
+    for (let j = i + 1; j < aspirations.length; j++) {
+      const aDims = new Set(aspirations[i].dimensionsTouched || []);
+      const bDims = new Set(aspirations[j].dimensionsTouched || []);
+      if (aDims.size === 0 || bDims.size === 0) continue;
+
+      let overlap = 0;
+      for (const d of aDims) if (bDims.has(d)) overlap++;
+      if (overlap === 0) continue;
+
+      const weight = overlap / Math.min(aDims.size, bDims.size);
+      if (weight >= 0.4) {
+        links.push({
+          sourceId: aspirations[i].id,
+          targetId: aspirations[j].id,
+          weight: Math.round(weight * 100) / 100,
+        });
+      }
+    }
+  }
+  return links;
+}
+
 // Serialize context for AI prompt
 function serializeContext(
   ctx: Record<string, unknown>,
@@ -178,6 +206,7 @@ export default function WholePage() {
   const [whyStatement, setWhyStatement] = useState<string | null>(null);
   const [archetypes, setArchetypes] = useState<string[]>([]);
   const [operatorName, setOperatorName] = useState("");
+  const [correlations, setCorrelations] = useState<AspirationCorrelation[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [computing, setComputing] = useState(false);
   const [selectedNode, setSelectedNode] = useState<HolonNode | null>(null);
@@ -228,12 +257,13 @@ export default function WholePage() {
         const supabase = createClient();
         if (supabase) {
           try {
-            const [dbAspirations, dbContext, dbInsight, dbWhy, dbPrinciples] = await Promise.all([
+            const [dbAspirations, dbContext, dbInsight, dbWhy, dbPrinciples, dbCorrelations] = await Promise.all([
               getAllAspirations(supabase, user.id),
               getKnownContext(supabase, user.id),
               getUndeliveredInsight(supabase, user.id),
               getWhyStatement(supabase, user.id),
               getPrinciples(supabase, user.id),
+              getAspirationCorrelations(supabase, user.id),
             ]);
 
             if (dbAspirations.length > 0) setAspirations(dbAspirations);
@@ -247,6 +277,7 @@ export default function WholePage() {
             setInsight(dbInsight);
             setWhyStatement(dbWhy.whyStatement);
             setPrinciples(dbPrinciples);
+            setCorrelations(dbCorrelations);
 
             const nameFromCtx = (dbContext as Record<string, unknown>).operator_name as string
               || (dbContext as Record<string, unknown>).name as string;
@@ -329,6 +360,19 @@ export default function WholePage() {
   // Build nodes
   const nodes = buildNodes(aspirations, context, principles, operatorName);
   const isEmpty = aspirations.length === 0 && Object.keys(context).length === 0 && principles.length === 0;
+
+  // Build links: behavioral correlations if available, dimension overlap as fallback
+  const holonLinks: HolonLink[] = useMemo(() => {
+    if (correlations.length > 0) {
+      return correlations.map((c) => ({
+        sourceId: c.sourceId,
+        targetId: c.targetId,
+        weight: c.weight,
+      }));
+    }
+    // Fallback: dimension overlap for pre-auth / new users
+    return computeDimensionLinks(aspirations);
+  }, [correlations, aspirations]);
 
   const shapeHeight = Math.round(shapeWidth * 0.75);
 
@@ -489,6 +533,7 @@ export default function WholePage() {
             >
               <WholeShape
                 nodes={nodes}
+                links={holonLinks}
                 width={shapeWidth}
                 height={shapeHeight}
                 onNodeTap={handleNodeTap}

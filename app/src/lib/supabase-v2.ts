@@ -1315,3 +1315,76 @@ export async function getAllAspirations(
     triggerData: (row.trigger_data as AspirationTrigger) || undefined,
   }));
 }
+
+// ─── Aspiration Behavioral Correlation ──────────────────────────────────────
+// Computes co-completion strength between aspiration pairs over the last 30 days.
+// Returns pairs with a weight from 0–1 indicating how often both aspirations
+// had behaviors checked on the same day.
+
+export interface AspirationCorrelation {
+  sourceId: string;
+  targetId: string;
+  weight: number;       // 0–1: co-completion ratio
+  coCompletionDays: number;
+}
+
+export async function getAspirationCorrelations(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<AspirationCorrelation[]> {
+  const startStr = getLocalDateOffset(29); // 30 days including today
+
+  const { data } = await supabase
+    .from("sheet_entries")
+    .select("aspiration_id, date, checked")
+    .eq("user_id", userId)
+    .eq("checked", true)
+    .gte("date", startStr)
+    .not("aspiration_id", "is", null);
+
+  if (!data || data.length === 0) return [];
+
+  // Group: which dates did each aspiration have at least one check-off?
+  const aspirationDays = new Map<string, Set<string>>();
+  for (const row of data) {
+    const aspId = row.aspiration_id as string;
+    if (!aspirationDays.has(aspId)) aspirationDays.set(aspId, new Set());
+    aspirationDays.get(aspId)!.add(row.date as string);
+  }
+
+  const aspirationIds = Array.from(aspirationDays.keys());
+  if (aspirationIds.length < 2) return [];
+
+  const correlations: AspirationCorrelation[] = [];
+
+  for (let i = 0; i < aspirationIds.length; i++) {
+    for (let j = i + 1; j < aspirationIds.length; j++) {
+      const aDays = aspirationDays.get(aspirationIds[i])!;
+      const bDays = aspirationDays.get(aspirationIds[j])!;
+
+      // Co-completion: days where both had a check-off
+      let coCount = 0;
+      for (const day of aDays) {
+        if (bDays.has(day)) coCount++;
+      }
+
+      if (coCount === 0) continue;
+
+      // Normalize by the smaller set (Jaccard-like but biased toward overlap)
+      const minDays = Math.min(aDays.size, bDays.size);
+      const weight = minDays > 0 ? coCount / minDays : 0;
+
+      // Only include meaningful correlations (at least 3 co-completion days, weight > 0.3)
+      if (coCount >= 3 && weight > 0.3) {
+        correlations.push({
+          sourceId: aspirationIds[i],
+          targetId: aspirationIds[j],
+          weight: Math.round(weight * 100) / 100,
+          coCompletionDays: coCount,
+        });
+      }
+    }
+  }
+
+  return correlations;
+}

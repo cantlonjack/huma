@@ -6,7 +6,9 @@ import {
   forceX,
   forceY,
   forceCollide,
+  forceLink,
   type SimulationNodeDatum,
+  type SimulationLinkDatum,
 } from "d3-force";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -26,6 +28,12 @@ export interface HolonNode {
   dimensions?: string[];
 }
 
+export interface HolonLink {
+  sourceId: string;
+  targetId: string;
+  weight: number; // 0–1: behavioral correlation strength
+}
+
 interface SimNode extends SimulationNodeDatum {
   id: string;
   label: string;
@@ -33,6 +41,10 @@ interface SimNode extends SimulationNodeDatum {
   status: HolonStatus;
   r: number;
   type: HolonNode["type"];
+}
+
+interface SimLink extends SimulationLinkDatum<SimNode> {
+  weight: number;
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -62,6 +74,7 @@ const MEMBRANE_PATH = "M130 8 C178 6, 240 36, 248 86 C256 136, 232 166, 198 176 
 
 interface WholeShapeProps {
   nodes: HolonNode[];
+  links?: HolonLink[];
   width: number;
   height: number;
   onNodeTap: (node: HolonNode) => void;
@@ -71,6 +84,7 @@ interface WholeShapeProps {
 
 export default function WholeShape({
   nodes,
+  links = [],
   width,
   height,
   onNodeTap,
@@ -84,8 +98,8 @@ export default function WholeShape({
   const ry = MEMBRANE_VB_HEIGHT / 2 - 16;
 
   // Run d3-force simulation in viewBox coordinate space
-  const positioned = useMemo(() => {
-    if (nodes.length === 0) return [];
+  const { positionedNodes, positionedLinks } = useMemo(() => {
+    if (nodes.length === 0) return { positionedNodes: [] as SimNode[], positionedLinks: [] as SimLink[] };
 
     const simNodes: SimNode[] = nodes.map((n) => ({
       ...n,
@@ -96,6 +110,16 @@ export default function WholeShape({
       fy: n.type === "identity" ? cy : undefined,
     }));
 
+    // Build link objects from HolonLink data, referencing SimNode indices
+    const nodeIndex = new Map(simNodes.map((n, i) => [n.id, i]));
+    const simLinks: SimLink[] = links
+      .filter((l) => nodeIndex.has(l.sourceId) && nodeIndex.has(l.targetId))
+      .map((l) => ({
+        source: nodeIndex.get(l.sourceId)!,
+        target: nodeIndex.get(l.targetId)!,
+        weight: l.weight,
+      }));
+
     const sim = forceSimulation(simNodes)
       .force("x", forceX(cx).strength(0.1))
       .force(
@@ -105,8 +129,20 @@ export default function WholeShape({
       .force(
         "collide",
         forceCollide<SimNode>((d) => d.r + 4).strength(0.9)
-      )
-      .force("contain", () => {
+      );
+
+    // Behavioral correlation: linked nodes drift closer
+    if (simLinks.length > 0) {
+      sim.force(
+        "link",
+        forceLink<SimNode, SimLink>(simLinks)
+          .id((_, i) => i)
+          .distance((l) => 30 - l.weight * 15)   // stronger correlation → closer (30 → 15)
+          .strength((l) => l.weight * 0.3)        // gentle pull, not reactive
+      );
+    }
+
+    sim.force("contain", () => {
         // Clamp every node inside the membrane ellipse
         for (const node of simNodes) {
           if (node.fx !== undefined) continue; // skip fixed nodes
@@ -133,8 +169,8 @@ export default function WholeShape({
       node.fy = node.y;
     }
 
-    return simNodes;
-  }, [nodes, cx, cy, rx, ry]);
+    return { positionedNodes: simNodes, positionedLinks: simLinks };
+  }, [nodes, links, cx, cy, rx, ry]);
 
   const truncateLabel = useCallback((text: string, r: number) => {
     const maxChars = Math.floor(r / 3.5);
@@ -197,8 +233,32 @@ export default function WholeShape({
         />
       )}
 
+      {/* Behavioral correlation links */}
+      {positionedLinks.map((link, i) => {
+        const src = link.source as SimNode;
+        const tgt = link.target as SimNode;
+        if (src.x == null || tgt.x == null) return null;
+        // Thickness: 0.5 at weight 0.3, up to 2.0 at weight 1.0
+        const thickness = 0.5 + link.weight * 1.5;
+        // Opacity: subtle, 0.15–0.4
+        const opacity = 0.15 + link.weight * 0.25;
+        return (
+          <line
+            key={`link-${i}`}
+            x1={src.x}
+            y1={src.y}
+            x2={tgt.x}
+            y2={tgt.y}
+            stroke="#A8C4AA"
+            strokeWidth={thickness}
+            strokeOpacity={opacity}
+            strokeLinecap="round"
+          />
+        );
+      })}
+
       {/* Holon nodes */}
-      {positioned.map((node) => {
+      {positionedNodes.map((node) => {
         const isIdentity = node.type === "identity";
         const isSelected = selectedNodeId === node.id;
         const displayR = isIdentity ? 36 : node.r;
