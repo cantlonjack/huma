@@ -179,6 +179,13 @@ export interface NotificationPreferences {
   timezone?: string;                                // IANA timezone, e.g. "America/New_York"
 }
 
+export interface FinancialContext {
+  situation?: string;       // e.g. "tight budget", "comfortable", "debt payoff mode"
+  income?: string;          // e.g. "freelance, variable" or "salaried, bi-weekly"
+  constraints?: string[];   // e.g. ["$200/week groceries", "no discretionary until May"]
+  rhythm?: string;          // e.g. "paid bi-weekly Fridays" or "invoices land mid-month"
+}
+
 export interface KnownContext {
   people?: KnownContextPerson[];
   place?: { name: string; detail: string };
@@ -186,6 +193,7 @@ export interface KnownContext {
   time?: { detail: string };
   stage?: { label: string; detail: string };
   health?: { detail: string };
+  financial?: FinancialContext;
   resources?: string[];
   notifications?: NotificationPreferences;
   [key: string]: unknown;

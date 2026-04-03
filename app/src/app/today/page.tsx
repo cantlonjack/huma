@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import type { Aspiration, Behavior, Insight, SheetEntry } from "@/types/v2";
+import type { Aspiration, Behavior, FutureAction, Insight, SheetEntry } from "@/types/v2";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { displayName } from "@/lib/display-name";
@@ -669,6 +669,124 @@ function InsightCard({
         >
           &times;
         </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Coming Up Readiness ─────────────────────────────────────────────────────
+
+interface ComingUpItem {
+  aspirationName: string;
+  action: FutureAction;
+}
+
+/**
+ * Determines which aspirations have solid THIS WEEK behaviors (70%+ completion
+ * rate over the last 7 days) and returns their COMING UP items for surfacing.
+ */
+function getReadyComingUp(
+  aspirations: Aspiration[],
+  weekCounts: Record<string, { completed: number; total: number }>,
+  dayCount: number,
+): ComingUpItem[] {
+  // Only surface after 7+ days — need enough data to judge consistency
+  if (dayCount < 7) return [];
+
+  const items: ComingUpItem[] = [];
+
+  for (const asp of aspirations) {
+    if (!asp.comingUp || asp.comingUp.length === 0) continue;
+
+    // Compute aspiration-level completion rate from its behavior keys
+    let totalCompleted = 0;
+    let totalLogged = 0;
+    for (const b of asp.behaviors) {
+      const counts = weekCounts[b.text] || weekCounts[b.key];
+      if (counts) {
+        totalCompleted += counts.completed;
+        totalLogged += counts.total;
+      }
+    }
+
+    // 70% threshold — behaviors are solid
+    if (totalLogged > 0 && totalCompleted / totalLogged >= 0.7) {
+      // Surface the first comingUp item only — one at a time
+      items.push({
+        aspirationName: asp.title || asp.clarifiedText || asp.rawText,
+        action: asp.comingUp[0],
+      });
+    }
+  }
+
+  return items;
+}
+
+function ComingUpSection({ items }: { items: ComingUpItem[] }) {
+  if (items.length === 0) return null;
+
+  return (
+    <div style={{ padding: "0 16px", marginTop: "12px", marginBottom: "16px" }}>
+      <span
+        className="font-sans"
+        style={{
+          fontSize: "11px",
+          fontWeight: 600,
+          letterSpacing: "0.22em",
+          color: "var(--color-ink-300)",
+          display: "block",
+          marginBottom: "10px",
+        }}
+      >
+        COMING UP
+      </span>
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        {items.map((item, i) => (
+          <div
+            key={i}
+            style={{
+              borderLeft: "2px solid var(--color-sage-300)",
+              background: "var(--color-sand-100)",
+              borderRadius: "0 8px 8px 0",
+              padding: "12px 16px",
+            }}
+          >
+            <span
+              className="font-sans"
+              style={{
+                fontSize: "11px",
+                color: "var(--color-sage-400)",
+                letterSpacing: "0.05em",
+              }}
+            >
+              {item.aspirationName} &middot; {item.action.timeframe}
+            </span>
+            <p
+              className="font-serif"
+              style={{
+                fontSize: "16px",
+                lineHeight: "1.4",
+                color: "var(--color-ink-700)",
+                marginTop: "4px",
+              }}
+            >
+              {item.action.name}
+            </p>
+            {item.action.detail && (
+              <p
+                className="font-sans"
+                style={{
+                  fontSize: "13px",
+                  lineHeight: "1.5",
+                  color: "var(--color-ink-500)",
+                  marginTop: "2px",
+                }}
+              >
+                {item.action.detail}
+              </p>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -1607,6 +1725,9 @@ export default function TodayPage() {
                   </div>
                 );
               })}
+
+            {/* Coming Up — surfaces when THIS WEEK behaviors are solid */}
+            <ComingUpSection items={getReadyComingUp(aspirations, weekCounts, dayCount)} />
 
             {/* Reroute Card (conditional) */}
             {rerouteAspiration && (

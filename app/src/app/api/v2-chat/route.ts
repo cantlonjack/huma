@@ -50,6 +50,10 @@ RULES:
   NOT an AI summarizing a transcript. Be specific: names, numbers, places, timing.
 - When the operator adds context (freezer contents, schedule, budget, etc.), extract it:
   [[CONTEXT:{"key":"value"}]]
+- When the operator mentions money, budget, income, expenses, debt, or financial
+  constraints, extract structured financial context:
+  [[CONTEXT:{"financial":{"situation":"tight budget","constraints":["$200/week groceries"],"rhythm":"paid bi-weekly Fridays"}}]]
+  Financial details make the production sheet dramatically more specific.
 
 WHAT YOU'RE BUILDING TOWARD:
 A phased decomposition with 2-4 THIS WEEK actions that are specific enough to

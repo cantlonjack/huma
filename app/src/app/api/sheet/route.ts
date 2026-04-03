@@ -73,12 +73,21 @@ function formatKnownContext(ctx: KnownContext): string {
   if (ctx.time?.detail) {
     lines.push(`Time constraints: ${ctx.time.detail}`);
   }
+  if (ctx.financial) {
+    const f = ctx.financial as { situation?: string; income?: string; constraints?: string[]; rhythm?: string };
+    const parts: string[] = [];
+    if (f.situation) parts.push(f.situation);
+    if (f.income) parts.push(`income: ${f.income}`);
+    if (f.rhythm) parts.push(`pay rhythm: ${f.rhythm}`);
+    if (f.constraints && f.constraints.length > 0) parts.push(`constraints: ${f.constraints.join("; ")}`);
+    if (parts.length > 0) lines.push(`Financial: ${parts.join(". ")}`);
+  }
   if (ctx.resources && ctx.resources.length > 0) {
     lines.push(`Resources: ${ctx.resources.join(", ")}`);
   }
 
   // Include any unstructured keys we don't have a formatter for
-  const knownKeys = new Set(["people", "place", "work", "time", "stage", "health", "resources", "archetypes", "why_statement"]);
+  const knownKeys = new Set(["people", "place", "work", "time", "stage", "health", "financial", "resources", "archetypes", "why_statement"]);
   for (const [key, value] of Object.entries(ctx)) {
     if (!knownKeys.has(key) && value != null) {
       lines.push(`${key}: ${typeof value === "string" ? value : JSON.stringify(value)}`);
@@ -491,6 +500,18 @@ hard cap, not a suggestion.`
     ? identityParts.join("\n")
     : "";
 
+  // Build financial awareness section when financial context exists
+  const fin = knownContext.financial as { situation?: string; income?: string; constraints?: string[]; rhythm?: string } | undefined;
+  const financialSection = fin && (fin.situation || fin.constraints?.length || fin.rhythm)
+    ? `── FINANCIAL AWARENESS ──────────────────────────────────────────
+This operator shared financial context. Use it:
+${fin.situation ? `- Situation: ${fin.situation}` : ""}
+${fin.rhythm ? `- Pay rhythm: ${fin.rhythm} — time money-related actions to land AFTER pay, not before.` : ""}
+${fin.constraints?.length ? `- Hard constraints: ${fin.constraints.join("; ")}` : ""}
+Meal plans should respect budget. Purchases should reference actual amounts.
+"No spend day" and "$X budget" are valid sheet headlines when money is a dimension.`
+    : "";
+
   const prompt = SHEET_PROMPT
     .replace("{name}", name)
     .replace("{identity_section}", identitySection)
@@ -500,7 +521,7 @@ hard cap, not a suggestion.`
     .replace("{conversation_transcript}", conversationStr)
     .replace("{known_context}", contextStr)
     .replace("{recent_history}", historyStr)
-    .replace("{history_analysis}", historyAnalysis)
+    .replace("{history_analysis}", historyAnalysis + (financialSection ? "\n\n" + financialSection : ""))
     .replace("{day_of_week}", dayOfWeek)
     .replace("{date}", date)
     .replace("{season}", season)
