@@ -195,6 +195,16 @@ function buildTabContextBlock(
 
   const parts: string[] = [];
 
+  // ─── Shared identity context (all tabs) ──────────────────────────────
+  if (tabContext?.archetypes && Array.isArray(tabContext.archetypes) && tabContext.archetypes.length > 0) {
+    const archs = tabContext.archetypes as string[];
+    const archLabel = archs.length === 1 ? archs[0] : `${archs[0]} / ${archs[1]}`;
+    parts.push(`The operator identifies as ${archLabel}. Reference this identity naturally when it's relevant — e.g. "that's your ${archs[0]} side" or "the ${archs[archs.length > 1 ? 1 : 0]} in you shows up here". Never explain archetypes or make them sound like a personality test.`);
+  }
+  if (tabContext?.whyStatement) {
+    parts.push(`Their WHY statement: "${tabContext.whyStatement}"`);
+  }
+
   if (sourceTab === "today") {
     parts.push(`The operator opened chat from their TODAY tab (production sheet).
 Tone: operational, specific, present-tense. They're in "doing" mode.
@@ -211,12 +221,6 @@ If they mention a specific aspiration or behavior, reference what you know about
 Tone: reflective, connecting, wider-view. They're in "seeing" mode.
 Help them see connections between parts, not just individual items.`);
 
-    if (tabContext?.archetypes && Array.isArray(tabContext.archetypes) && tabContext.archetypes.length > 0) {
-      parts.push(`Their archetypes: ${(tabContext.archetypes as string[]).join(", ")}`);
-    }
-    if (tabContext?.whyStatement) {
-      parts.push(`Their WHY statement: "${tabContext.whyStatement}"`);
-    }
     if (tabContext?.principles && Array.isArray(tabContext.principles) && tabContext.principles.length > 0) {
       parts.push(`Their principles: ${(tabContext.principles as string[]).join("; ")}`);
     }

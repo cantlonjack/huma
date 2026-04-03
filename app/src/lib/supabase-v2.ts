@@ -518,7 +518,7 @@ const DIMENSION_LABEL_MAP: Record<string, string> = {
   cultural: "Identity", identity: "Identity",
 };
 
-export function computeStructuralInsight(aspirations: Aspiration[]): Insight | null {
+export function computeStructuralInsight(aspirations: Aspiration[], whyStatement?: string | null): Insight | null {
   const allBehaviors = aspirations.flatMap(a =>
     a.behaviors.map(b => ({
       ...b,
@@ -529,6 +529,66 @@ export function computeStructuralInsight(aspirations: Aspiration[]): Insight | n
 
   if (allBehaviors.length === 0) return null;
 
+  // ─── WHY alignment check ──────────────────────────────────────────────
+  if (whyStatement && whyStatement.trim().length > 0) {
+    const whyWords = whyStatement.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    const dimensionKeywords: Record<string, string[]> = {
+      body: ["body", "health", "physical", "move", "movement", "energy", "sleep", "strength"],
+      people: ["people", "family", "friend", "community", "relationship", "connect", "love", "together"],
+      money: ["money", "income", "financial", "earn", "wealth", "business", "work", "career"],
+      home: ["home", "space", "land", "garden", "place", "environment", "house", "property"],
+      growth: ["growth", "learn", "skill", "knowledge", "develop", "create", "build", "improve"],
+      joy: ["joy", "play", "creative", "beauty", "music", "enjoy", "pleasure", "adventure"],
+      purpose: ["purpose", "meaning", "serve", "contribute", "impact", "mission", "calling"],
+      identity: ["identity", "culture", "heritage", "tradition", "values", "belief", "spirit", "soul"],
+    };
+
+    // Find which dimensions the WHY statement implies
+    const whyDimensions = new Set<string>();
+    for (const [dim, keywords] of Object.entries(dimensionKeywords)) {
+      if (whyWords.some(w => keywords.some(k => w.includes(k) || k.includes(w)))) {
+        whyDimensions.add(dim);
+      }
+    }
+
+    // Check if aspiration text or dimensions overlap with WHY
+    const aspirationsWithWhyOverlap = aspirations.filter(a => {
+      const aspText = (a.clarifiedText || a.rawText).toLowerCase();
+      const aspDims = (a.dimensionsTouched || []) as string[];
+      const hasTextOverlap = whyWords.some(w => aspText.includes(w));
+      const hasDimOverlap = whyDimensions.size > 0 && aspDims.some(d => whyDimensions.has(d));
+      return hasTextOverlap || hasDimOverlap;
+    });
+
+    const gapAspirations = aspirations.filter(a => !aspirationsWithWhyOverlap.includes(a));
+
+    if (gapAspirations.length > 0 && aspirationsWithWhyOverlap.length > 0) {
+      // WHY gap — highest priority
+      const gapName = gapAspirations[0].clarifiedText || gapAspirations[0].rawText;
+      return {
+        id: crypto.randomUUID(),
+        text: `${gapName} doesn\u2019t obviously connect to your WHY: \u201c${whyStatement}\u201d That might be fine \u2014 or it might be worth a conversation.`,
+        dimensionsInvolved: [],
+        behaviorsInvolved: [],
+        dataBasis: { correlation: 1, dataPoints: 0, pattern: "structural-why-gap" },
+        delivered: false,
+      };
+    }
+
+    if (aspirationsWithWhyOverlap.length === aspirations.length && aspirations.length > 1) {
+      // Full WHY alignment — second priority
+      return {
+        id: crypto.randomUUID(),
+        text: `Everything you\u2019re building serves your WHY: \u201c${whyStatement}\u201d That\u2019s not common \u2014 most people\u2019s daily actions drift from what they say matters.`,
+        dimensionsInvolved: [],
+        behaviorsInvolved: [],
+        dataBasis: { correlation: 1, dataPoints: 0, pattern: "structural-why-aligned" },
+        delivered: false,
+      };
+    }
+  }
+
+  // ─── Connected behavior insight (lowest priority) ─────────────────────
   // Find behavior touching most dimensions
   let maxDims = 0;
   let mostConnected: (typeof allBehaviors)[0] | null = null;

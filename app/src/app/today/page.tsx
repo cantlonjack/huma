@@ -844,6 +844,8 @@ export default function TodayPage() {
   const [standaloneEntries, setStandaloneEntries] = useState<Array<{ behavior_text: string; dimensions?: string[] }>>([]);
   const [rhythmData, setRhythmData] = useState<Record<string, Record<number, number>>>({});
   const [disruptions, setDisruptions] = useState<Record<string, string | null>>({});
+  const [archetypes, setArchetypes] = useState<string[]>([]);
+  const [whyStatementForChat, setWhyStatementForChat] = useState<string | null>(null);
   const insightMarkedRef = useRef(false);
 
   const dayCount = getDayCount();
@@ -892,6 +894,26 @@ export default function TodayPage() {
       });
 
       setAspirations(asps);
+
+      // Load archetypes + WHY for chat context
+      if (supabase && user) {
+        try {
+          const ctx = await getKnownContext(supabase, user.id);
+          const savedArchs = ctx.archetypes as string[] | undefined;
+          if (savedArchs && Array.isArray(savedArchs) && savedArchs.length > 0) setArchetypes(savedArchs);
+          if (ctx.why_statement) setWhyStatementForChat(ctx.why_statement as string);
+        } catch { /* non-critical */ }
+      }
+      if (archetypes.length === 0 || !whyStatementForChat) {
+        try {
+          const localCtx = localStorage.getItem("huma-v2-known-context");
+          if (localCtx) {
+            const parsed = JSON.parse(localCtx);
+            if (parsed.archetypes?.length > 0 && archetypes.length === 0) setArchetypes(parsed.archetypes);
+            if (parsed.why_statement && !whyStatementForChat) setWhyStatementForChat(parsed.why_statement);
+          }
+        } catch { /* fresh */ }
+      }
 
       // Load today's checked entries from sheet_entries
       if (supabase && user) {
@@ -1035,7 +1057,24 @@ export default function TodayPage() {
         }
 
         if (!insightData) {
-          insightData = computeStructuralInsight(asps);
+          // Load WHY statement for structural insight prioritization
+          let whyStatement: string | null = null;
+          if (supabase && user) {
+            try {
+              const ctx = await getKnownContext(supabase, user.id);
+              whyStatement = (ctx.why_statement as string) || null;
+            } catch { /* non-critical */ }
+          }
+          if (!whyStatement) {
+            try {
+              const localCtx = localStorage.getItem("huma-v2-known-context");
+              if (localCtx) {
+                const parsed = JSON.parse(localCtx);
+                whyStatement = parsed.why_statement || null;
+              }
+            } catch { /* fresh */ }
+          }
+          insightData = computeStructuralInsight(asps, whyStatement);
           if (insightData) {
             localStorage.setItem("huma-v2-pending-insight", JSON.stringify(insightData));
           }
@@ -1213,6 +1252,8 @@ export default function TodayPage() {
         stalledAspirations: aspirations
           .filter(a => a.funnel?.validationStatus === "adjusting")
           .map(a => a.clarifiedText || a.rawText),
+        ...(archetypes.length > 0 && { archetypes }),
+        ...(whyStatementForChat && { whyStatement: whyStatementForChat }),
       }}
     >
       <div className="min-h-dvh bg-sand-50 flex flex-col" style={{ paddingBottom: "140px" }}>

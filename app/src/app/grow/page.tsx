@@ -38,6 +38,38 @@ function progressBarColor(status: Pattern["status"]): string {
 
 // ─── Pattern Card ───────────────────────────────────────────────────────────
 
+const ARCHETYPE_DOMAINS: Record<string, DimensionKey[]> = {
+  "Earth Tender": ["body", "home"],
+  "Creator": ["growth", "joy"],
+  "Entrepreneur": ["money", "growth"],
+  "Parent": ["people", "home"],
+  "Educator": ["growth", "people"],
+  "Spirit": ["purpose", "identity"],
+};
+
+/** Check if a pattern's aspiration dimensions overlap with an archetype's domain */
+function getArchetypeMatch(
+  pattern: Pattern,
+  aspirations: Aspiration[],
+  primaryArchetype: string | undefined,
+): string | null {
+  if (!primaryArchetype) return null;
+  const domains = ARCHETYPE_DOMAINS[primaryArchetype];
+  if (!domains) return null;
+
+  const asp = aspirations.find(a => a.id === pattern.aspirationId);
+  if (!asp) return null;
+
+  const aspDims = (asp.dimensionsTouched || []) as string[];
+  const behaviorDims = (asp.behaviors || []).flatMap(b =>
+    (b.dimensions || []).map(d => typeof d === "string" ? d : d.dimension)
+  );
+  const allDims = new Set([...aspDims, ...behaviorDims]);
+
+  if (domains.some(d => allDims.has(d))) return primaryArchetype;
+  return null;
+}
+
 /** Get ALL dimensions touched across all steps in a pattern, deduplicated */
 function getAllStepDimensions(pattern: Pattern, aspirations: Aspiration[]): DimensionKey[] {
   const asp = aspirations.find(a => a.id === pattern.aspirationId);
@@ -110,11 +142,13 @@ function PatternCard({
   aspirations,
   expanded,
   onToggle,
+  primaryArchetype,
 }: {
   pattern: Pattern;
   aspirations: Aspiration[];
   expanded: boolean;
   onToggle: () => void;
+  primaryArchetype?: string;
 }) {
   const colors = statusColor(pattern.status);
   const percent = validationPercent(pattern);
@@ -124,6 +158,7 @@ function PatternCard({
   const aspirationName = getAspirationName(pattern, aspirations);
   const { comingUp, longerArc } = getAspirationPhases(pattern, aspirations);
   const hasExpandContent = comingUp.length > 0 || longerArc.length > 0;
+  const archetypeLabel = getArchetypeMatch(pattern, aspirations, primaryArchetype);
 
   return (
     <div
@@ -162,22 +197,37 @@ function PatternCard({
         >
           {displayName(pattern.name)}
         </span>
-        <span
-          className="font-sans"
-          style={{
-            fontSize: "11px",
-            fontWeight: 600,
-            letterSpacing: "0.08em",
-            padding: "3px 10px",
-            borderRadius: "10px",
-            background: colors.bg,
-            color: colors.text,
-            flexShrink: 0,
-            textTransform: "uppercase",
-          }}
-        >
-          {statusLabel(pattern.status)}
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+          {archetypeLabel && (
+            <span
+              className="font-sans"
+              style={{
+                fontSize: "9px",
+                fontWeight: 600,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "var(--color-sage-300)",
+              }}
+            >
+              {archetypeLabel}
+            </span>
+          )}
+          <span
+            className="font-sans"
+            style={{
+              fontSize: "11px",
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              padding: "3px 10px",
+              borderRadius: "10px",
+              background: colors.bg,
+              color: colors.text,
+              textTransform: "uppercase",
+            }}
+          >
+            {statusLabel(pattern.status)}
+          </span>
+        </div>
       </div>
 
       {/* Trigger + Pathway */}
@@ -549,6 +599,8 @@ export default function GrowPage() {
   const [patterns, setPatterns] = useState<Pattern[]>([]);
   const [aspirations, setAspirations] = useState<Aspiration[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [archetypes, setArchetypes] = useState<string[]>([]);
+  const [whyStatement, setWhyStatement] = useState<string | null>(null);
 
   const handleToggleExpand = useCallback((id: string) => {
     setExpandedId(prev => prev === id ? null : id);
@@ -615,6 +667,32 @@ export default function GrowPage() {
 
       setPatterns(loadedPatterns);
       setAspirations(loadedAspirations);
+
+      // Load archetypes + WHY for chat context and display
+      let loadedArchetypes: string[] = [];
+      let loadedWhy: string | null = null;
+      if (supabase && user) {
+        try {
+          const { getKnownContext } = await import("@/lib/supabase-v2");
+          const ctx = await getKnownContext(supabase, user.id);
+          const savedArchs = ctx.archetypes as string[] | undefined;
+          if (savedArchs?.length) loadedArchetypes = savedArchs;
+          if (ctx.why_statement) loadedWhy = ctx.why_statement as string;
+        } catch { /* non-critical */ }
+      }
+      if (loadedArchetypes.length === 0 || !loadedWhy) {
+        try {
+          const localCtx = localStorage.getItem("huma-v2-known-context");
+          if (localCtx) {
+            const parsed = JSON.parse(localCtx);
+            if (parsed.archetypes?.length > 0 && loadedArchetypes.length === 0) loadedArchetypes = parsed.archetypes;
+            if (parsed.why_statement && !loadedWhy) loadedWhy = parsed.why_statement;
+          }
+        } catch { /* fresh */ }
+      }
+      setArchetypes(loadedArchetypes);
+      setWhyStatement(loadedWhy);
+
       setLoading(false);
     }
 
@@ -649,6 +727,8 @@ export default function GrowPage() {
     tabContext.aspirationCount = aspirations.length;
   }
   tabContext.dayCount = dayCount;
+  if (archetypes.length > 0) tabContext.archetypes = archetypes;
+  if (whyStatement) tabContext.whyStatement = whyStatement;
 
   // ─── Group patterns by status ──────────────────────────────────────────
   const validated = patterns.filter(p => p.status === "validated");
@@ -709,10 +789,12 @@ export default function GrowPage() {
               <PatternSection
                 title="Validated"
                 subtitle="These patterns are working. They're part of your operating system."
+                whySubtitle={whyStatement ? `These serve your WHY: \u201c${whyStatement}\u201d` : undefined}
                 patterns={validated}
                 aspirations={aspirations}
                 expandedId={expandedId}
                 onToggleExpand={handleToggleExpand}
+                primaryArchetype={archetypes[0]}
               />
             )}
 
@@ -725,6 +807,7 @@ export default function GrowPage() {
                 aspirations={aspirations}
                 expandedId={expandedId}
                 onToggleExpand={handleToggleExpand}
+                primaryArchetype={archetypes[0]}
               />
             )}
 
@@ -736,6 +819,7 @@ export default function GrowPage() {
                 patterns={finding}
                 aspirations={aspirations}
                 expandedId={expandedId}
+                primaryArchetype={archetypes[0]}
                 onToggleExpand={handleToggleExpand}
               />
             )}
@@ -751,17 +835,21 @@ export default function GrowPage() {
 function PatternSection({
   title,
   subtitle,
+  whySubtitle,
   patterns,
   aspirations,
   expandedId,
   onToggleExpand,
+  primaryArchetype,
 }: {
   title: string;
   subtitle: string;
+  whySubtitle?: string;
   patterns: Pattern[];
   aspirations: Aspiration[];
   expandedId: string | null;
   onToggleExpand: (id: string) => void;
+  primaryArchetype?: string;
 }) {
   return (
     <div style={{ marginBottom: "24px" }}>
@@ -772,12 +860,21 @@ function PatternSection({
         >
           {title}
         </h2>
-        <p
-          className="font-sans text-sage-400"
-          style={{ fontSize: "13px", lineHeight: "1.4" }}
-        >
-          {subtitle}
-        </p>
+        {whySubtitle ? (
+          <p
+            className="font-serif"
+            style={{ fontSize: "13px", lineHeight: "1.4", fontStyle: "italic", color: "var(--color-sage-500)" }}
+          >
+            {whySubtitle}
+          </p>
+        ) : (
+          <p
+            className="font-sans text-sage-400"
+            style={{ fontSize: "13px", lineHeight: "1.4" }}
+          >
+            {subtitle}
+          </p>
+        )}
       </div>
       {patterns.map(p => (
         <PatternCard
@@ -786,6 +883,7 @@ function PatternSection({
           aspirations={aspirations}
           expanded={expandedId === p.id}
           onToggle={() => onToggleExpand(p.id)}
+          primaryArchetype={primaryArchetype}
         />
       ))}
     </div>
