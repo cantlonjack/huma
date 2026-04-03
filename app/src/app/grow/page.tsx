@@ -10,6 +10,7 @@ import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
 import { getPatterns, getAspirations, getPatternSparklines } from "@/lib/supabase-v2";
 import TabShell from "@/components/TabShell";
 import GrowSkeleton from "@/components/GrowSkeleton";
+import Sparkline from "@/components/Sparkline";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -489,27 +490,41 @@ function PatternCard({
         )}
       </div>
 
-      {/* Validation progress */}
+      {/* Validation + Sparkline */}
       <div style={{ padding: "12px 16px", borderTop: "1px solid #F0EBE3" }}>
-        <div
-          style={{
-            width: "100%",
-            height: "6px",
-            borderRadius: "3px",
-            background: "#F0EBE3",
-            overflow: "hidden",
-          }}
-        >
+        {/* Sparkline + progress bar row */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {/* Progress bar — fills available space */}
           <div
             style={{
-              width: `${percent}%`,
-              height: "100%",
+              flex: 1,
+              height: "6px",
               borderRadius: "3px",
-              background: progressBarColor(pattern.status),
-              transition: "width 400ms cubic-bezier(0.22, 1, 0.36, 1)",
+              background: "#F0EBE3",
+              overflow: "hidden",
             }}
-          />
+          >
+            <div
+              style={{
+                width: `${percent}%`,
+                height: "100%",
+                borderRadius: "3px",
+                background: progressBarColor(pattern.status),
+                transition: "width 400ms cubic-bezier(0.22, 1, 0.36, 1)",
+              }}
+            />
+          </div>
+          {/* Sparkline — right side, only when data exists */}
+          {sparkline && sparkline.points.length >= 2 && (
+            <Sparkline
+              points={sparkline.points}
+              trend={sparkline.trend}
+              width={80}
+              height={24}
+            />
+          )}
         </div>
+        {/* Stats row */}
         <div
           className="font-sans"
           style={{
@@ -523,11 +538,14 @@ function PatternCard({
           <span>{pattern.validationCount} of {pattern.validationTarget} days</span>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             {sparkline && sparkline.trend !== "stable" && (
-              <span style={{
-                fontSize: "10px",
-                color: sparkline.trend === "rising" ? "#3A5A40" : "#B5621E",
-                fontStyle: "italic",
-              }}>
+              <span
+                className="font-serif"
+                style={{
+                  fontSize: "11px",
+                  color: sparkline.trend === "rising" ? "#3A5A40" : "#B5621E",
+                  fontStyle: "italic",
+                }}
+              >
                 {sparkline.trend === "rising" ? "momentum" : "something changed"}
               </span>
             )}
