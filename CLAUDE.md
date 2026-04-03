@@ -315,6 +315,75 @@ Does this feature help the operator's life run better? Does it surface a connect
 
 ---
 
+## Build Roadmap (Sessions 25–49)
+
+Six increments organized by operator experience arc, not by theme. Source: `HUMA_ROADMAP_ANALYSIS.md`. The lineage is a constraint system, not a feature spec — the operator experiences the system, never sees the vocabulary.
+
+### Increment 1: The Specific Sheet — "This app knows my life"
+
+| Session | Name | What Gets Built | Status |
+|---------|------|----------------|--------|
+| **25** | Sheet context injection | Enriched SheetCompileRequest: full known_context, season, dayOfWeek, dayCount, archetypes, whyStatement, conversation transcript, 7-day history. `lib/sheet-compiler.ts` client helper. | **Done** |
+| **26** | Sheet prompt rewrite | Action-level prompt ("Stew night — chuck in freezer" not "Cook dinner"). Identity section with archetypes + WHY. Context usage mandate. | **Done** |
+| **27** | Wire compileSheet + through-line header | Wire `compileSheet()` into Today page (replace inline fetch). Add structural through-line at top of sheet: "Three of these feed the same thing: your evening rhythm is where Body, Money, and Joy converge." | |
+| **28** | Sheet item UI refinement | Cormorant Garamond headlines, Source Sans 3 detail. Sand-50 bg. Generous vertical spacing (Alexander's Void). Trigger item: warm sand-100 bg + thin amber-600 left border. | |
+| **29** | Check-off gesture redesign | Replace checkbox with tap → text shifts to ink-200 + thin line-through + brief dimension dot glow. No "task list" aesthetic. | |
+| **30** | Sheet cap + selection logic | Enforce max 5 items hard. When more behaviors exist, sheet compilation selects highest-leverage based on check-off history and dimensional balance. | |
+
+### Increment 2: The Return Loop — "It shows up for me"
+
+| Session | Name | What Gets Built |
+|---------|------|----------------|
+| **31** | Service worker + web push setup | Register service worker, configure FCM for web push. Notification permission request flow. |
+| **32** | Morning push notification | Scheduled sheet compilation (Vercel cron). Push with trigger item: "Your day: [detail]." Tap opens `/today`. |
+| **33** | Evening reflection overlay | Half-sheet overlay (reuse ChatSheet pattern). Single text input + 3 tap options. Response flows into known_context. |
+| **34** | Notification preferences | Settings for morning/evening time, opt-out. Stored in known_context. HUMA voice — no emoji, no exclamation marks. |
+| **35** | Insight delivery via push | After 7+ days, morning push occasionally includes a behavioral connection. ~2x/week, not daily. |
+
+### Increment 3: The Living Grow Tab — "My patterns are alive and adaptive"
+
+| Session | Name | What Gets Built |
+|---------|------|----------------|
+| **36** | Sparkline computation | 14-day check-off consistency per pattern from behavior_log. Returns daily values for sparkline rendering. |
+| **37** | Pattern card redesign + sparkline UI | Full-width cards, Cormorant Garamond name, thin amber-600 sparkline. Rising = momentum, flat = stability, dropping = something changed. No labels. |
+| **38** | "What changed?" conversation | Tap dropping pattern → ChatSheet pre-loaded: "Your morning walk dropped off after [date]. What changed?" New decomposition for changed context. |
+| **39** | Pattern emergence detection | Detect unnamed consistent behaviors (12+ days). "Something forming..." at top of Grow. Tap to see, name/formalize or dismiss. |
+| **40** | Cross-aspiration merging | Shared behavior detection → merge suggestion. Operator can merge or keep separate. Inline suggestion on shared pattern card. |
+| **41** | Grow tab breathing room | Max 5–7 visible cards. Fold by dimension if more. Alexander's Void enforced. Pattern emergence in italic Cormorant Garamond on sand-100. |
+
+### Increment 4: The Whole Page as Living Mirror — "I can see my system evolving"
+
+| Session | Name | What Gets Built |
+|---------|------|----------------|
+| **42** | Behavioral weight on holon connections | D3 link thickness/gravity from behavioral correlation. Correlated holons drift closer. Gradual, not reactive. |
+| **43** | WHY statement evolution | After 4+ weeks, re-suggest WHY: "Your original WHY was X. What you're actually building looks more like Y." Inline suggestion, operator chooses. |
+| **44** | Insight thread annotations | 3 most significant historical insights as small text near relevant holon nodes. Cormorant Garamond italic, ink-400. Museum placard aesthetic. |
+
+### Increment 5: Temporal Intelligence — "HUMA knows my seasons"
+
+| Session | Name | What Gets Built |
+|---------|------|----------------|
+| **45** | Monthly review surface | Auto-generated at month end. 4-column week grid × behavior rows. Sage = consistent, amber = intermittent, blank = absent. |
+| **46** | Financial rhythm + COMING UP surfacing | Financial context via conversation → known_context. Sheet becomes financially aware. COMING UP items appear when THIS WEEK behaviors are solid. |
+| **47** | Life stage transition detection | Significant context change → reorganization conversation. Revisit affected aspirations, suggest releases/protections, revised decomposition. |
+
+### Increment 6: The Shareworthy Moment — "I want to show someone this"
+
+| Session | Name | What Gets Built |
+|---------|------|----------------|
+| **48** | Shareworthy insight cards | Strong cross-dimensional insights get full-screen card: Cormorant Garamond, operator's name, dimension circles, share button. Letterpress aesthetic. |
+| **49** | Living Canvas evolution + share | Canvas regenerable from behavioral data. CapitalRadar from computed scores. Share extends to insight cards via `/api/og`. |
+
+### What Not to Build
+
+- **Template library / pattern commons** — not until 1,000+ active operators with 3+ months data
+- **Adaptive cycle labels** — operator never sees "exploitation," "conservation," "release," "reorganization"
+- **Animated connection reveals on check-off** — gamifies check-offs, violates Sanford's principles
+- **Voice input** — low priority, evening reflection tap options reduce friction enough
+- **SEO landing pages** — growth marketing, not product development; premature without PMF
+
+---
+
 ## Session Protocol
 
 At the END of every CC session, before the final commit:

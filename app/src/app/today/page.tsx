@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import type { Aspiration, Behavior, Insight } from "@/types/v2";
+import type { Aspiration, Behavior, Insight, SheetEntry } from "@/types/v2";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { displayName } from "@/lib/display-name";
 import { getLocalDate, getLocalDateOffset } from "@/lib/date-utils";
+import { compileSheet, type CompiledSheet } from "@/lib/sheet-compiler";
 import TabShell from "@/components/TabShell";
 import TodaySkeleton from "@/components/TodaySkeleton";
 import WeekRhythm from "@/components/WeekRhythm";
@@ -826,6 +827,147 @@ function StandaloneBehaviorRow({
   );
 }
 
+// ─── Compiled Sheet Entry Row ──────────────────────────────────────────────
+
+function CompiledEntryRow({
+  entry,
+  isChecked,
+  isLast,
+  onToggle,
+}: {
+  entry: SheetEntry;
+  isChecked: boolean;
+  isLast: boolean;
+  onToggle: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div
+      style={{
+        borderBottom: isLast ? "none" : "1px solid #F0EBE3",
+      }}
+    >
+      <button
+        onClick={onToggle}
+        className="w-full text-left cursor-pointer"
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          gap: "12px",
+          padding: "14px 16px",
+          background: isChecked
+            ? "linear-gradient(135deg, #F8F6F1, #F4F1EB)"
+            : "transparent",
+        }}
+      >
+        {/* Check circle */}
+        <div
+          style={{
+            width: "22px",
+            height: "22px",
+            borderRadius: "50%",
+            border: isChecked ? "none" : "1.5px solid #DDD4C0",
+            background: isChecked ? "#5C7A62" : "transparent",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            marginTop: "1px",
+            transition: "all 200ms cubic-bezier(0.22, 1, 0.36, 1)",
+          }}
+        >
+          {isChecked && (
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+              <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </div>
+
+        {/* Content */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span
+            className="font-serif text-sage-700"
+            style={{
+              fontSize: "16px",
+              lineHeight: "1.35",
+              display: "block",
+              textDecoration: isChecked ? "line-through" : "none",
+              color: isChecked ? "var(--color-sage-300)" : undefined,
+              transition: "color 200ms ease",
+            }}
+          >
+            {entry.headline || entry.behaviorText}
+          </span>
+
+          {/* Dimension dots */}
+          {entry.dimensions && entry.dimensions.length > 0 && (
+            <div style={{ display: "flex", gap: "5px", marginTop: "6px" }}>
+              {entry.dimensions.map(dim => (
+                <div
+                  key={dim}
+                  style={{
+                    width: "6px",
+                    height: "6px",
+                    borderRadius: "50%",
+                    background: DIMENSION_DOT_COLORS[dim] || "#8BAF8E",
+                    opacity: isChecked ? 0.4 : 1,
+                    transition: "opacity 200ms ease",
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </button>
+
+      {/* Detail — tap headline area to expand */}
+      {entry.detail && typeof entry.detail === "string" && entry.detail.length > 0 && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="w-full text-left cursor-pointer"
+          style={{
+            padding: expanded ? "0 16px 12px 50px" : "0",
+            maxHeight: expanded ? "200px" : "0",
+            overflow: "hidden",
+            transition: "all 250ms cubic-bezier(0.22, 1, 0.36, 1)",
+            opacity: expanded ? 1 : 0,
+          }}
+        >
+          <p
+            className="font-sans text-sage-500"
+            style={{
+              fontSize: "13px",
+              lineHeight: "1.5",
+            }}
+          >
+            {entry.detail as string}
+          </p>
+        </button>
+      )}
+
+      {/* Tap-to-expand hint — subtle chevron */}
+      {entry.detail && typeof entry.detail === "string" && entry.detail.length > 0 && !expanded && !isChecked && (
+        <button
+          onClick={() => setExpanded(true)}
+          className="w-full cursor-pointer"
+          style={{
+            padding: "0 16px 8px 50px",
+            textAlign: "left",
+          }}
+        >
+          <span
+            className="font-sans text-sage-300"
+            style={{ fontSize: "12px" }}
+          >
+            how &darr;
+          </span>
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ─── Today Page ─────────────────────────────────────────────────────────────
 
 export default function TodayPage() {
@@ -846,7 +988,11 @@ export default function TodayPage() {
   const [disruptions, setDisruptions] = useState<Record<string, string | null>>({});
   const [archetypes, setArchetypes] = useState<string[]>([]);
   const [whyStatementForChat, setWhyStatementForChat] = useState<string | null>(null);
+  const [compiledEntries, setCompiledEntries] = useState<SheetEntry[]>([]);
+  const [throughLine, setThroughLine] = useState<string | null>(null);
+  const [sheetCompiling, setSheetCompiling] = useState(false);
   const insightMarkedRef = useRef(false);
+  const sheetCompiledRef = useRef(false);
 
   const dayCount = getDayCount();
 
@@ -1099,6 +1245,79 @@ export default function TodayPage() {
     }
     loadData();
   }, [user, authLoading, date]);
+
+  // ─── Sheet Compilation ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (aspirations.length === 0 || sheetCompiledRef.current) return;
+
+    const cacheKey = `huma-v2-compiled-sheet-${date}`;
+
+    // Check localStorage cache first
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached) as CompiledSheet;
+        if (parsed.entries?.length > 0) {
+          setCompiledEntries(parsed.entries.map(e => ({
+            id: e.id || `${e.behaviorKey}-${date}`,
+            aspirationId: e.aspirationId || "",
+            behaviorKey: e.behaviorKey,
+            behaviorText: e.behaviorText || e.headline || "",
+            headline: e.headline,
+            detail: e.detail || "",
+            timeOfDay: e.timeOfDay || "morning",
+            dimensions: e.dimensions,
+            checked: false,
+          })));
+          setThroughLine(parsed.throughLine || null);
+          sheetCompiledRef.current = true;
+          return;
+        }
+      }
+    } catch { /* no cache, compile fresh */ }
+
+    // Compile sheet in background
+    sheetCompiledRef.current = true;
+    setSheetCompiling(true);
+
+    const supabase = user ? createClient() : null;
+
+    // Get operator name from context
+    let operatorName = "there";
+    try {
+      const localCtx = localStorage.getItem("huma-v2-known-context");
+      if (localCtx) {
+        const parsed = JSON.parse(localCtx);
+        operatorName = parsed.operator_name || parsed.name || "there";
+      }
+    } catch { /* default */ }
+
+    compileSheet({
+      aspirations,
+      supabase,
+      userId: user?.id || null,
+      name: operatorName,
+      archetypes: archetypes.length > 0 ? archetypes : undefined,
+      whyStatement: whyStatementForChat || undefined,
+    })
+      .then((result) => {
+        if (result.entries.length > 0) {
+          setCompiledEntries(result.entries);
+          setThroughLine(result.throughLine || null);
+
+          // Cache for today
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify({
+              entries: result.entries,
+              throughLine: result.throughLine,
+              date: result.date,
+            }));
+          } catch { /* storage full */ }
+        }
+      })
+      .catch(() => { /* compilation failed, PatternRouteCards remain */ })
+      .finally(() => setSheetCompiling(false));
+  }, [aspirations, date, user, archetypes, whyStatementForChat]);
 
   // ─── Check-off handler ──────────────────────────────────────────────────
   const handleToggleStep = useCallback(
@@ -1402,8 +1621,72 @@ export default function TodayPage() {
               />
             )}
 
-            {/* Pattern Route Cards */}
-            {aspirations
+            {/* Through-line header */}
+            {throughLine && compiledEntries.length > 0 && (
+              <div
+                className="animate-entrance-2"
+                style={{
+                  padding: "0 16px 12px",
+                }}
+              >
+                <p
+                  className="font-serif italic text-sage-600"
+                  style={{
+                    fontSize: "15px",
+                    lineHeight: "1.5",
+                    maxWidth: "480px",
+                  }}
+                >
+                  {throughLine}
+                </p>
+              </div>
+            )}
+
+            {/* Compiled Sheet Entries */}
+            {compiledEntries.length > 0 ? (
+              <div style={{ margin: "0 16px 16px" }}>
+                <div
+                  style={{
+                    background: "white",
+                    border: "1px solid #DDD4C0",
+                    borderRadius: "16px",
+                    overflow: "hidden",
+                  }}
+                >
+                  {compiledEntries.map((entry, i) => {
+                    const isChecked = checkedEntries.has(`${entry.aspirationId}:${entry.behaviorKey}`);
+                    return (
+                      <CompiledEntryRow
+                        key={entry.behaviorKey}
+                        entry={entry}
+                        isChecked={isChecked}
+                        isLast={i === compiledEntries.length - 1}
+                        onToggle={() =>
+                          handleToggleStep(
+                            entry.aspirationId,
+                            entry.behaviorKey,
+                            !isChecked
+                          )
+                        }
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            ) : sheetCompiling ? (
+              /* Compiling indicator — subtle, not a spinner */
+              <div style={{ padding: "0 16px 12px" }}>
+                <p
+                  className="font-serif italic text-sage-400 animate-entrance-2"
+                  style={{ fontSize: "14px" }}
+                >
+                  Building your day...
+                </p>
+              </div>
+            ) : null}
+
+            {/* Pattern Route Cards (fallback when no compiled sheet, or always below) */}
+            {compiledEntries.length === 0 && !sheetCompiling && aspirations
               .filter(a => {
                 const status = a.funnel?.validationStatus || "working";
                 return status === "working" || status === "active";

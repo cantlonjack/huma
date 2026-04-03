@@ -150,9 +150,22 @@ DETAIL (1-3 sentences, shown on tap):
 
 VOICE: fence-post neighbor. Direct. Spare. No therapy-speak. No cheerleading. No "consider" or "try to" — just tell them what to do today.
 
+THROUGH-LINE (required):
+After choosing today's entries, look at the dimensions they touch. Find the connection — the one thread that runs through multiple items. Write ONE sentence (max 20 words) that names this connection in the operator's own language.
+
+GOOD through-lines:
+- "Three of these feed the same thing: your evening rhythm is where Body, Money, and Joy converge."
+- "Today's through-line is the kitchen — it's where your health, budget, and family time overlap."
+- "Morning quiet is doing triple duty: Body, Growth, and Purpose all start there."
+
+BAD through-lines:
+- "You have several important tasks today." (generic, says nothing)
+- "These behaviors will help you optimize your life." (therapy-speak, banned vocabulary)
+
 Return ONLY this JSON, no other text:
 
 {
+  "through_line": "Three of these feed the same thing: your evening rhythm is where Body, Money, and Joy converge.",
   "entries": [
     {
       "behavior_key": "cook-dinner",
@@ -166,7 +179,7 @@ Return ONLY this JSON, no other text:
 }
 
 Every entry MUST have: behavior_key, aspiration_id, headline, detail, time_of_day (morning/midday/evening), dimensions (from: body, people, money, home, growth, joy, purpose, identity).
-MAXIMUM 5 entries. Return ONLY valid JSON.`;
+MAXIMUM 5 entries. through_line is REQUIRED. Return ONLY valid JSON.`;
 
 interface RecentEntry {
   date: string;
@@ -337,7 +350,7 @@ ${Object.entries(allSpecificityHints).map(([key, hint]) => `  ${key}: ${hint}`).
 
     const text = response.content[0].type === "text" ? response.content[0].text : "{}";
 
-    let parsed: { entries: Array<Record<string, unknown>> };
+    let parsed: { entries: Array<Record<string, unknown>>; through_line?: string };
     try {
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : { entries: [] };
@@ -345,7 +358,11 @@ ${Object.entries(allSpecificityHints).map(([key, hint]) => `  ${key}: ${hint}`).
       parsed = { entries: [] };
     }
 
-    return Response.json({ entries: parsed.entries || [], date });
+    return Response.json({
+      entries: parsed.entries || [],
+      through_line: parsed.through_line || null,
+      date,
+    });
   } catch (err) {
     console.error("Sheet compilation error:", err);
     return internalError("Failed to compile sheet.");

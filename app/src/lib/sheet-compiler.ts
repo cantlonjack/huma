@@ -76,9 +76,15 @@ export interface CompileSheetOptions {
   whyStatement?: string;
 }
 
+export interface CompiledSheet {
+  entries: SheetEntry[];
+  throughLine: string | null;
+  date: string;
+}
+
 export async function compileSheet(
   options: CompileSheetOptions
-): Promise<{ entries: SheetEntry[]; date: string }> {
+): Promise<CompiledSheet> {
   const { aspirations, supabase, userId, name, archetypes, whyStatement } = options;
   const date = getLocalDate();
   const dayOfWeek = new Date(date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long" });
@@ -173,5 +179,22 @@ export async function compileSheet(
     throw new Error(`Sheet compilation failed: ${res.status}`);
   }
 
-  return res.json();
+  const data = await res.json();
+  const rawEntries = (data.entries || []) as Array<Record<string, unknown>>;
+  const entries: SheetEntry[] = rawEntries.map((e) => ({
+    id: (e.behavior_key as string) || `entry-${date}`,
+    aspirationId: (e.aspiration_id as string) || "",
+    behaviorKey: (e.behavior_key as string) || "",
+    behaviorText: (e.headline as string) || "",
+    headline: (e.headline as string) || undefined,
+    detail: (e.detail as string) || "",
+    timeOfDay: ((e.time_of_day as string) || "morning") as "morning" | "midday" | "evening",
+    dimensions: (e.dimensions as string[]) || [],
+    checked: false,
+  }));
+  return {
+    entries,
+    throughLine: data.through_line || null,
+    date: data.date || date,
+  };
 }
