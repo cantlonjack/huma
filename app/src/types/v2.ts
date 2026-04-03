@@ -240,8 +240,36 @@ export interface DecomposeResponse {
 }
 
 export interface SheetCompileRequest {
-  userId: string;
-  date: string;
+  name: string;
+  date: string;                                    // YYYY-MM-DD, client local timezone
+  aspirations: Array<{
+    id: string;
+    rawText: string;
+    clarifiedText: string;
+    behaviors: Array<{
+      key: string;
+      text: string;
+      frequency: string;
+      days?: string[];
+      detail?: string;
+      enabled?: boolean;
+    }>;
+  }>;
+  knownContext: KnownContext;                       // Full structured context
+  recentHistory: Array<{                           // Last 7 days of check-off data
+    date: string;
+    behaviorKey: string;
+    checked: boolean;
+  }>;
+  conversationMessages: Array<{                    // Recent conversation (last 20)
+    role: string;
+    content: string;
+  }>;
+  dayOfWeek: string;                               // e.g. "Wednesday"
+  season: string;                                  // e.g. "early spring"
+  dayCount: number;                                // Days since operator started
+  archetypes?: string[];                           // Primary/secondary archetype names
+  whyStatement?: string;                           // Operator's WHY
 }
 
 export interface SheetCompileResponse {

@@ -2,6 +2,91 @@ import Anthropic from "@anthropic-ai/sdk";
 import { isRateLimited } from "@/lib/rate-limit";
 import { matchTemplate, getSpecificityHints } from "@/lib/template-matcher";
 import { rateLimited, badRequest, serviceUnavailable, internalError } from "@/lib/api-error";
+import type { KnownContext, SheetCompileRequest } from "@/types/v2";
+
+// ─── Season derivation ────────────────────────────────────────────────────
+// Returns a human-readable season string from a YYYY-MM-DD date.
+// Uses solstice/equinox-approximate boundaries and qualifies with "early/mid/late".
+
+function getSeason(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00");
+  const month = d.getMonth(); // 0-indexed
+  const day = d.getDate();
+
+  // Approximate season boundaries (Northern Hemisphere)
+  // Spring: Mar 20 – Jun 20, Summer: Jun 21 – Sep 22, Autumn: Sep 23 – Dec 20, Winter: Dec 21 – Mar 19
+  type SeasonName = "spring" | "summer" | "autumn" | "winter";
+  let season: SeasonName;
+  let dayInSeason: number;
+  let seasonLength: number;
+
+  if ((month === 2 && day >= 20) || month === 3 || month === 4 || (month === 5 && day <= 20)) {
+    season = "spring";
+    const start = new Date(d.getFullYear(), 2, 20);
+    dayInSeason = Math.floor((d.getTime() - start.getTime()) / 86400000);
+    seasonLength = 93;
+  } else if ((month === 5 && day >= 21) || month === 6 || month === 7 || (month === 8 && day <= 22)) {
+    season = "summer";
+    const start = new Date(d.getFullYear(), 5, 21);
+    dayInSeason = Math.floor((d.getTime() - start.getTime()) / 86400000);
+    seasonLength = 94;
+  } else if ((month === 8 && day >= 23) || month === 9 || month === 10 || (month === 11 && day <= 20)) {
+    season = "autumn";
+    const start = new Date(d.getFullYear(), 8, 23);
+    dayInSeason = Math.floor((d.getTime() - start.getTime()) / 86400000);
+    seasonLength = 89;
+  } else {
+    season = "winter";
+    // Winter spans year boundary — approximate
+    const start = month === 11 ? new Date(d.getFullYear(), 11, 21) : new Date(d.getFullYear() - 1, 11, 21);
+    dayInSeason = Math.floor((d.getTime() - start.getTime()) / 86400000);
+    seasonLength = 89;
+  }
+
+  const fraction = dayInSeason / seasonLength;
+  const qualifier = fraction < 0.33 ? "early" : fraction < 0.66 ? "mid" : "late";
+  return `${qualifier} ${season}`;
+}
+
+// ─── Structured known_context formatting ──────────────────────────────────
+// Formats KnownContext into readable prose instead of raw JSON.
+
+function formatKnownContext(ctx: KnownContext): string {
+  const lines: string[] = [];
+
+  if (ctx.place?.name) {
+    lines.push(`Location: ${ctx.place.name}${ctx.place.detail ? ` — ${ctx.place.detail}` : ""}`);
+  }
+  if (ctx.work?.title) {
+    lines.push(`Work: ${ctx.work.title}${ctx.work.detail ? ` — ${ctx.work.detail}` : ""}`);
+  }
+  if (ctx.people && ctx.people.length > 0) {
+    const peopleStr = ctx.people.map(p => `${p.name} (${p.role})`).join(", ");
+    lines.push(`People: ${peopleStr}`);
+  }
+  if (ctx.stage?.label) {
+    lines.push(`Life stage: ${ctx.stage.label}${ctx.stage.detail ? ` — ${ctx.stage.detail}` : ""}`);
+  }
+  if (ctx.health?.detail) {
+    lines.push(`Health: ${ctx.health.detail}`);
+  }
+  if (ctx.time?.detail) {
+    lines.push(`Time constraints: ${ctx.time.detail}`);
+  }
+  if (ctx.resources && ctx.resources.length > 0) {
+    lines.push(`Resources: ${ctx.resources.join(", ")}`);
+  }
+
+  // Include any unstructured keys we don't have a formatter for
+  const knownKeys = new Set(["people", "place", "work", "time", "stage", "health", "resources", "archetypes", "why_statement"]);
+  for (const [key, value] of Object.entries(ctx)) {
+    if (!knownKeys.has(key) && value != null) {
+      lines.push(`${key}: ${typeof value === "string" ? value : JSON.stringify(value)}`);
+    }
+  }
+
+  return lines.length > 0 ? lines.join("\n") : "Limited context so far.";
+}
 
 const SHEET_PROMPT = `You are compiling today's production sheet for {name}.
 
@@ -21,7 +106,7 @@ Recent behavior history (last 7 days):
 
 {history_analysis}
 
-Today is {day_of_week}, {date}.
+Today is {day_of_week}, {date}. Season: {season}.
 
 IMPORTANT: Only behaviors from ACTIVE aspirations are included below.
 Do NOT generate entries for aspirations the operator is still planning or dreaming about.
@@ -139,31 +224,24 @@ export async function POST(request: Request) {
     return badRequest("Invalid JSON.");
   }
 
-  const name = (body.name || "there") as string;
-  const aspirations = (body.aspirations || []) as Array<{
-    id: string;
-    rawText: string;
-    clarifiedText: string;
-    behaviors: Array<{
-      key: string;
-      text: string;
-      frequency: string;
-      days?: string[];
-      detail?: string;
-      enabled?: boolean;
-    }>;
-  }>;
-  const knownContext = (body.knownContext || {}) as Record<string, unknown>;
-  const recentHistory = (body.recentHistory || []) as RecentEntry[];
-  const conversationMessages = (body.conversationMessages || []) as Array<{ role: string; content: string }>;
+  const req = body as Partial<SheetCompileRequest>;
+  const name = req.name || "there";
+  const aspirations = req.aspirations || [];
+  const knownContext = (req.knownContext || {}) as KnownContext;
+  const recentHistory = (req.recentHistory || []) as RecentEntry[];
+  const conversationMessages = req.conversationMessages || [];
   // Date should always come from the client (local timezone). UTC fallback only as last resort.
-  const date = (body.date || new Date().toISOString().split("T")[0]) as string;
+  const date = req.date || new Date().toISOString().split("T")[0];
+  const dayCount = req.dayCount || 1;
+  const archetypes = req.archetypes || [];
+  const whyStatement = req.whyStatement || "";
 
   if (aspirations.length === 0) {
     return Response.json({ entries: [], date });
   }
 
-  const dayOfWeek = new Date(date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long" });
+  const dayOfWeek = req.dayOfWeek || new Date(date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long" });
+  const season = req.season || getSeason(date);
 
   // Build specificity hints from matched templates
   const allSpecificityHints: Record<string, string> = {};
@@ -201,9 +279,7 @@ ${Object.entries(allSpecificityHints).map(([key, hint]) => `  ${key}: ${hint}`).
 
   const historyAnalysis = analyzeHistory(recentHistory, dayOfWeek);
 
-  const contextStr = Object.keys(knownContext).length > 0
-    ? JSON.stringify(knownContext, null, 2)
-    : "Limited context so far.";
+  const contextStr = formatKnownContext(knownContext);
 
   // Build conversation transcript (last 20 messages max to stay within token budget)
   const recentConvo = conversationMessages.slice(-20);
@@ -220,7 +296,8 @@ ${Object.entries(allSpecificityHints).map(([key, hint]) => `  ${key}: ${hint}`).
     .replace("{recent_history}", historyStr)
     .replace("{history_analysis}", historyAnalysis)
     .replace("{day_of_week}", dayOfWeek)
-    .replace("{date}", date);
+    .replace("{date}", date)
+    .replace("{season}", season);
 
   try {
     const anthropic = new Anthropic();
