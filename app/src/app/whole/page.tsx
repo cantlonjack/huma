@@ -6,6 +6,7 @@ import WholeShape, { type HolonNode, type HolonLink, type HolonLayer, type Holon
 import HolonExpandPanel from "@/components/whole/HolonExpandPanel";
 import ProfileBanner from "@/components/whole/ProfileBanner";
 import InsightCard from "@/components/whole/InsightCard";
+import WhyEvolution, { type WhyEvolutionData } from "@/components/whole/WhyEvolution";
 import ArchetypeSelector from "@/components/whole/ArchetypeSelector";
 import ContextPortrait from "@/components/ContextPortrait";
 import WholeSkeleton from "@/components/WholeSkeleton";
@@ -23,6 +24,7 @@ import {
   updateKnownContext,
   getPrinciples,
   getAspirationCorrelations,
+  getBehavioralSummary,
   type AspirationCorrelation,
 } from "@/lib/supabase-v2";
 
@@ -212,6 +214,8 @@ export default function WholePage() {
   const [selectedNode, setSelectedNode] = useState<HolonNode | null>(null);
   const [archetypeSelectorOpen, setArchetypeSelectorOpen] = useState(false);
   const [chatShellOpen, setChatShellOpen] = useState(false);
+  const [whyEvolution, setWhyEvolution] = useState<WhyEvolutionData | null>(null);
+  const [whyDate, setWhyDate] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [shapeWidth, setShapeWidth] = useState(340);
   const computeCalledRef = useRef(false);
@@ -276,6 +280,7 @@ export default function WholePage() {
 
             setInsight(dbInsight);
             setWhyStatement(dbWhy.whyStatement);
+            setWhyDate(dbWhy.whyDate);
             setPrinciples(dbPrinciples);
             setCorrelations(dbCorrelations);
 
@@ -342,6 +347,61 @@ export default function WholePage() {
       .catch(() => { /* silent fallback */ })
       .finally(() => setComputing(false));
   }, [loaded, rawContext, aspirations, archetypes.length, whyStatement]);
+
+  // ─── WHY Evolution: check if 28+ days since WHY was set ────────────────
+  const whyEvolveCalledRef = useRef(false);
+
+  useEffect(() => {
+    if (!loaded || !user || !whyStatement || !whyDate || whyEvolveCalledRef.current) return;
+
+    // Check if 28+ days have passed since WHY was set
+    const daysSinceWhy = Math.floor(
+      (Date.now() - new Date(whyDate).getTime()) / 86400000,
+    );
+    if (daysSinceWhy < 28) return;
+
+    whyEvolveCalledRef.current = true;
+
+    // Check if already dismissed this cycle (localStorage flag reset monthly)
+    const dismissKey = `huma-why-evolve-dismissed-${whyDate}`;
+    if (localStorage.getItem(dismissKey)) return;
+
+    const supabase = createClient();
+    if (!supabase) return;
+
+    (async () => {
+      try {
+        const summary = await getBehavioralSummary(supabase, user.id, aspirations);
+        // Need at least 7 active days to have meaningful data
+        if (summary.totalDays < 7) return;
+
+        const summaryText = [
+          `Active days: ${summary.totalDays}/28`,
+          `Top behaviors: ${summary.topBehaviors.map((b) => `${b.name} (${b.completedDays} days)`).join(", ")}`,
+          `Dimension focus: ${Object.entries(summary.dimensionCounts).sort((a, b) => b[1] - a[1]).map(([d, c]) => `${d}: ${c}`).join(", ")}`,
+        ].join("\n");
+
+        const contextStr = serializeContext(rawContext, aspirations);
+
+        const res = await fetch("/api/whole-compute", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contextData: contextStr,
+            compute: "why-evolve",
+            originalWhy: whyStatement,
+            behavioralSummary: summaryText,
+          }),
+        });
+        const data = await res.json();
+        if (data.whyEvolution?.evolved) {
+          setWhyEvolution(data.whyEvolution);
+        }
+      } catch {
+        /* silent */
+      }
+    })();
+  }, [loaded, user, whyStatement, whyDate, aspirations, rawContext]);
 
   // Day number
   const dayNum = (() => {
@@ -455,6 +515,31 @@ export default function WholePage() {
     }
   }, [rawContext, context, user]);
 
+  // WHY evolution: accept evolved WHY
+  const handleWhyEvolutionAccept = useCallback(async (newWhy: string) => {
+    setWhyStatement(newWhy);
+    setWhyEvolution(null);
+    if (user) {
+      const supabase = createClient();
+      if (supabase) {
+        try { await updateWhyStatement(supabase, user.id, newWhy); } catch { /* */ }
+      }
+    }
+    // Also persist to localStorage
+    const updated = { ...rawContext, why_statement: newWhy };
+    setRawContext(updated);
+    localStorage.setItem("huma-v2-known-context", JSON.stringify(updated));
+  }, [rawContext, user]);
+
+  // WHY evolution: dismiss (keep original)
+  const handleWhyEvolutionDismiss = useCallback(() => {
+    setWhyEvolution(null);
+    // Mark dismissed for this WHY cycle so it doesn't re-appear
+    if (whyDate) {
+      localStorage.setItem(`huma-why-evolve-dismissed-${whyDate}`, "1");
+    }
+  }, [whyDate]);
+
   // WHY tap when no context — open chat with pre-filled prompt
   const handleWhyTapNoContext = useCallback(() => {
     setChatShellOpen(true);
@@ -524,6 +609,18 @@ export default function WholePage() {
                 hasContext={hasContext}
               />
             </div>
+
+            {/* WHY Evolution suggestion */}
+            {whyEvolution && whyStatement && (
+              <div style={{ marginTop: "14px" }}>
+                <WhyEvolution
+                  originalWhy={whyStatement}
+                  evolution={whyEvolution}
+                  onAccept={handleWhyEvolutionAccept}
+                  onDismiss={handleWhyEvolutionDismiss}
+                />
+              </div>
+            )}
 
             {/* Shape */}
             <div

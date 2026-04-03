@@ -1388,3 +1388,71 @@ export async function getAspirationCorrelations(
 
   return correlations;
 }
+
+// ─── WHY Evolution: Behavioral Summary ──────────────────────────────────────
+// Builds a text summary of what the operator has actually been doing over
+// the last 28 days — used by the WHY evolution prompt to contrast the
+// original WHY with observed behavior.
+
+export interface BehavioralSummary {
+  totalDays: number;                // Days with any log entry
+  topBehaviors: { key: string; name: string; completedDays: number }[];
+  dimensionCounts: Record<string, number>;  // Dimension → total completions
+}
+
+export async function getBehavioralSummary(
+  supabase: SupabaseClient,
+  userId: string,
+  aspirations: { id: string; behaviors: { key: string; text: string; dimensions?: { dimension: string }[] }[] }[],
+): Promise<BehavioralSummary> {
+  const startStr = getLocalDateOffset(27); // 28 days including today
+  const todayStr = getLocalDate();
+
+  const { data: rows } = await supabase
+    .from("behavior_log")
+    .select("behavior_key, behavior_name, date, completed")
+    .eq("user_id", userId)
+    .eq("completed", true)
+    .gte("date", startStr)
+    .lte("date", todayStr);
+
+  if (!rows || rows.length === 0) {
+    return { totalDays: 0, topBehaviors: [], dimensionCounts: {} };
+  }
+
+  // Count distinct active days
+  const activeDates = new Set(rows.map((r) => r.date));
+
+  // Group by behavior_key
+  const keyMap = new Map<string, { name: string; dates: Set<string> }>();
+  for (const row of rows) {
+    const key = row.behavior_key || row.behavior_name;
+    if (!keyMap.has(key)) keyMap.set(key, { name: row.behavior_name, dates: new Set() });
+    keyMap.get(key)!.dates.add(row.date);
+  }
+
+  // Sort by completed days descending, take top 10
+  const topBehaviors = Array.from(keyMap.entries())
+    .map(([key, val]) => ({ key, name: val.name, completedDays: val.dates.size }))
+    .sort((a, b) => b.completedDays - a.completedDays)
+    .slice(0, 10);
+
+  // Build dimension → completion count from aspiration behavior metadata
+  const dimLookup = new Map<string, string[]>();
+  for (const asp of aspirations) {
+    for (const b of asp.behaviors) {
+      dimLookup.set(b.key, b.dimensions?.map((d) => d.dimension) || []);
+    }
+  }
+
+  const dimensionCounts: Record<string, number> = {};
+  for (const row of rows) {
+    const key = row.behavior_key || row.behavior_name;
+    const dims = dimLookup.get(key) || [];
+    for (const d of dims) {
+      dimensionCounts[d] = (dimensionCounts[d] || 0) + 1;
+    }
+  }
+
+  return { totalDays: activeDates.size, topBehaviors, dimensionCounts };
+}

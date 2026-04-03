@@ -20,12 +20,58 @@ Bad example: "I am passionate about creating a better world through sustainable 
 
 Respond with JSON only: { "why": "your draft here" }`;
 
+const WHY_EVOLVE_SYSTEM = `You are HUMA. An operator set their WHY statement weeks ago. Since then, their actual behavior tells a story. Your job: compare what they said mattered with what they've actually been doing, and draft an evolved WHY that reflects the real shape of their life.
+
+Rules:
+- Write in first person. Maximum 15 words.
+- Direct, specific, no therapy-speak.
+- The evolved WHY should honor the original intent but incorporate what behavioral data reveals.
+- If the original WHY still fits perfectly, say so — don't change for the sake of change.
+- Frame the suggestion warmly: this is recognition, not correction.
+
+Respond with JSON only:
+{
+  "evolved": true/false,
+  "evolvedWhy": "the new draft (only if evolved=true)",
+  "observation": "One sentence (max 20 words) noting what the behavioral data reveals — e.g. 'Your strongest patterns all center on evening rituals with your family.'"
+}`;
+
 export async function POST(request: Request) {
   try {
-    const { contextData, compute } = await request.json();
+    const { contextData, compute, originalWhy, behavioralSummary } = await request.json();
 
     if (!contextData || typeof contextData !== "string") {
       return badRequest("No context data provided.");
+    }
+
+    // ─── WHY Evolution ────────────────────────────────────────────────
+    if (compute === "why-evolve") {
+      if (!originalWhy || !behavioralSummary) {
+        return badRequest("why-evolve requires originalWhy and behavioralSummary.");
+      }
+
+      const prompt = `Original WHY: "${originalWhy}"
+
+Behavioral data (last 28 days):
+${behavioralSummary}
+
+Operator context:
+${contextData}`;
+
+      const res = await client.messages.create({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 200,
+        system: WHY_EVOLVE_SYSTEM,
+        messages: [{ role: "user", content: prompt }],
+      });
+
+      const text = res.content[0].type === "text" ? res.content[0].text : "";
+      try {
+        const parsed = JSON.parse(text.replace(/```json\n?|```/g, "").trim());
+        return Response.json({ whyEvolution: parsed });
+      } catch {
+        return Response.json({ whyEvolution: null });
+      }
     }
 
     const results: { archetypes?: { suggested: string[]; reasoning: string }; why?: string } = {};
