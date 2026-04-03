@@ -141,6 +141,15 @@ export async function GET(request: Request) {
         || "there";
       const dayCount = ctxRow?.created_at ? getDayCountFromCreated(ctxRow.created_at) : 1;
 
+      // Respect notification preferences — skip if morning is explicitly disabled
+      const notifPrefs = (knownContext.notifications || {}) as {
+        morning?: { enabled: boolean };
+      };
+      if (notifPrefs.morning?.enabled === false) {
+        totalSkipped++;
+        continue;
+      }
+
       // 4. Fetch recent check-off history (7 days)
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);

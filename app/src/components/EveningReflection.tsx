@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import { createClient } from "@/lib/supabase";
+import { getKnownContext } from "@/lib/supabase-v2";
 import { getLocalDate } from "@/lib/date-utils";
+import type { NotificationPreferences } from "@/types/v2";
 
 type ReflectionType = "solid" | "shifted" | "hard";
 
@@ -38,53 +41,77 @@ export default function EveningReflection() {
     // Already reflected today
     if (localStorage.getItem(storageKey)) return;
 
-    // Check if it's evening (5pm+)
-    const hour = new Date().getHours();
-    if (hour < 17) return;
+    let cancelled = false;
 
-    // Check if operator has at least 1 check-off today
-    const sheetKey = `huma-v2-sheet-${today}`;
-    const sheetRaw = localStorage.getItem(sheetKey);
-    let hasCheckoff = false;
-
-    if (sheetRaw) {
+    async function checkEveningEligibility() {
+      // Load notification preferences to respect opt-out and custom hour
+      let eveningHour = 17;
       try {
-        const sheet = JSON.parse(sheetRaw);
-        const entries = sheet.entries || sheet;
-        if (Array.isArray(entries)) {
-          hasCheckoff = entries.some(
-            (e: { checked?: boolean }) => e.checked === true
-          );
-        }
+        const supabase = createClient();
+        if (!supabase) throw new Error("no client");
+        const ctx = await getKnownContext(supabase, user!.id);
+        const notif = (ctx.notifications || {}) as NotificationPreferences;
+        if (notif.evening?.enabled === false) return; // opted out
+        if (typeof notif.evening?.hour === "number") eveningHour = notif.evening.hour;
       } catch {
-        // ignore parse errors
+        // Use default hour on failure
       }
-    }
 
-    // Also check compiled sheet cache
-    if (!hasCheckoff) {
-      const compiledKey = `huma-v2-compiled-sheet-${today}`;
-      const compiledRaw = localStorage.getItem(compiledKey);
-      if (compiledRaw) {
+      if (cancelled) return;
+
+      // Check if it's evening (at or past the configured hour)
+      const hour = new Date().getHours();
+      if (hour < eveningHour) return;
+
+      // Check if operator has at least 1 check-off today
+      let hasCheckoff = false;
+
+      const sheetKey = `huma-v2-sheet-${today}`;
+      const sheetRaw = localStorage.getItem(sheetKey);
+      if (sheetRaw) {
         try {
-          const compiled = JSON.parse(compiledRaw);
-          const entries = compiled.entries || compiled;
+          const sheet = JSON.parse(sheetRaw);
+          const entries = sheet.entries || sheet;
           if (Array.isArray(entries)) {
             hasCheckoff = entries.some(
               (e: { checked?: boolean }) => e.checked === true
             );
           }
         } catch {
-          // ignore
+          // ignore parse errors
         }
       }
+
+      // Also check compiled sheet cache
+      if (!hasCheckoff) {
+        const compiledKey = `huma-v2-compiled-sheet-${today}`;
+        const compiledRaw = localStorage.getItem(compiledKey);
+        if (compiledRaw) {
+          try {
+            const compiled = JSON.parse(compiledRaw);
+            const entries = compiled.entries || compiled;
+            if (Array.isArray(entries)) {
+              hasCheckoff = entries.some(
+                (e: { checked?: boolean }) => e.checked === true
+              );
+            }
+          } catch {
+            // ignore
+          }
+        }
+      }
+
+      if (!hasCheckoff || cancelled) return;
+
+      // Delay appearance
+      setTimeout(() => {
+        if (!cancelled) setVisible(true);
+      }, 4000);
     }
 
-    if (!hasCheckoff) return;
+    checkEveningEligibility();
 
-    // Delay appearance
-    const timer = setTimeout(() => setVisible(true), 4000);
-    return () => clearTimeout(timer);
+    return () => { cancelled = true; };
   }, [user, today, storageKey]);
 
   if (!visible || dismissed) return null;

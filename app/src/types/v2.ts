@@ -147,6 +147,12 @@ export interface KnownContextPerson {
   role: string;
 }
 
+export interface NotificationPreferences {
+  morning?: { enabled: boolean; hour: number };   // hour in local time (0-23), default 7
+  evening?: { enabled: boolean; hour: number };    // hour in local time (0-23), default 21
+  timezone?: string;                                // IANA timezone, e.g. "America/New_York"
+}
+
 export interface KnownContext {
   people?: KnownContextPerson[];
   place?: { name: string; detail: string };
@@ -155,6 +161,7 @@ export interface KnownContext {
   stage?: { label: string; detail: string };
   health?: { detail: string };
   resources?: string[];
+  notifications?: NotificationPreferences;
   [key: string]: unknown;
 }
 

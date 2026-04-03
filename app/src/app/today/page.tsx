@@ -11,6 +11,8 @@ import { compileSheet, type CompiledSheet } from "@/lib/sheet-compiler";
 import TabShell from "@/components/TabShell";
 import TodaySkeleton from "@/components/TodaySkeleton";
 import WeekRhythm from "@/components/WeekRhythm";
+import NotificationSettings from "@/components/NotificationSettings";
+import { usePush } from "@/lib/use-push";
 import {
   getAspirations,
   getKnownContext,
@@ -875,8 +877,10 @@ export default function TodayPage() {
   const [compiledEntries, setCompiledEntries] = useState<SheetEntry[]>([]);
   const [throughLine, setThroughLine] = useState<string | null>(null);
   const [sheetCompiling, setSheetCompiling] = useState(false);
+  const [notifSettingsOpen, setNotifSettingsOpen] = useState(false);
   const insightMarkedRef = useRef(false);
   const sheetCompiledRef = useRef(false);
+  const { state: pushState } = usePush(user?.id ?? null);
 
   const dayCount = getDayCount();
 
@@ -1643,6 +1647,28 @@ export default function TodayPage() {
                 ))}
               </>
             )}
+
+            {/* Notification settings link — only for subscribed operators */}
+            {pushState === "subscribed" && (
+              <div style={{ padding: "24px 16px 0", textAlign: "center" }}>
+                <button
+                  onClick={() => setNotifSettingsOpen(true)}
+                  className="font-sans cursor-pointer"
+                  style={{
+                    fontSize: 12,
+                    color: "#8A7D6B",
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    textDecoration: "underline",
+                    textDecorationColor: "#DDD4C0",
+                    textUnderlineOffset: "3px",
+                  }}
+                >
+                  Notification settings
+                </button>
+              </div>
+            )}
           </>
         )}
 
@@ -1697,6 +1723,12 @@ export default function TodayPage() {
           </div>
         )}
       </div>
+
+      {/* Notification Settings */}
+      <NotificationSettings
+        open={notifSettingsOpen}
+        onClose={() => setNotifSettingsOpen(false)}
+      />
 
       {/* Aspiration Quick-Look */}
       {quickLookAspiration && (
