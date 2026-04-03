@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import type { Pattern, Aspiration, DimensionKey } from "@/types/v2";
+import { useState, useEffect, useCallback } from "react";
+import type { Pattern, Aspiration, DimensionKey, FutureAction, FuturePhase } from "@/types/v2";
 import { DIMENSION_COLORS, DIMENSION_LABELS } from "@/types/v2";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
@@ -38,6 +38,44 @@ function progressBarColor(status: Pattern["status"]): string {
 
 // ─── Pattern Card ───────────────────────────────────────────────────────────
 
+/** Get ALL dimensions touched across all steps in a pattern, deduplicated */
+function getAllStepDimensions(pattern: Pattern, aspirations: Aspiration[]): DimensionKey[] {
+  const asp = aspirations.find(a => a.id === pattern.aspirationId);
+  if (!asp) return [];
+
+  const seen = new Set<DimensionKey>();
+  for (const step of pattern.steps) {
+    const stepText = step.text.toLowerCase().trim();
+    const behavior = asp.behaviors?.find(b => b.text.toLowerCase().trim() === stepText);
+    if (behavior?.dimensions) {
+      for (const d of behavior.dimensions) {
+        const dim = typeof d === "string" ? d : d.dimension;
+        if (dim) seen.add(dim as DimensionKey);
+      }
+    }
+  }
+  return Array.from(seen);
+}
+
+/** Get the display name of a pattern's source aspiration */
+function getAspirationName(pattern: Pattern, aspirations: Aspiration[]): string | null {
+  const asp = aspirations.find(a => a.id === pattern.aspirationId);
+  if (!asp) return null;
+  return displayName(asp.title || asp.clarifiedText || asp.rawText);
+}
+
+/** Get coming_up and longer_arc data from the source aspiration */
+function getAspirationPhases(pattern: Pattern, aspirations: Aspiration[]): {
+  comingUp: FutureAction[];
+  longerArc: FuturePhase[];
+} {
+  const asp = aspirations.find(a => a.id === pattern.aspirationId);
+  return {
+    comingUp: asp?.comingUp ?? [],
+    longerArc: asp?.longerArc ?? [],
+  };
+}
+
 /** Get the dimensions that a trigger behavior touches, by looking up the aspiration */
 function getTriggerDimensions(pattern: Pattern, aspirations: Aspiration[]): DimensionKey[] {
   const asp = aspirations.find(a => a.id === pattern.aspirationId);
@@ -67,20 +105,36 @@ function getSharedCaption(pattern: Pattern, aspirations: Aspiration[]): string |
   return `Shared across ${shared.length + 1} patterns`;
 }
 
-function PatternCard({ pattern, aspirations }: { pattern: Pattern; aspirations: Aspiration[] }) {
+function PatternCard({
+  pattern,
+  aspirations,
+  expanded,
+  onToggle,
+}: {
+  pattern: Pattern;
+  aspirations: Aspiration[];
+  expanded: boolean;
+  onToggle: () => void;
+}) {
   const colors = statusColor(pattern.status);
   const percent = validationPercent(pattern);
   const triggerStep = pattern.steps.find(s => s.isTrigger);
   const pathwaySteps = pattern.steps.filter(s => !s.isTrigger);
+  const allDims = getAllStepDimensions(pattern, aspirations);
+  const aspirationName = getAspirationName(pattern, aspirations);
+  const { comingUp, longerArc } = getAspirationPhases(pattern, aspirations);
+  const hasExpandContent = comingUp.length > 0 || longerArc.length > 0;
 
   return (
     <div
+      onClick={onToggle}
       style={{
         background: "white",
         border: "1px solid #DDD4C0",
         borderRadius: "16px",
         marginBottom: "16px",
         overflow: "hidden",
+        cursor: hasExpandContent ? "pointer" : "default",
       }}
     >
       {/* Header */}
@@ -241,13 +295,144 @@ function PatternCard({ pattern, aspirations }: { pattern: Pattern; aspirations: 
           </div>
         )}
 
-        {/* Time window if present */}
+        {/* Aggregate dimension row — all dimensions across all steps */}
+        {allDims.length > 0 && (
+          <div
+            style={{
+              marginTop: "14px",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "8px",
+              alignItems: "center",
+            }}
+          >
+            <span
+              className="font-sans"
+              style={{ fontSize: "11px", color: "var(--color-sage-400)" }}
+            >
+              Touches
+            </span>
+            {allDims.map(dim => (
+              <div key={dim} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                <div
+                  style={{
+                    width: "5px",
+                    height: "5px",
+                    borderRadius: "50%",
+                    background: DIMENSION_COLORS[dim] || "#8BAF8E",
+                    flexShrink: 0,
+                  }}
+                />
+                <span
+                  className="font-sans"
+                  style={{ fontSize: "11px", color: "var(--color-sage-400)" }}
+                >
+                  {DIMENSION_LABELS[dim] || dim}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Time window if present (shown in collapsed state too) */}
         {pattern.timeWindow && (
           <div
             className="font-sans text-sage-400"
             style={{ fontSize: "12px", marginTop: "12px", fontStyle: "italic" }}
           >
             {pattern.timeWindow}
+          </div>
+        )}
+      </div>
+
+      {/* Expanded: Coming Up + Longer Arc */}
+      <div
+        style={{
+          maxHeight: expanded ? "600px" : "0px",
+          opacity: expanded ? 1 : 0,
+          overflow: "hidden",
+          transition: "max-height 300ms cubic-bezier(0.22, 1, 0.36, 1), opacity 300ms cubic-bezier(0.22, 1, 0.36, 1)",
+        }}
+      >
+        {hasExpandContent && (
+          <div style={{ padding: "0 16px 14px", borderTop: "1px solid #F0EBE3" }}>
+            {/* Coming Up */}
+            {comingUp.length > 0 && (
+              <div style={{ paddingTop: "14px" }}>
+                <span
+                  className="font-sans"
+                  style={{
+                    display: "block",
+                    fontSize: "9px",
+                    fontWeight: 600,
+                    letterSpacing: "0.18em",
+                    color: "var(--color-sage-400)",
+                    marginBottom: "8px",
+                  }}
+                >
+                  COMING UP
+                </span>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  {comingUp.map((item, i) => (
+                    <div key={i}>
+                      <span
+                        className="font-sans"
+                        style={{ fontSize: "13px", color: "var(--color-sage-500)", lineHeight: "1.4" }}
+                      >
+                        {item.name}
+                      </span>
+                      {item.timeframe && (
+                        <span
+                          className="font-sans"
+                          style={{ fontSize: "12px", color: "var(--color-sage-400)", marginLeft: "6px" }}
+                        >
+                          — {item.timeframe}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Longer Arc */}
+            {longerArc.length > 0 && (
+              <div style={{ paddingTop: comingUp.length > 0 ? "14px" : "14px" }}>
+                <span
+                  className="font-sans"
+                  style={{
+                    display: "block",
+                    fontSize: "9px",
+                    fontWeight: 600,
+                    letterSpacing: "0.18em",
+                    color: "var(--color-sage-400)",
+                    marginBottom: "8px",
+                  }}
+                >
+                  THE LONGER ARC
+                </span>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  {longerArc.map((phase, i) => (
+                    <div key={i}>
+                      <span
+                        className="font-sans"
+                        style={{ fontSize: "13px", color: "var(--color-sage-500)", lineHeight: "1.4" }}
+                      >
+                        {phase.phase}
+                      </span>
+                      {phase.timeframe && (
+                        <span
+                          className="font-sans"
+                          style={{ fontSize: "12px", color: "var(--color-sage-400)", marginLeft: "6px" }}
+                        >
+                          — {phase.timeframe}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -287,6 +472,22 @@ function PatternCard({ pattern, aspirations }: { pattern: Pattern; aspirations: 
           <span>{percent}%</span>
         </div>
       </div>
+
+      {/* Aspiration provenance */}
+      {aspirationName && (
+        <div style={{ padding: "8px 16px 12px", borderTop: "1px solid #F0EBE3" }}>
+          <span
+            className="font-sans"
+            style={{
+              fontSize: "11px",
+              fontStyle: "italic",
+              color: "var(--color-sage-400)",
+            }}
+          >
+            From: {aspirationName}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -347,6 +548,11 @@ export default function GrowPage() {
   const [loading, setLoading] = useState(true);
   const [patterns, setPatterns] = useState<Pattern[]>([]);
   const [aspirations, setAspirations] = useState<Aspiration[]>([]);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const handleToggleExpand = useCallback((id: string) => {
+    setExpandedId(prev => prev === id ? null : id);
+  }, []);
 
   // ─── Data Loading ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -492,6 +698,8 @@ export default function GrowPage() {
                 subtitle="These patterns are working. They're part of your operating system."
                 patterns={validated}
                 aspirations={aspirations}
+                expandedId={expandedId}
+                onToggleExpand={handleToggleExpand}
               />
             )}
 
@@ -502,6 +710,8 @@ export default function GrowPage() {
                 subtitle="You're building these. Keep going."
                 patterns={working}
                 aspirations={aspirations}
+                expandedId={expandedId}
+                onToggleExpand={handleToggleExpand}
               />
             )}
 
@@ -512,6 +722,8 @@ export default function GrowPage() {
                 subtitle="Still emerging. The shape will clarify with use."
                 patterns={finding}
                 aspirations={aspirations}
+                expandedId={expandedId}
+                onToggleExpand={handleToggleExpand}
               />
             )}
           </div>
@@ -528,11 +740,15 @@ function PatternSection({
   subtitle,
   patterns,
   aspirations,
+  expandedId,
+  onToggleExpand,
 }: {
   title: string;
   subtitle: string;
   patterns: Pattern[];
   aspirations: Aspiration[];
+  expandedId: string | null;
+  onToggleExpand: (id: string) => void;
 }) {
   return (
     <div style={{ marginBottom: "24px" }}>
@@ -551,7 +767,13 @@ function PatternSection({
         </p>
       </div>
       {patterns.map(p => (
-        <PatternCard key={p.id} pattern={p} aspirations={aspirations} />
+        <PatternCard
+          key={p.id}
+          pattern={p}
+          aspirations={aspirations}
+          expanded={expandedId === p.id}
+          onToggle={() => onToggleExpand(p.id)}
+        />
       ))}
     </div>
   );
