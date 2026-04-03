@@ -29,9 +29,11 @@ interface ChatSheetProps {
   sourceTab?: "today" | "whole" | "grow";
   /** Structured context from the current tab */
   tabContext?: Record<string, unknown>;
+  /** Pre-loaded HUMA opener message (e.g. pattern investigation). Shown once on first open. */
+  initialMessage?: string;
 }
 
-export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tabContext }: ChatSheetProps) {
+export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tabContext, initialMessage }: ChatSheetProps) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<RichMessage[]>([]);
   const [input, setInput] = useState("");
@@ -134,6 +136,22 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
     }
     loadState();
   }, [open, loaded, user]);
+
+  // Inject initial HUMA opener (e.g. "What changed?" for dropping patterns)
+  const initialMessageInjected = useRef<string | null>(null);
+  useEffect(() => {
+    if (!loaded || !open || !initialMessage) return;
+    // Only inject once per unique initialMessage value
+    if (initialMessageInjected.current === initialMessage) return;
+    initialMessageInjected.current = initialMessage;
+    const opener: RichMessage = {
+      id: crypto.randomUUID(),
+      role: "huma",
+      content: initialMessage,
+      createdAt: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, opener]);
+  }, [loaded, open, initialMessage]);
 
   // Persist to localStorage
   useEffect(() => {

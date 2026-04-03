@@ -225,9 +225,44 @@ Help them see connections between parts, not just individual items.`);
       parts.push(`Their principles: ${(tabContext.principles as string[]).join("; ")}`);
     }
   } else if (sourceTab === "grow") {
-    parts.push(`The operator opened chat from the GROW tab (patterns view).
+    // Check if this is a pattern investigation ("What changed?" flow)
+    const selected = tabContext?.selectedPattern as {
+      name?: string; trigger?: string; steps?: string[];
+      status?: string; validationCount?: number; validationTarget?: number;
+      trend?: string; aspirationName?: string;
+    } | undefined;
+
+    if (selected?.trend === "dropping") {
+      parts.push(`The operator tapped "something changed" on a DROPPING pattern. This is an investigation conversation.
+
+PATTERN UNDER INVESTIGATION:
+- Name: ${selected.name}
+- Trigger: "${selected.trigger}"
+- Steps: ${(selected.steps || []).join(" → ")}
+- Status: ${selected.status} (${selected.validationCount}/${selected.validationTarget} days)
+- Source aspiration: ${selected.aspirationName || "unknown"}
+- Trend: dropping (consistency declined over the past 14 days)
+
+YOUR ROLE: Help the operator figure out what changed in their life that caused this pattern to drop off. This is NOT about motivation or trying harder. Something in their context shifted — a schedule change, a new commitment, a season change, an emotional shift, a logistical barrier.
+
+APPROACH:
+1. Ask what changed — one question, direct, specific to the pattern's trigger
+2. Listen for the systemic cause (not the symptom)
+3. If context has shifted, suggest a revised decomposition that accounts for the new reality
+4. The pattern may need to evolve, not be forced back. "Maybe the 6am version isn't available right now. What time IS available?"
+
+TONE: Curious, not concerned. Investigative, not motivational. This is a design problem, not a discipline problem.
+
+NEVER say: "Don't be too hard on yourself" / "That's okay" / "Life gets busy" / "Try to get back on track"
+DO say: "What shifted?" / "When did the [trigger] stop fitting?" / "What does [time of day] look like now?"
+
+Use [[DECOMPOSITION:...]] marker if the operator describes changed context that warrants a revised behavior set.
+Use [[CONTEXT:...]] marker to capture any new context revealed (schedule changes, new commitments, etc).`);
+    } else {
+      parts.push(`The operator opened chat from the GROW tab (patterns view).
 Tone: forward-looking, pattern-aware. They're looking at how their behaviors connect.
 Help them see which patterns are forming, what triggers are working, and where the leverage is.`);
+    }
 
     if (tabContext?.patterns && Array.isArray(tabContext.patterns)) {
       const patList = (tabContext.patterns as Array<{ name: string; trigger: string; status: string; validationCount: number; validationTarget: number }>)

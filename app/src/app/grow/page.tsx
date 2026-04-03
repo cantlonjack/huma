@@ -138,6 +138,30 @@ function getSharedCaption(pattern: Pattern, aspirations: Aspiration[]): string |
   return `Shared across ${shared.length + 1} patterns`;
 }
 
+/** Find the approximate date where a dropping pattern started declining */
+function findDropOffDate(points: SparklineData["points"]): string | null {
+  if (points.length < 4) return null;
+  const mid = Math.floor(points.length / 2);
+  // Walk backward from midpoint to find last "good" day (ratio >= 0.5)
+  for (let i = mid; i >= 0; i--) {
+    if (points[i].ratio >= 0.5) {
+      return points[i].date;
+    }
+  }
+  // Fallback: use the point with highest ratio in first half
+  let best = 0;
+  for (let i = 1; i < mid; i++) {
+    if (points[i].ratio > points[best].ratio) best = i;
+  }
+  return points[best].date;
+}
+
+/** Format a YYYY-MM-DD date as a readable string like "March 21" */
+function formatDropDate(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00");
+  return d.toLocaleDateString("en-US", { month: "long", day: "numeric" });
+}
+
 function PatternCard({
   pattern,
   aspirations,
@@ -145,6 +169,7 @@ function PatternCard({
   onToggle,
   primaryArchetype,
   sparkline,
+  onInvestigate,
 }: {
   pattern: Pattern;
   aspirations: Aspiration[];
@@ -152,6 +177,8 @@ function PatternCard({
   onToggle: () => void;
   primaryArchetype?: string;
   sparkline?: SparklineData;
+  /** Called when operator taps "something changed" on a dropping pattern */
+  onInvestigate?: (patternId: string) => void;
 }) {
   const colors = statusColor(pattern.status);
   const percent = validationPercent(pattern);
@@ -537,17 +564,39 @@ function PatternCard({
         >
           <span>{pattern.validationCount} of {pattern.validationTarget} days</span>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            {sparkline && sparkline.trend !== "stable" && (
+            {sparkline && sparkline.trend === "rising" && (
               <span
                 className="font-serif"
                 style={{
                   fontSize: "11px",
-                  color: sparkline.trend === "rising" ? "#3A5A40" : "#B5621E",
+                  color: "#3A5A40",
                   fontStyle: "italic",
                 }}
               >
-                {sparkline.trend === "rising" ? "momentum" : "something changed"}
+                momentum
               </span>
+            )}
+            {sparkline && sparkline.trend === "dropping" && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onInvestigate?.(pattern.id);
+                }}
+                className="font-serif cursor-pointer"
+                style={{
+                  fontSize: "11px",
+                  color: "#B5621E",
+                  fontStyle: "italic",
+                  background: "none",
+                  border: "none",
+                  padding: "2px 0",
+                  textDecoration: "underline",
+                  textDecorationStyle: "dotted",
+                  textUnderlineOffset: "2px",
+                }}
+              >
+                something changed
+              </button>
             )}
             <span>{percent}%</span>
           </div>
@@ -633,9 +682,18 @@ export default function GrowPage() {
   const [archetypes, setArchetypes] = useState<string[]>([]);
   const [whyStatement, setWhyStatement] = useState<string | null>(null);
   const [sparklines, setSparklines] = useState<Map<string, SparklineData>>(new Map());
+  const [investigatePatternId, setInvestigatePatternId] = useState<string | null>(null);
 
   const handleToggleExpand = useCallback((id: string) => {
     setExpandedId(prev => prev === id ? null : id);
+  }, []);
+
+  const handleInvestigate = useCallback((patternId: string) => {
+    setInvestigatePatternId(patternId);
+  }, []);
+
+  const handleChatClose = useCallback(() => {
+    setInvestigatePatternId(null);
   }, []);
 
   // ─── Data Loading ───────────────────────────────────────────────────────
@@ -777,6 +835,38 @@ export default function GrowPage() {
     if (Object.keys(trends).length > 0) tabContext.patternTrends = trends;
   }
 
+  // ─── "What changed?" investigation ─────────────────────────────────────
+  const investigatePattern = investigatePatternId
+    ? patterns.find(p => p.id === investigatePatternId) ?? null
+    : null;
+  const investigateSparkline = investigatePatternId
+    ? sparklines.get(investigatePatternId) ?? null
+    : null;
+
+  // Build the initial HUMA message for dropping pattern investigation
+  let investigateMessage: string | undefined;
+  if (investigatePattern && investigateSparkline?.trend === "dropping") {
+    const dropDate = findDropOffDate(investigateSparkline.points);
+    const dateStr = dropDate ? ` after ${formatDropDate(dropDate)}` : "";
+    investigateMessage = `Your ${displayName(investigatePattern.name)} dropped off${dateStr}. What changed?`;
+  }
+
+  // Enrich tabContext with selected pattern details when investigating
+  if (investigatePattern && investigateSparkline) {
+    tabContext.selectedPattern = {
+      id: investigatePattern.id,
+      name: investigatePattern.name,
+      trigger: investigatePattern.trigger,
+      steps: investigatePattern.steps.map(s => s.text),
+      status: investigatePattern.status,
+      validationCount: investigatePattern.validationCount,
+      validationTarget: investigatePattern.validationTarget,
+      trend: investigateSparkline.trend,
+      sparklinePoints: investigateSparkline.points,
+      aspirationName: getAspirationName(investigatePattern, aspirations),
+    };
+  }
+
   // ─── Group patterns by status ──────────────────────────────────────────
   const validated = patterns.filter(p => p.status === "validated");
   const working = patterns.filter(p => p.status === "working");
@@ -787,6 +877,9 @@ export default function GrowPage() {
       contextPrompt="What patterns are you noticing in your days?"
       sourceTab="grow"
       tabContext={tabContext}
+      forceOpen={!!investigatePatternId}
+      onChatClose={handleChatClose}
+      initialMessage={investigateMessage}
     >
       <div
         className="min-h-dvh bg-sand-50"
@@ -843,6 +936,7 @@ export default function GrowPage() {
                 onToggleExpand={handleToggleExpand}
                 primaryArchetype={archetypes[0]}
                 sparklines={sparklines}
+                onInvestigate={handleInvestigate}
               />
             )}
 
@@ -857,6 +951,7 @@ export default function GrowPage() {
                 onToggleExpand={handleToggleExpand}
                 primaryArchetype={archetypes[0]}
                 sparklines={sparklines}
+                onInvestigate={handleInvestigate}
               />
             )}
 
@@ -871,6 +966,7 @@ export default function GrowPage() {
                 primaryArchetype={archetypes[0]}
                 onToggleExpand={handleToggleExpand}
                 sparklines={sparklines}
+                onInvestigate={handleInvestigate}
               />
             )}
           </div>
@@ -892,6 +988,7 @@ function PatternSection({
   onToggleExpand,
   primaryArchetype,
   sparklines,
+  onInvestigate,
 }: {
   title: string;
   subtitle: string;
@@ -902,6 +999,7 @@ function PatternSection({
   onToggleExpand: (id: string) => void;
   primaryArchetype?: string;
   sparklines?: Map<string, SparklineData>;
+  onInvestigate?: (patternId: string) => void;
 }) {
   return (
     <div style={{ marginBottom: "24px" }}>
@@ -937,6 +1035,7 @@ function PatternSection({
           onToggle={() => onToggleExpand(p.id)}
           primaryArchetype={primaryArchetype}
           sparkline={sparklines?.get(p.id)}
+          onInvestigate={onInvestigate}
         />
       ))}
     </div>

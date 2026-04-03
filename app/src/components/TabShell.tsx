@@ -20,13 +20,15 @@ interface TabShellProps {
   sourceTab?: "today" | "whole" | "grow";
   /** Structured context data from the current tab to pass to the conversation engine */
   tabContext?: Record<string, unknown>;
+  /** Pre-loaded HUMA opener message for ChatSheet (e.g. pattern investigation) */
+  initialMessage?: string;
 }
 
 /**
  * Wraps a tab page with the ChatBubble + ChatSheet overlay.
  * BottomNav is rendered in the root layout — this only adds the chat layer.
  */
-export default function TabShell({ contextPrompt, children, forceOpen, onChatClose, hideBubble, sourceTab, tabContext }: TabShellProps) {
+export default function TabShell({ contextPrompt, children, forceOpen, onChatClose, hideBubble, sourceTab, tabContext, initialMessage }: TabShellProps) {
   const [chatOpen, setChatOpen] = useState(false);
   const online = useNetworkStatus();
 
@@ -72,6 +74,7 @@ export default function TabShell({ contextPrompt, children, forceOpen, onChatClo
         contextPrompt={contextPrompt}
         sourceTab={sourceTab}
         tabContext={tabContext}
+        initialMessage={initialMessage}
       />
     </>
   );
