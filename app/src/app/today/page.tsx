@@ -25,6 +25,7 @@ interface BehaviorStep {
   text: string;
   is_trigger: boolean;
   dimension: string;
+  dimensions: string[];
 }
 
 interface CheckedEntry {
@@ -83,7 +84,12 @@ function getBehaviorChain(aspiration: Aspiration): BehaviorStep[] {
       ? (typeof dim === "string" ? dim : dim.dimension)
       : "";
 
-    return { text: b.text, is_trigger: isTrigger, dimension };
+    // Extract all dimension keys for this behavior
+    const allDims: string[] = b.dimensions
+      ? b.dimensions.map(d => typeof d === "string" ? d : d.dimension).filter(Boolean)
+      : [];
+
+    return { text: b.text, is_trigger: isTrigger, dimension, dimensions: allDims };
   });
 }
 
@@ -151,12 +157,52 @@ function AspirationQuickLook({
 
 // ─── Pattern Route Card ─────────────────────────────────────────────────────
 
+/** Build a one-line trigger caption: dimensions served + shared behavior signal */
+function triggerCaption(
+  triggerStep: BehaviorStep | undefined,
+  allAspirations: Aspiration[],
+  currentAspirationId: string,
+): string | null {
+  if (!triggerStep) return null;
+
+  const parts: string[] = [];
+  const LABELS: Record<string, string> = {
+    body: "body", people: "people", money: "money", home: "home",
+    growth: "growth", joy: "joy", purpose: "purpose", identity: "identity",
+  };
+
+  // Dimension count
+  const dims = triggerStep.dimensions;
+  if (dims.length > 1) {
+    const names = dims.map(d => LABELS[d] || d);
+    parts.push(`Serves ${names.join(", ")}`);
+  }
+
+  // Shared behavior detection: does this trigger text appear in other aspirations?
+  const triggerText = triggerStep.text.toLowerCase().trim();
+  const sharedWith = allAspirations.filter(a =>
+    a.id !== currentAspirationId &&
+    a.behaviors?.some(b => b.text.toLowerCase().trim() === triggerText)
+  );
+  if (sharedWith.length > 0) {
+    const name = displayName(sharedWith[0].clarifiedText || sharedWith[0].rawText);
+    if (sharedWith.length === 1) {
+      parts.push(`Shared with ${name}`);
+    } else {
+      parts.push(`Shared across ${sharedWith.length + 1} patterns`);
+    }
+  }
+
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
 function PatternRouteCard({
   aspiration,
   steps,
   checkedSteps,
   weekCounts,
   thirtyDayCount,
+  allAspirations,
   onToggleStep,
   onOpenChat,
 }: {
@@ -165,12 +211,14 @@ function PatternRouteCard({
   checkedSteps: Set<string>;
   weekCounts: Record<string, { completed: number; total: number }>;
   thirtyDayCount: number;
+  allAspirations: Aspiration[];
   onToggleStep: (aspirationId: string, stepText: string, checked: boolean) => void;
   onOpenChat: (context: string) => void;
 }) {
   const [showCompletion, setShowCompletion] = useState(false);
   const [microCounters, setMicroCounters] = useState<Set<string>>(new Set());
   const [bouncingStep, setBouncingStep] = useState<string | null>(null);
+  const [glowingStep, setGlowingStep] = useState<string | null>(null);
 
   const allChecked = steps.length > 0 && steps.every(s => checkedSteps.has(s.text));
   const validationStatus = aspiration.funnel?.validationStatus || "working";
@@ -192,6 +240,10 @@ function PatternRouteCard({
     setTimeout(() => setBouncingStep(null), 200);
 
     if (!wasChecked) {
+      // Glow dimension dots
+      setGlowingStep(stepText);
+      setTimeout(() => setGlowingStep(null), 600);
+
       // Show micro-counter after 150ms
       setTimeout(() => {
         setMicroCounters(prev => new Set(prev).add(stepText));
@@ -359,7 +411,9 @@ function PatternRouteCard({
                   padding: isTrigger ? "10px 14px 10px 48px" : "9px 14px 9px 48px",
                   borderBottom: i < steps.length - 1 ? `1px solid ${isTrigger ? "#F0EBE3" : "#F8F5F0"}` : "none",
                   background: isTrigger ? "linear-gradient(135deg, #FFFAF4, #FFF4E6)" : "transparent",
-                  display: "block",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "8px",
                 }}
               >
                 {/* Checkbox */}
@@ -393,54 +447,106 @@ function PatternRouteCard({
                   )}
                 </div>
 
-                {/* Trigger badge */}
-                {isTrigger && (
+                {/* Text content */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {/* Trigger badge */}
+                  {isTrigger && (
+                    <span
+                      className="font-sans"
+                      style={{
+                        display: "block",
+                        fontSize: "9px",
+                        fontWeight: 600,
+                        letterSpacing: "0.18em",
+                        color: "#B5621E",
+                        marginBottom: "2px",
+                      }}
+                    >
+                      THE DECISION
+                    </span>
+                  )}
+
+                  {/* Step text */}
                   <span
                     className="font-sans"
                     style={{
+                      fontSize: isTrigger ? "15px" : "14px",
+                      fontWeight: isTrigger ? 500 : 400,
+                      color: isChecked
+                        ? "var(--color-sage-300)"
+                        : (isTrigger ? "var(--color-sage-700)" : "var(--color-sage-600)"),
+                      textDecoration: isChecked ? "line-through" : "none",
                       display: "block",
-                      fontSize: "9px",
-                      fontWeight: 600,
-                      letterSpacing: "0.18em",
-                      color: "#B5621E",
-                      marginBottom: "2px",
+                      lineHeight: "1.4",
                     }}
                   >
-                    THE DECISION
+                    {step.text}
                   </span>
-                )}
 
-                {/* Step text */}
-                <span
-                  className="font-sans"
-                  style={{
-                    fontSize: isTrigger ? "15px" : "14px",
-                    fontWeight: isTrigger ? 500 : 400,
-                    color: isChecked
-                      ? "var(--color-sage-300)"
-                      : (isTrigger ? "var(--color-sage-700)" : "var(--color-sage-600)"),
-                    textDecoration: isChecked ? "line-through" : "none",
-                    display: "block",
-                    lineHeight: "1.4",
-                  }}
-                >
-                  {step.text}
-                </span>
+                  {/* Trigger caption — nodal visibility */}
+                  {isTrigger && (() => {
+                    const caption = triggerCaption(step, allAspirations, aspiration.id);
+                    return caption ? (
+                      <span
+                        className="font-sans"
+                        style={{
+                          display: "block",
+                          fontSize: "11px",
+                          fontStyle: "italic",
+                          color: isChecked ? "var(--color-sage-300)" : "var(--color-sage-400)",
+                          marginTop: "2px",
+                          transition: "color 300ms cubic-bezier(0.22, 1, 0.36, 1)",
+                        }}
+                      >
+                        {caption}
+                      </span>
+                    ) : null;
+                  })()}
 
-                {/* Micro-counter */}
-                {showMicro && wc && (
-                  <span
-                    className="font-sans animate-fade-in"
+                  {/* Micro-counter */}
+                  {showMicro && wc && (
+                    <span
+                      className="font-sans animate-fade-in"
+                      style={{
+                        display: "block",
+                        fontSize: "11px",
+                        fontStyle: "italic",
+                        color: "var(--color-sage-400)",
+                        marginTop: "2px",
+                      }}
+                    >
+                      {step.text} &middot; {wc.completed} of 7 days this week
+                    </span>
+                  )}
+                </div>
+
+                {/* Dimension dots */}
+                {step.dimensions.length > 0 && (
+                  <div
                     style={{
-                      display: "block",
-                      fontSize: "11px",
-                      fontStyle: "italic",
-                      color: "var(--color-sage-400)",
-                      marginTop: "2px",
+                      display: "flex",
+                      gap: "3px",
+                      alignItems: "center",
+                      flexShrink: 0,
+                      marginTop: isTrigger ? "10px" : "2px",
+                      opacity: isChecked ? 0.4 : 1,
+                      transition: "opacity 300ms cubic-bezier(0.22, 1, 0.36, 1)",
                     }}
                   >
-                    {step.text} &middot; {wc.completed} of 7 days this week
-                  </span>
+                    {step.dimensions.map(dim => (
+                      <div
+                        key={dim}
+                        title={dim}
+                        className={glowingStep === step.text ? "animate-dim-glow" : ""}
+                        style={{
+                          width: "6px",
+                          height: "6px",
+                          borderRadius: "50%",
+                          background: DIMENSION_DOT_COLORS[dim] || "#8BAF8E",
+                        }}
+                      />
+                    ))}
+                  </div>
                 )}
               </button>
             );
@@ -448,36 +554,77 @@ function PatternRouteCard({
         </div>
       )}
 
-      {/* Window + validation strip */}
-      {!showCompletion && (
-        <div
-          style={{
-            padding: "10px 14px",
-            borderTop: "1px solid #F0EBE3",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          {/* Left: timing */}
-          <span className="font-sans text-sage-400" style={{ fontSize: "12px" }}>
-            {aspiration.triggerData?.window
-              ? `${aspiration.triggerData.window}${aspiration.triggerData.failureNote ? ` · ${aspiration.triggerData.failureNote}` : ""}`
-              : ""}
-          </span>
+      {/* Footer: dimensions + timing/validation */}
+      {!showCompletion && (() => {
+        // Collect unique dimensions across all steps
+        const allDims = Array.from(new Set(steps.flatMap(s => s.dimensions)));
+        const LABELS: Record<string, string> = {
+          body: "Body", people: "People", money: "Money", home: "Home",
+          growth: "Growth", joy: "Joy", purpose: "Purpose", identity: "Identity",
+        };
+        return (
+          <>
+            {/* Dimension summary */}
+            {allDims.length > 0 && (
+              <div
+                style={{
+                  padding: "6px 14px 0",
+                  borderTop: "1px solid #F0EBE3",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <div style={{ display: "flex", gap: "3px", flexShrink: 0 }}>
+                  {allDims.map(dim => (
+                    <div
+                      key={dim}
+                      style={{
+                        width: "5px",
+                        height: "5px",
+                        borderRadius: "50%",
+                        background: DIMENSION_DOT_COLORS[dim] || "#8BAF8E",
+                      }}
+                    />
+                  ))}
+                </div>
+                <span className="font-sans text-sage-400" style={{ fontSize: "11px" }}>
+                  Touches {allDims.map(d => LABELS[d] || d).join(", ")}
+                </span>
+              </div>
+            )}
 
-          {/* Right: validation */}
-          <span
-            className="font-sans"
-            style={{
-              fontSize: "12px",
-              color: validationStatus === "adjusting" ? "#B5621E" : (validationStatus === "active" ? "var(--color-sage-400)" : "var(--color-sage-500)"),
-            }}
-          >
-            {thirtyDayCount}/30 &middot; {validationStatus}
-          </span>
-        </div>
-      )}
+            {/* Window + validation strip */}
+            <div
+              style={{
+                padding: allDims.length > 0 ? "6px 14px 10px" : "10px 14px",
+                borderTop: allDims.length > 0 ? "none" : "1px solid #F0EBE3",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              {/* Left: timing */}
+              <span className="font-sans text-sage-400" style={{ fontSize: "12px" }}>
+                {aspiration.triggerData?.window
+                  ? `${aspiration.triggerData.window}${aspiration.triggerData.failureNote ? ` · ${aspiration.triggerData.failureNote}` : ""}`
+                  : ""}
+              </span>
+
+              {/* Right: validation */}
+              <span
+                className="font-sans"
+                style={{
+                  fontSize: "12px",
+                  color: validationStatus === "adjusting" ? "#B5621E" : (validationStatus === "active" ? "var(--color-sage-400)" : "var(--color-sage-500)"),
+                }}
+              >
+                {thirtyDayCount}/30 &middot; {validationStatus}
+              </span>
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 }
@@ -1182,6 +1329,7 @@ export default function TodayPage() {
                       checkedSteps={aspChecked}
                       weekCounts={weekCounts}
                       thirtyDayCount={thirtyDayCounts[asp.id] || 0}
+                      allAspirations={aspirations}
                       onToggleStep={handleToggleStep}
                       onOpenChat={openChatWithContext}
                     />

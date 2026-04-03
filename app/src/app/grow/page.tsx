@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { Pattern, Aspiration } from "@/types/v2";
+import type { Pattern, Aspiration, DimensionKey } from "@/types/v2";
+import { DIMENSION_COLORS, DIMENSION_LABELS } from "@/types/v2";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { displayName } from "@/lib/display-name";
@@ -37,7 +38,36 @@ function progressBarColor(status: Pattern["status"]): string {
 
 // ─── Pattern Card ───────────────────────────────────────────────────────────
 
-function PatternCard({ pattern }: { pattern: Pattern }) {
+/** Get the dimensions that a trigger behavior touches, by looking up the aspiration */
+function getTriggerDimensions(pattern: Pattern, aspirations: Aspiration[]): DimensionKey[] {
+  const asp = aspirations.find(a => a.id === pattern.aspirationId);
+  if (!asp) return [];
+
+  const triggerText = pattern.trigger.toLowerCase().trim();
+  const behavior = asp.behaviors?.find(b => b.text.toLowerCase().trim() === triggerText);
+  if (!behavior?.dimensions) return [];
+
+  return behavior.dimensions
+    .map(d => typeof d === "string" ? d : d.dimension)
+    .filter(Boolean) as DimensionKey[];
+}
+
+/** Detect if trigger behavior is shared across multiple aspirations */
+function getSharedCaption(pattern: Pattern, aspirations: Aspiration[]): string | null {
+  const triggerText = pattern.trigger.toLowerCase().trim();
+  const shared = aspirations.filter(a =>
+    a.id !== pattern.aspirationId &&
+    a.behaviors?.some(b => b.text.toLowerCase().trim() === triggerText)
+  );
+  if (shared.length === 0) return null;
+  if (shared.length === 1) {
+    const name = displayName(shared[0].clarifiedText || shared[0].rawText);
+    return `Shared with ${name}`;
+  }
+  return `Shared across ${shared.length + 1} patterns`;
+}
+
+function PatternCard({ pattern, aspirations }: { pattern: Pattern; aspirations: Aspiration[] }) {
   const colors = statusColor(pattern.status);
   const percent = validationPercent(pattern);
   const triggerStep = pattern.steps.find(s => s.isTrigger);
@@ -125,6 +155,48 @@ function PatternCard({ pattern }: { pattern: Pattern }) {
             >
               {triggerStep.text}
             </span>
+
+            {/* Dimension pills — nodal visibility */}
+            {(() => {
+              const dims = getTriggerDimensions(pattern, aspirations);
+              const shared = getSharedCaption(pattern, aspirations);
+              if (dims.length === 0 && !shared) return null;
+              return (
+                <div style={{ marginTop: "6px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                  {dims.length > 0 && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
+                      {dims.map(dim => (
+                        <div key={dim} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                          <div
+                            style={{
+                              width: "5px",
+                              height: "5px",
+                              borderRadius: "50%",
+                              background: DIMENSION_COLORS[dim] || "#8BAF8E",
+                              flexShrink: 0,
+                            }}
+                          />
+                          <span
+                            className="font-sans"
+                            style={{ fontSize: "10px", color: "var(--color-sage-400)" }}
+                          >
+                            {DIMENSION_LABELS[dim] || dim}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {shared && (
+                    <span
+                      className="font-sans"
+                      style={{ fontSize: "10px", fontStyle: "italic", color: "var(--color-sage-400)" }}
+                    >
+                      {shared}
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         )}
 
@@ -419,6 +491,7 @@ export default function GrowPage() {
                 title="Validated"
                 subtitle="These patterns are working. They're part of your operating system."
                 patterns={validated}
+                aspirations={aspirations}
               />
             )}
 
@@ -428,6 +501,7 @@ export default function GrowPage() {
                 title="Working"
                 subtitle="You're building these. Keep going."
                 patterns={working}
+                aspirations={aspirations}
               />
             )}
 
@@ -437,6 +511,7 @@ export default function GrowPage() {
                 title="Finding"
                 subtitle="Still emerging. The shape will clarify with use."
                 patterns={finding}
+                aspirations={aspirations}
               />
             )}
           </div>
@@ -452,10 +527,12 @@ function PatternSection({
   title,
   subtitle,
   patterns,
+  aspirations,
 }: {
   title: string;
   subtitle: string;
   patterns: Pattern[];
+  aspirations: Aspiration[];
 }) {
   return (
     <div style={{ marginBottom: "24px" }}>
@@ -474,7 +551,7 @@ function PatternSection({
         </p>
       </div>
       {patterns.map(p => (
-        <PatternCard key={p.id} pattern={p} />
+        <PatternCard key={p.id} pattern={p} aspirations={aspirations} />
       ))}
     </div>
   );

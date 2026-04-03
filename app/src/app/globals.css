@@ -337,6 +337,18 @@ textarea:focus-visible {
   animation: huma-dot-pulse 2s ease-in-out infinite;
 }
 
+/* ─── Dimension Dot Pulse (on check-off) ─── */
+
+@keyframes dim-dot-glow {
+  0% { transform: scale(1); opacity: 0.4; }
+  40% { transform: scale(1.8); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-dim-glow {
+  animation: dim-dot-glow 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* ─── Skeleton Loading ─── */
 
 @keyframes skeleton-shimmer {
@@ -404,6 +416,9 @@ textarea:focus-visible {
   .animate-dot-pulse {
     animation: none;
     opacity: 0.7;
+  }
+  .animate-dim-glow {
+    animation: none;
   }
 }
 
