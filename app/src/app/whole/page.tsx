@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import TabShell from "@/components/TabShell";
-import WholeShape, { type HolonNode, type HolonLink, type HolonLayer, type HolonStatus } from "@/components/whole/WholeShape";
+import WholeShape, { type HolonNode, type HolonLink, type HolonLayer, type HolonStatus, type InsightAnnotation } from "@/components/whole/WholeShape";
 import HolonExpandPanel from "@/components/whole/HolonExpandPanel";
 import ProfileBanner from "@/components/whole/ProfileBanner";
 import InsightCard from "@/components/whole/InsightCard";
@@ -25,6 +25,7 @@ import {
   getPrinciples,
   getAspirationCorrelations,
   getBehavioralSummary,
+  getRecentInsights,
   type AspirationCorrelation,
 } from "@/lib/supabase-v2";
 
@@ -209,6 +210,7 @@ export default function WholePage() {
   const [archetypes, setArchetypes] = useState<string[]>([]);
   const [operatorName, setOperatorName] = useState("");
   const [correlations, setCorrelations] = useState<AspirationCorrelation[]>([]);
+  const [historicalInsights, setHistoricalInsights] = useState<InsightAnnotation[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [computing, setComputing] = useState(false);
   const [selectedNode, setSelectedNode] = useState<HolonNode | null>(null);
@@ -261,13 +263,14 @@ export default function WholePage() {
         const supabase = createClient();
         if (supabase) {
           try {
-            const [dbAspirations, dbContext, dbInsight, dbWhy, dbPrinciples, dbCorrelations] = await Promise.all([
+            const [dbAspirations, dbContext, dbInsight, dbWhy, dbPrinciples, dbCorrelations, dbHistoricalInsights] = await Promise.all([
               getAllAspirations(supabase, user.id),
               getKnownContext(supabase, user.id),
               getUndeliveredInsight(supabase, user.id),
               getWhyStatement(supabase, user.id),
               getPrinciples(supabase, user.id),
               getAspirationCorrelations(supabase, user.id),
+              getRecentInsights(supabase, user.id, 3),
             ]);
 
             if (dbAspirations.length > 0) setAspirations(dbAspirations);
@@ -283,6 +286,17 @@ export default function WholePage() {
             setWhyDate(dbWhy.whyDate);
             setPrinciples(dbPrinciples);
             setCorrelations(dbCorrelations);
+
+            // Map historical insights to annotations
+            if (dbHistoricalInsights.length > 0) {
+              setHistoricalInsights(
+                dbHistoricalInsights.map((ins) => ({
+                  id: ins.id,
+                  text: ins.text,
+                  dimensionsInvolved: ins.dimensionsInvolved as string[],
+                })),
+              );
+            }
 
             const nameFromCtx = (dbContext as Record<string, unknown>).operator_name as string
               || (dbContext as Record<string, unknown>).name as string;
@@ -631,6 +645,7 @@ export default function WholePage() {
               <WholeShape
                 nodes={nodes}
                 links={holonLinks}
+                annotations={historicalInsights}
                 width={shapeWidth}
                 height={shapeHeight}
                 onNodeTap={handleNodeTap}

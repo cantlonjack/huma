@@ -361,6 +361,33 @@ export async function markInsightDelivered(
     .eq("user_id", userId);
 }
 
+/** Fetch the N most recent delivered insights for annotation on the Whole page. */
+export async function getRecentInsights(
+  supabase: SupabaseClient,
+  userId: string,
+  limit = 3,
+): Promise<Insight[]> {
+  const { data } = await supabase
+    .from("insights")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("delivered", true)
+    .order("delivered_at", { ascending: false })
+    .limit(limit);
+
+  if (!data || data.length === 0) return [];
+
+  return data.map((row) => ({
+    id: row.id,
+    text: row.insight_text,
+    dimensionsInvolved: row.dimensions_involved as Insight["dimensionsInvolved"],
+    behaviorsInvolved: row.behaviors_involved as Insight["behaviorsInvolved"],
+    dataBasis: row.data_basis as Insight["dataBasis"],
+    delivered: row.delivered,
+    deliveredAt: row.delivered_at || undefined,
+  }));
+}
+
 // ─── Behavior Log (check-off tracking) ──────────────────────────────────────
 
 export async function logBehaviorCheckoff(

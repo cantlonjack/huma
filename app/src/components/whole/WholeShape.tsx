@@ -34,6 +34,13 @@ export interface HolonLink {
   weight: number; // 0–1: behavioral correlation strength
 }
 
+export interface InsightAnnotation {
+  id: string;
+  text: string;              // First sentence of insight
+  dimensionsInvolved: string[];
+  nodeId?: string;           // Assigned during rendering — the holon node it anchors to
+}
+
 interface SimNode extends SimulationNodeDatum {
   id: string;
   label: string;
@@ -75,6 +82,7 @@ const MEMBRANE_PATH = "M130 8 C178 6, 240 36, 248 86 C256 136, 232 166, 198 176 
 interface WholeShapeProps {
   nodes: HolonNode[];
   links?: HolonLink[];
+  annotations?: InsightAnnotation[];
   width: number;
   height: number;
   onNodeTap: (node: HolonNode) => void;
@@ -82,9 +90,18 @@ interface WholeShapeProps {
   isEmpty: boolean;
 }
 
+// Truncate to first sentence, max ~60 chars
+function truncateInsight(text: string): string {
+  const firstSentence = text.split(/[.!?]/)[0];
+  const trimmed = firstSentence.trim();
+  if (trimmed.length <= 60) return trimmed;
+  return trimmed.slice(0, 57) + "…";
+}
+
 export default function WholeShape({
   nodes,
   links = [],
+  annotations = [],
   width,
   height,
   onNodeTap,
@@ -181,6 +198,53 @@ export default function WholeShape({
 
   // Which layers have nodes?
   const populatedLayers = new Set(nodes.map((n) => n.layer));
+
+  // Match insight annotations to nearest holon node by dimension overlap
+  const placedAnnotations = useMemo(() => {
+    if (annotations.length === 0 || positionedNodes.length === 0) return [];
+
+    const usedNodeIds = new Set<string>();
+    return annotations.map((ann, idx) => {
+      // Find best matching aspiration node (by dimension overlap)
+      let bestNode: SimNode | null = null;
+      let bestScore = 0;
+
+      for (const pn of positionedNodes) {
+        if (pn.type !== "aspiration" || usedNodeIds.has(pn.id)) continue;
+        const nodeData = nodes.find((n) => n.id === pn.id);
+        if (!nodeData?.dimensions) continue;
+
+        const overlap = ann.dimensionsInvolved.filter((d) =>
+          nodeData.dimensions!.includes(d),
+        ).length;
+        if (overlap > bestScore) {
+          bestScore = overlap;
+          bestNode = pn;
+        }
+      }
+
+      // Fallback: use any aspiration node not yet taken
+      if (!bestNode) {
+        bestNode = positionedNodes.find(
+          (pn) => pn.type === "aspiration" && !usedNodeIds.has(pn.id),
+        ) || null;
+      }
+
+      if (!bestNode) return null;
+      usedNodeIds.add(bestNode.id);
+
+      // Position: offset below and slightly to the side of the node
+      const offsetX = idx % 2 === 0 ? bestNode.r + 6 : -(bestNode.r + 6);
+      const offsetY = bestNode.r + 8;
+
+      return {
+        ...ann,
+        x: (bestNode.x ?? cx) + offsetX,
+        y: (bestNode.y ?? cy) + offsetY,
+        anchor: idx % 2 === 0 ? "start" as const : "end" as const,
+      };
+    }).filter(Boolean) as Array<InsightAnnotation & { x: number; y: number; anchor: "start" | "end" }>;
+  }, [annotations, positionedNodes, nodes, cx, cy]);
 
   return (
     <svg
@@ -335,6 +399,25 @@ export default function WholeShape({
           </g>
         );
       })}
+
+      {/* Insight thread annotations — museum placard aesthetic */}
+      {placedAnnotations.map((ann) => (
+        <text
+          key={ann.id}
+          x={ann.x}
+          y={ann.y}
+          textAnchor={ann.anchor}
+          dominantBaseline="hanging"
+          fontFamily="'Cormorant Garamond', serif"
+          fontStyle="italic"
+          fontSize="6"
+          fill="#6B6358"
+          opacity={0.75}
+          style={{ pointerEvents: "none" }}
+        >
+          {truncateInsight(ann.text)}
+        </text>
+      ))}
     </svg>
   );
 }
