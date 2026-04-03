@@ -451,6 +451,60 @@ export async function getBehaviorWeekCounts(
   return counts;
 }
 
+// ─── Day-of-Week Rhythm Counts ──────────────────────────────────────────────
+
+/** Trailing 28-day completion counts grouped by day of week (0=Sun..6=Sat). */
+export async function getBehaviorDayOfWeekCounts(
+  supabase: SupabaseClient,
+  userId: string,
+  aspirationId?: string
+): Promise<Record<number, number>> {
+  const startStr = getLocalDateOffset(28);
+
+  let query = supabase
+    .from("sheet_entries")
+    .select("date")
+    .eq("user_id", userId)
+    .eq("checked", true)
+    .gte("date", startStr);
+
+  if (aspirationId) {
+    query = query.eq("aspiration_id", aspirationId);
+  }
+
+  const { data } = await query;
+  if (!data) return {};
+
+  const counts: Record<number, number> = {};
+  for (const row of data) {
+    const dow = new Date(row.date + "T12:00:00").getDay(); // 0=Sun..6=Sat
+    counts[dow] = (counts[dow] || 0) + 1;
+  }
+  return counts;
+}
+
+/** Recent streak detection: completions in last N days for an aspiration. */
+export async function getRecentCompletionDays(
+  supabase: SupabaseClient,
+  userId: string,
+  aspirationId: string,
+  days: number
+): Promise<number> {
+  const startStr = getLocalDateOffset(days);
+
+  const { data } = await supabase
+    .from("sheet_entries")
+    .select("date")
+    .eq("user_id", userId)
+    .eq("aspiration_id", aspirationId)
+    .eq("checked", true)
+    .gte("date", startStr);
+
+  if (!data) return 0;
+  // Count unique dates
+  return new Set(data.map(r => r.date)).size;
+}
+
 // ─── Structural Insight (Day 1) ─────────────────────────────────────────────
 
 const DIMENSION_LABEL_MAP: Record<string, string> = {

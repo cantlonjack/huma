@@ -9,6 +9,7 @@ import { displayName } from "@/lib/display-name";
 import { getLocalDate, getLocalDateOffset } from "@/lib/date-utils";
 import TabShell from "@/components/TabShell";
 import TodaySkeleton from "@/components/TodaySkeleton";
+import WeekRhythm from "@/components/WeekRhythm";
 import {
   getAspirations,
   getKnownContext,
@@ -17,6 +18,8 @@ import {
   markInsightDelivered,
   logBehaviorCheckoff,
   getBehaviorWeekCounts,
+  getBehaviorDayOfWeekCounts,
+  getRecentCompletionDays,
 } from "@/lib/supabase-v2";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -203,6 +206,9 @@ function PatternRouteCard({
   weekCounts,
   thirtyDayCount,
   allAspirations,
+  dayOfWeekCounts,
+  disruption,
+  dayCount,
   onToggleStep,
   onOpenChat,
 }: {
@@ -212,6 +218,9 @@ function PatternRouteCard({
   weekCounts: Record<string, { completed: number; total: number }>;
   thirtyDayCount: number;
   allAspirations: Aspiration[];
+  dayOfWeekCounts: Record<number, number>;
+  disruption: string | null;
+  dayCount: number;
   onToggleStep: (aspirationId: string, stepText: string, checked: boolean) => void;
   onOpenChat: (context: string) => void;
 }) {
@@ -554,6 +563,18 @@ function PatternRouteCard({
         </div>
       )}
 
+      {/* Weekly rhythm (only after 7+ days of data) */}
+      {!showCompletion && dayCount >= 7 && Object.keys(dayOfWeekCounts).length > 0 && (
+        <WeekRhythm
+          dayCounts={dayOfWeekCounts}
+          disruption={disruption}
+          onDisruptionTap={disruption ? () => {
+            const name = displayName(aspiration.clarifiedText || aspiration.rawText);
+            onOpenChat(`Looking at ${name} — ${disruption}`);
+          } : undefined}
+        />
+      )}
+
       {/* Footer: dimensions + timing/validation */}
       {!showCompletion && (() => {
         // Collect unique dimensions across all steps
@@ -821,6 +842,8 @@ export default function TodayPage() {
   const [chatContext, setChatContext] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [standaloneEntries, setStandaloneEntries] = useState<Array<{ behavior_text: string; dimensions?: string[] }>>([]);
+  const [rhythmData, setRhythmData] = useState<Record<string, Record<number, number>>>({});
+  const [disruptions, setDisruptions] = useState<Record<string, string | null>>({});
   const insightMarkedRef = useRef(false);
 
   const dayCount = getDayCount();
@@ -961,6 +984,33 @@ export default function TodayPage() {
             }
             setThirtyDayCounts(counts);
           }
+        } catch { /* non-critical */ }
+      }
+
+      // Load day-of-week rhythm + disruption detection
+      if (supabase && user && asps.length > 0 && dayCount >= 7) {
+        try {
+          const rhythmResults: Record<string, Record<number, number>> = {};
+          const disruptionResults: Record<string, string | null> = {};
+
+          await Promise.all(asps.map(async (asp) => {
+            const [dowCounts, last7, last3] = await Promise.all([
+              getBehaviorDayOfWeekCounts(supabase, user.id, asp.id),
+              getRecentCompletionDays(supabase, user.id, asp.id, 7),
+              getRecentCompletionDays(supabase, user.id, asp.id, 3),
+            ]);
+            rhythmResults[asp.id] = dowCounts;
+
+            // Disruption: 4+ of last 7 days but 0 in last 3
+            if (last7 >= 4 && last3 === 0) {
+              disruptionResults[asp.id] = "3 days since last \u2014 what changed?";
+            } else {
+              disruptionResults[asp.id] = null;
+            }
+          }));
+
+          setRhythmData(rhythmResults);
+          setDisruptions(disruptionResults);
         } catch { /* non-critical */ }
       }
 
@@ -1330,6 +1380,9 @@ export default function TodayPage() {
                       weekCounts={weekCounts}
                       thirtyDayCount={thirtyDayCounts[asp.id] || 0}
                       allAspirations={aspirations}
+                      dayOfWeekCounts={rhythmData[asp.id] || {}}
+                      disruption={disruptions[asp.id] || null}
+                      dayCount={dayCount}
                       onToggleStep={handleToggleStep}
                       onOpenChat={openChatWithContext}
                     />
