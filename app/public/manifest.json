@@ -1,0 +1,21 @@
+{
+  "name": "HUMA",
+  "short_name": "HUMA",
+  "description": "Your life, one connected system",
+  "start_url": "/today",
+  "display": "standalone",
+  "background_color": "#FAF8F3",
+  "theme_color": "#3A5A40",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

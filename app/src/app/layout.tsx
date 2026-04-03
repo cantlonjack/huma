@@ -31,6 +31,7 @@ export const metadata: Metadata = {
   title: "HUMA — Your life, one connected system",
   description:
     "Tell HUMA what's going on. Get a daily production sheet. See the connections you couldn't.",
+  manifest: "/manifest.json",
   openGraph: {
     title: "HUMA — Your life, one connected system",
     description:
