@@ -238,6 +238,26 @@ export interface SparklineData {
   trend: "rising" | "stable" | "dropping";
 }
 
+// ─── Monthly Review ─────────────────────────────────────────────────────────
+
+/** Consistency level for a behavior in a given week. */
+export type WeekConsistency = "consistent" | "intermittent" | "absent";
+
+/** One behavior's row in the monthly review grid. */
+export interface MonthlyReviewRow {
+  behaviorKey: string;
+  behaviorName: string;
+  dimensions: DimensionKey[];
+  weeks: WeekConsistency[];  // 4 entries (week 1–4, oldest first)
+}
+
+/** Full monthly review data. */
+export interface MonthlyReviewData {
+  month: string;             // e.g. "March 2026"
+  weekRanges: string[];      // 4 entries, e.g. ["Mar 3–9", "Mar 10–16", ...]
+  rows: MonthlyReviewRow[];
+}
+
 // ─── Chat Messages ───────────────────────────────────────────────────────────
 
 export interface ChatMessage {

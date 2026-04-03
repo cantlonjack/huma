@@ -1,17 +1,18 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Pattern, Aspiration, DimensionKey, FutureAction, FuturePhase, SparklineData, EmergingBehavior, MergeSuggestion } from "@/types/v2";
+import type { Pattern, Aspiration, DimensionKey, FutureAction, FuturePhase, SparklineData, EmergingBehavior, MergeSuggestion, MonthlyReviewData } from "@/types/v2";
 import { DIMENSION_COLORS, DIMENSION_LABELS } from "@/types/v2";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { displayName } from "@/lib/display-name";
 import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
-import { getPatterns, getAspirations, getPatternSparklines, detectEmergingBehaviors, savePattern, detectMergeCandidates, mergePatterns } from "@/lib/supabase-v2";
+import { getPatterns, getAspirations, getPatternSparklines, detectEmergingBehaviors, savePattern, detectMergeCandidates, mergePatterns, getMonthlyReviewData } from "@/lib/supabase-v2";
 import TabShell from "@/components/TabShell";
 import GrowSkeleton from "@/components/GrowSkeleton";
 import Sparkline from "@/components/Sparkline";
 import EmergenceCard from "@/components/EmergenceCard";
+import MonthlyReview from "@/components/MonthlyReview";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -751,6 +752,7 @@ export default function GrowPage() {
   const [emergingBehaviors, setEmergingBehaviors] = useState<EmergingBehavior[]>([]);
   const [investigatePatternId, setInvestigatePatternId] = useState<string | null>(null);
   const [dismissedMerges, setDismissedMerges] = useState<Set<string>>(new Set());
+  const [monthlyReview, setMonthlyReview] = useState<MonthlyReviewData | null>(null);
 
   const handleToggleExpand = useCallback((id: string) => {
     setExpandedId(prev => prev === id ? null : id);
@@ -986,6 +988,14 @@ export default function GrowPage() {
         } catch { /* non-critical */ }
       }
 
+      // Monthly review (requires auth + behavior_log history)
+      if (supabase && user) {
+        try {
+          const review = await getMonthlyReviewData(supabase, user.id, loadedAspirations);
+          setMonthlyReview(review);
+        } catch { /* non-critical */ }
+      }
+
       setLoading(false);
     }
 
@@ -1185,6 +1195,13 @@ export default function GrowPage() {
                 onMerge={handleMerge}
                 onDismissMerge={handleDismissMerge}
               />
+            )}
+
+            {/* Monthly review — previous month's behavior grid */}
+            {monthlyReview && (
+              <div style={{ marginTop: "32px" }}>
+                <MonthlyReview data={monthlyReview} />
+              </div>
             )}
           </div>
         )}
