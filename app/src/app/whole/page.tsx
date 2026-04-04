@@ -635,6 +635,42 @@ export default function WholePage() {
     setConfirmAction(null);
   }, [confirmAction, user, rawContext]);
 
+  // Handle context field removal from ContextPortrait
+  const handleContextFieldRemove = useCallback(async (fieldPath: string) => {
+    const supabase = user ? createClient() : null;
+
+    // Handle array element removal: "people[2]" or top-level "place"
+    const arrayMatch = fieldPath.match(/^(\w+)\[(\d+)\]$/);
+
+    if (supabase && user) {
+      try { await removeContextField(supabase, user.id, fieldPath); } catch { /* */ }
+    }
+    removeLocalContextField(fieldPath);
+
+    const updated = { ...rawContext };
+    if (arrayMatch) {
+      const [, key, indexStr] = arrayMatch;
+      const arr = (updated as Record<string, unknown>)[key];
+      if (Array.isArray(arr)) {
+        const newArr = [...arr];
+        newArr.splice(parseInt(indexStr, 10), 1);
+        (updated as Record<string, unknown>)[key] = newArr;
+      }
+    } else {
+      delete (updated as Record<string, unknown>)[fieldPath];
+    }
+
+    setRawContext(updated);
+    setContext(updated as KnownContext);
+    localStorage.setItem("huma-v2-known-context", JSON.stringify(updated));
+
+    // Clear cached sheet so it recompiles
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      localStorage.removeItem(`huma-v2-sheet-${today}`);
+    } catch { /* */ }
+  }, [user, rawContext]);
+
   // Map context node IDs to field paths
   const contextFieldForNodeId = (nodeId: string): string | null => {
     if (nodeId === "ctx-place") return "place";
@@ -829,7 +865,12 @@ export default function WholePage() {
 
             {/* Context portrait */}
             <div className="animate-entrance-3" style={{ marginTop: "16px" }}>
-              <ContextPortrait context={context} onSave={handleContextSave} />
+              <ContextPortrait
+                context={context}
+                onSave={handleContextSave}
+                manageMode={manageMode}
+                onRemoveField={handleContextFieldRemove}
+              />
             </div>
 
             {/* Canvas regeneration */}
