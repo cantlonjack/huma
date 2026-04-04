@@ -120,6 +120,126 @@ export async function updateAspirationStatus(
     .eq("user_id", userId);
 }
 
+/** Archive an aspiration (soft delete — recoverable). */
+export async function archiveAspiration(
+  supabase: SupabaseClient,
+  userId: string,
+  aspirationId: string,
+) {
+  await supabase
+    .from("aspirations")
+    .update({ status: "archived", updated_at: new Date().toISOString() })
+    .eq("id", aspirationId)
+    .eq("user_id", userId);
+}
+
+/**
+ * Hard-delete an aspiration and cascade to related data.
+ * DB FKs: sheet_entries cascade-deletes, behavior_log and patterns null the FK.
+ * We explicitly delete patterns and behavior_log rows for full cleanup.
+ */
+export async function deleteAspiration(
+  supabase: SupabaseClient,
+  userId: string,
+  aspirationId: string,
+) {
+  // 1. Delete related patterns (DB would only null aspiration_id)
+  await supabase
+    .from("patterns")
+    .delete()
+    .eq("user_id", userId)
+    .eq("aspiration_id", aspirationId);
+
+  // 2. Delete related behavior_log rows (DB would only null behavior_id)
+  await supabase
+    .from("behavior_log")
+    .delete()
+    .eq("user_id", userId)
+    .eq("behavior_id", aspirationId);
+
+  // 3. Delete the aspiration itself (sheet_entries cascade automatically via FK)
+  const { error } = await supabase
+    .from("aspirations")
+    .delete()
+    .eq("id", aspirationId)
+    .eq("user_id", userId);
+
+  if (error) throw error;
+}
+
+/**
+ * Remove a key from known_context JSONB.
+ * Supports top-level keys (e.g. "place", "work") and array element removal
+ * via path like "people[2]" (removes index 2 from the people array).
+ */
+export async function removeContextField(
+  supabase: SupabaseClient,
+  userId: string,
+  fieldPath: string,
+) {
+  const ctx = await getOrCreateContext(supabase, userId);
+  const knownContext = { ...((ctx.known_context as Record<string, unknown>) || {}) };
+
+  // Parse array syntax: "people[2]" → key="people", index=2
+  const arrayMatch = fieldPath.match(/^(\w+)\[(\d+)\]$/);
+  if (arrayMatch) {
+    const [, key, indexStr] = arrayMatch;
+    const arr = knownContext[key];
+    if (Array.isArray(arr)) {
+      const index = parseInt(indexStr, 10);
+      if (index >= 0 && index < arr.length) {
+        const newArr = [...arr];
+        newArr.splice(index, 1);
+        knownContext[key] = newArr;
+      }
+    }
+  } else {
+    // Simple top-level key removal
+    delete knownContext[fieldPath];
+  }
+
+  await updateKnownContext(supabase, userId, knownContext);
+}
+
+/**
+ * Nuclear reset: clear all user data across every table.
+ * Resets known_context to {}, why_statement to null,
+ * and deletes all rows from aspirations, patterns, sheet_entries,
+ * behavior_log, insights, principles, and chat_messages.
+ */
+export async function clearAllUserData(
+  supabase: SupabaseClient,
+  userId: string,
+) {
+  // Reset context row (keep the row, clear its data)
+  const ctx = await getOrCreateContext(supabase, userId);
+  await supabase
+    .from("contexts")
+    .update({
+      known_context: {},
+      why_statement: null,
+      why_date: null,
+      raw_statements: [],
+      aspirations: [],
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", ctx.id);
+
+  // Delete all rows from dependent tables (order matters for FKs)
+  // patterns references aspirations — delete first
+  await supabase.from("patterns").delete().eq("user_id", userId);
+  // sheet_entries references aspirations — delete first
+  await supabase.from("sheet_entries").delete().eq("user_id", userId);
+  // behavior_log references aspirations — delete first
+  await supabase.from("behavior_log").delete().eq("user_id", userId);
+  // Now safe to delete aspirations
+  await supabase.from("aspirations").delete().eq("user_id", userId);
+  // Independent tables
+  await supabase.from("insights").delete().eq("user_id", userId);
+  await supabase.from("principles").delete().eq("user_id", userId);
+  await supabase.from("chat_messages").delete().eq("user_id", userId);
+}
+
 /** Replace an aspiration's behaviors (for reorganization revisions). */
 export async function updateAspirationBehaviors(
   supabase: SupabaseClient,
@@ -1661,4 +1781,102 @@ function partitionMonthIntoWeeks(monthStart: Date): Array<{ dates: string[] }> {
   }
 
   return weeks;
+}
+
+// ─── localStorage CRUD Helpers ─────────────────────────────────────────────
+// For pre-auth state management. Mirrors Supabase operations in localStorage.
+
+/** Remove a single aspiration from localStorage by ID. */
+export function removeLocalAspiration(aspirationId: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem("huma-v2-aspirations");
+    if (!raw) return;
+    const aspirations = JSON.parse(raw) as Aspiration[];
+    const filtered = aspirations.filter(a => a.id !== aspirationId);
+    localStorage.setItem("huma-v2-aspirations", JSON.stringify(filtered));
+
+    // Also remove related patterns
+    const patRaw = localStorage.getItem("huma-v2-patterns");
+    if (patRaw) {
+      const patterns = JSON.parse(patRaw) as Pattern[];
+      const filteredPatterns = patterns.filter(p => p.aspirationId !== aspirationId);
+      localStorage.setItem("huma-v2-patterns", JSON.stringify(filteredPatterns));
+    }
+  } catch { /* skip */ }
+}
+
+/** Archive a local aspiration (set status to "archived"). */
+export function archiveLocalAspiration(aspirationId: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem("huma-v2-aspirations");
+    if (!raw) return;
+    const aspirations = JSON.parse(raw) as Aspiration[];
+    const updated = aspirations.map(a =>
+      a.id === aspirationId ? { ...a, status: "archived" as const } : a
+    );
+    localStorage.setItem("huma-v2-aspirations", JSON.stringify(updated));
+  } catch { /* skip */ }
+}
+
+/** Remove a key from localStorage known_context. Supports "field" and "field[index]" paths. */
+export function removeLocalContextField(fieldPath: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem("huma-v2-known-context");
+    if (!raw) return;
+    const ctx = JSON.parse(raw) as Record<string, unknown>;
+
+    const arrayMatch = fieldPath.match(/^(\w+)\[(\d+)\]$/);
+    if (arrayMatch) {
+      const [, key, indexStr] = arrayMatch;
+      const arr = ctx[key];
+      if (Array.isArray(arr)) {
+        const index = parseInt(indexStr, 10);
+        if (index >= 0 && index < arr.length) {
+          const newArr = [...arr];
+          newArr.splice(index, 1);
+          ctx[key] = newArr;
+        }
+      }
+    } else {
+      delete ctx[fieldPath];
+    }
+
+    localStorage.setItem("huma-v2-known-context", JSON.stringify(ctx));
+  } catch { /* skip */ }
+}
+
+/** Clear all localStorage context (reset known_context to {}). */
+export function clearLocalStorageContext(): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("huma-v2-known-context", JSON.stringify({}));
+}
+
+/** Nuclear reset: clear all huma-v2-* keys from localStorage. */
+export function clearAllLocalStorage(): void {
+  if (typeof window === "undefined") return;
+  const keysToRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key?.startsWith("huma-v2-") || key?.startsWith("huma-conversation")) {
+      keysToRemove.push(key);
+    }
+  }
+  for (const key of keysToRemove) {
+    localStorage.removeItem(key);
+  }
+}
+
+/** Remove a pattern from localStorage by ID. */
+export function removeLocalPattern(patternId: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem("huma-v2-patterns");
+    if (!raw) return;
+    const patterns = JSON.parse(raw) as Pattern[];
+    const filtered = patterns.filter(p => p.id !== patternId);
+    localStorage.setItem("huma-v2-patterns", JSON.stringify(filtered));
+  } catch { /* skip */ }
 }

@@ -94,7 +94,7 @@ export interface Aspiration {
   comingUp?: FutureAction[];  // Next 2-4 weeks (stored, not on /today)
   longerArc?: FuturePhase[];  // Seasonal/multi-month picture (stored, not on /today)
   dimensionsTouched: DimensionKey[];
-  status: "active" | "paused" | "completed" | "dropped";
+  status: "active" | "paused" | "completed" | "dropped" | "archived";
   stage: "active" | "planning" | "someday";
   funnel?: AspirationFunnel;
   triggerData?: AspirationTrigger;

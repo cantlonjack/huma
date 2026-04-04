@@ -209,12 +209,12 @@ Pre-auth: all data in localStorage. On auth: `migrateLocalStorageToSupabase()` m
 
 | Decision | Resolution |
 |----------|-----------|
-| Entry experience | Open conversation: "What's going on?" NOT guided onboarding. |
+| Entry experience | Archetype selection (Step 0, skippable) → open conversation. NOT guided onboarding wizard. |
 | Home screen | Production sheet (`/today`). NOT a chat page. |
 | Visible artifact | Whole page (`/whole`) with holonic visualization, archetypes, WHY. |
 | Conversation model | Ephemeral input -> structured output. NOT a growing chat log. |
-| Capital scores | COMPUTED from behavior through decomposition chains. NOT self-reported. |
-| Context building | Through conversation and use over time. NOT forms. |
+| Capital scores | COMPUTED from behavior through decomposition chains. NOT self-reported. Optional Day 0 sketch as seed only. |
+| Context building | Through conversation and use over time. NOT forms. Archetype templates as starting points, refined by conversation. |
 | Product model | Life operating system / infrastructure. NOT self-improvement tool. |
 | Palette function | PrepBoard model -- browse, tap to add context. NOT chat injection. |
 | Insight timing | Structural insight on Day 1 (from decomposition). Behavioral insights Week 2+. |
@@ -222,6 +222,8 @@ Pre-auth: all data in localStorage. On auth: `migrateLocalStorageToSupabase()` m
 | Navigation | Today / Whole / Grow (bottom tab bar). Chat is overlay, not a tab. |
 | V1 architecture | Archived. Lotus Flow, petals, workspace may return in evolved form. |
 | V2 MVP architecture | Superseded by V2.1 artifact-first redesign. |
+| Context editability | Everything is directly editable from the Whole page. Aspirations, patterns, behaviors, context fields -- all removable, archivable, or modifiable without going through conversation. |
+| Archetype onboarding | Step 0 with visual cards, skippable. Pre-populates Whole with template data. "Start from a template or blank slate" fork. |
 
 ---
 
@@ -315,9 +317,9 @@ Does this feature help the operator's life run better? Does it surface a connect
 
 ---
 
-## Build Roadmap (Sessions 25–49)
+## Build Roadmap (Sessions 25–68)
 
-Six increments organized by operator experience arc, not by theme. Source: `HUMA_ROADMAP_ANALYSIS.md`. The lineage is a constraint system, not a feature spec — the operator experiences the system, never sees the vocabulary.
+Seven increments organized by operator experience arc, not by theme. Increments 1–6 source: `HUMA_ROADMAP_ANALYSIS.md`. Increment 7 source: `docs/BUILD_ROADMAP_INCREMENT_7.md`. The lineage is a constraint system, not a feature spec — the operator experiences the system, never sees the vocabulary.
 
 ### Increment 1: The Specific Sheet — "This app knows my life"
 
@@ -374,6 +376,44 @@ Six increments organized by operator experience arc, not by theme. Source: `HUMA
 | **48** | Shareworthy insight cards | Strong cross-dimensional insights get full-screen card: Cormorant Garamond, operator's name, dimension circles, share button. Letterpress aesthetic. |
 | **49** | Living Canvas evolution + share | Canvas regenerable from behavioral data. CapitalRadar from computed scores. Share extends to insight cards via `/api/og`. |
 
+### Increment 7: Context Ownership — "I can shape my own system"
+
+_Source: `docs/BUILD_ROADMAP_INCREMENT_7.md`. Three phases, 19 sessions. Prototype reference: `docs/references/prototype.zip`._
+
+**Phase A: Make Things Removable (Sessions 50–55)**
+
+| Session | Name | What Gets Built |
+|---------|------|----------------|
+| **50** | Data layer: delete & archive | `deleteAspiration()`, `archiveAspiration()`, `removeContextField()`, `clearAllUserData()`. Full CRUD. |
+| **51** | Whole page: manage mode | Manage toggle on Whole. Aspiration nodes get archive/delete. Foundation nodes get clear. Confirmation bottom sheets. |
+| **52** | Grow page: pattern management | Overflow menu on pattern cards: edit, archive, remove. Inline pattern editing (name, trigger, steps). |
+| **53** | Context field management | Field removal from ContextPortrait. People/resources removable. "Add context" affordance for missing fields. |
+| **54** | Fresh start / reset | Settings bottom sheet: clear chat, clear context, start fresh (nuclear). HUMA-voice confirmations. |
+| **55** | Phase A polish | Empty states after deletion. Undo toast for archive. Sheet recompile triggers. Design system audit. |
+
+**Phase B: Archetype-First Onboarding (Sessions 56–62)**
+
+| Session | Name | What Gets Built |
+|---------|------|----------------|
+| **56** | Archetype card design + data | ArchetypeCard component with descriptions + typical concerns. Template data per archetype (aspirations, behaviors, context hints). |
+| **57** | Step 0: archetype selection | New `/start` flow: archetype cards before conversation. Multi-select, "Skip — just talk" option. Editability promise. |
+| **58** | Template pre-population | Pre-populate Whole from archetype templates. "Template or blank slate" fork. Whole mini-preview. Optional capital sketch. |
+| **59** | Archetype-aware conversation | HUMA opens with archetype context. Template refinement markers. Reflect-back before decomposition. |
+| **60** | ArchetypeSelector redesign | Replace Whole page button grid with ArchetypeCard component. "Learn more" expand per card. |
+| **61** | New aspiration entry points | "Add aspiration" from Whole/Grow/Today. ChatSheet new-aspiration mode. Template quick-add cards. |
+| **62** | Persistent Whole mini + polish | Whole mini-indicator in nav. Onboarding transition polish. Mobile optimization. End-to-end test. |
+
+**Phase C: Direct Manipulation Workbench (Sessions 63–68)**
+
+| Session | Name | What Gets Built |
+|---------|------|----------------|
+| **63** | Aspiration detail panel | Full editing workspace: rename, reorder behaviors, add/remove, change trigger. Decomposition chain visualization. |
+| **64** | Contextual suggestion engine | `/api/suggest` endpoint: related patterns, alternative framings, connections, warnings. Haiku-powered, session-cached. |
+| **65** | Suggestion UI in panels | "Related" section in aspiration + pattern panels. Add suggested patterns. Accept alternative framings. Connection impact visible. |
+| **66** | Foundation context suggestions | Context enrichment from chat history. Empty context prompts with archetype-relevant suggestions. Dimension content view. |
+| **67** | Cross-component impact awareness | Impact preview on destructive actions. Visual node highlighting on hover/press. Accurate downstream counts. |
+| **68** | Integration polish | Cross-page edit consistency. Transition animations. Mobile gestures. Accessibility audit. Design system sweep. |
+
 ### What Not to Build
 
 - **Template library / pattern commons** — not until 1,000+ active operators with 3+ months data
@@ -381,6 +421,10 @@ Six increments organized by operator experience arc, not by theme. Source: `HUMA
 - **Animated connection reveals on check-off** — gamifies check-offs, violates Sanford's principles
 - **Voice input** — low priority, evening reflection tap options reduce friction enough
 - **SEO landing pages** — growth marketing, not product development; premature without PMF
+- **Entity-type selection** (Person/Group/Place/Enterprise) — HUMA V2 is person-only. Revisit for teams/orgs.
+- **Full component graph network** — prototype s55-s56. Needs population data. Take the side-panel pattern only.
+- **Regenerative Wealth flower visualization** — alternative to D3 force graph. Future redesign option.
+- **12-step linear onboarding wizard** — prototype's full sequence. Too many steps. Archetype + conversation is better.
 
 ---
 
