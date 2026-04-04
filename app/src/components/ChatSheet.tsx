@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import type { ChatMessage, Behavior, Aspiration } from "@/types/v2";
+import type { ChatMessage, Behavior, Aspiration, ReorganizationPlan } from "@/types/v2";
 import { parseMarkersV2 as parseMarkers } from "@/lib/parse-markers-v2";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
@@ -12,8 +12,83 @@ import {
   saveAspiration,
   getKnownContext,
   updateKnownContext,
+  updateAspirationStatus,
+  updateAspirationBehaviors,
 } from "@/lib/supabase-v2";
 import { getLocalDate } from "@/lib/date-utils";
+
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+/**
+ * Apply a reorganization plan: pause released aspirations, update revised behaviors.
+ * Runs async, non-blocking. Updates both Supabase and local state.
+ */
+async function applyReorganization(
+  supabase: SupabaseClient,
+  userId: string,
+  plan: ReorganizationPlan,
+  aspirations: Aspiration[],
+  setAspirations: React.Dispatch<React.SetStateAction<Aspiration[]>>,
+) {
+  // Release — pause these aspirations
+  for (const item of plan.release) {
+    updateAspirationStatus(supabase, userId, item.aspirationId, "paused").catch(() => {});
+  }
+
+  // Revise — update behaviors for these aspirations
+  for (const item of plan.revise) {
+    const behaviors: Behavior[] = item.revisedBehaviors.map(b => ({
+      key: b.key,
+      text: b.text || b.name,
+      frequency: b.frequency || "weekly",
+      dimensions: (b.dimensions || []).map(d => ({
+        dimension: d as Behavior["dimensions"][0]["dimension"],
+        direction: "builds" as const,
+        reasoning: "",
+      })),
+      detail: b.detail,
+      enabled: true,
+      is_trigger: b.is_trigger,
+    })) as (Behavior & { is_trigger?: boolean })[];
+
+    updateAspirationBehaviors(supabase, userId, item.aspirationId, behaviors).catch(() => {});
+  }
+
+  // Update local state
+  const releaseIds = new Set(plan.release.map(r => r.aspirationId));
+  const reviseMap = new Map(plan.revise.map(r => [r.aspirationId, r]));
+
+  const updated = aspirations.map(asp => {
+    if (releaseIds.has(asp.id)) {
+      return { ...asp, status: "paused" as const };
+    }
+    const revision = reviseMap.get(asp.id);
+    if (revision) {
+      const newBehaviors: Behavior[] = revision.revisedBehaviors.map(b => ({
+        key: b.key,
+        text: b.text || b.name,
+        frequency: b.frequency || "weekly",
+        dimensions: (b.dimensions || []).map(d => ({
+          dimension: d as Behavior["dimensions"][0]["dimension"],
+          direction: "builds" as const,
+          reasoning: "",
+        })),
+        detail: b.detail,
+        enabled: true,
+      }));
+      return { ...asp, behaviors: newBehaviors };
+    }
+    return asp;
+  });
+
+  setAspirations(updated);
+  localStorage.setItem("huma-v2-aspirations", JSON.stringify(updated));
+
+  // Clear today's cached sheet so it recompiles with new behaviors
+  const today = getLocalDate();
+  localStorage.removeItem(`huma-v2-sheet-${today}`);
+  localStorage.removeItem(`huma-v2-compiled-sheet-${today}`);
+}
 
 type RichMessage = ChatMessage & {
   options?: string[] | null;
@@ -247,7 +322,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
         });
       }
 
-      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext } = parseMarkers(fullResponse);
+      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedReorganization } = parseMarkers(fullResponse);
 
       const finalHumaMsg: ChatMessage = { ...humaMsg, content: cleanText, contextExtracted: parsedContext || undefined };
       if (user) {
@@ -282,6 +357,14 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
         if (user) {
           const supabase = createClient();
           if (supabase) saveAspiration(supabase, user.id, newAspiration).catch(() => {});
+        }
+      }
+
+      // Handle reorganization output — release, protect, revise aspirations
+      if (parsedReorganization && user) {
+        const supabase = createClient();
+        if (supabase) {
+          applyReorganization(supabase, user.id, parsedReorganization, aspirations, setAspirations);
         }
       }
 

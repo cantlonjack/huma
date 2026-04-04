@@ -106,6 +106,34 @@ export async function saveAspiration(
   if (error) throw error;
 }
 
+/** Update an aspiration's status (e.g. active → paused for reorganization releases). */
+export async function updateAspirationStatus(
+  supabase: SupabaseClient,
+  userId: string,
+  aspirationId: string,
+  status: Aspiration["status"],
+) {
+  await supabase
+    .from("aspirations")
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("id", aspirationId)
+    .eq("user_id", userId);
+}
+
+/** Replace an aspiration's behaviors (for reorganization revisions). */
+export async function updateAspirationBehaviors(
+  supabase: SupabaseClient,
+  userId: string,
+  aspirationId: string,
+  behaviors: Aspiration["behaviors"],
+) {
+  await supabase
+    .from("aspirations")
+    .update({ behaviors, updated_at: new Date().toISOString() })
+    .eq("id", aspirationId)
+    .eq("user_id", userId);
+}
+
 // ─── Chat Messages ───────────────────────────────────────────────────────────
 
 export async function getChatMessages(

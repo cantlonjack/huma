@@ -266,6 +266,56 @@ export interface MonthlyReviewData {
   rows: MonthlyReviewRow[];
 }
 
+// ─── Life Stage Transition ──────────────────────────────────────────────────
+
+/** Detected when multiple aspirations decline simultaneously — signals a life stage shift. */
+export interface TransitionSignal {
+  detected: boolean;
+  severity: "gentle" | "significant";   // gentle: 2 aspirations dropping; significant: 3+
+  decliningAspirations: Array<{
+    id: string;
+    name: string;
+    completionRate: number;             // 0–100
+    previousRate: number;               // 0–100 (prior 14-day window)
+    drop: number;                       // percentage points dropped
+  }>;
+  stableAspirations: Array<{
+    id: string;
+    name: string;
+    completionRate: number;
+  }>;
+  daysSinceLastTransition?: number;     // cooldown — don't re-fire within 14 days
+  dismissedAt?: string;                 // ISO date if operator dismissed this signal
+}
+
+/** Output from a reorganization conversation — what to release, protect, revise. */
+export interface ReorganizationPlan {
+  release: Array<{
+    aspirationId: string;
+    name: string;
+    reason: string;                     // Why this can be released right now
+  }>;
+  protect: Array<{
+    aspirationId: string;
+    name: string;
+    reason: string;                     // Why this needs guarding
+  }>;
+  revise: Array<{
+    aspirationId: string;
+    name: string;
+    revisedBehaviors: Array<{
+      key: string;
+      name: string;
+      text: string;
+      detail: string;
+      is_trigger: boolean;
+      dimensions: string[];
+      frequency: "daily" | "weekly" | "specific-days";
+    }>;
+  }>;
+  contextUpdate?: Record<string, unknown>; // New context learned during reorganization
+}
+
 // ─── Chat Messages ───────────────────────────────────────────────────────────
 
 export interface ChatMessage {

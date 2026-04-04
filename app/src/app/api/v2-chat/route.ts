@@ -117,6 +117,48 @@ RULES:
 Before the JSON markers, write a brief conversational intro (1-2 sentences) framing
 what you've designed. Do NOT write a long explanation.`;
 
+// ─── Reorganization Prompt ────────────────────────────────────────────────
+const REORGANIZATION_PROMPT = `The operator's system is under pressure. Multiple parts of their life have declined simultaneously — this isn't one pattern dropping, it's a life stage shift. Something structural changed.
+
+YOUR ROLE: Help the operator see what shifted, then reorganize their system to match the new reality. This is a DESIGN conversation, not a motivational one.
+
+APPROACH:
+1. Name the pattern you see — multiple things dropped together. Don't alarm, just observe.
+2. Ask ONE question: "What changed?" — direct, systemic. Not "how are you feeling?"
+3. Listen for the structural cause: job change, relationship shift, health event, move, season change, new responsibility.
+4. Once you understand the shift, walk through their active aspirations and suggest:
+   - RELEASE: Aspirations that no longer fit the new reality. "This one can rest for now."
+   - PROTECT: Aspirations that are load-bearing and need guarding. "This one matters more now."
+   - REVISE: Aspirations that need their behaviors redesigned for the new context.
+5. Output a [[REORGANIZATION:{...}]] marker with the structured plan.
+
+REORGANIZATION MARKER FORMAT:
+[[REORGANIZATION:{
+  "release": [{"aspirationId": "...", "name": "...", "reason": "..."}],
+  "protect": [{"aspirationId": "...", "name": "...", "reason": "..."}],
+  "revise": [{
+    "aspirationId": "...",
+    "name": "...",
+    "revisedBehaviors": [{
+      "key": "kebab-case-key",
+      "name": "Short action name",
+      "text": "Short action name",
+      "detail": "Specific what/when/where for their new context",
+      "is_trigger": true or false,
+      "dimensions": ["body", "money", etc],
+      "frequency": "daily" or "weekly" or "specific-days"
+    }]
+  }]
+}]]
+
+TONE: The fence-post neighbor who noticed the barn looks different. Not worried, just observant. "Looks like a few things shifted at once. What's going on?"
+
+NEVER: "Don't be too hard on yourself" / "It's normal" / "Life happens" / "You've been doing great"
+DO: "Three of your patterns dropped in the same two weeks. That's not discipline — that's context. What changed?"
+
+Use [[CONTEXT:...]] to capture any new context (job change, move, health, relationship shift, etc).
+Only output [[REORGANIZATION:...]] AFTER the operator has confirmed what changed and you've discussed which aspirations to release, protect, or revise.`;
+
 // ─── Behavioral Context Builder ──────────────────────────────────────────
 function buildBehavioralContext(
   dayCount: number,
@@ -207,6 +249,31 @@ function buildTabContextBlock(
   }
   if (tabContext?.whyStatement) {
     parts.push(`Their WHY statement: "${tabContext.whyStatement}"`);
+  }
+
+  // ─── Reorganization mode (any tab) ──────────────────────────────────────
+  const transitionData = tabContext?.transition as {
+    severity?: string;
+    decliningAspirations?: Array<{ id: string; name: string; completionRate: number; previousRate: number; drop: number }>;
+    stableAspirations?: Array<{ id: string; name: string; completionRate: number }>;
+  } | undefined;
+
+  if (transitionData?.decliningAspirations && transitionData.decliningAspirations.length > 0) {
+    const declining = transitionData.decliningAspirations
+      .map(a => `- ${a.name}: ${a.previousRate}% → ${a.completionRate}% (dropped ${a.drop}pp)`)
+      .join("\n");
+    const stableStr = (transitionData.stableAspirations || [])
+      .map(a => `- ${a.name}: ${a.completionRate}% (holding)`)
+      .join("\n");
+
+    parts.push(`LIFE STAGE TRANSITION DETECTED (${transitionData.severity || "gentle"}):
+
+Declining aspirations (last 14 days vs prior 14 days):
+${declining}
+
+${stableStr ? `Stable aspirations:\n${stableStr}\n` : ""}This is a reorganization conversation. The operator tapped "Something shifted" on their Today page.`);
+
+    return `\n\nTRANSITION CONTEXT:\n${parts.join("\n")}`;
   }
 
   if (sourceTab === "today") {
@@ -311,10 +378,25 @@ function buildSystemPrompt(
   let phasePrompt: string;
   let messageCountRule: string;
 
-  // Adaptive minimum: operators with 30+ days of data get deeper conversations
-  const minExchangesForDecomposition = (dayCount && dayCount >= 30) ? 4 : 3;
+  // ─── Reorganization mode ──────────────────────────────────────────────
+  const isReorganization = !!(tabContext?.transition as Record<string, unknown> | undefined)?.decliningAspirations;
 
-  if (isConfirmation && userMessageCount >= minExchangesForDecomposition) {
+  if (isReorganization) {
+    phasePrompt = REORGANIZATION_PROMPT;
+
+    if (userMessageCount >= 4 && isConfirmation) {
+      messageCountRule = `\n\nThe operator confirmed the reorganization. Output [[REORGANIZATION:{...}]] now with release/protect/revise decisions. Also use [[CONTEXT:...]] to capture any new context.`;
+    } else if (userMessageCount >= 6) {
+      messageCountRule = `\n\nThis is message #${userMessageCount} of the reorganization conversation. You have enough context. Summarize what you'd suggest for release, protect, and revise — then output [[REORGANIZATION:{...}]].`;
+    } else if (userMessageCount === 1) {
+      messageCountRule = `\n\nThis is the first message. Name the pattern you see (multiple things dropping together) in 1-2 sentences. Ask one direct question: what changed? Offer: [[OPTIONS:["New job / schedule","Relationship shift","Health thing","Something else"]]]`;
+    } else {
+      messageCountRule = `\n\nThis is message #${userMessageCount}. Continue the reorganization conversation. Ask ONE follow-up question about the shift, building on what they've said. When you have enough context to suggest release/protect/revise, do so.`;
+    }
+  } else
+
+  // Adaptive minimum: operators with 30+ days of data get deeper conversations
+  if (isConfirmation && userMessageCount >= (((dayCount && dayCount >= 30) ? 4 : 3))) {
     // Operator confirmed — decompose now
     phasePrompt = DECOMPOSITION_PHASE_PROMPT;
     messageCountRule = `\n\nCRITICAL: The operator just confirmed with "${lastUserMessage}". DECOMPOSE NOW.

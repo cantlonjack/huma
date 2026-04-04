@@ -24,6 +24,8 @@ import {
   getBehaviorDayOfWeekCounts,
   getRecentCompletionDays,
 } from "@/lib/supabase-v2";
+import { detectTransition } from "@/lib/transition-detection";
+import type { TransitionSignal } from "@/types/v2";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -972,6 +974,78 @@ function CompiledEntryRow({
   );
 }
 
+// ─── Transition Card ────────────────────────────────────────────────────────
+
+function TransitionCard({
+  signal,
+  onOpen,
+  onDismiss,
+}: {
+  signal: TransitionSignal;
+  onOpen: () => void;
+  onDismiss: () => void;
+}) {
+  const count = signal.decliningAspirations.length;
+  const names = signal.decliningAspirations.map(a => a.name);
+
+  return (
+    <div
+      style={{
+        margin: "0 16px 20px",
+        padding: "16px 20px",
+        background: "var(--color-sand-100)",
+        borderRadius: "12px",
+        borderLeft: "3px solid var(--color-ink-300)",
+      }}
+    >
+      <p
+        className="font-serif text-ink-700"
+        style={{ fontSize: "17px", lineHeight: "1.35", margin: 0 }}
+      >
+        Something shifted
+      </p>
+      <p
+        className="font-sans text-ink-400"
+        style={{ fontSize: "13px", lineHeight: "1.5", marginTop: "6px" }}
+      >
+        {count === 2
+          ? `${names[0]} and ${names[1]} both dropped in the same stretch.`
+          : `${count} parts of your system dropped at once — ${names.slice(0, 2).join(", ")}${count > 2 ? `, and ${count - 2} more` : ""}.`}
+        {" "}That&apos;s not discipline. That&apos;s context.
+      </p>
+      <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
+        <button
+          onClick={onOpen}
+          className="font-sans cursor-pointer"
+          style={{
+            fontSize: "13px",
+            fontWeight: 600,
+            color: "var(--color-amber-600)",
+            background: "none",
+            border: "none",
+            padding: 0,
+          }}
+        >
+          Let&apos;s look at it
+        </button>
+        <button
+          onClick={onDismiss}
+          className="font-sans cursor-pointer"
+          style={{
+            fontSize: "13px",
+            color: "var(--color-ink-300)",
+            background: "none",
+            border: "none",
+            padding: 0,
+          }}
+        >
+          Not now
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Today Page ─────────────────────────────────────────────────────────────
 
 export default function TodayPage() {
@@ -996,6 +1070,7 @@ export default function TodayPage() {
   const [throughLine, setThroughLine] = useState<string | null>(null);
   const [sheetCompiling, setSheetCompiling] = useState(false);
   const [notifSettingsOpen, setNotifSettingsOpen] = useState(false);
+  const [transitionSignal, setTransitionSignal] = useState<TransitionSignal | null>(null);
   const insightMarkedRef = useRef(false);
   const sheetCompiledRef = useRef(false);
   const { state: pushState } = usePush(user?.id ?? null);
@@ -1325,6 +1400,32 @@ export default function TodayPage() {
       .finally(() => setSheetCompiling(false));
   }, [aspirations, date, user, archetypes, whyStatementForChat]);
 
+  // ─── Transition Detection ───────────────────────────────────────────────
+  useEffect(() => {
+    if (!user || dayCount < 28 || aspirations.length < 2) return;
+
+    // Check if already dismissed recently
+    const dismissKey = "huma-v2-transition-dismissed";
+    const dismissed = localStorage.getItem(dismissKey);
+
+    const supabase = createClient();
+    if (!supabase) return;
+
+    detectTransition(supabase, user.id, aspirations, dayCount, dismissed)
+      .then(signal => { if (signal) setTransitionSignal(signal); })
+      .catch(() => { /* non-critical */ });
+  }, [user, aspirations, dayCount]);
+
+  const dismissTransition = useCallback(() => {
+    setTransitionSignal(null);
+    localStorage.setItem("huma-v2-transition-dismissed", new Date().toISOString());
+  }, []);
+
+  const openTransitionChat = useCallback(() => {
+    setChatContext("Something shifted — let's look at what changed.");
+    setChatOpen(true);
+  }, []);
+
   // ─── Check-off handler ──────────────────────────────────────────────────
   const handleToggleStep = useCallback(
     (aspirationId: string, stepText: string, checked: boolean) => {
@@ -1479,6 +1580,7 @@ export default function TodayPage() {
           .map(a => a.clarifiedText || a.rawText),
         ...(archetypes.length > 0 && { archetypes }),
         ...(whyStatementForChat && { whyStatement: whyStatementForChat }),
+        ...(transitionSignal && chatOpen && { transition: transitionSignal }),
       }}
     >
       <div className="min-h-dvh bg-sand-50 flex flex-col" style={{ paddingBottom: "140px" }}>
@@ -1648,6 +1750,15 @@ export default function TodayPage() {
                   {throughLine}
                 </p>
               </div>
+            )}
+
+            {/* Transition Signal — life stage shift detected */}
+            {transitionSignal && (
+              <TransitionCard
+                signal={transitionSignal}
+                onOpen={openTransitionChat}
+                onDismiss={dismissTransition}
+              />
             )}
 
             {/* Compiled Sheet Entries */}

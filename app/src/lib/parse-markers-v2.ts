@@ -1,4 +1,4 @@
-import type { Behavior, FutureAction, FuturePhase } from "@/types/v2";
+import type { Behavior, FutureAction, FuturePhase, ReorganizationPlan } from "@/types/v2";
 
 export interface DecompositionData {
   aspiration_title: string;
@@ -25,9 +25,10 @@ export interface ParsedMarkers {
   parsedContext: Record<string, unknown> | null;
   parsedAspirationName: string | null;
   parsedDecomposition: DecompositionData | null;
+  parsedReorganization: ReorganizationPlan | null;
 }
 
-const MARKER_TYPES = ["OPTIONS", "BEHAVIORS", "ACTIONS", "CONTEXT", "ASPIRATION_NAME", "DECOMPOSITION"] as const;
+const MARKER_TYPES = ["OPTIONS", "BEHAVIORS", "ACTIONS", "CONTEXT", "ASPIRATION_NAME", "DECOMPOSITION", "REORGANIZATION"] as const;
 
 /**
  * Extract a single marker from text by finding [[TYPE: then scanning forward
@@ -110,6 +111,7 @@ export function parseMarkersV2(text: string): ParsedMarkers {
   let parsedContext: Record<string, unknown> | null = null;
   let parsedAspirationName: string | null = null;
   let parsedDecomposition: DecompositionData | null = null;
+  let parsedReorganization: ReorganizationPlan | null = null;
 
   let cleanText = text;
 
@@ -140,6 +142,9 @@ export function parseMarkersV2(text: string): ParsedMarkers {
         case "DECOMPOSITION":
           parsedDecomposition = result.json as DecompositionData;
           break;
+        case "REORGANIZATION":
+          parsedReorganization = result.json as ReorganizationPlan;
+          break;
       }
       cleanText = cleanText.replace(result.fullMatch, "");
     }
@@ -165,8 +170,8 @@ export function parseMarkersV2(text: string): ParsedMarkers {
 
   // Strip incomplete markers at end of stream
   cleanText = cleanText
-    .replace(/\[\[(?:OPTIONS|BEHAVIORS|ACTIONS|CONTEXT|ASPIRATION_NAME|DECOMPOSITION):?[\s\S]*$/g, "")
+    .replace(/\[\[(?:OPTIONS|BEHAVIORS|ACTIONS|CONTEXT|ASPIRATION_NAME|DECOMPOSITION|REORGANIZATION):?[\s\S]*$/g, "")
     .trim();
 
-  return { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName, parsedDecomposition };
+  return { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName, parsedDecomposition, parsedReorganization };
 }
