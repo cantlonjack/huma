@@ -11,6 +11,7 @@ import WhyEvolution, { type WhyEvolutionData } from "@/components/whole/WhyEvolu
 import ArchetypeSelector from "@/components/whole/ArchetypeSelector";
 import ContextPortrait from "@/components/ContextPortrait";
 import CanvasRegenerate from "@/components/whole/CanvasRegenerate";
+import ConfirmationSheet from "@/components/whole/ConfirmationSheet";
 import WholeSkeleton from "@/components/WholeSkeleton";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
@@ -29,6 +30,13 @@ import {
   getAspirationCorrelations,
   getBehavioralSummary,
   getRecentInsights,
+  archiveAspiration,
+  deleteAspiration,
+  removeContextField,
+  deletePrinciple,
+  removeLocalAspiration,
+  archiveLocalAspiration,
+  removeLocalContextField,
   type AspirationCorrelation,
 } from "@/lib/supabase-v2";
 
@@ -223,6 +231,12 @@ export default function WholePage() {
   const [whyDate, setWhyDate] = useState<string | null>(null);
   const [shareworthyOpen, setShareworthyOpen] = useState(false);
   const [regeneratedCanvas, setRegeneratedCanvas] = useState<CanvasData | null>(null);
+  const [manageMode, setManageMode] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{
+    type: "archive" | "delete" | "clear-context" | "delete-principle";
+    id: string;
+    label: string;
+  } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [shapeWidth, setShapeWidth] = useState(340);
   const computeCalledRef = useRef(false);
@@ -564,11 +578,77 @@ export default function WholePage() {
     setChatShellOpen(true);
   }, []);
 
+  // ─── Manage mode handlers ────────────────────────────────────────────────
+
+  const handleManageToggle = useCallback(() => {
+    setManageMode((prev) => {
+      if (prev) {
+        setSelectedNode(null);
+        setConfirmAction(null);
+      }
+      return !prev;
+    });
+  }, []);
+
+  const handleConfirmAction = useCallback(async () => {
+    if (!confirmAction) return;
+    const { type, id } = confirmAction;
+    const supabase = user ? createClient() : null;
+
+    if (type === "archive") {
+      if (supabase && user) {
+        try { await archiveAspiration(supabase, user.id, id); } catch { /* */ }
+      }
+      archiveLocalAspiration(id);
+      setAspirations((prev) => prev.filter((a) => a.id !== id));
+    } else if (type === "delete") {
+      if (supabase && user) {
+        try { await deleteAspiration(supabase, user.id, id); } catch { /* */ }
+      }
+      removeLocalAspiration(id);
+      setAspirations((prev) => prev.filter((a) => a.id !== id));
+    } else if (type === "clear-context") {
+      // id is the field path like "place", "work", "stage", "health"
+      if (supabase && user) {
+        try { await removeContextField(supabase, user.id, id); } catch { /* */ }
+      }
+      removeLocalContextField(id);
+      const updated = { ...rawContext };
+      delete (updated as Record<string, unknown>)[id];
+      setRawContext(updated);
+      setContext(updated as KnownContext);
+      localStorage.setItem("huma-v2-known-context", JSON.stringify(updated));
+    } else if (type === "delete-principle") {
+      if (supabase) {
+        try { await deletePrinciple(supabase, id); } catch { /* */ }
+      }
+      setPrinciples((prev) => prev.filter((p) => `principle-${p.id}` !== id && p.id !== id));
+    }
+
+    // Clear cached sheet so it recompiles
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      localStorage.removeItem(`huma-v2-sheet-${today}`);
+    } catch { /* */ }
+
+    setSelectedNode(null);
+    setConfirmAction(null);
+  }, [confirmAction, user, rawContext]);
+
+  // Map context node IDs to field paths
+  const contextFieldForNodeId = (nodeId: string): string | null => {
+    if (nodeId === "ctx-place") return "place";
+    if (nodeId === "ctx-work") return "work";
+    if (nodeId === "ctx-stage") return "stage";
+    if (nodeId === "ctx-health") return "health";
+    return null;
+  };
+
   const selectedFullNode = selectedNode ? nodes.find((n) => n.id === selectedNode.id) : null;
 
   return (
     <TabShell
-      contextPrompt={chatShellOpen ? "Tell me what you're building and why it matters to you." : "What would you like to explore or change?"}
+      contextPrompt={chatShellOpen ? "Tell me what you're building and why it matters to you." : manageMode ? "What would you like to change?" : "What would you like to explore or change?"}
       forceOpen={chatShellOpen}
       onChatClose={() => setChatShellOpen(false)}
       sourceTab="whole"
@@ -593,12 +673,47 @@ export default function WholePage() {
           >
             HUMA
           </span>
-          <span
-            className="font-sans font-medium"
-            style={{ fontSize: "11px", color: "#A8C4AA", letterSpacing: "0.1em" }}
-          >
-            Day {dayNum}
-          </span>
+          <div className="flex items-center gap-3">
+            <span
+              className="font-sans font-medium"
+              style={{ fontSize: "11px", color: "#A8C4AA", letterSpacing: "0.1em" }}
+            >
+              Day {dayNum}
+            </span>
+            <button
+              onClick={handleManageToggle}
+              className="cursor-pointer"
+              style={{
+                width: "28px",
+                height: "28px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: manageMode ? "#EDF3ED" : "none",
+                border: "none",
+                borderRadius: "8px",
+                transition: "background 200ms",
+              }}
+              aria-label={manageMode ? "Exit manage mode" : "Manage"}
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"
+                  stroke={manageMode ? "#3A5A40" : "#A8C4AA"}
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M16.17 12.5a1.39 1.39 0 00.28 1.53l.05.05a1.69 1.69 0 01-1.19 2.88 1.69 1.69 0 01-1.19-.5l-.05-.04a1.39 1.39 0 00-1.53-.28 1.39 1.39 0 00-.84 1.27v.14a1.69 1.69 0 01-3.38 0v-.07a1.39 1.39 0 00-.91-1.27 1.39 1.39 0 00-1.53.28l-.05.05a1.69 1.69 0 11-2.39-2.39l.05-.05a1.39 1.39 0 00.28-1.53 1.39 1.39 0 00-1.27-.84h-.14a1.69 1.69 0 010-3.38h.07a1.39 1.39 0 001.27-.91 1.39 1.39 0 00-.28-1.53l-.05-.05a1.69 1.69 0 112.39-2.39l.05.05a1.39 1.39 0 001.53.28h.07a1.39 1.39 0 00.84-1.27v-.14a1.69 1.69 0 013.38 0v.07a1.39 1.39 0 00.84 1.27 1.39 1.39 0 001.53-.28l.05-.05a1.69 1.69 0 112.39 2.39l-.05.05a1.39 1.39 0 00-.28 1.53v.07a1.39 1.39 0 001.27.84h.14a1.69 1.69 0 010 3.38h-.07a1.39 1.39 0 00-1.27.84z"
+                  stroke={manageMode ? "#3A5A40" : "#A8C4AA"}
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Section label */}
@@ -656,6 +771,7 @@ export default function WholePage() {
                 onNodeTap={handleNodeTap}
                 selectedNodeId={selectedNode?.id}
                 isEmpty={isEmpty}
+                manageMode={manageMode}
               />
             </div>
 
@@ -685,6 +801,29 @@ export default function WholePage() {
                 onWhySave={handleWhySave}
                 value={selectedFullNode.description}
                 onValueSave={selectedFullNode.type === "context" ? (v) => handleFoundationSave(selectedFullNode.id, v) : undefined}
+                manageMode={manageMode}
+                onArchive={
+                  manageMode && selectedFullNode.type === "aspiration"
+                    ? () => setConfirmAction({ type: "archive", id: selectedFullNode.id, label: selectedFullNode.label })
+                    : undefined
+                }
+                onDelete={
+                  manageMode && (selectedFullNode.type === "aspiration" || selectedFullNode.type === "principle")
+                    ? () => setConfirmAction({
+                        type: selectedFullNode.type === "principle" ? "delete-principle" : "delete",
+                        id: selectedFullNode.id,
+                        label: selectedFullNode.label,
+                      })
+                    : undefined
+                }
+                onClearContext={
+                  manageMode && selectedFullNode.type === "context"
+                    ? () => {
+                        const field = contextFieldForNodeId(selectedFullNode.id);
+                        if (field) setConfirmAction({ type: "clear-context", id: field, label: selectedFullNode.label });
+                      }
+                    : undefined
+                }
               />
             )}
 
@@ -731,6 +870,31 @@ export default function WholePage() {
         onClose={() => setArchetypeSelectorOpen(false)}
         onSave={handleArchetypeSave}
         initialSelected={archetypes}
+      />
+
+      {/* Confirmation sheet for destructive actions */}
+      <ConfirmationSheet
+        open={!!confirmAction}
+        title={
+          confirmAction?.type === "archive"
+            ? `Archive ${confirmAction.label}?`
+            : confirmAction?.type === "clear-context"
+              ? `Clear ${confirmAction.label}?`
+              : `Remove ${confirmAction?.label ?? ""}?`
+        }
+        body={
+          confirmAction?.type === "archive"
+            ? "This hides the aspiration from your shape. You can restore it later."
+            : confirmAction?.type === "clear-context"
+              ? "This removes this context from what HUMA knows about you."
+              : confirmAction?.type === "delete-principle"
+                ? "This removes the principle from your shape."
+                : "This removes the aspiration, its behaviors, and related patterns. You can't undo this."
+        }
+        confirmLabel={confirmAction?.type === "archive" ? "Archive" : "Remove"}
+        cancelLabel="Keep it"
+        onConfirm={handleConfirmAction}
+        onCancel={() => setConfirmAction(null)}
       />
     </TabShell>
   );

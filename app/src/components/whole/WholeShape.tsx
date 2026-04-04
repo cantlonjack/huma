@@ -88,6 +88,7 @@ interface WholeShapeProps {
   onNodeTap: (node: HolonNode) => void;
   selectedNodeId?: string | null;
   isEmpty: boolean;
+  manageMode?: boolean;
 }
 
 // Truncate to first sentence, max ~60 chars
@@ -107,6 +108,7 @@ export default function WholeShape({
   onNodeTap,
   selectedNodeId,
   isEmpty,
+  manageMode = false,
 }: WholeShapeProps) {
   // Ellipse parameters for containment (in viewBox coords)
   const cx = MEMBRANE_VB_WIDTH / 2;
@@ -396,6 +398,33 @@ export default function WholeShape({
             >
               {truncateLabel(node.label, displayR)}
             </text>
+
+            {/* Manage mode × badge — shown on aspiration, context, principle nodes */}
+            {manageMode && !isIdentity && (
+              <g>
+                <circle
+                  cx={(node.x ?? 0) + displayR * 0.65}
+                  cy={(node.y ?? 0) - displayR * 0.65}
+                  r={6}
+                  fill="#FAF8F3"
+                  stroke="#B5621E"
+                  strokeWidth={1}
+                />
+                <text
+                  x={(node.x ?? 0) + displayR * 0.65}
+                  y={(node.y ?? 0) - displayR * 0.65}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fill="#B5621E"
+                  fontFamily="'Source Sans 3', sans-serif"
+                  fontSize="8"
+                  fontWeight="600"
+                  style={{ pointerEvents: "none" }}
+                >
+                  &times;
+                </text>
+              </g>
+            )}
           </g>
         );
       })}

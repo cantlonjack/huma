@@ -20,6 +20,11 @@ interface HolonExpandPanelProps {
   // Foundation-specific
   value?: string;
   onValueSave?: (value: string) => void;
+  // Manage mode
+  manageMode?: boolean;
+  onArchive?: () => void;
+  onDelete?: () => void;
+  onClearContext?: () => void;
 }
 
 const STATUS_LABELS: Record<HolonStatus, string> = {
@@ -230,6 +235,10 @@ export default function HolonExpandPanel({
   onWhySave,
   value,
   onValueSave,
+  manageMode,
+  onArchive,
+  onDelete,
+  onClearContext,
 }: HolonExpandPanelProps) {
   const style = STATUS_STYLES[status];
 
@@ -387,6 +396,88 @@ export default function HolonExpandPanel({
         >
           {description || label}
         </p>
+      )}
+
+      {/* ─── Manage mode: danger zone ─────────────────────────────────── */}
+      {manageMode && type === "aspiration" && (
+        <div
+          style={{
+            marginTop: "16px",
+            paddingTop: "12px",
+            borderTop: "1px solid #E8E2D6",
+          }}
+        >
+          <div className="flex gap-3">
+            {onArchive && (
+              <button
+                onClick={onArchive}
+                className="font-sans font-medium cursor-pointer"
+                style={{
+                  fontSize: "13px",
+                  padding: "8px 16px",
+                  borderRadius: "10px",
+                  background: "none",
+                  border: "1px solid #6B8F71",
+                  color: "#6B8F71",
+                }}
+              >
+                Archive
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={onDelete}
+                className="font-sans font-medium cursor-pointer"
+                style={{
+                  fontSize: "13px",
+                  padding: "8px 16px",
+                  borderRadius: "10px",
+                  background: "none",
+                  border: "none",
+                  color: "#E57373",
+                }}
+              >
+                Remove
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {manageMode && type === "context" && onClearContext && (
+        <div style={{ marginTop: "12px" }}>
+          <button
+            onClick={onClearContext}
+            className="font-sans cursor-pointer"
+            style={{
+              fontSize: "13px",
+              background: "none",
+              border: "none",
+              color: "#6B6358",
+              padding: 0,
+            }}
+          >
+            Clear this
+          </button>
+        </div>
+      )}
+
+      {manageMode && type === "principle" && onDelete && (
+        <div style={{ marginTop: "12px" }}>
+          <button
+            onClick={onDelete}
+            className="font-sans cursor-pointer"
+            style={{
+              fontSize: "13px",
+              background: "none",
+              border: "none",
+              color: "#E57373",
+              padding: 0,
+            }}
+          >
+            Remove
+          </button>
+        </div>
       )}
 
       <style>{`
