@@ -6,6 +6,7 @@ import WholeShape, { type HolonNode, type HolonLink, type HolonLayer, type Holon
 import HolonExpandPanel from "@/components/whole/HolonExpandPanel";
 import ProfileBanner from "@/components/whole/ProfileBanner";
 import InsightCard from "@/components/whole/InsightCard";
+import ShareworthyInsightCard, { isShareworthyInsight } from "@/components/whole/ShareworthyInsightCard";
 import WhyEvolution, { type WhyEvolutionData } from "@/components/whole/WhyEvolution";
 import ArchetypeSelector from "@/components/whole/ArchetypeSelector";
 import ContextPortrait from "@/components/ContextPortrait";
@@ -218,6 +219,7 @@ export default function WholePage() {
   const [chatShellOpen, setChatShellOpen] = useState(false);
   const [whyEvolution, setWhyEvolution] = useState<WhyEvolutionData | null>(null);
   const [whyDate, setWhyDate] = useState<string | null>(null);
+  const [shareworthyOpen, setShareworthyOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [shapeWidth, setShapeWidth] = useState(340);
   const computeCalledRef = useRef(false);
@@ -691,12 +693,26 @@ export default function WholePage() {
             {/* Insight card */}
             {insight && (
               <div style={{ marginTop: "16px" }}>
-                <InsightCard insight={insight} onDismiss={handleDismissInsight} />
+                <InsightCard
+                  insight={insight}
+                  onDismiss={handleDismissInsight}
+                  shareworthy={isShareworthyInsight(insight)}
+                  onShare={() => setShareworthyOpen(true)}
+                />
               </div>
             )}
           </>
         )}
       </div>
+
+      {/* Shareworthy insight full-screen card */}
+      {shareworthyOpen && insight && (
+        <ShareworthyInsightCard
+          insight={insight}
+          operatorName={operatorName}
+          onDismiss={() => setShareworthyOpen(false)}
+        />
+      )}
 
       {/* Archetype selector bottom sheet */}
       <ArchetypeSelector

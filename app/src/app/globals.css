@@ -448,6 +448,11 @@ textarea:focus-visible {
   to { opacity: 1; transform: scale(1); }
 }
 
+@keyframes insight-circle-in {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 /* ─── Spatial Canvas Animations ─── */
 
 @keyframes spatial-essence-enter {

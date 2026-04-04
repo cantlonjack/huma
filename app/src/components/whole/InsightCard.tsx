@@ -5,9 +5,11 @@ import type { Insight } from "@/types/v2";
 interface InsightCardProps {
   insight: Insight;
   onDismiss: () => void;
+  shareworthy?: boolean;
+  onShare?: () => void;
 }
 
-export default function InsightCard({ insight, onDismiss }: InsightCardProps) {
+export default function InsightCard({ insight, onDismiss, shareworthy, onShare }: InsightCardProps) {
   return (
     <div
       className="mx-4 relative overflow-hidden"
@@ -76,17 +78,43 @@ export default function InsightCard({ insight, onDismiss }: InsightCardProps) {
           {insight.text}
         </p>
 
-        {/* Link */}
-        <p
-          className="font-sans font-medium"
+        {/* Actions row */}
+        <div
           style={{
-            fontSize: "13px",
-            color: "#6B8F71",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
             marginTop: "12px",
           }}
         >
-          See full pattern &rarr;
-        </p>
+          <p
+            className="font-sans font-medium"
+            style={{
+              fontSize: "13px",
+              color: "#6B8F71",
+              margin: 0,
+            }}
+          >
+            See full pattern &rarr;
+          </p>
+
+          {shareworthy && onShare && (
+            <button
+              onClick={onShare}
+              className="font-sans font-medium cursor-pointer"
+              style={{
+                fontSize: "12px",
+                color: "#B5621E",
+                background: "none",
+                border: "none",
+                padding: "0 0 0 8px",
+                letterSpacing: "0.04em",
+              }}
+            >
+              Share this
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
