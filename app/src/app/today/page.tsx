@@ -1647,14 +1647,14 @@ export default function TodayPage() {
               className="font-serif italic text-sage-600"
               style={{ fontSize: "20px", textAlign: "center", maxWidth: "240px" }}
             >
-              Your day starts with a conversation.
+              Nothing scheduled yet.
             </p>
 
             <p
               className="font-sans text-sage-400"
               style={{ fontSize: "14px", textAlign: "center", maxWidth: "260px", lineHeight: "1.5" }}
             >
-              Start a conversation and HUMA will build your first route.
+              Start a conversation and HUMA will build your first day.
             </p>
 
             <button

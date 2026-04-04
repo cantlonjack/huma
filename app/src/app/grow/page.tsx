@@ -1090,14 +1090,26 @@ function EmptyState() {
         className="font-serif text-sage-700"
         style={{ fontSize: "20px", lineHeight: "1.3", marginBottom: "8px" }}
       >
-        Patterns emerge from living
+        Patterns emerge from your aspirations.
       </p>
       <p
         className="font-sans text-sage-400"
-        style={{ fontSize: "14px", lineHeight: "1.5", maxWidth: "280px", margin: "0 auto" }}
+        style={{ fontSize: "14px", lineHeight: "1.5", maxWidth: "280px", margin: "0 auto 16px" }}
       >
         As you check off behaviors on your production sheet, HUMA will surface the patterns that hold your days together.
       </p>
+      <a
+        href="/start"
+        className="font-sans"
+        style={{
+          fontSize: "14px",
+          color: "#B5621E",
+          textDecoration: "underline",
+          textUnderlineOffset: "2px",
+        }}
+      >
+        Start a conversation
+      </a>
     </div>
   );
 }

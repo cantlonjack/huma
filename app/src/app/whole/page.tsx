@@ -34,10 +34,12 @@ import {
   getRecentInsights,
   archiveAspiration,
   deleteAspiration,
+  updateAspirationStatus,
   removeContextField,
   deletePrinciple,
   removeLocalAspiration,
   archiveLocalAspiration,
+  restoreLocalAspiration,
   removeLocalContextField,
   clearChatMessages,
   clearLocalChatMessages,
@@ -246,6 +248,8 @@ export default function WholePage() {
     id: string;
     label: string;
   } | null>(null);
+  const [archiveToast, setArchiveToast] = useState<{ id: string; label: string } | null>(null);
+  const archivedAspirationRef = useRef<Aspiration | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [shapeWidth, setShapeWidth] = useState(340);
   const computeCalledRef = useRef(false);
@@ -594,6 +598,7 @@ export default function WholePage() {
       if (prev) {
         setSelectedNode(null);
         setConfirmAction(null);
+        setArchiveToast(null);
       }
       return !prev;
     });
@@ -605,11 +610,21 @@ export default function WholePage() {
     const supabase = user ? createClient() : null;
 
     if (type === "archive") {
+      // Store aspiration for undo before removing
+      const asp = aspirations.find(a => a.id === id);
+      if (asp) archivedAspirationRef.current = asp;
+
       if (supabase && user) {
         try { await archiveAspiration(supabase, user.id, id); } catch { /* */ }
       }
       archiveLocalAspiration(id);
       setAspirations((prev) => prev.filter((a) => a.id !== id));
+
+      // Show undo toast
+      setArchiveToast({ id, label: confirmAction.label });
+      setTimeout(() => {
+        setArchiveToast(prev => prev?.id === id ? null : prev);
+      }, 5000);
     } else if (type === "delete") {
       if (supabase && user) {
         try { await deleteAspiration(supabase, user.id, id); } catch { /* */ }
@@ -642,7 +657,29 @@ export default function WholePage() {
 
     setSelectedNode(null);
     setConfirmAction(null);
-  }, [confirmAction, user, rawContext]);
+  }, [confirmAction, user, rawContext, aspirations]);
+
+  const handleArchiveUndo = useCallback(async () => {
+    if (!archiveToast || !archivedAspirationRef.current) return;
+    const restored = archivedAspirationRef.current;
+    archivedAspirationRef.current = null;
+
+    // Add back to local state
+    setAspirations(prev => [...prev, restored]);
+
+    // Restore in Supabase
+    if (user) {
+      try {
+        const sb = createClient();
+        if (sb) await updateAspirationStatus(sb, user.id, restored.id, "active");
+      } catch { /* non-critical */ }
+    }
+
+    // Restore in localStorage
+    restoreLocalAspiration(restored.id);
+
+    setArchiveToast(null);
+  }, [user, archiveToast]);
 
   const handleSettingsAction = useCallback(async (action: "clear-chat" | "clear-context" | "start-fresh") => {
     const supabase = user ? createClient() : null;
@@ -890,12 +927,26 @@ export default function WholePage() {
 
             {/* Empty state message */}
             {isEmpty && (
-              <p
-                className="font-serif text-center"
-                style={{ fontSize: "16px", fontStyle: "italic", color: "#A8C4AA", margin: "12px 24px 0" }}
-              >
-                Your shape builds as you use HUMA.
-              </p>
+              <div style={{ textAlign: "center", padding: "12px 24px 0" }}>
+                <p
+                  className="font-serif"
+                  style={{ fontSize: "18px", fontStyle: "italic", color: "#A8C4AA", marginBottom: "12px" }}
+                >
+                  Your shape starts here.
+                </p>
+                <a
+                  href="/start"
+                  className="font-sans"
+                  style={{
+                    fontSize: "14px",
+                    color: "#B5621E",
+                    textDecoration: "underline",
+                    textUnderlineOffset: "2px",
+                  }}
+                >
+                  Start a conversation
+                </a>
+              </div>
             )}
 
             {/* Expand panel */}
@@ -1021,6 +1072,48 @@ export default function WholePage() {
         onClose={() => setSettingsOpen(false)}
         onAction={handleSettingsAction}
       />
+
+      {/* Archive undo toast */}
+      {archiveToast && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "100px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "#F6F1E9",
+            color: "#6B6358",
+            border: "2px solid #C8D5C9",
+            borderRadius: "16px",
+            padding: "12px 20px",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            zIndex: 40,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+            animation: "confirmation-slide-up 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
+          }}
+        >
+          <span className="font-sans" style={{ fontSize: "14px" }}>
+            {displayName(archiveToast.label)} archived
+          </span>
+          <button
+            onClick={handleArchiveUndo}
+            className="font-sans font-medium cursor-pointer"
+            style={{
+              background: "none",
+              border: "none",
+              color: "#B5621E",
+              fontSize: "14px",
+              padding: 0,
+              textDecoration: "underline",
+              textUnderlineOffset: "2px",
+            }}
+          >
+            Undo
+          </button>
+        </div>
+      )}
     </TabShell>
   );
 }

@@ -79,7 +79,7 @@ function InlineField({
       fontSize: "14px",
       lineHeight: "1.5",
       color: "#3D3B36",
-      background: "white",
+      background: "#FAF8F3",
       border: "1px solid #6B8F71",
       borderRadius: "8px",
       padding: "8px 12px",
@@ -186,7 +186,7 @@ function FoundationValue({ label, value, onSave }: { label: string; value?: stri
           style={{
             fontSize: "14px",
             color: "#3D3B36",
-            background: "white",
+            background: "#FAF8F3",
             border: "1px solid #6B8F71",
             borderRadius: "8px",
             padding: "6px 10px",
@@ -246,7 +246,7 @@ export default function HolonExpandPanel({
     <div
       className="mx-4 overflow-hidden"
       style={{
-        background: "white",
+        background: "#FAF8F3",
         borderRadius: "12px",
         border: "1px solid #DDD4C0",
         padding: "16px",

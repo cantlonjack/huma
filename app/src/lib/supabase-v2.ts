@@ -1828,6 +1828,20 @@ export function archiveLocalAspiration(aspirationId: string): void {
   } catch { /* skip */ }
 }
 
+/** Restore an archived aspiration in localStorage back to active. */
+export function restoreLocalAspiration(aspirationId: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem("huma-v2-aspirations");
+    if (!raw) return;
+    const aspirations = JSON.parse(raw) as Aspiration[];
+    const updated = aspirations.map(a =>
+      a.id === aspirationId ? { ...a, status: "active" as const } : a
+    );
+    localStorage.setItem("huma-v2-aspirations", JSON.stringify(updated));
+  } catch { /* skip */ }
+}
+
 /** Remove a key from localStorage known_context. Supports "field" and "field[index]" paths. */
 export function removeLocalContextField(fieldPath: string): void {
   if (typeof window === "undefined") return;
