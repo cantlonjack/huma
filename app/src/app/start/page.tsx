@@ -10,6 +10,8 @@ import { createClient } from "@/lib/supabase";
 import { migrateLocalStorageToSupabase } from "@/lib/supabase-v2";
 import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
 import DecompositionPreview from "@/components/DecompositionPreview";
+import ArchetypeCard from "@/components/onboarding/ArchetypeCard";
+import { DOMAIN_TEMPLATES, ORIENTATION_TEMPLATES } from "@/lib/archetype-templates";
 
 // ─── Palette Acknowledgments ─────────────────────────────────────────────────
 
@@ -29,6 +31,133 @@ const PALETTE_ACKS = {
 function getPaletteAcknowledgment(concept: PaletteConcept): string {
   const options = PALETTE_ACKS[concept.category] || PALETTE_ACKS.pain;
   return options[Math.floor(Math.random() * options.length)](concept.text);
+}
+
+// ─── Archetype Selection Screen ─────────────────────────────────────────────
+
+function ArchetypeSelectionScreen({
+  onContinue,
+  onSkip,
+}: {
+  onContinue: (selected: { domains: string[]; orientations: string[] }) => void;
+  onSkip: () => void;
+}) {
+  const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
+  const [selectedOrientations, setSelectedOrientations] = useState<string[]>([]);
+  const [showPromise, setShowPromise] = useState(false);
+
+  const hasSelection = selectedDomains.length > 0 || selectedOrientations.length > 0;
+
+  const toggleDomain = (name: string) => {
+    setSelectedDomains((prev) =>
+      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
+    );
+  };
+
+  const toggleOrientation = (name: string) => {
+    setSelectedOrientations((prev) =>
+      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
+    );
+  };
+
+  const handleContinue = () => {
+    setShowPromise(true);
+    setTimeout(() => {
+      onContinue({ domains: selectedDomains, orientations: selectedOrientations });
+    }, 1800);
+  };
+
+  return (
+    <div className="min-h-dvh bg-sand-50 flex flex-col items-center px-6 py-10 animate-fade-in">
+      <div className="w-full max-w-2xl">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <h1
+            className="font-serif text-earth-800 mb-2"
+            style={{ fontSize: "24px", lineHeight: "1.3" }}
+          >
+            What kind of life are you running?
+          </h1>
+          <p className="font-sans text-earth-400" style={{ fontSize: "14px" }}>
+            Pick what fits. You can change this anytime.
+          </p>
+        </div>
+
+        {/* Domain Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
+          {DOMAIN_TEMPLATES.map((t) => (
+            <ArchetypeCard
+              key={t.name}
+              name={t.name}
+              description={t.description}
+              typicalConcerns={t.typicalConcerns}
+              selected={selectedDomains.includes(t.name)}
+              onToggle={() => toggleDomain(t.name)}
+            />
+          ))}
+        </div>
+
+        {/* Orientation Section */}
+        <div className="mb-8">
+          <p
+            className="font-sans text-earth-300 mb-3"
+            style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em" }}
+          >
+            How you move
+          </p>
+          <div className="grid grid-cols-3 gap-3">
+            {ORIENTATION_TEMPLATES.map((t) => (
+              <ArchetypeCard
+                key={t.name}
+                name={t.name}
+                description={t.description}
+                selected={selectedOrientations.includes(t.name)}
+                onToggle={() => toggleOrientation(t.name)}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Continue / Skip */}
+        <div className="flex flex-col items-center gap-3">
+          {hasSelection && (
+            <button
+              onClick={handleContinue}
+              className="w-full py-3.5 rounded-full font-sans text-base font-medium text-sand-50 cursor-pointer animate-fade-in"
+              style={{
+                backgroundColor: "#B5621E",
+                transition: "background-color 200ms cubic-bezier(0.22, 1, 0.36, 1)",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#C87A3A")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#B5621E")}
+            >
+              Continue
+            </button>
+          )}
+          <button
+            onClick={onSkip}
+            className="font-sans text-earth-400 cursor-pointer"
+            style={{ fontSize: "13px", textDecoration: "underline" }}
+          >
+            Skip — just talk
+          </button>
+        </div>
+
+        {/* Editability Promise */}
+        {showPromise && (
+          <p
+            className="text-center mt-6 font-sans text-sage-400"
+            style={{
+              fontSize: "12px",
+              animation: "promise-flash 1.8s cubic-bezier(0.22, 1, 0.36, 1) forwards",
+            }}
+          >
+            This shapes your starting point. You can change it anytime from Whole.
+          </p>
+        )}
+      </div>
+    </div>
+  );
 }
 
 // ─── Message Component ──────────────────────────────────────────────────────
@@ -146,6 +275,8 @@ function PalettePanel({
 export default function StartPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const [onboardingStep, setOnboardingStep] = useState<"archetype" | "conversation">("archetype");
+  const [stepReady, setStepReady] = useState(false);
   const [messages, setMessages] = useState<
     (ChatMessage & { options?: string[] | null; behaviors?: Behavior[] | null; actions?: string[] | null; decomposition?: DecompositionData | null; contextNote?: boolean })[]
   >([]);
@@ -187,6 +318,7 @@ export default function StartPage() {
   }, [messages, knownContext, decomposedBehaviors]);
 
   // Restore from localStorage (unless fresh start requested or conversation already completed)
+  // Also determine whether to show archetype selection or skip to conversation
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const isFresh = params.get("fresh") === "1";
@@ -194,27 +326,47 @@ export default function StartPage() {
       // Clear stale conversation state for a clean start
       localStorage.removeItem("huma-v2-start-messages");
       localStorage.removeItem("huma-v2-behaviors");
+      setStepReady(true);
       return;
     }
     try {
+      // Check if archetypes already selected — skip straight to conversation
+      const ctx = localStorage.getItem("huma-v2-known-context");
+      if (ctx) {
+        const parsed = JSON.parse(ctx);
+        if (parsed.archetypes && Array.isArray(parsed.archetypes) && parsed.archetypes.length > 0) {
+          setOnboardingStep("conversation");
+          setKnownContext(parsed);
+        }
+      }
+
       // Check if aspirations already exist (conversation was completed before)
       const existingAspirations = localStorage.getItem("huma-v2-aspirations");
       if (existingAspirations) {
         const parsed = JSON.parse(existingAspirations);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Conversation was already completed — start fresh
+          // Conversation was already completed — start fresh conversation
           localStorage.removeItem("huma-v2-start-messages");
           localStorage.removeItem("huma-v2-behaviors");
+          setOnboardingStep("conversation");
+          setStepReady(true);
           return;
         }
       }
       const saved = localStorage.getItem("huma-v2-start-messages");
-      if (saved) setMessages(JSON.parse(saved));
-      const ctx = localStorage.getItem("huma-v2-known-context");
-      if (ctx) setKnownContext(JSON.parse(ctx));
+      if (saved) {
+        setMessages(JSON.parse(saved));
+        setOnboardingStep("conversation"); // Resume mid-conversation
+      }
+      if (!ctx) {
+        // No context at all — check if ctx was already set above
+      } else {
+        setKnownContext(JSON.parse(ctx));
+      }
       const beh = localStorage.getItem("huma-v2-behaviors");
       if (beh) setDecomposedBehaviors(JSON.parse(beh));
     } catch { /* fresh start */ }
+    setStepReady(true);
   }, []);
 
   // Fetch palette after user messages
@@ -486,7 +638,28 @@ export default function StartPage() {
     }
   };
 
+  // Archetype selection handlers
+  const handleArchetypeContinue = useCallback(
+    (selected: { domains: string[]; orientations: string[] }) => {
+      const archetypes = [...selected.domains, ...selected.orientations];
+      const updatedContext = { ...knownContext, archetypes };
+      setKnownContext(updatedContext);
+      localStorage.setItem("huma-v2-known-context", JSON.stringify(updatedContext));
+      setOnboardingStep("conversation");
+    },
+    [knownContext]
+  );
+
+  const handleArchetypeSkip = useCallback(() => {
+    setOnboardingStep("conversation");
+  }, []);
+
   const hasMessages = messages.length > 0;
+
+  // Wait for initialization before rendering
+  if (!stepReady) {
+    return <div className="min-h-dvh bg-sand-50" />;
+  }
 
   // Transition screen
   if (showTransition) {
@@ -504,8 +677,18 @@ export default function StartPage() {
     );
   }
 
+  // Step 0: Archetype selection
+  if (onboardingStep === "archetype") {
+    return (
+      <ArchetypeSelectionScreen
+        onContinue={handleArchetypeContinue}
+        onSkip={handleArchetypeSkip}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-dvh bg-sand-50 flex flex-col lg:flex-row">
+    <div className="min-h-dvh bg-sand-50 flex flex-col lg:flex-row animate-fade-in">
       {/* Auth Modal */}
       <AuthModal
         open={showAuthModal}
