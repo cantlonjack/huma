@@ -344,6 +344,11 @@ export default function ShareworthyInsightCard({
     }
   }, [downloading]);
 
+  // Build shareable URL — /insight/[id] has proper OG metadata, then redirects to /whole
+  const shareUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/insight/${encodeURIComponent(insight.id)}`
+    : "";
+
   const shareCard = useCallback(async () => {
     if (!cardRef.current || downloading) return;
     setDownloading(true);
@@ -363,6 +368,7 @@ export default function ShareworthyInsightCard({
         await navigator.share({
           title: "A connection HUMA revealed",
           text: insight.text,
+          url: shareUrl,
           files: [file],
         });
       } else {
@@ -377,7 +383,7 @@ export default function ShareworthyInsightCard({
     } finally {
       setDownloading(false);
     }
-  }, [downloading, insight.text]);
+  }, [downloading, insight.text, shareUrl]);
 
   const displayW = CARD_W * displayScale;
   const displayH = CARD_H * displayScale;

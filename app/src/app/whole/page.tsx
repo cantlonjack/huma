@@ -10,11 +10,13 @@ import ShareworthyInsightCard, { isShareworthyInsight } from "@/components/whole
 import WhyEvolution, { type WhyEvolutionData } from "@/components/whole/WhyEvolution";
 import ArchetypeSelector from "@/components/whole/ArchetypeSelector";
 import ContextPortrait from "@/components/ContextPortrait";
+import CanvasRegenerate from "@/components/whole/CanvasRegenerate";
 import WholeSkeleton from "@/components/WholeSkeleton";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { displayName } from "@/lib/display-name";
 import type { Aspiration, Insight, Principle, KnownContext } from "@/types/v2";
+import type { CanvasData } from "@/engine/canvas-types";
 import {
   getAllAspirations,
   getKnownContext,
@@ -220,6 +222,7 @@ export default function WholePage() {
   const [whyEvolution, setWhyEvolution] = useState<WhyEvolutionData | null>(null);
   const [whyDate, setWhyDate] = useState<string | null>(null);
   const [shareworthyOpen, setShareworthyOpen] = useState(false);
+  const [regeneratedCanvas, setRegeneratedCanvas] = useState<CanvasData | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [shapeWidth, setShapeWidth] = useState(340);
   const computeCalledRef = useRef(false);
@@ -689,6 +692,14 @@ export default function WholePage() {
             <div className="animate-entrance-3" style={{ marginTop: "16px" }}>
               <ContextPortrait context={context} onSave={handleContextSave} />
             </div>
+
+            {/* Canvas regeneration */}
+            {user && aspirations.length > 0 && (
+              <CanvasRegenerate
+                onGenerated={setRegeneratedCanvas}
+                existingCanvas={regeneratedCanvas}
+              />
+            )}
 
             {/* Insight card */}
             {insight && (
