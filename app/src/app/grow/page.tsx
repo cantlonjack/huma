@@ -1,18 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { Pattern, Aspiration, DimensionKey, FutureAction, FuturePhase, SparklineData, EmergingBehavior, MergeSuggestion, MonthlyReviewData } from "@/types/v2";
 import { DIMENSION_COLORS, DIMENSION_LABELS } from "@/types/v2";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { displayName } from "@/lib/display-name";
 import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
-import { getPatterns, getAspirations, getPatternSparklines, detectEmergingBehaviors, savePattern, detectMergeCandidates, mergePatterns, getMonthlyReviewData } from "@/lib/supabase-v2";
+import { getPatterns, getAspirations, getPatternSparklines, detectEmergingBehaviors, savePattern, detectMergeCandidates, mergePatterns, getMonthlyReviewData, updatePattern, deletePattern } from "@/lib/supabase-v2";
 import TabShell from "@/components/TabShell";
 import GrowSkeleton from "@/components/GrowSkeleton";
 import Sparkline from "@/components/Sparkline";
 import EmergenceCard from "@/components/EmergenceCard";
 import MonthlyReview from "@/components/MonthlyReview";
+import ConfirmationSheet from "@/components/whole/ConfirmationSheet";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -175,6 +176,9 @@ function PatternCard({
   mergeSuggestion,
   onMerge,
   onDismissMerge,
+  onUpdate,
+  onArchive,
+  onRemove,
 }: {
   pattern: Pattern;
   aspirations: Aspiration[];
@@ -187,7 +191,73 @@ function PatternCard({
   mergeSuggestion?: MergeSuggestion;
   onMerge?: (primaryId: string, secondaryId: string) => void;
   onDismissMerge?: (patternId: string, otherPatternId: string) => void;
+  onUpdate?: (patternId: string, updates: Partial<Pick<Pattern, "name" | "trigger" | "steps" | "timeWindow">>) => void;
+  onArchive?: (patternId: string) => void;
+  onRemove?: (patternId: string) => void;
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState(pattern.name);
+  const [editTrigger, setEditTrigger] = useState(pattern.trigger);
+  const [editSteps, setEditSteps] = useState(pattern.steps.filter(s => !s.isTrigger).map(s => ({ ...s })));
+  const [editTimeWindow, setEditTimeWindow] = useState(pattern.timeWindow || "");
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    const timer = setTimeout(() => document.addEventListener("mousedown", handler), 10);
+    return () => { clearTimeout(timer); document.removeEventListener("mousedown", handler); };
+  }, [menuOpen]);
+
+  const startEditing = () => {
+    setEditName(pattern.name);
+    setEditTrigger(pattern.trigger);
+    setEditSteps(pattern.steps.filter(s => !s.isTrigger).map(s => ({ ...s })));
+    setEditTimeWindow(pattern.timeWindow || "");
+    setEditing(true);
+    setMenuOpen(false);
+  };
+
+  const cancelEditing = () => setEditing(false);
+
+  const saveEditing = () => {
+    const triggerStep = pattern.steps.find(s => s.isTrigger);
+    const updatedSteps = [
+      ...(triggerStep ? [{ ...triggerStep, text: editTrigger }] : []),
+      ...editSteps.map((s, i) => ({ ...s, order: i + 1 })),
+    ];
+    onUpdate?.(pattern.id, {
+      name: editName,
+      trigger: editTrigger,
+      steps: updatedSteps,
+      timeWindow: editTimeWindow || undefined,
+    });
+    setEditing(false);
+  };
+
+  const addStep = () => {
+    setEditSteps(prev => [...prev, {
+      behaviorKey: `step-${Date.now()}`,
+      text: "",
+      order: prev.length + 1,
+      isTrigger: false,
+    }]);
+  };
+
+  const removeStep = (index: number) => {
+    setEditSteps(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateStepText = (index: number, text: string) => {
+    setEditSteps(prev => prev.map((s, i) => i === index ? { ...s, text } : s));
+  };
+
   const colors = statusColor(pattern.status);
   const percent = validationPercent(pattern);
   const triggerStep = pattern.steps.find(s => s.isTrigger);
@@ -200,14 +270,14 @@ function PatternCard({
 
   return (
     <div
-      onClick={onToggle}
+      onClick={editing ? undefined : onToggle}
       style={{
         background: "white",
         border: "1px solid #DDD4C0",
         borderRadius: "16px",
         marginBottom: "20px",
         overflow: "hidden",
-        cursor: hasExpandContent ? "pointer" : "default",
+        cursor: editing ? "default" : hasExpandContent ? "pointer" : "default",
       }}
     >
       {/* Header */}
@@ -221,22 +291,42 @@ function PatternCard({
           gap: "8px",
         }}
       >
-        <span
-          className="font-serif text-sage-700"
-          style={{
-            fontSize: "18px",
-            lineHeight: "1.3",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            minWidth: 0,
-            flex: 1,
-          }}
-        >
-          {displayName(pattern.name)}
-        </span>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-          {archetypeLabel && (
+        {editing ? (
+          <input
+            value={editName}
+            onChange={e => setEditName(e.target.value)}
+            onClick={e => e.stopPropagation()}
+            className="font-serif text-sage-700"
+            style={{
+              fontSize: "18px",
+              lineHeight: "1.3",
+              minWidth: 0,
+              flex: 1,
+              background: "#F6F1E9",
+              border: "1px solid #DDD4C0",
+              borderRadius: "8px",
+              padding: "4px 8px",
+              outline: "none",
+            }}
+          />
+        ) : (
+          <span
+            className="font-serif text-sage-700"
+            style={{
+              fontSize: "18px",
+              lineHeight: "1.3",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              minWidth: 0,
+              flex: 1,
+            }}
+          >
+            {displayName(pattern.name)}
+          </span>
+        )}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, position: "relative" }}>
+          {archetypeLabel && !editing && (
             <span
               className="font-sans"
               style={{
@@ -250,29 +340,120 @@ function PatternCard({
               {archetypeLabel}
             </span>
           )}
-          <span
-            className="font-sans"
-            style={{
-              fontSize: "11px",
-              fontWeight: 600,
-              letterSpacing: "0.08em",
-              padding: "3px 10px",
-              borderRadius: "10px",
-              background: colors.bg,
-              color: colors.text,
-              textTransform: "uppercase",
-            }}
-          >
-            {statusLabel(pattern.status)}
-          </span>
+          {!editing && (
+            <span
+              className="font-sans"
+              style={{
+                fontSize: "11px",
+                fontWeight: 600,
+                letterSpacing: "0.08em",
+                padding: "3px 10px",
+                borderRadius: "10px",
+                background: colors.bg,
+                color: colors.text,
+                textTransform: "uppercase",
+              }}
+            >
+              {statusLabel(pattern.status)}
+            </span>
+          )}
+          {/* Overflow menu */}
+          {!editing && (
+            <div ref={menuRef} style={{ position: "relative" }}>
+              <button
+                onClick={e => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
+                className="cursor-pointer"
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: "4px 6px",
+                  fontSize: "16px",
+                  lineHeight: 1,
+                  color: "#8C8274",
+                  letterSpacing: "2px",
+                }}
+                aria-label="Pattern options"
+              >
+                &middot;&middot;&middot;
+              </button>
+              {menuOpen && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    right: 0,
+                    marginTop: "4px",
+                    background: "#FAF8F3",
+                    border: "1px solid #DDD4C0",
+                    borderRadius: "12px",
+                    boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                    zIndex: 20,
+                    minWidth: "140px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <button
+                    onClick={e => { e.stopPropagation(); startEditing(); }}
+                    className="font-sans cursor-pointer"
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      textAlign: "left",
+                      padding: "10px 16px",
+                      fontSize: "14px",
+                      color: "#3D3B36",
+                      background: "none",
+                      border: "none",
+                      borderBottom: "1px solid #F0EBE3",
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={e => { e.stopPropagation(); setMenuOpen(false); onArchive?.(pattern.id); }}
+                    className="font-sans cursor-pointer"
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      textAlign: "left",
+                      padding: "10px 16px",
+                      fontSize: "14px",
+                      color: "#3D3B36",
+                      background: "none",
+                      border: "none",
+                      borderBottom: "1px solid #F0EBE3",
+                    }}
+                  >
+                    Archive
+                  </button>
+                  <button
+                    onClick={e => { e.stopPropagation(); setMenuOpen(false); onRemove?.(pattern.id); }}
+                    className="font-sans cursor-pointer"
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      textAlign: "left",
+                      padding: "10px 16px",
+                      fontSize: "14px",
+                      color: "#E57373",
+                      background: "none",
+                      border: "none",
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Trigger + Pathway */}
-      <div style={{ padding: "14px 16px" }}>
-        {/* The Decision */}
-        {triggerStep && (
-          <div style={{ marginBottom: pathwaySteps.length > 0 ? "14px" : 0 }}>
+      {/* Trigger + Pathway — edit mode or display mode */}
+      {editing ? (
+        <div style={{ padding: "14px 16px" }} onClick={e => e.stopPropagation()}>
+          {/* Edit: Trigger */}
+          <div style={{ marginBottom: "14px" }}>
             <span
               className="font-sans"
               style={{
@@ -286,64 +467,26 @@ function PatternCard({
             >
               THE DECISION
             </span>
-            <span
+            <input
+              value={editTrigger}
+              onChange={e => setEditTrigger(e.target.value)}
               className="font-sans"
               style={{
+                width: "100%",
                 fontSize: "15px",
                 fontWeight: 500,
                 color: "var(--color-sage-700)",
                 lineHeight: "1.4",
+                background: "#F6F1E9",
+                border: "1px solid #DDD4C0",
+                borderRadius: "8px",
+                padding: "6px 8px",
+                outline: "none",
               }}
-            >
-              {triggerStep.text}
-            </span>
-
-            {/* Dimension pills — nodal visibility */}
-            {(() => {
-              const dims = getTriggerDimensions(pattern, aspirations);
-              const shared = getSharedCaption(pattern, aspirations);
-              if (dims.length === 0 && !shared) return null;
-              return (
-                <div style={{ marginTop: "6px", display: "flex", flexDirection: "column", gap: "4px" }}>
-                  {dims.length > 0 && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
-                      {dims.map(dim => (
-                        <div key={dim} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                          <div
-                            style={{
-                              width: "5px",
-                              height: "5px",
-                              borderRadius: "50%",
-                              background: DIMENSION_COLORS[dim] || "#8BAF8E",
-                              flexShrink: 0,
-                            }}
-                          />
-                          <span
-                            className="font-sans"
-                            style={{ fontSize: "10px", color: "var(--color-sage-400)" }}
-                          >
-                            {DIMENSION_LABELS[dim] || dim}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {shared && (
-                    <span
-                      className="font-sans"
-                      style={{ fontSize: "10px", fontStyle: "italic", color: "var(--color-sage-400)" }}
-                    >
-                      {shared}
-                    </span>
-                  )}
-                </div>
-              );
-            })()}
+            />
           </div>
-        )}
 
-        {/* Golden Pathway */}
-        {pathwaySteps.length > 0 && (
+          {/* Edit: Golden Pathway steps */}
           <div>
             <span
               className="font-sans"
@@ -358,80 +501,301 @@ function PatternCard({
             >
               GOLDEN PATHWAY
             </span>
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              {pathwaySteps.map((step, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {editSteps.map((step, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <div
                     style={{
                       width: "6px",
                       height: "6px",
                       borderRadius: "50%",
                       background: "var(--color-sage-300)",
-                      marginTop: "6px",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <input
+                    value={step.text}
+                    onChange={e => updateStepText(i, e.target.value)}
+                    className="font-sans text-sage-600"
+                    style={{
+                      flex: 1,
+                      fontSize: "14px",
+                      lineHeight: "1.4",
+                      background: "#F6F1E9",
+                      border: "1px solid #DDD4C0",
+                      borderRadius: "8px",
+                      padding: "4px 8px",
+                      outline: "none",
+                    }}
+                  />
+                  <button
+                    onClick={() => removeStep(i)}
+                    className="cursor-pointer"
+                    style={{
+                      background: "none",
+                      border: "none",
+                      fontSize: "16px",
+                      color: "#8C8274",
+                      padding: "2px 6px",
+                      lineHeight: 1,
+                    }}
+                    aria-label="Remove step"
+                  >
+                    &times;
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={addStep}
+                className="font-sans cursor-pointer"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  background: "none",
+                  border: "none",
+                  padding: "4px 0",
+                  fontSize: "13px",
+                  color: "var(--color-sage-400)",
+                }}
+              >
+                <span style={{ fontSize: "16px", lineHeight: 1 }}>+</span> Add step
+              </button>
+            </div>
+          </div>
+
+          {/* Edit: Time window */}
+          <div style={{ marginTop: "14px" }}>
+            <span
+              className="font-sans"
+              style={{
+                display: "block",
+                fontSize: "9px",
+                fontWeight: 600,
+                letterSpacing: "0.18em",
+                color: "var(--color-sage-400)",
+                marginBottom: "4px",
+              }}
+            >
+              TIME WINDOW
+            </span>
+            <input
+              value={editTimeWindow}
+              onChange={e => setEditTimeWindow(e.target.value)}
+              placeholder="e.g. 5:15–5:45 AM"
+              className="font-sans text-sage-400"
+              style={{
+                width: "100%",
+                fontSize: "12px",
+                fontStyle: "italic",
+                background: "#F6F1E9",
+                border: "1px solid #DDD4C0",
+                borderRadius: "8px",
+                padding: "4px 8px",
+                outline: "none",
+              }}
+            />
+          </div>
+
+          {/* Save / Cancel */}
+          <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
+            <button
+              onClick={cancelEditing}
+              className="font-sans font-medium cursor-pointer"
+              style={{
+                flex: 1,
+                padding: "10px",
+                borderRadius: "10px",
+                fontSize: "14px",
+                background: "#E8E2D6",
+                color: "#6B6358",
+                border: "none",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={saveEditing}
+              className="font-sans font-medium cursor-pointer"
+              style={{
+                flex: 1,
+                padding: "10px",
+                borderRadius: "10px",
+                fontSize: "14px",
+                background: "#B5621E",
+                color: "#FAF8F3",
+                border: "none",
+              }}
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ padding: "14px 16px" }}>
+          {/* The Decision */}
+          {triggerStep && (
+            <div style={{ marginBottom: pathwaySteps.length > 0 ? "14px" : 0 }}>
+              <span
+                className="font-sans"
+                style={{
+                  display: "block",
+                  fontSize: "9px",
+                  fontWeight: 600,
+                  letterSpacing: "0.18em",
+                  color: "#B5621E",
+                  marginBottom: "4px",
+                }}
+              >
+                THE DECISION
+              </span>
+              <span
+                className="font-sans"
+                style={{
+                  fontSize: "15px",
+                  fontWeight: 500,
+                  color: "var(--color-sage-700)",
+                  lineHeight: "1.4",
+                }}
+              >
+                {triggerStep.text}
+              </span>
+
+              {/* Dimension pills — nodal visibility */}
+              {(() => {
+                const dims = getTriggerDimensions(pattern, aspirations);
+                const shared = getSharedCaption(pattern, aspirations);
+                if (dims.length === 0 && !shared) return null;
+                return (
+                  <div style={{ marginTop: "6px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                    {dims.length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
+                        {dims.map(dim => (
+                          <div key={dim} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                            <div
+                              style={{
+                                width: "5px",
+                                height: "5px",
+                                borderRadius: "50%",
+                                background: DIMENSION_COLORS[dim] || "#8BAF8E",
+                                flexShrink: 0,
+                              }}
+                            />
+                            <span
+                              className="font-sans"
+                              style={{ fontSize: "10px", color: "var(--color-sage-400)" }}
+                            >
+                              {DIMENSION_LABELS[dim] || dim}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {shared && (
+                      <span
+                        className="font-sans"
+                        style={{ fontSize: "10px", fontStyle: "italic", color: "var(--color-sage-400)" }}
+                      >
+                        {shared}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* Golden Pathway */}
+          {pathwaySteps.length > 0 && (
+            <div>
+              <span
+                className="font-sans"
+                style={{
+                  display: "block",
+                  fontSize: "9px",
+                  fontWeight: 600,
+                  letterSpacing: "0.18em",
+                  color: "var(--color-sage-400)",
+                  marginBottom: "8px",
+                }}
+              >
+                GOLDEN PATHWAY
+              </span>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                {pathwaySteps.map((step, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                    <div
+                      style={{
+                        width: "6px",
+                        height: "6px",
+                        borderRadius: "50%",
+                        background: "var(--color-sage-300)",
+                        marginTop: "6px",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span
+                      className="font-sans text-sage-600"
+                      style={{ fontSize: "14px", lineHeight: "1.4" }}
+                    >
+                      {step.text}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Aggregate dimension row — all dimensions across all steps */}
+          {allDims.length > 0 && (
+            <div
+              style={{
+                marginTop: "14px",
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "8px",
+                alignItems: "center",
+              }}
+            >
+              <span
+                className="font-sans"
+                style={{ fontSize: "11px", color: "var(--color-sage-400)" }}
+              >
+                Touches
+              </span>
+              {allDims.map(dim => (
+                <div key={dim} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                  <div
+                    style={{
+                      width: "5px",
+                      height: "5px",
+                      borderRadius: "50%",
+                      background: DIMENSION_COLORS[dim] || "#8BAF8E",
                       flexShrink: 0,
                     }}
                   />
                   <span
-                    className="font-sans text-sage-600"
-                    style={{ fontSize: "14px", lineHeight: "1.4" }}
+                    className="font-sans"
+                    style={{ fontSize: "11px", color: "var(--color-sage-400)" }}
                   >
-                    {step.text}
+                    {DIMENSION_LABELS[dim] || dim}
                   </span>
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Aggregate dimension row — all dimensions across all steps */}
-        {allDims.length > 0 && (
-          <div
-            style={{
-              marginTop: "14px",
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "8px",
-              alignItems: "center",
-            }}
-          >
-            <span
-              className="font-sans"
-              style={{ fontSize: "11px", color: "var(--color-sage-400)" }}
+          {/* Time window if present (shown in collapsed state too) */}
+          {pattern.timeWindow && (
+            <div
+              className="font-sans text-sage-400"
+              style={{ fontSize: "12px", marginTop: "12px", fontStyle: "italic" }}
             >
-              Touches
-            </span>
-            {allDims.map(dim => (
-              <div key={dim} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                <div
-                  style={{
-                    width: "5px",
-                    height: "5px",
-                    borderRadius: "50%",
-                    background: DIMENSION_COLORS[dim] || "#8BAF8E",
-                    flexShrink: 0,
-                  }}
-                />
-                <span
-                  className="font-sans"
-                  style={{ fontSize: "11px", color: "var(--color-sage-400)" }}
-                >
-                  {DIMENSION_LABELS[dim] || dim}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Time window if present (shown in collapsed state too) */}
-        {pattern.timeWindow && (
-          <div
-            className="font-sans text-sage-400"
-            style={{ fontSize: "12px", marginTop: "12px", fontStyle: "italic" }}
-          >
-            {pattern.timeWindow}
-          </div>
-        )}
-      </div>
+              {pattern.timeWindow}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Expanded: Coming Up + Longer Arc */}
       <div
@@ -854,6 +1218,145 @@ export default function GrowPage() {
     } catch { /* non-critical */ }
   }, []);
 
+  // ─── Pattern management: update, archive, remove ────────────────────────
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+  const [archiveToast, setArchiveToast] = useState<{ id: string; name: string } | null>(null);
+  const archivedPatternRef = useRef<Pattern | null>(null);
+
+  const handlePatternUpdate = useCallback(async (
+    patternId: string,
+    updates: Partial<Pick<Pattern, "name" | "trigger" | "steps" | "timeWindow">>
+  ) => {
+    // Update local state immediately
+    setPatterns(prev => prev.map(p => {
+      if (p.id !== patternId) return p;
+      return { ...p, ...updates, updatedAt: new Date().toISOString() };
+    }));
+
+    // Persist to Supabase
+    if (user) {
+      try {
+        const sb = createClient();
+        if (sb) await updatePattern(sb, patternId, user.id, updates);
+      } catch { /* non-critical, local state already updated */ }
+    }
+
+    // Persist to localStorage for pre-auth
+    try {
+      const saved = localStorage.getItem("huma-v2-patterns");
+      if (saved) {
+        const all: Pattern[] = JSON.parse(saved);
+        const updated = all.map(p => p.id === patternId ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p);
+        localStorage.setItem("huma-v2-patterns", JSON.stringify(updated));
+      }
+    } catch { /* non-critical */ }
+  }, [user]);
+
+  const handlePatternArchive = useCallback(async (patternId: string) => {
+    const pat = patterns.find(p => p.id === patternId);
+    if (!pat) return;
+
+    // Store for undo
+    archivedPatternRef.current = pat;
+
+    // Remove from view
+    setPatterns(prev => prev.filter(p => p.id !== patternId));
+    setArchiveToast({ id: patternId, name: pat.name });
+
+    // Delete from Supabase (re-saved on undo)
+    if (user) {
+      try {
+        const sb = createClient();
+        if (sb) await deletePattern(sb, patternId, user.id);
+      } catch { /* non-critical */ }
+    }
+
+    // Remove from localStorage
+    try {
+      const saved = localStorage.getItem("huma-v2-patterns");
+      if (saved) {
+        const all: Pattern[] = JSON.parse(saved);
+        localStorage.setItem("huma-v2-patterns", JSON.stringify(all.filter(p => p.id !== patternId)));
+      }
+    } catch { /* non-critical */ }
+
+    // Clear cached sheet to force recompile
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      localStorage.removeItem(`huma-v2-sheet-${today}`);
+    } catch { /* non-critical */ }
+
+    // Auto-dismiss toast after 5 seconds
+    setTimeout(() => {
+      setArchiveToast(prev => prev?.id === patternId ? null : prev);
+    }, 5000);
+  }, [user, patterns]);
+
+  const handleArchiveUndo = useCallback(async () => {
+    if (!archiveToast || !archivedPatternRef.current) return;
+    const restored = archivedPatternRef.current;
+    archivedPatternRef.current = null;
+
+    // Add back to local state
+    setPatterns(prev => [...prev, restored]);
+
+    // Re-save to Supabase
+    if (user) {
+      try {
+        const sb = createClient();
+        if (sb) await savePattern(sb, user.id, restored);
+      } catch { /* non-critical */ }
+    }
+
+    // Re-add to localStorage
+    try {
+      const saved = localStorage.getItem("huma-v2-patterns");
+      const all: Pattern[] = saved ? JSON.parse(saved) : [];
+      all.push(restored);
+      localStorage.setItem("huma-v2-patterns", JSON.stringify(all));
+    } catch { /* non-critical */ }
+
+    setArchiveToast(null);
+  }, [user, archiveToast]);
+
+  const handlePatternRemove = useCallback((patternId: string) => {
+    setConfirmRemoveId(patternId);
+  }, []);
+
+  const confirmPatternRemove = useCallback(async () => {
+    if (!confirmRemoveId) return;
+    const patternId = confirmRemoveId;
+    setConfirmRemoveId(null);
+
+    // Remove from local state
+    setPatterns(prev => prev.filter(p => p.id !== patternId));
+
+    // Delete from Supabase
+    if (user) {
+      try {
+        const sb = createClient();
+        if (sb) await deletePattern(sb, patternId, user.id);
+      } catch { /* non-critical */ }
+    }
+
+    // Remove from localStorage
+    try {
+      const saved = localStorage.getItem("huma-v2-patterns");
+      if (saved) {
+        const all: Pattern[] = JSON.parse(saved);
+        localStorage.setItem("huma-v2-patterns", JSON.stringify(all.filter(p => p.id !== patternId)));
+      }
+    } catch { /* non-critical */ }
+
+    // Clear cached sheet to force recompile
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      localStorage.removeItem(`huma-v2-sheet-${today}`);
+    } catch { /* non-critical */ }
+  }, [user, confirmRemoveId]);
+
+  const confirmRemovePattern = confirmRemoveId ? patterns.find(p => p.id === confirmRemoveId) : null;
+
   // ─── Merge suggestions (computed from current patterns) ─────────────────
   const mergeSuggestions = (() => {
     if (patterns.length < 2) return new Map<string, MergeSuggestion>();
@@ -1158,6 +1661,9 @@ export default function GrowPage() {
                 mergeSuggestions={mergeSuggestions}
                 onMerge={handleMerge}
                 onDismissMerge={handleDismissMerge}
+                onUpdate={handlePatternUpdate}
+                onArchive={handlePatternArchive}
+                onRemove={handlePatternRemove}
               />
             )}
 
@@ -1176,6 +1682,9 @@ export default function GrowPage() {
                 mergeSuggestions={mergeSuggestions}
                 onMerge={handleMerge}
                 onDismissMerge={handleDismissMerge}
+                onUpdate={handlePatternUpdate}
+                onArchive={handlePatternArchive}
+                onRemove={handlePatternRemove}
               />
             )}
 
@@ -1194,6 +1703,9 @@ export default function GrowPage() {
                 mergeSuggestions={mergeSuggestions}
                 onMerge={handleMerge}
                 onDismissMerge={handleDismissMerge}
+                onUpdate={handlePatternUpdate}
+                onArchive={handlePatternArchive}
+                onRemove={handlePatternRemove}
               />
             )}
 
@@ -1206,6 +1718,59 @@ export default function GrowPage() {
           </div>
         )}
       </div>
+
+      {/* Confirmation sheet for pattern removal */}
+      <ConfirmationSheet
+        open={!!confirmRemoveId}
+        title={confirmRemovePattern ? `Remove ${displayName(confirmRemovePattern.name)}?` : "Remove pattern?"}
+        body="This removes the pattern and its golden pathway. You can't undo this."
+        confirmLabel="Remove"
+        cancelLabel="Keep it"
+        onConfirm={confirmPatternRemove}
+        onCancel={() => setConfirmRemoveId(null)}
+      />
+
+      {/* Archive undo toast */}
+      {archiveToast && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "100px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "#F6F1E9",
+            color: "#6B6358",
+            border: "2px solid #C8D5C9",
+            borderRadius: "16px",
+            padding: "12px 20px",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            zIndex: 40,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+            animation: "confirmation-slide-up 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
+          }}
+        >
+          <span className="font-sans" style={{ fontSize: "14px" }}>
+            {displayName(archiveToast.name)} archived
+          </span>
+          <button
+            onClick={handleArchiveUndo}
+            className="font-sans font-medium cursor-pointer"
+            style={{
+              background: "none",
+              border: "none",
+              color: "#B5621E",
+              fontSize: "14px",
+              padding: 0,
+              textDecoration: "underline",
+              textUnderlineOffset: "2px",
+            }}
+          >
+            Undo
+          </button>
+        </div>
+      )}
     </TabShell>
   );
 }
@@ -1255,6 +1820,9 @@ function DimensionFold({
   mergeSuggestions,
   onMerge,
   onDismissMerge,
+  onUpdate,
+  onArchive,
+  onRemove,
 }: {
   label: string;
   color: string;
@@ -1268,6 +1836,9 @@ function DimensionFold({
   mergeSuggestions?: Map<string, MergeSuggestion>;
   onMerge?: (primaryId: string, secondaryId: string) => void;
   onDismissMerge?: (patternId: string, otherPatternId: string) => void;
+  onUpdate?: (patternId: string, updates: Partial<Pick<Pattern, "name" | "trigger" | "steps" | "timeWindow">>) => void;
+  onArchive?: (patternId: string) => void;
+  onRemove?: (patternId: string) => void;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -1355,6 +1926,9 @@ function DimensionFold({
             mergeSuggestion={mergeSuggestions?.get(p.id)}
             onMerge={onMerge}
             onDismissMerge={onDismissMerge}
+            onUpdate={onUpdate}
+            onArchive={onArchive}
+            onRemove={onRemove}
           />
         ))}
       </div>
@@ -1378,6 +1952,9 @@ function PatternSection({
   mergeSuggestions,
   onMerge,
   onDismissMerge,
+  onUpdate,
+  onArchive,
+  onRemove,
 }: {
   title: string;
   subtitle: string;
@@ -1392,6 +1969,9 @@ function PatternSection({
   mergeSuggestions?: Map<string, MergeSuggestion>;
   onMerge?: (primaryId: string, secondaryId: string) => void;
   onDismissMerge?: (patternId: string, otherPatternId: string) => void;
+  onUpdate?: (patternId: string, updates: Partial<Pick<Pattern, "name" | "trigger" | "steps" | "timeWindow">>) => void;
+  onArchive?: (patternId: string) => void;
+  onRemove?: (patternId: string) => void;
 }) {
   const needsFolding = patterns.length > MAX_VISIBLE_CARDS;
   const visible = needsFolding ? patterns.slice(0, 5) : patterns;
@@ -1436,6 +2016,9 @@ function PatternSection({
           mergeSuggestion={mergeSuggestions?.get(p.id)}
           onMerge={onMerge}
           onDismissMerge={onDismissMerge}
+          onUpdate={onUpdate}
+          onArchive={onArchive}
+          onRemove={onRemove}
         />
       ))}
 
@@ -1474,6 +2057,9 @@ function PatternSection({
               mergeSuggestions={mergeSuggestions}
               onMerge={onMerge}
               onDismissMerge={onDismissMerge}
+              onUpdate={onUpdate}
+              onArchive={onArchive}
+              onRemove={onRemove}
             />
           ))}
         </div>

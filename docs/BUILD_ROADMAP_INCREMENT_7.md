@@ -13,6 +13,8 @@ This is the gap between "an app that runs your life" and "infrastructure you own
 
 Three phases, one goal: **the operator owns their Whole and can shape it directly.**
 
+A second gap runs deeper: HUMA currently organizes what the operator already knows, but never evaluates whether their *method* is the best approach. It decomposes "keep 15 chickens healthy in a static coop" into daily behaviors — but never surfaces the proven insight that a mobile pasture coop produces 2x eggs at lower cost and labor. HUMA should be a **knowledge broker for proven practice** — connecting operators to the forefront of whatever they're working on, with evidence and provenance, not just opinion. This "method intelligence" layer is woven into the conversation engine (Session 59) and suggestion engine (Sessions 64–65) rather than built as a separate feature.
+
 ### What the Prototype Taught Us
 
 The original Canva prototype (s29–s56) had several ideas worth extracting:
@@ -84,18 +86,18 @@ The Whole page currently displays context and aspirations as a read-mostly visua
 Patterns currently render as read-only cards on the Grow page. This session adds inline editing, archiving, and deletion.
 
 **Implementation:**
-- [ ] **Overflow menu** on each pattern card — `···` button (earth-400, top-right), opens a small dropdown:
+- [x] **Overflow menu** on each pattern card — `···` button (earth-400, top-right), opens a small dropdown:
   - "Edit" — enters inline edit mode on the card
   - "Archive" — sets pattern to archived status, removes from view with fade-out
   - "Remove" — confirmation bottom sheet → `deletePattern()`
-- [ ] **Inline pattern editing** — when "Edit" tapped:
+- [x] **Inline pattern editing** — when "Edit" tapped:
   - Pattern name: text becomes editable input (Cormorant Garamond, same size/weight)
   - Trigger text: becomes editable input
   - Golden pathway steps: each becomes editable text, with `×` to remove and `+` at bottom to add
   - Time window: editable input
   - "Save" / "Cancel" buttons at bottom of card (amber-600 / sand-200)
-- [ ] Wire saves to `updatePattern()` in supabase-v2 (already exists, expose to UI)
-- [ ] For pre-auth users: mirror edits in localStorage `huma-v2-patterns`
+- [x] Wire saves to `updatePattern()` in supabase-v2 (already exists, expose to UI)
+- [x] For pre-auth users: mirror edits in localStorage `huma-v2-patterns`
 
 **Deliverable:** Operators can rename, edit steps, archive, and delete patterns directly from the Grow page.
 
@@ -273,9 +275,9 @@ After archetype selection, the system pre-populates the operator's Whole with te
 
 ---
 
-### Session 59 — Archetype-aware conversation opening
+### Session 59 — Archetype-aware conversation opening + method intelligence
 
-The conversation should know about the archetype and templates, and reflect back what it's starting with.
+The conversation should know about the archetype and templates, reflect back what it's starting with, and evaluate whether the operator's stated method is the best known approach.
 
 **Implementation:**
 - [ ] **Archetype-aware opening message** — instead of blank "What's going on?":
@@ -292,12 +294,17 @@ The conversation should know about the archetype and templates, and reflect back
   - If operator contradicts a template aspiration → HUMA offers to replace it
   - New marker: `[[REPLACE_ASPIRATION:templateAspirationId:newText]]` — swaps template aspiration with conversation-derived one
 - [ ] **"Suggested" badge on DecompositionPreview** — template-sourced behaviors show a subtle label: "suggested" (earth-300, italic, 11px) that disappears when the behavior is confirmed or replaced through conversation
-- [ ] **Reflect-back before decomposition** — when HUMA has enough context to decompose (existing behavior), add a brief reflect-back step:
-  - "Here's what I'm working with — [summary]. Does this look right?"
-  - Options: "Yes, show me behaviors" / "Let me adjust"
-  - "Let me adjust" continues conversation; "Yes" triggers decomposition
+- [ ] **Reflect-back with method evaluation** — when HUMA has enough context to decompose, the reflect-back step now does double duty:
+  - Checks understanding: "Here's what I'm working with — [summary]."
+  - Evaluates method: if the operator's stated approach has a significantly better alternative that fits their context, HUMA surfaces it as part of the reflect-back:
+    - e.g., "You mentioned the static coop setup. The folks who've figured out the egg game at your scale — they went mobile. Joel Salatin, Harvey Ussery — pasture rotation cuts feed costs 30% and the birds do the fertilizing. Want me to build around that approach instead?"
+  - If no better method exists (or current method is already best practice), reflect-back is pure understanding check
+  - Options: "Yes, show me behaviors" / "Tell me more about that" / "Let me adjust"
+- [ ] **Method evaluation prompt addition** to `/api/v2-chat` system prompt — new instruction block:
+  - "When the operator describes HOW they plan to accomplish something, evaluate whether their stated method is the best known approach for their specific context (scale, resources, constraints, location). If there is a significantly better method — one with documented evidence, named practitioners, or clear mechanical advantage — surface it during the reflect-back. Name the source. Explain the mechanism. Map it to their context. Do not say 'optimize' or 'you should consider.' Say it like a neighbor who's seen what actually works: specific, grounded, warm. If their method is solid, say nothing — don't manufacture alternatives."
+  - This instruction fires during the reflect-back phase only, not during initial context gathering
 
-**Deliverable:** Conversation opens with archetype awareness. Template aspirations can be refined or replaced. Reflect-back checks understanding before committing.
+**Deliverable:** Conversation opens with archetype awareness. Template aspirations can be refined or replaced. Reflect-back checks understanding AND evaluates whether there's a better proven method — with evidence, named sources, and context-specific mapping.
 
 ---
 
@@ -419,9 +426,9 @@ The current HolonExpandPanel shows minimal aspiration info (name, status, descri
 
 ---
 
-### Session 64 — Contextual suggestion engine
+### Session 64 — Contextual suggestion engine + method intelligence
 
-HUMA should surface intelligent suggestions when an operator is examining a component — related patterns, alternative framings, impact warnings.
+HUMA should surface intelligent suggestions when an operator is examining a component — related patterns, alternative framings, impact warnings, and proven better methods.
 
 **Implementation:**
 - [ ] **`/api/suggest` POST endpoint**:
@@ -434,10 +441,19 @@ HUMA should surface intelligent suggestions when an operator is examining a comp
       alternatives: { text: string; reason: string }[];
       connections: { dimension: string; explanation: string }[];
       warnings: string[];
+      betterMethods: {
+        currentMethod: string;       // What the operator is doing
+        suggestedMethod: string;     // What actually works better
+        evidence: string;            // Why — specific, sourced, mechanistic
+        applicability: string;       // How it maps to their context
+        source: string;              // Who figured this out (named practitioners, traditions, research)
+      }[];
     }
     ```
   - Uses Haiku model for speed (< 2 second response)
   - System prompt: focused on the operator's context + the specific component, asks for practical suggestions in HUMA voice
+  - **Method evaluation instruction** in system prompt: "Examine the operator's current approach to this aspiration/pattern. If there is a fundamentally better method — one with documented evidence, named practitioners or traditions, and clear mechanical advantage at the operator's specific scale and context — include it in `betterMethods`. Name the source. Explain the mechanism (WHY it works, not just THAT it works). Map it to the operator's context. Only include methods you have high confidence in — well-documented across multiple independent sources. If their current approach is solid, return an empty array."
+  - `betterMethods` should be empty most of the time — only surface when there's a genuinely significant improvement, not incremental tweaks
 - [ ] **Client-side caching** — suggestions cached by component ID in React state. Re-fetched only if component data changes.
 - [ ] **Suggestion data shape** in `types/v2.ts`:
   ```typescript
@@ -446,10 +462,17 @@ HUMA should surface intelligent suggestions when an operator is examining a comp
     alternatives: { text: string; reason: string }[];
     connections: { dimension: string; explanation: string }[];
     warnings: string[];
+    betterMethods: {
+      currentMethod: string;
+      suggestedMethod: string;
+      evidence: string;
+      applicability: string;
+      source: string;
+    }[];
   }
   ```
 
-**Deliverable:** `/api/suggest` returns contextual suggestions for any component. Fast response, session-cached.
+**Deliverable:** `/api/suggest` returns contextual suggestions including proven better methods when they exist. Fast response, session-cached.
 
 ---
 
@@ -474,9 +497,21 @@ Surface the suggestion engine's output in the detail panels operators already us
   - Tap a pattern card to expand → existing detail + new "Related" section at bottom
   - Complementary patterns, conflict warnings from suggestion engine
   - Same lazy-load + skeleton pattern
+- [ ] **"Better approach" section** — when `betterMethods` is non-empty, render above "Related" as a distinct block:
+  - Header: "There's a better way" (Cormorant Garamond, 16px, sage-700)
+  - Card: sand-100 bg, sage-300 left border (2px), 16px padding
+  - Content:
+    - Current method: struck through in earth-300 (what they're doing)
+    - Suggested method: sage-700, 15px (what works better)
+    - Evidence: Source Sans 3, 13px, earth-500 — WHY it works, specific mechanism
+    - Source: earth-400, italic, 12px — named practitioner, tradition, or research
+    - Applicability: earth-500, 12px — how it maps to THEIR context specifically
+  - Action: "Rebuild around this" button (sage-600, rounded-full) → replaces aspiration's behaviors with decomposition based on the better method (opens brief chat to confirm and customize)
+  - "Not for me" dismiss (earth-300 link) → hides, persisted in localStorage
+  - This section appears ONLY when there's a genuinely significant improvement — not for incremental tweaks
 - [ ] **Empty suggestion state**: if API returns empty, show nothing (don't show "No suggestions"). Absence is fine.
 
-**Deliverable:** Tapping aspirations or patterns shows contextual suggestions. Related patterns can be added. Alternative framings can be accepted. Connection impact is visible.
+**Deliverable:** Tapping aspirations or patterns shows contextual suggestions including proven better methods with evidence and sources. Related patterns can be added. Alternative framings can be accepted. Connection impact is visible.
 
 ---
 
@@ -607,6 +642,9 @@ END OF SESSION:
 | 2026-04-03 | Persistent Whole mini-indicator in nav | Prototype showed the Whole as a persistent evolving avatar. A 28px simplified SVG in the nav reinforces "your system is alive" without visual noise. |
 | 2026-04-03 | Entity-type selection (Person/Group/Place) deferred | HUMA V2 is person-only. The prototype's entity types are a V3 concern when HUMA serves teams and organizations. |
 | 2026-04-03 | Reflect-back before decomposition | Prototype paused at every step to check understanding. We add one reflect-back moment before the first decomposition — "Does this look right?" |
+| 2026-04-03 | Method intelligence woven in, not bolted on | HUMA should be a knowledge broker for proven practice — connecting operators to the best methods, not just organizing what they already do. This isn't a separate feature; it's an enhancement to the reflect-back (Session 59) and suggestion engine (Session 64–65). |
+| 2026-04-03 | Method suggestions require high confidence | Only surface better methods with documented evidence, named practitioners/traditions, and clear mechanical advantage. No "studies suggest" — name the source, explain the mechanism, map to context. Empty is fine; false confidence is not. |
+| 2026-04-03 | Method suggestions rare, not constant | `betterMethods` should be empty most of the time. Only surface when there's a genuinely significant improvement — a fundamentally different approach, not an incremental tweak to the current one. |
 
 ---
 
@@ -618,3 +656,8 @@ END OF SESSION:
 - **Voice input for context gathering** — prototype showed audio recording UI (s48), low priority vs typed conversation
 - **Ikigai Venn for structured context** — prototype used Love/Good/Need/Paid overlapping Venn (s40–s44). Could be a structured alternative to conversational context gathering.
 - **12-step linear onboarding wizard** — prototype's full sequence. Too many steps for MVP, but individual steps (who, what, context, purpose, vision, behavior) could become optional deep-dive modules.
+- **RPPL method_comparison field** — extend pattern schema with `common_alternatives`, `advantage`, `evidence_type`. Enables the pattern library to serve as a curated registry of proven methods with comparison data. Depends on operator validation data at scale.
+- **Population-level method validation** — "3 HUMA operators switched from static to mobile coop. All three saw lower feed costs within 6 weeks." Requires 1,000+ operators with sufficient usage data.
+- **Compounding gains / long-horizon reflection** — surface invisible progress over months/years: "Your food spending has dropped $200/month since you started producing eggs — $2,400 total savings." Distinct from the monthly review (Session 45) which shows recent consistency. This is about comparing NOW to 3/6/12 months ago. Requires 3+ months of data to be meaningful.
+- **Proactive intelligence taxonomy** — three types of nudges: Temporal (time-sensitive based on plan/season), Pattern Recognition (trends operator can't see), Opportunity Surfacing (connections operator hasn't made). Framework for evolving Increment 2's push notification system.
+- **Context portability / inheritance** — export operator's entire context as a human-readable document that could be handed to their children. "This is everything we learned about this land, this household, this life." Architectural constraint: data model should be exportable. Long-term.

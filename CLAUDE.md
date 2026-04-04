@@ -6,6 +6,8 @@ HUMA is infrastructure for running your life as one connected system. Not a well
 
 **What HUMA does that no other app can:** Show you how the different parts of your life are connected -- and which specific daily behaviors are the leverage points that hold everything together.
 
+**The core gap HUMA fills:** Claude is a brilliant generalist that requires a skilled operator. HUMA is the skilled operator -- generalized, persistent, proactive, and available to everyone. It knows which questions to ask, when to push back, and how to synthesize across domains. Most people can't do this themselves. That gap is the product.
+
 **Current state:** V2.1 in development. Three-tab app: Today (production sheet, home), Whole (holonic life map), Grow (patterns view). Entry flow at `/start` works. Conversation engine gathers deep context before decomposing into phased behaviors. Patterns auto-extracted from decompositions with triggers, displayed on Grow tab grouped by status with validation progress. Sheet compilation works. Whole page has force-directed holon visualization with archetypes and WHY statement. Chat overlay available from any tab with tab-specific context awareness.
 
 **Deployed:** huma-two.vercel.app
@@ -224,6 +226,7 @@ Pre-auth: all data in localStorage. On auth: `migrateLocalStorageToSupabase()` m
 | V2 MVP architecture | Superseded by V2.1 artifact-first redesign. |
 | Context editability | Everything is directly editable from the Whole page. Aspirations, patterns, behaviors, context fields -- all removable, archivable, or modifiable without going through conversation. |
 | Archetype onboarding | Step 0 with visual cards, skippable. Pre-populates Whole with template data. "Start from a template or blank slate" fork. |
+| Method intelligence | HUMA evaluates whether the operator's method is the best proven approach for their context. Surfaces better methods with evidence, named sources, and context-specific mapping. Woven into conversation reflect-back and suggestion engine — not a separate feature. Rare and high-confidence only. |
 
 ---
 
@@ -238,6 +241,8 @@ Read `HUMA_VOICE_BIBLE.md` for the full specification.
 **Vocabulary:** USE: "what's working," "where the leverage is," "that's a design problem, not a discipline problem." NEVER: optimize, productivity, hack, goals, accountability, mindset, journey, empower, wellness, actionable, transformative.
 
 **Response lengths:** Conversation clarification: tappable options + 1 sentence. Decomposition: phased behavior list + 1 sentence framing. Production sheet items: specific action + brief detail. Insight: 3 sentences max. One question per message.
+
+**Emotional arc of every session:** Recognition ("It already knows where I am") → Clarity ("I can see the whole picture") → Confidence ("I know what to do next and why") → Agency ("I made this decision. HUMA helped me see it."). The operator is always the protagonist. HUMA is the lens, not the hand.
 
 ---
 
@@ -314,6 +319,8 @@ Does this feature help the operator's life run better? Does it surface a connect
 - Leave space after insights (silence is a feature)
 - Make the shared insight beautiful enough to screenshot and send
 - Deliver specific, actionable outputs -- not plans, not advice, but "here's your tomorrow"
+- Deliver undeniable value in the first 30 minutes -- not a demo, not a tour, but something real for their real situation
+- Be proactive when earned -- the best interaction is the one the operator didn't have to initiate. Start quiet, earn the right to nudge over time. Never punish someone for ignoring a nudge.
 
 ---
 
@@ -398,7 +405,7 @@ _Source: `docs/BUILD_ROADMAP_INCREMENT_7.md`. Three phases, 19 sessions. Prototy
 | **56** | Archetype card design + data | ArchetypeCard component with descriptions + typical concerns. Template data per archetype (aspirations, behaviors, context hints). |
 | **57** | Step 0: archetype selection | New `/start` flow: archetype cards before conversation. Multi-select, "Skip — just talk" option. Editability promise. |
 | **58** | Template pre-population | Pre-populate Whole from archetype templates. "Template or blank slate" fork. Whole mini-preview. Optional capital sketch. |
-| **59** | Archetype-aware conversation | HUMA opens with archetype context. Template refinement markers. Reflect-back before decomposition. |
+| **59** | Archetype-aware conversation + method intelligence | HUMA opens with archetype context. Template refinement. Reflect-back evaluates method quality — surfaces proven better approaches with evidence and named sources. |
 | **60** | ArchetypeSelector redesign | Replace Whole page button grid with ArchetypeCard component. "Learn more" expand per card. |
 | **61** | New aspiration entry points | "Add aspiration" from Whole/Grow/Today. ChatSheet new-aspiration mode. Template quick-add cards. |
 | **62** | Persistent Whole mini + polish | Whole mini-indicator in nav. Onboarding transition polish. Mobile optimization. End-to-end test. |
@@ -408,8 +415,8 @@ _Source: `docs/BUILD_ROADMAP_INCREMENT_7.md`. Three phases, 19 sessions. Prototy
 | Session | Name | What Gets Built |
 |---------|------|----------------|
 | **63** | Aspiration detail panel | Full editing workspace: rename, reorder behaviors, add/remove, change trigger. Decomposition chain visualization. |
-| **64** | Contextual suggestion engine | `/api/suggest` endpoint: related patterns, alternative framings, connections, warnings. Haiku-powered, session-cached. |
-| **65** | Suggestion UI in panels | "Related" section in aspiration + pattern panels. Add suggested patterns. Accept alternative framings. Connection impact visible. |
+| **64** | Contextual suggestion engine + method intelligence | `/api/suggest` endpoint: related patterns, alternative framings, connections, warnings, AND proven better methods with evidence/sources. Haiku-powered, session-cached. |
+| **65** | Suggestion UI + "Better approach" cards | "Related" section + "There's a better way" cards with evidence, source, and "Rebuild around this" action. |
 | **66** | Foundation context suggestions | Context enrichment from chat history. Empty context prompts with archetype-relevant suggestions. Dimension content view. |
 | **67** | Cross-component impact awareness | Impact preview on destructive actions. Visual node highlighting on hover/press. Accurate downstream counts. |
 | **68** | Integration polish | Cross-page edit consistency. Transition animations. Mobile gestures. Accessibility audit. Design system sweep. |
