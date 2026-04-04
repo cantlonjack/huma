@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import TabShell from "@/components/TabShell";
 import WholeShape, { type HolonNode, type HolonLink, type HolonLayer, type HolonStatus, type InsightAnnotation } from "@/components/whole/WholeShape";
 import HolonExpandPanel from "@/components/whole/HolonExpandPanel";
@@ -12,6 +13,7 @@ import ArchetypeSelector from "@/components/whole/ArchetypeSelector";
 import ContextPortrait from "@/components/ContextPortrait";
 import CanvasRegenerate from "@/components/whole/CanvasRegenerate";
 import ConfirmationSheet from "@/components/whole/ConfirmationSheet";
+import SettingsSheet from "@/components/whole/SettingsSheet";
 import WholeSkeleton from "@/components/WholeSkeleton";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
@@ -37,6 +39,11 @@ import {
   removeLocalAspiration,
   archiveLocalAspiration,
   removeLocalContextField,
+  clearChatMessages,
+  clearLocalChatMessages,
+  clearLocalStorageContext,
+  clearAllUserData,
+  clearAllLocalStorage,
   type AspirationCorrelation,
 } from "@/lib/supabase-v2";
 
@@ -212,6 +219,7 @@ function serializeContext(
 
 export default function WholePage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [aspirations, setAspirations] = useState<Aspiration[]>([]);
   const [context, setContext] = useState<KnownContext>({});
   const [rawContext, setRawContext] = useState<Record<string, unknown>>({});
@@ -232,6 +240,7 @@ export default function WholePage() {
   const [shareworthyOpen, setShareworthyOpen] = useState(false);
   const [regeneratedCanvas, setRegeneratedCanvas] = useState<CanvasData | null>(null);
   const [manageMode, setManageMode] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{
     type: "archive" | "delete" | "clear-context" | "delete-principle";
     id: string;
@@ -635,6 +644,51 @@ export default function WholePage() {
     setConfirmAction(null);
   }, [confirmAction, user, rawContext]);
 
+  const handleSettingsAction = useCallback(async (action: "clear-chat" | "clear-context" | "start-fresh") => {
+    const supabase = user ? createClient() : null;
+
+    if (action === "clear-chat") {
+      if (supabase && user) {
+        try { await clearChatMessages(supabase, user.id); } catch { /* */ }
+      }
+      clearLocalChatMessages();
+    } else if (action === "clear-context") {
+      if (supabase && user) {
+        try {
+          const ctx = await import("@/lib/supabase-v2").then(m => m.getOrCreateContext(supabase, user.id));
+          await supabase.from("contexts").update({
+            known_context: {},
+            why_statement: null,
+            why_date: null,
+            updated_at: new Date().toISOString(),
+          }).eq("id", ctx.id);
+        } catch { /* */ }
+      }
+      clearLocalStorageContext();
+      setContext({});
+      setRawContext({});
+      setWhyStatement(null);
+      setArchetypes([]);
+    } else if (action === "start-fresh") {
+      if (supabase && user) {
+        try { await clearAllUserData(supabase, user.id); } catch { /* */ }
+      }
+      clearAllLocalStorage();
+      setSettingsOpen(false);
+      router.push("/start?fresh=1");
+      return;
+    }
+
+    // Clear cached sheet so it recompiles
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      localStorage.removeItem(`huma-v2-sheet-${today}`);
+      localStorage.removeItem(`huma-v2-compiled-sheet-${today}`);
+    } catch { /* */ }
+
+    setSettingsOpen(false);
+  }, [user, router]);
+
   // Handle context field removal from ContextPortrait
   const handleContextFieldRemove = useCallback(async (fieldPath: string) => {
     const supabase = user ? createClient() : null;
@@ -747,6 +801,29 @@ export default function WholePage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
+              </svg>
+            </button>
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="cursor-pointer"
+              style={{
+                width: "28px",
+                height: "28px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "none",
+                border: "none",
+                borderRadius: "8px",
+                transition: "background 200ms",
+              }}
+              aria-label="Settings"
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 5h12M3 9h12M3 13h12" stroke="#A8C4AA" strokeWidth="1.4" strokeLinecap="round" />
+                <circle cx="6" cy="5" r="1.5" fill="#FAF8F3" stroke="#A8C4AA" strokeWidth="1.2" />
+                <circle cx="12" cy="9" r="1.5" fill="#FAF8F3" stroke="#A8C4AA" strokeWidth="1.2" />
+                <circle cx="8" cy="13" r="1.5" fill="#FAF8F3" stroke="#A8C4AA" strokeWidth="1.2" />
               </svg>
             </button>
           </div>
@@ -936,6 +1013,13 @@ export default function WholePage() {
         cancelLabel="Keep it"
         onConfirm={handleConfirmAction}
         onCancel={() => setConfirmAction(null)}
+      />
+
+      {/* Settings sheet for reset options */}
+      <SettingsSheet
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onAction={handleSettingsAction}
       />
     </TabShell>
   );

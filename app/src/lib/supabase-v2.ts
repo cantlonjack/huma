@@ -277,6 +277,14 @@ export async function getChatMessages(
   }));
 }
 
+/** Delete all chat messages for a user (Supabase only). */
+export async function clearChatMessages(
+  supabase: SupabaseClient,
+  userId: string,
+) {
+  await supabase.from("chat_messages").delete().eq("user_id", userId);
+}
+
 export async function saveChatMessage(
   supabase: SupabaseClient,
   userId: string,
@@ -1852,6 +1860,13 @@ export function removeLocalContextField(fieldPath: string): void {
 export function clearLocalStorageContext(): void {
   if (typeof window === "undefined") return;
   localStorage.setItem("huma-v2-known-context", JSON.stringify({}));
+}
+
+/** Clear chat messages from localStorage. */
+export function clearLocalChatMessages(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("huma-v2-chat-messages");
+  localStorage.removeItem("huma-v2-start-messages");
 }
 
 /** Nuclear reset: clear all huma-v2-* keys from localStorage. */

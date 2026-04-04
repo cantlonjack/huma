@@ -128,7 +128,7 @@ The ContextPortrait on the Whole page supports inline editing but not removal. I
 For operators who tested casually and want to start over, this session adds a settings panel with reset options.
 
 **Implementation:**
-- [ ] **Settings bottom sheet** — opened from a gear icon in Whole page header (reuse manage toggle area, or place adjacent)
+- [x] **Settings bottom sheet** — opened from a sliders icon in Whole page header (adjacent to manage gear)
   - Three options, each with HUMA-voice confirmation:
   1. **"Clear chat history"** — deletes `chat_messages` for user + clears `huma-v2-chat-messages` and `huma-v2-start-messages` from localStorage
      - Confirmation: "This removes your conversation history. Your context, aspirations, and patterns stay."
@@ -137,8 +137,8 @@ For operators who tested casually and want to start over, this session adds a se
   3. **"Start fresh"** — calls `clearAllUserData()`, clears all localStorage keys matching `huma-v2-*`, redirects to `/start?fresh=1`
      - Confirmation: "Clean slate. Context, aspirations, patterns, history — everything goes. Your account stays."
      - Two-step: first tap shows confirmation sheet, second tap ("Yes, start fresh") executes
-- [ ] Settings sheet styling: sand-50 bg, options as full-width rows with icon + label + description, chevron indicator
-- [ ] Post-reset redirect: no stale state in React state or localStorage
+- [x] Settings sheet styling: sand-50 bg, options as full-width rows with icon + label + description, chevron indicator
+- [x] Post-reset redirect: no stale state in React state or localStorage
 
 **Deliverable:** Operators can clear chat, clear context, or fully reset. Each option has appropriate scope and confirmation.
 
