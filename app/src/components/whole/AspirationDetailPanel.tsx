@@ -28,12 +28,12 @@ const STATUS_CYCLE: { key: Aspiration["status"]; label: string; holon: HolonStat
 ];
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; border?: string }> = {
-  active: { bg: "#F5F9F5", text: "#6B8F71" },
-  working: { bg: "#EDF3ED", text: "#3A5A40" },
-  finding: { bg: "#F0EDE4", text: "#A8C4AA", border: "1px dashed #DDD4C0" },
-  no_path: { bg: "#F5F3EE", text: "#A8C4AA" },
-  adjusting: { bg: "#FFF5ED", text: "#B5621E" },
-  paused: { bg: "#FFF5ED", text: "#B5621E" },
+  active: { bg: "bg-sage-50", text: "text-sage-450" },
+  working: { bg: "bg-sage-100", text: "text-sage-700" },
+  finding: { bg: "bg-sand-100", text: "text-sage-300", border: "border border-dashed border-sand-300" },
+  no_path: { bg: "bg-sand-50", text: "text-sage-300" },
+  adjusting: { bg: "bg-amber-100", text: "text-amber-600" },
+  paused: { bg: "bg-amber-100", text: "text-amber-600" },
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -52,14 +52,14 @@ function EditableText({
   placeholder,
   onSave,
   serif,
-  fontSize = "14px",
+  textSize = "text-sm",
   className = "",
 }: {
   value: string;
   placeholder: string;
   onSave: (v: string) => void;
   serif?: boolean;
-  fontSize?: string;
+  textSize?: string;
   className?: string;
 }) {
   const [editing, setEditing] = useState(false);
@@ -86,20 +86,7 @@ function EditableText({
         onChange={(e) => setDraft(e.target.value)}
         onBlur={handleSave}
         onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") { setDraft(value); setEditing(false); } }}
-        className={className}
-        style={{
-          width: "100%",
-          fontSize,
-          lineHeight: "1.3",
-          color: "#3A5A40",
-          background: "#FAF8F3",
-          border: "1px solid #6B8F71",
-          borderRadius: "8px",
-          padding: "4px 8px",
-          outline: "none",
-          fontFamily: serif ? "'Cormorant Garamond', serif" : "'Source Sans 3', sans-serif",
-          fontWeight: serif ? 500 : 400,
-        }}
+        className={`w-full leading-[1.3] text-sage-700 bg-sand-50 border border-sage-450 rounded-lg px-2 py-1 outline-none ${serif ? "font-serif font-medium" : "font-sans"} ${textSize} ${className}`}
       />
     );
   }
@@ -107,17 +94,7 @@ function EditableText({
   return (
     <button
       onClick={() => { setDraft(value); setEditing(true); }}
-      className={`cursor-pointer text-left ${className}`}
-      style={{
-        background: "none",
-        border: "none",
-        padding: 0,
-        fontSize,
-        lineHeight: "1.3",
-        color: value ? "#3A5A40" : "#C8C0B0",
-        fontFamily: serif ? "'Cormorant Garamond', serif" : "'Source Sans 3', sans-serif",
-        fontWeight: serif ? 500 : 400,
-      }}
+      className={`cursor-pointer text-left bg-transparent border-none p-0 leading-[1.3] ${serif ? "font-serif font-medium" : "font-sans"} ${textSize} ${value ? "text-sage-700" : "text-sand-350"} ${className}`}
     >
       {value || placeholder}
     </button>
@@ -144,54 +121,18 @@ function BehaviorRow({
   onPatternTap?: (patternId: string) => void;
 }) {
   return (
-    <div
-      style={{
-        position: "relative",
-        paddingLeft: "20px",
-        paddingTop: "6px",
-        paddingBottom: "6px",
-      }}
-    >
+    <div className="relative pl-5 py-1.5">
       {/* Tree connector */}
-      <div
-        style={{
-          position: "absolute",
-          left: "6px",
-          top: 0,
-          bottom: 0,
-          width: "1px",
-          background: "#C4D9C6",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: "6px",
-          top: "16px",
-          width: "10px",
-          height: "1px",
-          background: "#C4D9C6",
-        }}
-      />
+      <div className="absolute left-1.5 top-0 bottom-0 w-px bg-sage-200" />
+      <div className="absolute left-1.5 top-4 w-2.5 h-px bg-sage-200" />
 
       {/* Behavior content */}
       <div className="flex items-start gap-2">
         {/* Trigger star */}
         <button
           onClick={onSetTrigger}
-          className="flex-shrink-0 cursor-pointer"
+          className="flex-shrink-0 cursor-pointer w-5 h-5 flex items-center justify-center bg-transparent border-none p-0 mt-px"
           title={isTrigger ? "Trigger behavior" : "Set as trigger"}
-          style={{
-            width: "20px",
-            height: "20px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "none",
-            border: "none",
-            padding: 0,
-            marginTop: "1px",
-          }}
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill={isTrigger ? "#B5621E" : "none"} xmlns="http://www.w3.org/2000/svg">
             <path
@@ -208,7 +149,6 @@ function BehaviorRow({
             value={behavior.text}
             placeholder="Behavior description"
             onSave={onTextSave}
-            fontSize="14px"
           />
 
           {/* Dimension dots */}
@@ -217,11 +157,9 @@ function BehaviorRow({
               {behavior.dimensions.map((d) => (
                 <span
                   key={d.dimension}
-                  className="rounded-full"
+                  className="w-1.5 h-1.5 rounded-full"
                   title={DIMENSION_LABELS[d.dimension as DimensionKey] || d.dimension}
                   style={{
-                    width: "6px",
-                    height: "6px",
                     background: DIMENSION_COLORS[d.dimension as DimensionKey] || "#A8C4AA",
                   }}
                 />
@@ -233,19 +171,9 @@ function BehaviorRow({
           {linkedPattern && (
             <button
               onClick={() => onPatternTap?.(linkedPattern.id)}
-              className="font-sans cursor-pointer"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                fontSize: "11px",
-                color: "#6B8F71",
-                background: "none",
-                border: "none",
-                padding: "2px 0 0",
-              }}
+              className="font-sans cursor-pointer flex items-center gap-1 text-[11px] text-sage-450 bg-transparent border-none pt-0.5"
             >
-              <span style={{ color: "#A8C4AA" }}>&rarr;</span>
+              <span className="text-sage-300">&rarr;</span>
               Pattern: {linkedPattern.name}
             </button>
           )}
@@ -254,20 +182,7 @@ function BehaviorRow({
         {/* Remove button */}
         <button
           onClick={onRemove}
-          className="flex-shrink-0 cursor-pointer"
-          style={{
-            width: "20px",
-            height: "20px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "none",
-            border: "none",
-            fontSize: "16px",
-            color: "#C4BAA8",
-            padding: 0,
-            marginTop: "1px",
-          }}
+          className="flex-shrink-0 cursor-pointer w-5 h-5 flex items-center justify-center bg-transparent border-none text-base text-earth-200 p-0 mt-px"
           title="Remove behavior"
         >
           &times;
@@ -301,7 +216,7 @@ function AddBehaviorRow({ onAdd }: { onAdd: (text: string) => void }) {
 
   if (adding) {
     return (
-      <div style={{ paddingLeft: "20px", paddingTop: "6px" }}>
+      <div className="pl-5 pt-1.5">
         <input
           ref={inputRef}
           type="text"
@@ -313,37 +228,17 @@ function AddBehaviorRow({ onAdd }: { onAdd: (text: string) => void }) {
             if (e.key === "Enter") handleAdd();
             if (e.key === "Escape") { setDraft(""); setAdding(false); }
           }}
-          className="font-sans"
-          style={{
-            width: "100%",
-            fontSize: "14px",
-            color: "#3D3830",
-            background: "#FAF8F3",
-            border: "1px solid #6B8F71",
-            borderRadius: "8px",
-            padding: "6px 10px",
-            outline: "none",
-          }}
+          className="font-sans w-full text-sm text-earth-700 bg-sand-50 border border-sage-450 rounded-lg px-2.5 py-1.5 outline-none"
         />
       </div>
     );
   }
 
   return (
-    <div style={{ paddingLeft: "20px", paddingTop: "6px" }}>
+    <div className="pl-5 pt-1.5">
       <button
         onClick={() => setAdding(true)}
-        className="font-sans cursor-pointer"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-          fontSize: "13px",
-          color: "#A8C4AA",
-          background: "none",
-          border: "none",
-          padding: 0,
-        }}
+        className="font-sans cursor-pointer flex items-center gap-1.5 text-[13px] text-sage-300 bg-transparent border-none p-0"
       >
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
           <path d="M6 1.5v9M1.5 6h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -383,19 +278,10 @@ function FutureSection<T extends { timeframe: string }>({
   if (items.length === 0 && !open) return null;
 
   return (
-    <div style={{ marginTop: "12px" }}>
+    <div className="mt-3">
       <button
         onClick={() => setOpen(!open)}
-        className="font-sans cursor-pointer w-full text-left flex items-center gap-2"
-        style={{
-          background: "none",
-          border: "none",
-          padding: 0,
-          fontSize: "11px",
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-          color: "#A8C4AA",
-        }}
+        className="font-sans cursor-pointer w-full text-left flex items-center gap-2 bg-transparent border-none p-0 text-[11px] tracking-[0.1em] uppercase text-sage-300"
       >
         <svg
           width="10"
@@ -407,41 +293,29 @@ function FutureSection<T extends { timeframe: string }>({
           <path d="M3 1.5l4 3.5-4 3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         {title}
-        <span style={{ color: "#C4BAA8" }}>({items.length})</span>
+        <span className="text-earth-200">({items.length})</span>
       </button>
 
       {open && (
-        <div style={{ marginTop: "6px", paddingLeft: "8px" }}>
+        <div className="mt-1.5 pl-2">
           {items.map((item, i) => (
-            <div key={i} className="flex items-start gap-2" style={{ paddingTop: "4px" }}>
+            <div key={i} className="flex items-start gap-2 pt-1">
               <div className="flex-1 min-w-0">
                 <EditableText
                   value={String(item[nameKey])}
                   placeholder="Description"
                   onSave={(v) => onItemSave(i, v)}
-                  fontSize="13px"
+                  textSize="text-[13px]"
                 />
                 {item.timeframe && (
-                  <span className="font-sans" style={{ fontSize: "11px", color: "#A89E90" }}>
+                  <span className="font-sans text-[11px] text-earth-300">
                     {item.timeframe}
                   </span>
                 )}
               </div>
               <button
                 onClick={() => onItemRemove(i)}
-                className="flex-shrink-0 cursor-pointer"
-                style={{
-                  width: "18px",
-                  height: "18px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "none",
-                  border: "none",
-                  fontSize: "14px",
-                  color: "#C4BAA8",
-                  padding: 0,
-                }}
+                className="flex-shrink-0 cursor-pointer w-[18px] h-[18px] flex items-center justify-center bg-transparent border-none text-sm text-earth-200 p-0"
               >
                 &times;
               </button>
@@ -449,7 +323,7 @@ function FutureSection<T extends { timeframe: string }>({
           ))}
 
           {adding ? (
-            <div style={{ paddingTop: "4px" }}>
+            <div className="pt-1">
               <input
                 ref={inputRef}
                 type="text"
@@ -461,33 +335,13 @@ function FutureSection<T extends { timeframe: string }>({
                   if (e.key === "Enter" && draft.trim()) { onItemAdd(draft.trim()); setDraft(""); setAdding(false); }
                   if (e.key === "Escape") { setDraft(""); setAdding(false); }
                 }}
-                className="font-sans"
-                style={{
-                  width: "100%",
-                  fontSize: "13px",
-                  color: "#3D3830",
-                  background: "#FAF8F3",
-                  border: "1px solid #6B8F71",
-                  borderRadius: "8px",
-                  padding: "5px 10px",
-                  outline: "none",
-                }}
+                className="font-sans w-full text-[13px] text-earth-700 bg-sand-50 border border-sage-450 rounded-lg px-2.5 py-[5px] outline-none"
               />
             </div>
           ) : (
             <button
               onClick={() => setAdding(true)}
-              className="font-sans cursor-pointer"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                fontSize: "12px",
-                color: "#A8C4AA",
-                background: "none",
-                border: "none",
-                padding: "4px 0 0",
-              }}
+              className="font-sans cursor-pointer flex items-center gap-1 text-xs text-sage-300 bg-transparent border-none pt-1"
             >
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                 <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
@@ -563,10 +417,7 @@ export default function AspirationDetailPanel({
   }, [behaviors, saveBehaviors]);
 
   const handleSetTrigger = useCallback((index: number) => {
-    // Trigger is stored in triggerData on the aspiration; for now we save the behavior key
-    // The parent handles persisting triggerData
     const updated = [...behaviors];
-    // Move the selected behavior to first position (trigger position)
     const [moved] = updated.splice(index, 1);
     updated.unshift(moved);
     saveBehaviors(updated);
@@ -643,17 +494,7 @@ export default function AspirationDetailPanel({
   return (
     <div
       ref={panelRef}
-      className="mx-4 overflow-hidden"
-      style={{
-        background: "#FAF8F3",
-        borderRadius: "12px",
-        border: "1px solid #DDD4C0",
-        padding: "16px",
-        margin: "12px 16px 0",
-        maxHeight: "65vh",
-        overflowY: "auto",
-        animation: "expand-panel-in 240ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
-      }}
+      className="mx-4 overflow-hidden bg-sand-50 rounded-xl border border-sand-300 p-4 mt-3 max-h-[65vh] overflow-y-auto animate-expand-panel-in"
     >
       {/* Header: name + close */}
       <div className="flex items-start justify-between">
@@ -663,23 +504,13 @@ export default function AspirationDetailPanel({
             placeholder="Name this aspiration"
             onSave={onNameSave}
             serif
-            fontSize="20px"
+            textSize="text-xl"
           />
 
           {/* Status chip — tappable */}
           <button
             onClick={handleStatusTap}
-            className="inline-block font-sans font-medium mt-1 cursor-pointer"
-            style={{
-              fontSize: "11px",
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              padding: "2px 10px",
-              borderRadius: "12px",
-              background: statusStyle.bg,
-              color: statusStyle.text,
-              border: statusStyle.border || "none",
-            }}
+            className={`inline-block font-sans font-medium mt-1 cursor-pointer text-[11px] tracking-[0.06em] uppercase px-2.5 py-0.5 rounded-xl ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border || ""}`}
           >
             {displayStatus}
           </button>
@@ -687,19 +518,7 @@ export default function AspirationDetailPanel({
 
         <button
           onClick={onClose}
-          className="flex-shrink-0 cursor-pointer"
-          style={{
-            width: "28px",
-            height: "28px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "none",
-            border: "none",
-            fontSize: "18px",
-            color: "#8C8274",
-            marginTop: "-2px",
-          }}
+          className="flex-shrink-0 cursor-pointer w-7 h-7 flex items-center justify-center bg-transparent border-none text-lg text-earth-400 -mt-0.5"
           aria-label="Close panel"
         >
           &times;
@@ -708,10 +527,7 @@ export default function AspirationDetailPanel({
 
       {/* Summary line */}
       {aspiration.summary && (
-        <p
-          className="font-sans"
-          style={{ fontSize: "13px", lineHeight: "1.5", color: "#6B8F71", marginTop: "6px" }}
-        >
+        <p className="font-sans text-[13px] leading-normal text-sage-450 mt-1.5">
           {aspiration.summary}
         </p>
       )}
@@ -722,14 +538,12 @@ export default function AspirationDetailPanel({
           {aspiration.dimensionsTouched.map((dim) => (
             <div key={dim} className="flex items-center gap-1">
               <span
-                className="rounded-full"
+                className="w-2 h-2 rounded-full"
                 style={{
-                  width: "8px",
-                  height: "8px",
                   background: DIMENSION_COLORS[dim as DimensionKey] || "#A8C4AA",
                 }}
               />
-              <span className="font-sans" style={{ fontSize: "11px", color: "#6B8F71" }}>
+              <span className="font-sans text-[11px] text-sage-450">
                 {DIMENSION_LABELS[dim as DimensionKey] || dim}
               </span>
             </div>
@@ -738,20 +552,12 @@ export default function AspirationDetailPanel({
       )}
 
       {/* ── Decomposition chain ── */}
-      <div style={{ marginTop: "14px" }}>
-        <span
-          className="font-sans"
-          style={{
-            fontSize: "11px",
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            color: "#A8C4AA",
-          }}
-        >
+      <div className="mt-3.5">
+        <span className="font-sans text-[11px] tracking-[0.1em] uppercase text-sage-300">
           This week
         </span>
 
-        <div style={{ marginTop: "4px" }}>
+        <div className="mt-1">
           {behaviors.map((b, i) => (
             <BehaviorRow
               key={b.key}
@@ -789,26 +595,12 @@ export default function AspirationDetailPanel({
 
       {/* ── Manage mode: danger zone ── */}
       {manageMode && (
-        <div
-          style={{
-            marginTop: "16px",
-            paddingTop: "12px",
-            borderTop: "1px solid #E8E2D6",
-          }}
-        >
+        <div className="mt-4 pt-3 border-t border-sand-250">
           <div className="flex gap-3">
             {onArchive && (
               <button
                 onClick={onArchive}
-                className="font-sans font-medium cursor-pointer"
-                style={{
-                  fontSize: "13px",
-                  padding: "8px 16px",
-                  borderRadius: "10px",
-                  background: "none",
-                  border: "1px solid #6B8F71",
-                  color: "#6B8F71",
-                }}
+                className="font-sans font-medium cursor-pointer text-[13px] px-4 py-2 rounded-[10px] bg-transparent border border-sage-450 text-sage-450"
               >
                 Archive
               </button>
@@ -816,15 +608,7 @@ export default function AspirationDetailPanel({
             {onDelete && (
               <button
                 onClick={onDelete}
-                className="font-sans font-medium cursor-pointer"
-                style={{
-                  fontSize: "13px",
-                  padding: "8px 16px",
-                  borderRadius: "10px",
-                  background: "none",
-                  border: "none",
-                  color: "var(--color-rose)",
-                }}
+                className="font-sans font-medium cursor-pointer text-[13px] px-4 py-2 rounded-[10px] bg-transparent border-none text-rose"
               >
                 Remove
               </button>
@@ -835,25 +619,10 @@ export default function AspirationDetailPanel({
 
       {/* Saved indicator */}
       {dirty && (
-        <div
-          className="font-sans"
-          style={{
-            marginTop: "12px",
-            fontSize: "11px",
-            color: "#A8C4AA",
-            textAlign: "right",
-          }}
-        >
+        <div className="font-sans mt-3 text-[11px] text-sage-300 text-right">
           Saved
         </div>
       )}
-
-      <style>{`
-        @keyframes expand-panel-in {
-          from { opacity: 0; transform: translateY(-8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   );
 }

@@ -61,34 +61,21 @@ function DimensionCircle({
 
   return (
     <div
+      className="flex flex-col items-center gap-3"
       style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "12px",
         opacity: 0,
         animation: `insight-circle-in 600ms cubic-bezier(0.22, 1, 0.36, 1) ${delay}ms forwards`,
       }}
     >
       <div
+        className="rounded-full opacity-85"
         style={{
           width: `${size}px`,
           height: `${size}px`,
-          borderRadius: "50%",
           backgroundColor: color,
-          opacity: 0.85,
         }}
       />
-      <span
-        style={{
-          fontFamily: "'Source Sans 3', 'Source Sans Pro', sans-serif",
-          fontSize: "13px",
-          fontWeight: 500,
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          color: COLORS.sandDark,
-        }}
-      >
+      <span className="font-sans text-[13px] font-medium tracking-[0.12em] uppercase text-earth-300">
         {label}
       </span>
     </div>
@@ -100,19 +87,19 @@ function DimensionCircle({
 function ConnectionLine({ width }: { width: number }) {
   return (
     <div
+      className="self-center"
       style={{
         width: `${width}px`,
         height: "1px",
         backgroundColor: COLORS.divider,
-        alignSelf: "center",
-        marginTop: `-${24 + 6}px`, // pull up to center between circles
+        marginTop: `-${24 + 6}px`,
         marginBottom: "30px",
       }}
     />
   );
 }
 
-// ─── Export Layout (static, for image generation) ───────────────
+// ─── Export Layout (static, for image generation — inline styles preserved) ──
 
 function ExportLayout({
   insight,
@@ -390,74 +377,41 @@ export default function ShareworthyInsightCard({
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-y-auto"
-      style={{ backgroundColor: "rgba(0,0,0,0.82)" }}
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/80"
       onClick={(e) => {
         if (e.target === e.currentTarget) onDismiss();
       }}
     >
       <div
-        className="min-h-full flex flex-col items-center justify-center gap-6 py-8 px-4"
-        style={{
-          animation:
-            "share-card-in 400ms cubic-bezier(0.22, 1, 0.36, 1)",
-        }}
+        className="min-h-full flex flex-col items-center justify-center gap-6 py-8 px-4 animate-share-card-in"
         onClick={(e) => {
           if (e.target === e.currentTarget) onDismiss();
         }}
       >
         {/* ─── Visible card (interactive, animated) ─── */}
         <div
+          className="rounded-xl max-w-[540px] w-full relative overflow-hidden bg-earth-900"
           style={{
-            backgroundColor: COLORS.bg,
-            borderRadius: "12px",
             boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
             padding: "56px 40px 48px",
-            maxWidth: "540px",
-            width: "100%",
-            position: "relative",
-            overflow: "hidden",
           }}
         >
           {/* Subtle radial glow */}
           <div
+            className="absolute inset-0 pointer-events-none"
             style={{
-              position: "absolute",
-              inset: 0,
               background:
                 "radial-gradient(ellipse at 50% 35%, rgba(138,175,142,0.06) 0%, transparent 60%)",
-              pointerEvents: "none",
             }}
           />
 
           {/* Label */}
-          <p
-            style={{
-              fontFamily: "'Source Sans 3', 'Source Sans Pro', sans-serif",
-              fontSize: "10px",
-              fontWeight: 600,
-              letterSpacing: "0.22em",
-              textTransform: "uppercase",
-              color: COLORS.sageMuted,
-              textAlign: "center",
-              marginBottom: "32px",
-              position: "relative",
-            }}
-          >
+          <p className="font-sans text-[10px] font-semibold tracking-[0.22em] uppercase text-sage-500 text-center mb-8 relative">
             HUMA SEES
           </p>
 
           {/* Dimension circles row */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "flex-start",
-              gap: "32px",
-              marginBottom: "36px",
-              position: "relative",
-            }}
-          >
+          <div className="flex justify-center items-start gap-8 mb-9 relative">
             {dims.map((dim, i) => (
               <DimensionCircle
                 key={dim}
@@ -470,81 +424,34 @@ export default function ShareworthyInsightCard({
 
           {/* Connection lines between circles */}
           {dims.length > 1 && (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                marginBottom: "28px",
-                position: "relative",
-              }}
-            >
+            <div className="flex justify-center mb-7 relative">
               <ConnectionLine width={Math.min((dims.length - 1) * 72, 280)} />
             </div>
           )}
 
           {/* Thin divider */}
           <div
+            className="mx-auto mb-7"
             style={{
               width: "36px",
               height: "1px",
               backgroundColor: COLORS.divider,
-              margin: "0 auto 28px",
             }}
           />
 
           {/* Insight text */}
-          <p
-            style={{
-              fontFamily: "'Cormorant Garamond', 'Cormorant', serif",
-              fontSize: "22px",
-              fontWeight: 400,
-              fontStyle: "italic",
-              lineHeight: 1.65,
-              color: COLORS.sandLight,
-              textAlign: "center",
-              maxWidth: "440px",
-              margin: "0 auto",
-              position: "relative",
-            }}
-          >
+          <p className="font-serif text-[22px] italic leading-[1.65] text-sand-200 text-center max-w-[440px] mx-auto relative">
             {insight.text}
           </p>
 
           {/* Operator name */}
-          <p
-            style={{
-              fontFamily: "'Cormorant Garamond', 'Cormorant', serif",
-              fontSize: "15px",
-              fontWeight: 500,
-              color: COLORS.inkLight,
-              textAlign: "center",
-              marginTop: "32px",
-              letterSpacing: "0.02em",
-              position: "relative",
-            }}
-          >
+          <p className="font-serif text-[15px] font-medium text-earth-200 text-center mt-8 tracking-[0.02em] relative">
             {operatorName}
           </p>
 
           {/* HUMA footer */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              marginTop: "40px",
-              position: "relative",
-            }}
-          >
-            <span
-              style={{
-                fontFamily: "'Source Sans 3', 'Source Sans Pro', sans-serif",
-                fontSize: "10px",
-                fontWeight: 600,
-                color: COLORS.sageMuted,
-                letterSpacing: "0.3em",
-                textTransform: "uppercase",
-              }}
-            >
+          <div className="flex justify-center mt-10 relative">
+            <span className="font-sans text-[10px] font-semibold text-sage-500 tracking-[0.3em] uppercase">
               HUMA
             </span>
           </div>
@@ -555,23 +462,20 @@ export default function ShareworthyInsightCard({
           <button
             onClick={shareCard}
             disabled={downloading}
-            className="px-6 py-2.5 text-sm rounded-full transition-all font-sans font-medium disabled:opacity-50"
-            style={{ backgroundColor: "#3A5A40", color: "#fff" }}
+            className="px-6 py-2.5 text-sm rounded-full transition-all font-sans font-medium disabled:opacity-50 bg-sage-700 text-white"
           >
             {downloading ? "Generating..." : "Share"}
           </button>
           <button
             onClick={downloadCard}
             disabled={downloading}
-            className="px-6 py-2.5 text-sm rounded-full border transition-all font-sans font-medium disabled:opacity-50"
-            style={{ borderColor: "#5C7A62", color: "#8BAF8E" }}
+            className="px-6 py-2.5 text-sm rounded-full border border-sage-500 transition-all font-sans font-medium disabled:opacity-50 text-sage-400"
           >
             Save Image
           </button>
           <button
             onClick={onDismiss}
-            className="px-6 py-2.5 text-sm rounded-full border transition-all font-sans"
-            style={{ borderColor: "#554D42", color: "#8C8274" }}
+            className="px-6 py-2.5 text-sm rounded-full border border-earth-600 transition-all font-sans text-earth-400"
           >
             Close
           </button>

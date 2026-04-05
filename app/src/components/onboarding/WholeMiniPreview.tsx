@@ -23,8 +23,7 @@ export default function WholeMiniPreview({
 
   return (
     <div
-      className="animate-fade-in"
-      style={{ width: size, height: size, opacity: 0.85 }}
+      className="animate-fade-in w-[120px] h-[120px] opacity-85"
     >
       <svg
         width={size}

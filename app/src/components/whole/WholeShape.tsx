@@ -253,7 +253,7 @@ export default function WholeShape({
       width={width}
       height={height}
       viewBox={`0 0 ${MEMBRANE_VB_WIDTH} ${MEMBRANE_VB_HEIGHT}`}
-      style={{ display: "block", margin: "0 auto" }}
+      className="block mx-auto"
     >
       {/* Membrane */}
       <path
@@ -279,7 +279,7 @@ export default function WholeShape({
             fontFamily="'Source Sans 3', sans-serif"
             fontSize="8"
             letterSpacing="0.15em"
-            style={{ transition: "opacity 400ms" }}
+            className="transition-opacity duration-400"
           >
             {label}
           </text>
@@ -375,7 +375,7 @@ export default function WholeShape({
                 type: node.type,
               })
             }
-            style={{ cursor: "pointer" }}
+            className="cursor-pointer"
           >
             <circle
               cx={node.x}
@@ -419,7 +419,7 @@ export default function WholeShape({
                   fontFamily="'Source Sans 3', sans-serif"
                   fontSize="8"
                   fontWeight="600"
-                  style={{ pointerEvents: "none" }}
+                  className="pointer-events-none"
                 >
                   &times;
                 </text>
@@ -442,7 +442,7 @@ export default function WholeShape({
           fontSize="6"
           fill="#6B6358"
           opacity={0.75}
-          style={{ pointerEvents: "none" }}
+          className="pointer-events-none"
         >
           {truncateInsight(ann.text)}
         </text>
