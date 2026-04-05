@@ -315,7 +315,7 @@ export default function SettingsSheet({
                   padding: "12px",
                   borderRadius: "12px",
                   background:
-                    selectedOption === "start-fresh" ? "#E57373" : "#D4A574",
+                    selectedOption === "start-fresh" ? "var(--color-rose)" : "#D4A574",
                   color: "#FAF8F3",
                   border: "none",
                 }}

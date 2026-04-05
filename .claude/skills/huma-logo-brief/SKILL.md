@@ -46,7 +46,7 @@ Capture HUMA's identity in language a designer can feel:
 
 **Color context:** The app uses sand, sage, amber, and earth tones. The logo should work within this palette but doesn't need to use all of it. A single-color mark that works in sage-700 (#344d34) on sand-50, and in earth-900 (#2a211b) on white, is ideal.
 
-**Typography context:** Georgia (serif) for ideas, Inter (sans) for interface. The logotype could go either direction — a serif wordmark feels intellectual, a sans wordmark feels modern. A custom or hand-drawn wordmark could split the difference.
+**Typography context:** Cormorant Garamond (serif) for ideas, Source Sans 3 (sans) for interface. The logotype could go either direction — a serif wordmark feels intellectual, a sans wordmark feels modern. A custom or hand-drawn wordmark could split the difference.
 
 **Visual metaphors to explore:**
 - Topographic contour lines (landscape reading)

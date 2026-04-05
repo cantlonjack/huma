@@ -823,7 +823,7 @@ export default function AspirationDetailPanel({
                   borderRadius: "10px",
                   background: "none",
                   border: "none",
-                  color: "#E57373",
+                  color: "var(--color-rose)",
                 }}
               >
                 Remove

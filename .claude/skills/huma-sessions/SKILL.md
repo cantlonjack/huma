@@ -19,12 +19,13 @@ A good unit is:
 
 ## Before Any Work
 
-Read the right documents FIRST:
+Read the right workspace FIRST (see routing table in CLAUDE.md):
 
-* Visual work → `/docs/HUMA_DESIGN_SYSTEM.md`
-* Prompt work → `/docs/HUMA_VOICE_BIBLE.md`
-* Feature work → `/docs/HUMA_USER_JOURNEY.md`
-* Any work → `/docs/HUMA_ETHICAL_FRAMEWORK.md` §02 (dependency test)
+* Code work → `workspaces/code.md`
+* Visual/design work → `workspaces/design.md` + `workspaces/code.md`
+* Prompt/voice work → `workspaces/prompts.md`
+* Planning/roadmap → `workspaces/planning.md`
+* Full build session → `workspaces/code.md` + `workspaces/design.md`
 
 ## Session Patterns
 

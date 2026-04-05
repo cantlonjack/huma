@@ -18,14 +18,10 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50"
-      style={{
-        background: "#FAF8F3",
-        borderTop: "1px solid #DDD4C0",
-        paddingBottom: "env(safe-area-inset-bottom, 0px)",
-      }}
+      className="fixed bottom-0 left-0 right-0 z-50 bg-sand-50 border-t border-sand-300"
+      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      <div className="flex items-center justify-around max-w-lg mx-auto" style={{ height: "56px" }}>
+      <div className="flex items-center justify-around max-w-lg mx-auto h-14">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href;
           const isWhole = item.href === "/whole";
@@ -34,19 +30,13 @@ export default function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className="flex flex-col items-center justify-center flex-1 gap-0.5"
-              style={{ minHeight: "44px", height: "56px" }}
+              className="flex flex-col items-center justify-center flex-1 gap-0.5 min-h-[44px] h-14"
             >
               {isWhole && <WholeMiniIndicator />}
               <span
-                className="font-sans"
-                style={{
-                  fontSize: isWhole ? "10px" : "13px",
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase" as const,
-                  fontWeight: isActive ? 600 : 400,
-                  color: isActive ? "#3A5A40" : "#A8C4AA",
-                }}
+                className={`font-sans uppercase tracking-wider
+                  ${isWhole ? "text-[10px]" : "text-[13px]"}
+                  ${isActive ? "font-semibold text-sage-700" : "font-normal text-sage-300"}`}
               >
                 {item.label}
               </span>

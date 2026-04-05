@@ -22,15 +22,15 @@ Text:        earth-500 (#7a6b5d)  earth-600 (#6b5a4a)  earth-700 (#5c4a3a)  eart
 
 | Context | Font | Size | Color |
 |---------|------|------|-------|
-| Display headline | Georgia serif | text-4xl/5xl | earth-900 |
-| Section heading | Georgia serif | text-2xl | sage-700 |
-| Conversation prose | Georgia serif | text-lg leading-relaxed | earth-800 |
-| UI labels | Inter sans | text-sm medium | earth-600 |
-| Buttons | Inter sans | text-lg (primary) text-sm (secondary) | white / earth-700 |
-| Financial data | Inter sans | text-sm medium | earth-900 |
-| Metadata | Inter sans | text-xs | earth-500 |
+| Display headline | Cormorant Garamond serif | text-4xl/5xl | earth-900 |
+| Section heading | Cormorant Garamond serif | text-2xl | sage-700 |
+| Conversation prose | Cormorant Garamond serif | text-lg leading-relaxed | earth-800 |
+| UI labels | Source Sans 3 sans | text-sm medium | earth-600 |
+| Buttons | Source Sans 3 sans | text-lg (primary) text-sm (secondary) | white / earth-700 |
+| Financial data | Source Sans 3 sans | text-sm medium | earth-900 |
+| Metadata | Source Sans 3 sans | text-xs | earth-500 |
 
-**Rule:** Georgia = anything the operator READS as content. Inter = anything the operator INTERACTS with as UI.
+**Rule:** Cormorant Garamond = anything the operator READS as content. Source Sans 3 = anything the operator INTERACTS with as UI.
 
 ### Spacing (8px base)
 
@@ -50,22 +50,31 @@ transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 
 ONE easing curve for everything. Breathing: `scale(1) → scale(1.03)`, 6-8s, ease-in-out.
 
-## Component Patterns
+## Shared UI Primitives (`components/ui/index.tsx`)
 
-### Buttons
+**USE THESE FIRST.** Import from `@/components/ui` before writing custom styling.
 
 ```tsx
-// Primary CTA — amber, only for THE action
-<button className="px-8 py-4 bg-amber-400 text-white text-lg font-medium rounded-lg hover:bg-amber-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+import { Button, Card, CardTitle, DestructiveAction, SectionHeading, Prose } from "@/components/ui";
 
-// Secondary — outline
-<button className="px-6 py-3 text-sage-600 border border-sage-300 rounded-lg hover:bg-sage-50 transition-colors text-sm">
+// Buttons — 4 variants, 3 sizes
+<Button variant="primary" size="lg">Start</Button>      // amber CTA
+<Button variant="secondary">Cancel</Button>              // sand bg
+<Button variant="ghost">Skip</Button>                    // text only
+<Button variant="destructive">Remove</Button>            // rose bg
+<DestructiveAction onClick={onRemove}>Remove</DestructiveAction>  // inline text, no bg
 
-// Tertiary — text only
-<button className="text-sm text-earth-500 hover:text-earth-700 transition-colors">
+// Cards
+<Card>content</Card>                    // sand-50 bg, sand-200 border
+<Card variant="warm">content</Card>    // sand-100 bg, sand-300 border
+<CardTitle>Heading</CardTitle>          // serif, sage-700
+
+// Typography
+<SectionHeading>Title</SectionHeading>  // serif, text-2xl, sage-700
+<Prose>Body text</Prose>                // serif, text-lg, earth-800
 ```
 
-### Messages
+### Messages (no primitive — pattern only)
 
 ```tsx
 // HUMA (assistant) — serif prose, no bubble
@@ -73,13 +82,6 @@ ONE easing curve for everything. Breathing: `scale(1) → scale(1.03)`, 6-8s, ea
 
 // Operator (user) — left border, no bubble
 <div className="pl-4 border-l-2 border-sage-300 text-earth-700 leading-relaxed whitespace-pre-wrap">
-```
-
-### Cards
-
-```tsx
-<div className="border border-sand-200 bg-sand-50 rounded-lg p-6">
-  <h3 className="font-serif text-xl font-bold text-sage-700">
 ```
 
 ### Loading
@@ -92,6 +94,20 @@ ONE easing curve for everything. Breathing: `scale(1) → scale(1.03)`, 6-8s, ea
 </div>
 ```
 
+## Token Usage Rules
+
+**NEVER** use inline `style={{}}` for colors, fonts, or spacing. Use Tailwind token classes:
+* Colors: `bg-sand-50`, `text-sage-700`, `border-amber-600`, `text-rose` (NOT raw hex)
+* Fonts: `font-serif`, `font-sans` (NOT `fontFamily`)
+* Spacing: Tailwind utilities `p-6`, `gap-4`, `mt-8` (NOT `padding: "24px"`)
+* Radii: `rounded-lg` (NOT `borderRadius: "12px"`)
+
+Inline styles are ONLY acceptable for:
+* Dynamic values computed at runtime (e.g., D3 positions, SVG transforms)
+* CSS custom properties as values (e.g., `var(--huma-ease)`)
+
+**Destructive actions:** Use `text-rose` or `bg-rose`. NEVER use red (#E57373, #FF0000, etc).
+
 ## Brand Do's and Don'ts
 
 ### DO:
@@ -102,7 +118,7 @@ ONE easing curve for everything. Breathing: `scale(1) → scale(1.03)`, 6-8s, ea
 * Keep print stylesheet clean: black on white, serif, no decoration
 
 ### DON'T:
-* Red for errors (use earth tones or amber)
+* Red for errors (use `text-rose` or `bg-rose` from design system)
 * Gradients, shadows, glass effects (this is land, not software)
 * Icons unless absolutely necessary (words are better)
 * Animate anything that isn't loading or transitioning
@@ -132,14 +148,15 @@ Touch targets: minimum 44x44px on mobile. iOS: inputs must be ≥16px to prevent
 
 ## New Component Checklist
 
-* [ ] Only palette colors (sand, sage, amber, earth)
-* [ ] Georgia for content, Inter for UI
-* [ ] Established spacing values
+* [ ] Uses shared primitives from `components/ui/` where applicable
+* [ ] Only palette colors via Tailwind tokens (no raw hex, no inline style for colors)
+* [ ] Cormorant Garamond (`font-serif`) for content, Source Sans 3 (`font-sans`) for UI
+* [ ] Spacing via Tailwind utilities (no inline `padding`, `margin` in px)
 * [ ] rounded-lg for interactive elements
+* [ ] Destructive actions use `text-rose` / `bg-rose` (never red)
 * [ ] Works at 375px, 768px, 1280px
 * [ ] Focus states visible
 * [ ] Color contrast AA compliant
-* [ ] Print: uses no-print for UI-only elements
 * [ ] All interaction states (hover, focus, active, disabled, loading)
 * [ ] All string literals voice-checked
 

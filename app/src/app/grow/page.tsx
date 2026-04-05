@@ -435,7 +435,7 @@ function PatternCard({
                       textAlign: "left",
                       padding: "10px 16px",
                       fontSize: "14px",
-                      color: "#E57373",
+                      color: "var(--color-rose)",
                       background: "none",
                       border: "none",
                     }}

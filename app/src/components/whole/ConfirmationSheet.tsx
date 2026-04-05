@@ -93,7 +93,7 @@ export default function ConfirmationSheet({
               fontSize: "14px",
               padding: "12px",
               borderRadius: "12px",
-              background: "#E57373",
+              background: "var(--color-rose)",
               color: "#FAF8F3",
               border: "none",
             }}

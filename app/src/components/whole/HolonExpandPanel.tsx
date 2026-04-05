@@ -434,7 +434,7 @@ export default function HolonExpandPanel({
                   borderRadius: "10px",
                   background: "none",
                   border: "none",
-                  color: "#E57373",
+                  color: "var(--color-rose)",
                 }}
               >
                 Remove
@@ -471,7 +471,7 @@ export default function HolonExpandPanel({
               fontSize: "13px",
               background: "none",
               border: "none",
-              color: "#E57373",
+              color: "var(--color-rose)",
               padding: 0,
             }}
           >
