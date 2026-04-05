@@ -1,0 +1,589 @@
+"use client";
+
+import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import type { PaletteConcept, ChatMessage, Behavior, DimensionKey } from "@/types/v2";
+import { parseMarkersV2 as parseMarkers, type DecompositionData } from "@/lib/parse-markers-v2";
+import { useAuth } from "@/components/AuthProvider";
+import { createClient } from "@/lib/supabase";
+import { migrateLocalStorageToSupabase } from "@/lib/supabase-v2";
+import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
+import { prePopulateFromArchetypes } from "@/lib/archetype-templates";
+import { getArchetypeOpener, getTemplateAspirationNames } from "@/lib/archetype-openers";
+
+// ---- Palette Acknowledgments ------------------------------------------------
+
+export const PALETTE_ACKS = {
+  pain: [
+    (t: string) => `Noted \u2014 "${t}" is part of the picture.`,
+    (t: string) => `"${t}" \u2014 that connects. We'll factor it in.`,
+    (t: string) => `Got it. "${t}" goes on the list.`,
+  ],
+  aspiration: [
+    (t: string) => `"${t}" \u2014 good. That shapes things.`,
+    (t: string) => `Noted. "${t}" will factor in.`,
+    (t: string) => `"${t}" \u2014 we'll build that into the system.`,
+  ],
+};
+
+export function getPaletteAcknowledgment(concept: PaletteConcept): string {
+  const options = PALETTE_ACKS[concept.category] || PALETTE_ACKS.pain;
+  return options[Math.floor(Math.random() * options.length)](concept.text);
+}
+
+// ---- Extended message type --------------------------------------------------
+
+export type StartMessage = ChatMessage & {
+  options?: string[] | null;
+  behaviors?: Behavior[] | null;
+  actions?: string[] | null;
+  decomposition?: DecompositionData | null;
+  contextNote?: boolean;
+};
+
+// ---- Hook return type -------------------------------------------------------
+
+export interface UseStartReturn {
+  // State
+  onboardingStep: "archetype" | "conversation";
+  transitioning: boolean;
+  stepReady: boolean;
+  messages: StartMessage[];
+  input: string;
+  setInput: (value: string) => void;
+  streaming: boolean;
+  paletteConcepts: PaletteConcept[];
+  paletteLoading: boolean;
+  showPaletteMobile: boolean;
+  setShowPaletteMobile: (value: boolean) => void;
+  showTransition: boolean;
+  showAuthModal: boolean;
+  setShowAuthModal: (value: boolean) => void;
+  hasMessages: boolean;
+
+  // Refs
+  scrollRef: React.RefObject<HTMLDivElement | null>;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+
+  // Handlers
+  sendMessage: (text: string) => void;
+  handleOptionTap: (option: string) => void;
+  handleConfirmBehaviors: (behaviors: Behavior[]) => void;
+  handlePaletteTap: (concept: PaletteConcept) => void;
+  handleKeyDown: (e: React.KeyboardEvent) => void;
+  handleAuthenticated: () => Promise<void>;
+  handleArchetypeContinueWithTemplate: (
+    selected: { domains: string[]; orientations: string[] },
+    capitalSketch?: Record<DimensionKey, number>,
+  ) => void;
+  handleArchetypeContinueBlank: (selected: { domains: string[]; orientations: string[] }) => void;
+  handleArchetypeSkip: () => void;
+}
+
+// ---- Hook -------------------------------------------------------------------
+
+export function useStart(): UseStartReturn {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [onboardingStep, setOnboardingStep] = useState<"archetype" | "conversation">("archetype");
+  const [transitioning, setTransitioning] = useState(false);
+  const [stepReady, setStepReady] = useState(false);
+  const [messages, setMessages] = useState<StartMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [streaming, setStreaming] = useState(false);
+  const [paletteConcepts, setPaletteConcepts] = useState<PaletteConcept[]>([]);
+  const [selectedConcepts, setSelectedConcepts] = useState<string[]>([]);
+  const [paletteLoading, setPaletteLoading] = useState(false);
+  const [knownContext, setKnownContext] = useState<Record<string, unknown>>({});
+  const [decomposedBehaviors, setDecomposedBehaviors] = useState<Behavior[]>([]);
+  const [decompositionData, setDecompositionData] = useState<DecompositionData | null>(null);
+  const [aspirationName, setAspirationName] = useState<string | null>(null);
+  const [showPaletteMobile, setShowPaletteMobile] = useState(false);
+  const [showTransition, setShowTransition] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingAspiration, setPendingAspiration] = useState<{
+    rawText: string;
+    clarifiedText: string;
+  } | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-scroll on new messages
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, streaming]);
+
+  // Persist to localStorage
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem("huma-v2-start-messages", JSON.stringify(messages));
+      localStorage.setItem("huma-v2-known-context", JSON.stringify(knownContext));
+      if (decomposedBehaviors.length > 0) {
+        localStorage.setItem("huma-v2-behaviors", JSON.stringify(decomposedBehaviors));
+      }
+    }
+  }, [messages, knownContext, decomposedBehaviors]);
+
+  // Restore from localStorage (unless fresh start requested or conversation already completed)
+  // Also determine whether to show archetype selection or skip to conversation
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const isFresh = params.get("fresh") === "1";
+    if (isFresh) {
+      // Clear stale conversation state for a clean start
+      localStorage.removeItem("huma-v2-start-messages");
+      localStorage.removeItem("huma-v2-behaviors");
+      setStepReady(true);
+      return;
+    }
+    try {
+      // Check if archetypes already selected — skip straight to conversation
+      const ctx = localStorage.getItem("huma-v2-known-context");
+      if (ctx) {
+        const parsed = JSON.parse(ctx);
+        if (parsed.archetypes && Array.isArray(parsed.archetypes) && parsed.archetypes.length > 0) {
+          setOnboardingStep("conversation");
+          setKnownContext(parsed);
+        }
+      }
+
+      // Check if aspirations already exist (conversation was completed before)
+      const existingAspirations = localStorage.getItem("huma-v2-aspirations");
+      if (existingAspirations) {
+        const parsed = JSON.parse(existingAspirations);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Conversation was already completed — start fresh conversation
+          localStorage.removeItem("huma-v2-start-messages");
+          localStorage.removeItem("huma-v2-behaviors");
+          setOnboardingStep("conversation");
+          setStepReady(true);
+          return;
+        }
+      }
+      const saved = localStorage.getItem("huma-v2-start-messages");
+      if (saved) {
+        setMessages(JSON.parse(saved));
+        setOnboardingStep("conversation"); // Resume mid-conversation
+      }
+      if (!ctx) {
+        // No context at all — check if ctx was already set above
+      } else {
+        setKnownContext(JSON.parse(ctx));
+      }
+      const beh = localStorage.getItem("huma-v2-behaviors");
+      if (beh) setDecomposedBehaviors(JSON.parse(beh));
+    } catch { /* fresh start */ }
+    setStepReady(true);
+  }, []);
+
+  // Fetch palette after user messages
+  const fetchPalette = useCallback(async (conversationTexts: string[]) => {
+    setPaletteLoading(true);
+    try {
+      const res = await fetch("/api/palette", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conversationSoFar: conversationTexts,
+          selectedConcepts,
+        }),
+      });
+      const data = await res.json();
+      setPaletteConcepts(data.concepts || []);
+    } catch {
+      // Palette is non-critical
+    } finally {
+      setPaletteLoading(false);
+    }
+  }, [selectedConcepts]);
+
+  // Send message to HUMA
+  const sendMessage = useCallback(async (text: string) => {
+    if (!text.trim() || streaming) return;
+
+    const userMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content: text.trim(),
+      createdAt: new Date().toISOString(),
+    };
+
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages as StartMessage[]);
+    setInput("");
+    setStreaming(true);
+
+    // Fetch palette in background
+    const userTexts = newMessages.filter(m => m.role === "user").map(m => m.content);
+    fetchPalette(userTexts);
+
+    try {
+      const res = await fetch("/api/v2-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: newMessages.filter(m => !(m as StartMessage).contextNote).map(m => ({ role: m.role === "huma" ? "assistant" : m.role, content: m.content })),
+          knownContext,
+          aspirations: [],
+        }),
+      });
+
+      if (!res.ok) throw new Error("Chat API error");
+
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No response body");
+
+      const decoder = new TextDecoder();
+      let fullResponse = "";
+
+      // Add placeholder for streaming
+      const humaMsg: StartMessage = {
+        id: crypto.randomUUID(),
+        role: "huma",
+        content: "",
+        createdAt: new Date().toISOString(),
+      };
+      setMessages([...newMessages, humaMsg] as StartMessage[]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        fullResponse += decoder.decode(value, { stream: true });
+
+        // Update the streaming message with clean text (no markers while streaming)
+        const { cleanText } = parseMarkers(fullResponse);
+        setMessages(prev => {
+          const updated = [...prev];
+          const last = updated[updated.length - 1];
+          if (last.role === "huma") {
+            updated[updated.length - 1] = { ...last, content: cleanText };
+          }
+          return updated;
+        });
+      }
+
+      // Final parse with all markers
+      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName, parsedDecomposition, parsedReplaceAspiration } = parseMarkers(fullResponse);
+
+      if (parsedContext) {
+        setKnownContext(prev => ({ ...prev, ...parsedContext }));
+      }
+
+      // Handle template aspiration replacement
+      if (parsedReplaceAspiration) {
+        try {
+          const existing = JSON.parse(localStorage.getItem("huma-v2-aspirations") || "[]");
+          // Find and replace the first template-sourced aspiration
+          const templateIdx = existing.findIndex((a: Record<string, unknown>) => a.source === "template");
+          if (templateIdx !== -1) {
+            existing[templateIdx] = {
+              ...existing[templateIdx],
+              rawText: parsedReplaceAspiration,
+              clarifiedText: parsedReplaceAspiration,
+              source: "conversation",
+            };
+            localStorage.setItem("huma-v2-aspirations", JSON.stringify(existing));
+          }
+        } catch { /* non-critical */ }
+      }
+
+      if (parsedBehaviors) {
+        setDecomposedBehaviors(parsedBehaviors);
+      }
+
+      if (parsedDecomposition) {
+        setDecompositionData(parsedDecomposition);
+      }
+
+      if (parsedAspirationName) {
+        setAspirationName(parsedAspirationName);
+      }
+
+      setMessages(prev => {
+        const updated = [...prev];
+        const last = updated[updated.length - 1];
+        if (last.role === "huma") {
+          updated[updated.length - 1] = {
+            ...last,
+            content: cleanText,
+            options: parsedOptions,
+            behaviors: parsedBehaviors,
+            actions: parsedActions,
+            decomposition: parsedDecomposition,
+          };
+        }
+        return updated;
+      });
+    } catch (err) {
+      console.error("Chat error:", err);
+      setMessages(prev => [
+        ...prev.filter(m => m.content !== ""),
+        {
+          id: crypto.randomUUID(),
+          role: "huma" as const,
+          content: "Something went wrong. Try again in a moment.",
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+    } finally {
+      setStreaming(false);
+    }
+  }, [messages, streaming, knownContext, fetchPalette]);
+
+  // Handle tappable option
+  const handleOptionTap = (option: string) => {
+    sendMessage(option);
+  };
+
+  // Save aspiration to localStorage and trigger auth or redirect
+  const saveAndProceed = useCallback(async (filteredBehaviors?: Behavior[]) => {
+    const behaviorsToSave = filteredBehaviors || decomposedBehaviors;
+    const userMessages = messages.filter(m => m.role === "user").map(m => m.content);
+    const rawText = userMessages[0] || "";
+    // Use Claude-extracted short name, fall back to first user message
+    const clarifiedText = aspirationName || rawText;
+
+    // Always save to localStorage first (fallback)
+    if (!localStorage.getItem("huma-v2-start-date")) {
+      localStorage.setItem("huma-v2-start-date", new Date().toISOString());
+    }
+    localStorage.setItem("huma-v2-behaviors", JSON.stringify(behaviorsToSave));
+    localStorage.setItem("huma-v2-known-context", JSON.stringify(knownContext));
+    const aspirations = [{
+      id: crypto.randomUUID(),
+      rawText,
+      clarifiedText,
+      title: decompositionData?.aspiration_title || clarifiedText,
+      summary: decompositionData?.summary || "",
+      behaviors: behaviorsToSave,
+      comingUp: decompositionData?.coming_up || [],
+      longerArc: decompositionData?.longer_arc || [],
+      dimensionsTouched: [],
+      status: "active" as const,
+      stage: "active" as const,
+    }];
+    localStorage.setItem("huma-v2-aspirations", JSON.stringify(aspirations));
+
+    // Extract patterns from aspirations that have a trigger behavior
+    const patterns = extractPatternsFromAspirations(aspirations);
+    if (patterns.length > 0) {
+      localStorage.setItem("huma-v2-patterns", JSON.stringify(patterns));
+    }
+
+    if (user) {
+      // Already authed -> migrate to Supabase and go to /today
+      try {
+        const supabase = createClient();
+        if (supabase) {
+          await migrateLocalStorageToSupabase(supabase, user.id);
+        }
+      } catch (err) {
+        console.error("Migration error:", err);
+        // localStorage is intact as fallback
+      }
+      setShowTransition(true);
+      setTimeout(() => router.push("/today"), 2200);
+    } else {
+      // Not authed -> store pending info and show AuthModal
+      setPendingAspiration({ rawText, clarifiedText });
+      setShowAuthModal(true);
+    }
+  }, [messages, decomposedBehaviors, decompositionData, knownContext, aspirationName, user, router]);
+
+  // Called when auth completes (from AuthModal or magic link return)
+  const handleAuthenticated = useCallback(async () => {
+    setShowAuthModal(false);
+
+    try {
+      const supabase = createClient();
+      if (supabase) {
+        // Poll for auth state instead of fixed 500ms delay
+        let freshUser = null;
+        for (let i = 0; i < 10; i++) {
+          const { data: { user: u } } = await supabase.auth.getUser();
+          if (u) { freshUser = u; break; }
+          await new Promise(r => setTimeout(r, 300));
+        }
+        if (freshUser) {
+          await migrateLocalStorageToSupabase(supabase, freshUser.id);
+        }
+      }
+    } catch (err) {
+      console.error("Post-auth migration error:", err);
+    }
+
+    setShowTransition(true);
+    setTimeout(() => router.push("/today"), 2200);
+  }, [router]);
+
+  // Handle decomposition confirm (from DecompositionPreview)
+  const handleConfirmBehaviors = useCallback((behaviors: Behavior[]) => {
+    saveAndProceed(behaviors);
+  }, [saveAndProceed]);
+
+  // Handle palette tap — accumulate context, don't send as chat message
+  const handlePaletteTap = (concept: PaletteConcept) => {
+    // 1. Track selection ID (for palette API filtering)
+    setSelectedConcepts(prev => [...prev, concept.id]);
+
+    // 2. Remove from displayed palette
+    setPaletteConcepts(prev => prev.filter(c => c.id !== concept.id));
+
+    // 3. Add to known context so it influences decomposition
+    setKnownContext(prev => ({
+      ...prev,
+      paletteSelections: [
+        ...((prev.paletteSelections as string[]) || []),
+        concept.text,
+      ],
+    }));
+
+    // 4. Show brief acknowledgment (not a full AI response)
+    const ack = getPaletteAcknowledgment(concept);
+    setMessages(prev => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        role: "huma" as const,
+        content: ack,
+        createdAt: new Date().toISOString(),
+        contextNote: true,
+      },
+    ]);
+
+    // 5. Refresh palette with new related concepts
+    const userTexts = messages.filter(m => m.role === "user").map(m => m.content);
+    fetchPalette(userTexts);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(input);
+    }
+  };
+
+  // Smooth crossfade from archetype screen to conversation
+  const transitionToConversation = useCallback(() => {
+    setTransitioning(true);
+    setTimeout(() => {
+      setOnboardingStep("conversation");
+      setTransitioning(false);
+    }, 300);
+  }, []);
+
+  // Archetype selection handlers
+  const handleArchetypeContinueWithTemplate = useCallback(
+    (selected: { domains: string[]; orientations: string[] }, capitalSketch?: Record<DimensionKey, number>) => {
+      const archetypes = [...selected.domains, ...selected.orientations];
+
+      // Pre-populate from templates
+      const { aspirations, patterns, contextHints } = prePopulateFromArchetypes(
+        selected.domains,
+        selected.orientations
+      );
+
+      // Build updated context: archetype names + context hints + optional capital sketch
+      const updatedContext: Record<string, unknown> = { ...knownContext, ...contextHints, archetypes };
+      if (capitalSketch) {
+        updatedContext.capitalSketch = capitalSketch;
+      }
+      setKnownContext(updatedContext);
+
+      // Persist everything to localStorage
+      localStorage.setItem("huma-v2-known-context", JSON.stringify(updatedContext));
+      if (aspirations.length > 0) {
+        // Merge with any existing aspirations (shouldn't be any at this point)
+        const existing = (() => {
+          try {
+            const raw = localStorage.getItem("huma-v2-aspirations");
+            return raw ? JSON.parse(raw) : [];
+          } catch { return []; }
+        })();
+        localStorage.setItem("huma-v2-aspirations", JSON.stringify([...existing, ...aspirations]));
+      }
+      if (patterns.length > 0) {
+        localStorage.setItem("huma-v2-patterns", JSON.stringify(patterns));
+      }
+
+      // Inject archetype-aware opening message
+      const templateNames = getTemplateAspirationNames(selected.domains);
+      const opener = getArchetypeOpener(archetypes, true, templateNames);
+      if (opener) {
+        setMessages([{
+          id: crypto.randomUUID(),
+          role: "huma",
+          content: opener,
+          createdAt: new Date().toISOString(),
+        }]);
+      }
+
+      transitionToConversation();
+    },
+    [knownContext, transitionToConversation]
+  );
+
+  const handleArchetypeContinueBlank = useCallback(
+    (selected: { domains: string[]; orientations: string[] }) => {
+      const archetypes = [...selected.domains, ...selected.orientations];
+      const updatedContext = { ...knownContext, archetypes };
+      setKnownContext(updatedContext);
+      localStorage.setItem("huma-v2-known-context", JSON.stringify(updatedContext));
+
+      // Inject archetype-aware opening message (blank slate)
+      const opener = getArchetypeOpener(archetypes, false);
+      if (opener) {
+        setMessages([{
+          id: crypto.randomUUID(),
+          role: "huma",
+          content: opener,
+          createdAt: new Date().toISOString(),
+        }]);
+      }
+
+      transitionToConversation();
+    },
+    [knownContext, transitionToConversation]
+  );
+
+  const handleArchetypeSkip = useCallback(() => {
+    transitionToConversation();
+  }, [transitionToConversation]);
+
+  const hasMessages = messages.length > 0;
+
+  // Suppress unused variable warning — pendingAspiration is kept in state
+  // for future use when AuthModal needs pre-fill data
+  void pendingAspiration;
+
+  return {
+    onboardingStep,
+    transitioning,
+    stepReady,
+    messages,
+    input,
+    setInput,
+    streaming,
+    paletteConcepts,
+    paletteLoading,
+    showPaletteMobile,
+    setShowPaletteMobile,
+    showTransition,
+    showAuthModal,
+    setShowAuthModal,
+    hasMessages,
+    scrollRef,
+    inputRef,
+    sendMessage,
+    handleOptionTap,
+    handleConfirmBehaviors,
+    handlePaletteTap,
+    handleKeyDown,
+    handleAuthenticated,
+    handleArchetypeContinueWithTemplate,
+    handleArchetypeContinueBlank,
+    handleArchetypeSkip,
+  };
+}
