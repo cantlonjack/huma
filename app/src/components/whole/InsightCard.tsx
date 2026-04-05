@@ -11,105 +11,45 @@ interface InsightCardProps {
 
 export default function InsightCard({ insight, onDismiss, shareworthy, onShare }: InsightCardProps) {
   return (
-    <div
-      className="mx-4 relative overflow-hidden"
-      style={{
-        borderRadius: "16px",
-        background: "white",
-        border: "1px solid #E8E2D6",
-      }}
-    >
+    <div className="mx-4 relative overflow-hidden rounded-2xl bg-white border border-sand-250">
       {/* Gradient top border */}
       <div
+        className="h-[3px]"
         style={{
-          height: "3px",
           background: "linear-gradient(90deg, #6B8F71, #B5621E)",
         }}
       />
 
-      <div style={{ padding: "16px 16px 14px" }}>
+      <div className="p-4 pb-3.5">
         {/* Dismiss */}
         <button
           onClick={onDismiss}
-          className="absolute cursor-pointer"
-          style={{
-            top: "12px",
-            right: "12px",
-            width: "24px",
-            height: "24px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "none",
-            border: "none",
-            fontSize: "14px",
-            color: "#A8C4AA",
-          }}
+          className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center bg-transparent border-none text-sm text-sage-300 cursor-pointer"
           aria-label="Dismiss insight"
         >
           &times;
         </button>
 
         {/* Label */}
-        <p
-          className="font-sans font-medium"
-          style={{
-            fontSize: "10px",
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            color: "#A8C4AA",
-            marginBottom: "8px",
-          }}
-        >
+        <p className="font-sans font-medium text-[10px] tracking-[0.18em] uppercase text-sage-300 mb-2">
           HUMA SEES
         </p>
 
         {/* Insight text */}
-        <p
-          className="font-serif"
-          style={{
-            fontSize: "16px",
-            fontStyle: "italic",
-            lineHeight: "1.6",
-            color: "#3D3B36",
-            paddingRight: "20px",
-          }}
-        >
+        <p className="font-serif text-base italic leading-relaxed text-earth-650 pr-5">
           {insight.text}
         </p>
 
         {/* Actions row */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginTop: "12px",
-          }}
-        >
-          <p
-            className="font-sans font-medium"
-            style={{
-              fontSize: "13px",
-              color: "#6B8F71",
-              margin: 0,
-            }}
-          >
+        <div className="flex items-center justify-between mt-3">
+          <p className="font-sans font-medium text-[13px] text-sage-450 m-0">
             See full pattern &rarr;
           </p>
 
           {shareworthy && onShare && (
             <button
               onClick={onShare}
-              className="font-sans font-medium cursor-pointer"
-              style={{
-                fontSize: "12px",
-                color: "#B5621E",
-                background: "none",
-                border: "none",
-                padding: "0 0 0 8px",
-                letterSpacing: "0.04em",
-              }}
+              className="font-sans font-medium cursor-pointer text-xs text-amber-600 bg-transparent border-none pl-2 tracking-wide"
             >
               Share this
             </button>

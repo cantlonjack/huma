@@ -49,29 +49,21 @@ export default function ProfileBanner({
   const pulseStyle = computing ? { opacity: 0.5, animation: "banner-pulse 1.5s ease-in-out infinite" } : {};
 
   return (
-    <div className="text-center" style={{ padding: "0 24px" }}>
-      <h2
-        className="font-serif font-medium"
-        style={{ fontSize: "24px", color: "#3A5A40", lineHeight: "1.2" }}
-      >
+    <div className="text-center px-6">
+      <h2 className="font-serif font-medium text-2xl text-sage-700 leading-tight">
         {name || "You"}
       </h2>
 
       {/* Archetype */}
-      <div style={{ marginTop: "4px", ...pulseStyle }}>
+      <div className="mt-1" style={pulseStyle}>
         <button
           onClick={onArchetypeTap}
-          className="cursor-pointer"
-          style={{ display: "inline", background: "none", border: "none", padding: 0 }}
+          className="cursor-pointer inline bg-transparent border-none p-0"
         >
           <span
-            className="font-sans font-medium"
-            style={{
-              fontSize: "12px",
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
-              color: archetypeDisplay ? "#6B8F71" : "#C8C0B0",
-            }}
+            className={`font-sans font-medium text-xs tracking-[0.15em] uppercase ${
+              archetypeDisplay ? "text-sage-450" : "text-sand-350"
+            }`}
           >
             {archetypeDisplay || "Tap to set your archetype"}
           </span>
@@ -79,16 +71,7 @@ export default function ProfileBanner({
         {archetypeDisplay && (
           <button
             onClick={onArchetypeTap}
-            className="font-sans cursor-pointer"
-            style={{
-              display: "block",
-              margin: "2px auto 0",
-              background: "none",
-              border: "none",
-              padding: 0,
-              fontSize: "12px",
-              color: "#A8C4AA",
-            }}
+            className="font-sans cursor-pointer block mx-auto mt-0.5 bg-transparent border-none p-0 text-xs text-sage-300"
           >
             Is this right?
           </button>
@@ -96,9 +79,9 @@ export default function ProfileBanner({
       </div>
 
       {/* WHY */}
-      <div style={{ marginTop: "6px", ...pulseStyle }}>
+      <div className="mt-1.5" style={pulseStyle}>
         {editingWhy ? (
-          <div style={{ maxWidth: "320px", margin: "0 auto" }}>
+          <div className="max-w-[320px] mx-auto">
             <input
               ref={whyInputRef}
               type="text"
@@ -106,30 +89,14 @@ export default function ProfileBanner({
               onChange={(e) => setWhyDraft(e.target.value)}
               onBlur={handleWhySave}
               onKeyDown={(e) => { if (e.key === "Enter") handleWhySave(); if (e.key === "Escape") setEditingWhy(false); }}
-              className="font-serif w-full text-center"
-              style={{
-                fontSize: "15px",
-                fontStyle: "italic",
-                color: "#3A5A40",
-                background: "white",
-                border: "1px solid #6B8F71",
-                borderRadius: "8px",
-                padding: "8px 12px",
-                outline: "none",
-              }}
+              className="font-serif w-full text-center text-[15px] italic text-sage-700 bg-white border border-sage-450 rounded-lg py-2 px-3 outline-none"
             />
           </div>
         ) : whyStatement ? (
           <>
             <p
-              className="font-serif"
+              className="font-serif text-[15px] italic text-sage-450 leading-snug max-w-[320px] mx-auto"
               style={{
-                fontSize: "15px",
-                fontStyle: "italic",
-                color: "#6B8F71",
-                lineHeight: "1.4",
-                maxWidth: "320px",
-                margin: "0 auto",
                 display: "-webkit-box",
                 WebkitLineClamp: 2,
                 WebkitBoxOrient: "vertical",
@@ -140,16 +107,7 @@ export default function ProfileBanner({
             </p>
             <button
               onClick={() => { setWhyDraft(whyStatement); setEditingWhy(true); }}
-              className="font-sans cursor-pointer"
-              style={{
-                display: "block",
-                margin: "2px auto 0",
-                background: "none",
-                border: "none",
-                padding: 0,
-                fontSize: "12px",
-                color: "#A8C4AA",
-              }}
+              className="font-sans cursor-pointer block mx-auto mt-0.5 bg-transparent border-none p-0 text-xs text-sage-300"
             >
               Refine &rarr;
             </button>
@@ -157,25 +115,9 @@ export default function ProfileBanner({
         ) : (
           <button
             onClick={hasContext ? () => {} : onWhyTapNoContext}
-            className="cursor-pointer"
-            style={{
-              display: "block",
-              margin: "0 auto",
-              background: "none",
-              border: "none",
-              padding: 0,
-              maxWidth: "320px",
-            }}
+            className="cursor-pointer block mx-auto bg-transparent border-none p-0 max-w-[320px]"
           >
-            <span
-              className="font-serif"
-              style={{
-                fontSize: "14px",
-                fontStyle: "italic",
-                color: "#C8C0B0",
-                lineHeight: "1.4",
-              }}
-            >
+            <span className="font-serif text-sm italic text-sand-350 leading-snug">
               {computing ? "Computing…" : "Tap to add your WHY"}
             </span>
           </button>

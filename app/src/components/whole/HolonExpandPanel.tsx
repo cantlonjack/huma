@@ -74,31 +74,13 @@ function InlineField({
   };
 
   if (editing) {
-    const sharedStyle = {
-      width: "100%",
-      fontSize: "14px",
-      lineHeight: "1.5",
-      color: "#3D3B36",
-      background: "#FAF8F3",
-      border: "1px solid #6B8F71",
-      borderRadius: "8px",
-      padding: "8px 12px",
-      outline: "none",
-      fontFamily: serif ? "'Cormorant Garamond', serif" : "'Source Sans 3', sans-serif",
-      fontStyle: serif ? "italic" : "normal" as const,
-    };
+    const sharedClasses = `w-full text-sm leading-normal text-earth-650 bg-sand-50 border border-sage-450 rounded-lg py-2 px-3 outline-none ${
+      serif ? "font-serif italic" : "font-sans"
+    }`;
 
     return (
-      <div
-        style={{
-          padding: "10px 14px",
-          borderRadius: "10px",
-          background: "#FAF8F3",
-          border: "1px solid #6B8F71",
-          marginBottom: "8px",
-        }}
-      >
-        <span className="font-sans" style={{ fontSize: "11px", letterSpacing: "0.1em", color: "#6B8F71", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>
+      <div className="p-2.5 px-3.5 rounded-[10px] bg-sand-50 border border-sage-450 mb-2">
+        <span className="font-sans text-[11px] tracking-[0.1em] text-sage-450 uppercase block mb-1">
           {label}
         </span>
         {multiline ? (
@@ -109,7 +91,7 @@ function InlineField({
             onBlur={handleSave}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSave(); } }}
             rows={2}
-            style={{ ...sharedStyle, resize: "none" }}
+            className={`${sharedClasses} resize-none`}
           />
         ) : (
           <input
@@ -119,7 +101,7 @@ function InlineField({
             onChange={(e) => setDraft(e.target.value)}
             onBlur={handleSave}
             onKeyDown={(e) => { if (e.key === "Enter") handleSave(); }}
-            style={sharedStyle}
+            className={sharedClasses}
           />
         )}
       </div>
@@ -129,26 +111,15 @@ function InlineField({
   return (
     <button
       onClick={() => { setDraft(value || ""); setEditing(true); }}
-      className="w-full text-left cursor-pointer"
-      style={{
-        padding: "10px 14px",
-        borderRadius: "10px",
-        background: "#FAF8F3",
-        border: "1px solid #E8E2D6",
-        marginBottom: "8px",
-      }}
+      className="w-full text-left cursor-pointer p-2.5 px-3.5 rounded-[10px] bg-sand-50 border border-sand-250 mb-2"
     >
-      <span className="font-sans" style={{ fontSize: "11px", letterSpacing: "0.1em", color: "#A8C4AA", textTransform: "uppercase" }}>
+      <span className="font-sans text-[11px] tracking-[0.1em] text-sage-300 uppercase">
         {label}
       </span>
       <p
-        className={serif && value ? "font-serif" : "font-sans"}
-        style={{
-          fontSize: "14px",
-          fontStyle: serif && value ? "italic" : "normal",
-          color: value ? "#3D3B36" : "#C8C0B0",
-          marginTop: "2px",
-        }}
+        className={`${serif && value ? "font-serif italic" : "font-sans"} text-sm mt-0.5 ${
+          value ? "text-earth-650" : "text-sand-350"
+        }`}
       >
         {value || placeholder}
       </p>
@@ -174,7 +145,7 @@ function FoundationValue({ label, value, onSave }: { label: string; value?: stri
 
   if (editing) {
     return (
-      <div className="flex items-center gap-2" style={{ marginTop: "4px" }}>
+      <div className="flex items-center gap-2 mt-1">
         <input
           ref={inputRef}
           type="text"
@@ -182,36 +153,26 @@ function FoundationValue({ label, value, onSave }: { label: string; value?: stri
           onChange={(e) => setDraft(e.target.value)}
           onBlur={handleSave}
           onKeyDown={(e) => { if (e.key === "Enter") handleSave(); }}
-          className="flex-1 font-sans"
-          style={{
-            fontSize: "14px",
-            color: "#3D3B36",
-            background: "#FAF8F3",
-            border: "1px solid #6B8F71",
-            borderRadius: "8px",
-            padding: "6px 10px",
-            outline: "none",
-          }}
+          className="flex-1 font-sans text-sm text-earth-650 bg-sand-50 border border-sage-450 rounded-lg py-1.5 px-2.5 outline-none"
         />
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-between" style={{ marginTop: "4px" }}>
+    <div className="flex items-center justify-between mt-1">
       <div>
-        <span className="font-sans" style={{ fontSize: "11px", letterSpacing: "0.1em", color: "#A8C4AA", textTransform: "uppercase" }}>
+        <span className="font-sans text-[11px] tracking-[0.1em] text-sage-300 uppercase">
           {label}
         </span>
-        <p className="font-sans" style={{ fontSize: "16px", color: "#3A5A40" }}>
+        <p className="font-sans text-base text-sage-700">
           {value || "—"}
         </p>
       </div>
       {onSave && (
         <button
           onClick={() => { setDraft(value || ""); setEditing(true); }}
-          className="font-sans font-medium cursor-pointer"
-          style={{ fontSize: "12px", color: "#B5621E", background: "none", border: "none", padding: "4px 8px" }}
+          className="font-sans font-medium cursor-pointer text-xs text-amber-600 bg-transparent border-none py-1 px-2"
         >
           Edit
         </button>
@@ -240,16 +201,12 @@ export default function HolonExpandPanel({
   onDelete,
   onClearContext,
 }: HolonExpandPanelProps) {
-  const style = STATUS_STYLES[status];
+  const statusStyle = STATUS_STYLES[status];
 
   return (
     <div
-      className="mx-4 overflow-hidden"
+      className="mx-4 overflow-hidden bg-sand-50 rounded-xl border border-sand-300 p-4 mt-3"
       style={{
-        background: "#FAF8F3",
-        borderRadius: "12px",
-        border: "1px solid #DDD4C0",
-        padding: "16px",
         margin: "12px 16px 0",
         animation: "expand-panel-in 240ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
       }}
@@ -258,25 +215,21 @@ export default function HolonExpandPanel({
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
           <p
-            className="font-serif font-medium"
-            style={{ fontSize: type === "identity" ? "22px" : "20px", lineHeight: "1.3", color: "#3A5A40" }}
+            className={`font-serif font-medium leading-tight text-sage-700 ${
+              type === "identity" ? "text-[22px]" : "text-[20px]"
+            }`}
           >
             {label}
           </p>
 
-          {/* Status chip for aspirations */}
+          {/* Status chip for aspirations — dynamic, keep inline */}
           {type === "aspiration" && (
             <span
-              className="inline-block font-sans font-medium mt-1"
+              className="inline-block font-sans font-medium mt-1 text-[11px] tracking-[0.06em] uppercase py-0.5 px-2.5 rounded-xl"
               style={{
-                fontSize: "11px",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                padding: "2px 10px",
-                borderRadius: "12px",
-                background: style.bg,
-                color: style.text,
-                border: style.border || "none",
+                background: statusStyle.bg,
+                color: statusStyle.text,
+                border: statusStyle.border || "none",
               }}
             >
               {STATUS_LABELS[status]}
@@ -286,19 +239,7 @@ export default function HolonExpandPanel({
 
         <button
           onClick={onClose}
-          className="flex-shrink-0 cursor-pointer"
-          style={{
-            width: "28px",
-            height: "28px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "none",
-            border: "none",
-            fontSize: "18px",
-            color: "#8C8274",
-            marginTop: "-2px",
-          }}
+          className="shrink-0 cursor-pointer w-7 h-7 flex items-center justify-center bg-transparent border-none text-lg text-earth-400 -mt-0.5"
           aria-label="Close panel"
         >
           &times;
@@ -308,12 +249,8 @@ export default function HolonExpandPanel({
       {/* Description (aspirations, 2 lines max) */}
       {type === "aspiration" && description && (
         <p
-          className="font-sans"
+          className="font-sans text-sm leading-relaxed text-sage-450 mt-2"
           style={{
-            fontSize: "14px",
-            lineHeight: "1.6",
-            color: "#6B8F71",
-            marginTop: "8px",
             display: "-webkit-box",
             WebkitLineClamp: 2,
             WebkitBoxOrient: "vertical",
@@ -324,20 +261,18 @@ export default function HolonExpandPanel({
         </p>
       )}
 
-      {/* Dimension dots for aspirations */}
+      {/* Dimension dots for aspirations — dynamic color, keep inline for bg */}
       {type === "aspiration" && dimensions && dimensions.length > 0 && (
         <div className="flex items-center gap-2 mt-2">
           {dimensions.map((dim) => (
             <div key={dim} className="flex items-center gap-1">
               <span
-                className="rounded-full"
+                className="rounded-full w-2 h-2"
                 style={{
-                  width: "8px",
-                  height: "8px",
                   background: DIMENSION_COLORS[dim as DimensionKey] || "#A8C4AA",
                 }}
               />
-              <span className="font-sans" style={{ fontSize: "11px", color: "#6B8F71" }}>
+              <span className="font-sans text-[11px] text-sage-450">
                 {DIMENSION_LABELS[dim as DimensionKey] || dim}
               </span>
             </div>
@@ -347,23 +282,16 @@ export default function HolonExpandPanel({
 
       {/* Identity-specific fields */}
       {type === "identity" && (
-        <div style={{ marginTop: "12px" }}>
+        <div className="mt-3">
           {onArchetypeSave && (
             <button
               onClick={onArchetypeSave}
-              className="w-full text-left cursor-pointer"
-              style={{
-                padding: "10px 14px",
-                borderRadius: "10px",
-                background: "#FAF8F3",
-                border: "1px solid #E8E2D6",
-                marginBottom: "8px",
-              }}
+              className="w-full text-left cursor-pointer p-2.5 px-3.5 rounded-[10px] bg-sand-50 border border-sand-250 mb-2"
             >
-              <span className="font-sans" style={{ fontSize: "11px", letterSpacing: "0.1em", color: "#A8C4AA", textTransform: "uppercase" }}>
+              <span className="font-sans text-[11px] tracking-[0.1em] text-sage-300 uppercase">
                 Archetype
               </span>
-              <p className="font-sans" style={{ fontSize: "14px", color: archetype ? "#3D3B36" : "#C8C0B0", marginTop: "2px" }}>
+              <p className={`font-sans text-sm mt-0.5 ${archetype ? "text-earth-650" : "text-sand-350"}`}>
                 {archetype || "Tap to choose your archetypes"}
               </p>
             </button>
@@ -383,43 +311,26 @@ export default function HolonExpandPanel({
 
       {/* Foundation: value + edit */}
       {type === "context" && (
-        <div style={{ marginTop: "8px" }}>
+        <div className="mt-2">
           <FoundationValue label={label} value={value || description} onSave={onValueSave} />
         </div>
       )}
 
       {/* Principle */}
       {type === "principle" && (
-        <p
-          className="font-serif"
-          style={{ fontSize: "15px", fontStyle: "italic", color: "#6B8F71", lineHeight: "1.5", marginTop: "8px" }}
-        >
+        <p className="font-serif text-[15px] italic text-sage-450 leading-normal mt-2">
           {description || label}
         </p>
       )}
 
       {/* ─── Manage mode: danger zone ─────────────────────────────────── */}
       {manageMode && type === "aspiration" && (
-        <div
-          style={{
-            marginTop: "16px",
-            paddingTop: "12px",
-            borderTop: "1px solid #E8E2D6",
-          }}
-        >
+        <div className="mt-4 pt-3 border-t border-sand-250">
           <div className="flex gap-3">
             {onArchive && (
               <button
                 onClick={onArchive}
-                className="font-sans font-medium cursor-pointer"
-                style={{
-                  fontSize: "13px",
-                  padding: "8px 16px",
-                  borderRadius: "10px",
-                  background: "none",
-                  border: "1px solid #6B8F71",
-                  color: "#6B8F71",
-                }}
+                className="font-sans font-medium cursor-pointer text-[13px] py-2 px-4 rounded-[10px] bg-transparent border border-sage-450 text-sage-450"
               >
                 Archive
               </button>
@@ -427,15 +338,7 @@ export default function HolonExpandPanel({
             {onDelete && (
               <button
                 onClick={onDelete}
-                className="font-sans font-medium cursor-pointer"
-                style={{
-                  fontSize: "13px",
-                  padding: "8px 16px",
-                  borderRadius: "10px",
-                  background: "none",
-                  border: "none",
-                  color: "var(--color-rose)",
-                }}
+                className="font-sans font-medium cursor-pointer text-[13px] py-2 px-4 rounded-[10px] bg-transparent border-none text-rose"
               >
                 Remove
               </button>
@@ -445,17 +348,10 @@ export default function HolonExpandPanel({
       )}
 
       {manageMode && type === "context" && onClearContext && (
-        <div style={{ marginTop: "12px" }}>
+        <div className="mt-3">
           <button
             onClick={onClearContext}
-            className="font-sans cursor-pointer"
-            style={{
-              fontSize: "13px",
-              background: "none",
-              border: "none",
-              color: "#6B6358",
-              padding: 0,
-            }}
+            className="font-sans cursor-pointer text-[13px] bg-transparent border-none text-earth-500 p-0"
           >
             Clear this
           </button>
@@ -463,17 +359,10 @@ export default function HolonExpandPanel({
       )}
 
       {manageMode && type === "principle" && onDelete && (
-        <div style={{ marginTop: "12px" }}>
+        <div className="mt-3">
           <button
             onClick={onDelete}
-            className="font-sans cursor-pointer"
-            style={{
-              fontSize: "13px",
-              background: "none",
-              border: "none",
-              color: "var(--color-rose)",
-              padding: 0,
-            }}
+            className="font-sans cursor-pointer text-[13px] bg-transparent border-none text-rose p-0"
           >
             Remove
           </button>

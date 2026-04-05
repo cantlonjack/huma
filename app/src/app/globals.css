@@ -5,7 +5,9 @@
   --color-sand-50: #FAF8F3;
   --color-sand-100: #F6F1E9;
   --color-sand-200: #EDE6D8;
+  --color-sand-250: #E8E2D6;
   --color-sand-300: #DDD4C0;
+  --color-sand-350: #C8C0B0;
   --color-sand-400: #C4B89E;
 
   /* ── Sage ── */
@@ -14,6 +16,7 @@
   --color-sage-200: #C4D9C6;
   --color-sage-300: #A8C4AA;
   --color-sage-400: #8BAF8E;
+  --color-sage-450: #6B8F71;
   --color-sage-500: #5C7A62;
   --color-sage-600: #4A6E50;
   --color-sage-700: #3A5A40;
@@ -24,6 +27,7 @@
   --color-amber-100: #FFF4EC;
   --color-amber-200: #F5D4B3;
   --color-amber-300: #F0B88A;
+  --color-amber-350: #D4A574;
   --color-amber-400: #E8935A;
   --color-amber-500: #C87A3A;
   --color-amber-600: #B5621E;
@@ -32,9 +36,11 @@
   /* ── Earth (Ink) ── */
   --color-earth-200: #C4BAA8;
   --color-earth-300: #A89E90;
+  --color-earth-350: #948B7D;
   --color-earth-400: #8C8274;
   --color-earth-500: #6B6358;
   --color-earth-600: #554D42;
+  --color-earth-650: #3D3B36;
   --color-earth-700: #3D3830;
   --color-earth-800: #2C2620;
   --color-earth-900: #1A1714;

@@ -147,55 +147,27 @@ export default function SettingsSheet({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
-      style={{ background: "rgba(0,0,0,0.25)" }}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/25"
     >
       <div
         ref={sheetRef}
+        className="w-full max-w-[440px] bg-sand-50 rounded-t-2xl px-5 pt-6 pb-8"
         style={{
-          width: "100%",
-          maxWidth: "440px",
-          background: "#FAF8F3",
-          borderRadius: "16px 16px 0 0",
-          padding: "24px 20px 32px",
           animation:
             "settings-slide-up 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
         }}
       >
         {/* Drag handle */}
-        <div className="flex justify-center" style={{ marginBottom: "16px" }}>
-          <div
-            style={{
-              width: "36px",
-              height: "4px",
-              borderRadius: "2px",
-              background: "#D4CFC6",
-            }}
-          />
+        <div className="flex justify-center mb-4">
+          <div className="w-9 h-1 rounded-sm bg-sand-300" />
         </div>
 
         {!selectedOption ? (
           <>
-            <h3
-              className="font-serif font-medium"
-              style={{
-                fontSize: "20px",
-                color: "#3D3B36",
-                lineHeight: "1.3",
-                marginBottom: "4px",
-              }}
-            >
+            <h3 className="font-serif font-medium text-[20px] text-earth-650 leading-tight mb-1">
               Settings
             </h3>
-            <p
-              className="font-sans"
-              style={{
-                fontSize: "13px",
-                color: "#948B7D",
-                lineHeight: "1.4",
-                marginBottom: "20px",
-              }}
-            >
+            <p className="font-sans text-[13px] text-earth-350 leading-snug mb-5">
               Manage your data
             </p>
 
@@ -204,43 +176,16 @@ export default function SettingsSheet({
                 <button
                   key={opt.key}
                   onClick={() => setSelectedOption(opt.key)}
-                  className="flex items-start gap-3 cursor-pointer text-left"
-                  style={{
-                    width: "100%",
-                    padding: "14px 16px",
-                    background: "#F5F1EA",
-                    border: "none",
-                    borderRadius: "12px",
-                    transition: "background 200ms",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = "#EDE8DF")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.background = "#F5F1EA")
-                  }
+                  className="flex items-start gap-3 cursor-pointer text-left w-full p-3.5 px-4 bg-sand-100 border-none rounded-xl transition-colors duration-200 hover:bg-sand-200"
                 >
-                  <div
-                    style={{ flexShrink: 0, marginTop: "1px" }}
-                  >
+                  <div className="shrink-0 mt-px">
                     {opt.icon}
                   </div>
                   <div>
-                    <span
-                      className="font-sans font-medium block"
-                      style={{ fontSize: "14px", color: "#3D3B36" }}
-                    >
+                    <span className="font-sans font-medium block text-sm text-earth-650">
                       {opt.label}
                     </span>
-                    <span
-                      className="font-sans block"
-                      style={{
-                        fontSize: "12px",
-                        color: "#948B7D",
-                        lineHeight: "1.4",
-                        marginTop: "2px",
-                      }}
-                    >
+                    <span className="font-sans block text-xs text-earth-350 leading-snug mt-0.5">
                       {opt.description}
                     </span>
                   </div>
@@ -249,7 +194,7 @@ export default function SettingsSheet({
                     height="16"
                     viewBox="0 0 16 16"
                     fill="none"
-                    style={{ flexShrink: 0, marginTop: "2px", marginLeft: "auto" }}
+                    className="shrink-0 mt-0.5 ml-auto"
                   >
                     <path
                       d="M6 4l4 4-4 4"
@@ -266,41 +211,18 @@ export default function SettingsSheet({
         ) : (
           /* Confirmation step */
           <>
-            <h3
-              className="font-serif font-medium"
-              style={{
-                fontSize: "20px",
-                color: "#3D3B36",
-                lineHeight: "1.3",
-              }}
-            >
+            <h3 className="font-serif font-medium text-[20px] text-earth-650 leading-tight">
               {confirmMessages[selectedOption].title}
             </h3>
 
-            <p
-              className="font-sans"
-              style={{
-                fontSize: "14px",
-                color: "#6B6358",
-                lineHeight: "1.5",
-                marginTop: "8px",
-              }}
-            >
+            <p className="font-sans text-sm text-earth-500 leading-normal mt-2">
               {confirmMessages[selectedOption].body}
             </p>
 
-            <div className="flex gap-3" style={{ marginTop: "20px" }}>
+            <div className="flex gap-3 mt-5">
               <button
                 onClick={() => setSelectedOption(null)}
-                className="flex-1 font-sans font-medium cursor-pointer"
-                style={{
-                  fontSize: "14px",
-                  padding: "12px",
-                  borderRadius: "12px",
-                  background: "#E8E2D6",
-                  color: "#6B6358",
-                  border: "none",
-                }}
+                className="flex-1 font-sans font-medium cursor-pointer text-sm py-3 rounded-xl bg-sand-300 text-earth-500 border-none"
               >
                 Go back
               </button>
@@ -309,16 +231,9 @@ export default function SettingsSheet({
                   onAction(selectedOption);
                   setSelectedOption(null);
                 }}
-                className="flex-1 font-sans font-medium cursor-pointer"
-                style={{
-                  fontSize: "14px",
-                  padding: "12px",
-                  borderRadius: "12px",
-                  background:
-                    selectedOption === "start-fresh" ? "var(--color-rose)" : "#D4A574",
-                  color: "#FAF8F3",
-                  border: "none",
-                }}
+                className={`flex-1 font-sans font-medium cursor-pointer text-sm py-3 rounded-xl text-sand-50 border-none ${
+                  selectedOption === "start-fresh" ? "bg-rose" : "bg-amber-350"
+                }`}
               >
                 {confirmMessages[selectedOption].confirm}
               </button>

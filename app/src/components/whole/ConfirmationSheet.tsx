@@ -43,60 +43,33 @@ export default function ConfirmationSheet({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
-      style={{ background: "rgba(0,0,0,0.25)" }}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/25"
     >
       <div
         ref={sheetRef}
+        className="w-full max-w-[440px] bg-sand-50 rounded-t-2xl px-5 pt-6 pb-8"
         style={{
-          width: "100%",
-          maxWidth: "440px",
-          background: "#FAF8F3",
-          borderRadius: "16px 16px 0 0",
-          padding: "24px 20px 32px",
           animation: "confirmation-slide-up 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
         }}
       >
-        <h3
-          className="font-serif font-medium"
-          style={{ fontSize: "20px", color: "#3D3B36", lineHeight: "1.3" }}
-        >
+        <h3 className="font-serif font-medium text-[20px] text-earth-650 leading-tight">
           {title}
         </h3>
 
-        <p
-          className="font-sans"
-          style={{ fontSize: "14px", color: "#6B6358", lineHeight: "1.5", marginTop: "8px" }}
-        >
+        <p className="font-sans text-sm text-earth-500 leading-normal mt-2">
           {body}
         </p>
 
-        <div className="flex gap-3" style={{ marginTop: "20px" }}>
+        <div className="flex gap-3 mt-5">
           <button
             onClick={onCancel}
-            className="flex-1 font-sans font-medium cursor-pointer"
-            style={{
-              fontSize: "14px",
-              padding: "12px",
-              borderRadius: "12px",
-              background: "#E8E2D6",
-              color: "#6B6358",
-              border: "none",
-            }}
+            className="flex-1 font-sans font-medium cursor-pointer text-sm py-3 rounded-xl bg-sand-300 text-earth-500 border-none"
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 font-sans font-medium cursor-pointer"
-            style={{
-              fontSize: "14px",
-              padding: "12px",
-              borderRadius: "12px",
-              background: "var(--color-rose)",
-              color: "#FAF8F3",
-              border: "none",
-            }}
+            className="flex-1 font-sans font-medium cursor-pointer text-sm py-3 rounded-xl bg-rose text-sand-50 border-none"
           >
             {confirmLabel}
           </button>
