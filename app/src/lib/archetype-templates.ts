@@ -581,6 +581,7 @@ export function prePopulateFromArchetypes(
         text: b.text,
         frequency: b.frequency,
         dimensions: b.dimensions,
+        source: "template" as const,
       }));
 
       aspirations.push({

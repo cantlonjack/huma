@@ -14,6 +14,7 @@ import ArchetypeCard from "@/components/onboarding/ArchetypeCard";
 import WholeMiniPreview from "@/components/onboarding/WholeMiniPreview";
 import CapitalSketch from "@/components/onboarding/CapitalSketch";
 import { DOMAIN_TEMPLATES, ORIENTATION_TEMPLATES, prePopulateFromArchetypes } from "@/lib/archetype-templates";
+import { getArchetypeOpener, getTemplateAspirationNames } from "@/lib/archetype-openers";
 
 // ─── Palette Acknowledgments ─────────────────────────────────────────────────
 
@@ -526,10 +527,28 @@ export default function StartPage() {
       }
 
       // Final parse with all markers
-      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName, parsedDecomposition } = parseMarkers(fullResponse);
+      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName, parsedDecomposition, parsedReplaceAspiration } = parseMarkers(fullResponse);
 
       if (parsedContext) {
         setKnownContext(prev => ({ ...prev, ...parsedContext }));
+      }
+
+      // Handle template aspiration replacement
+      if (parsedReplaceAspiration) {
+        try {
+          const existing = JSON.parse(localStorage.getItem("huma-v2-aspirations") || "[]");
+          // Find and replace the first template-sourced aspiration
+          const templateIdx = existing.findIndex((a: Record<string, unknown>) => a.source === "template");
+          if (templateIdx !== -1) {
+            existing[templateIdx] = {
+              ...existing[templateIdx],
+              rawText: parsedReplaceAspiration,
+              clarifiedText: parsedReplaceAspiration,
+              source: "conversation",
+            };
+            localStorage.setItem("huma-v2-aspirations", JSON.stringify(existing));
+          }
+        } catch { /* non-critical */ }
       }
 
       if (parsedBehaviors) {
@@ -742,6 +761,18 @@ export default function StartPage() {
         localStorage.setItem("huma-v2-patterns", JSON.stringify(patterns));
       }
 
+      // Inject archetype-aware opening message
+      const templateNames = getTemplateAspirationNames(selected.domains);
+      const opener = getArchetypeOpener(archetypes, true, templateNames);
+      if (opener) {
+        setMessages([{
+          id: crypto.randomUUID(),
+          role: "huma",
+          content: opener,
+          createdAt: new Date().toISOString(),
+        }]);
+      }
+
       setOnboardingStep("conversation");
     },
     [knownContext]
@@ -753,6 +784,18 @@ export default function StartPage() {
       const updatedContext = { ...knownContext, archetypes };
       setKnownContext(updatedContext);
       localStorage.setItem("huma-v2-known-context", JSON.stringify(updatedContext));
+
+      // Inject archetype-aware opening message (blank slate)
+      const opener = getArchetypeOpener(archetypes, false);
+      if (opener) {
+        setMessages([{
+          id: crypto.randomUUID(),
+          role: "huma",
+          content: opener,
+          createdAt: new Date().toISOString(),
+        }]);
+      }
+
       setOnboardingStep("conversation");
     },
     [knownContext]

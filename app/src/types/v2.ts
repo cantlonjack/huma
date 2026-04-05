@@ -51,6 +51,7 @@ export interface Behavior {
   dimensions: DimensionEffect[];
   detail?: string;
   enabled?: boolean;
+  source?: "template" | "conversation";
 }
 
 export interface AspirationFunnel {

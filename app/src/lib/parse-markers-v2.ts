@@ -26,6 +26,7 @@ export interface ParsedMarkers {
   parsedAspirationName: string | null;
   parsedDecomposition: DecompositionData | null;
   parsedReorganization: ReorganizationPlan | null;
+  parsedReplaceAspiration: string | null;
 }
 
 const MARKER_TYPES = ["OPTIONS", "BEHAVIORS", "ACTIONS", "CONTEXT", "ASPIRATION_NAME", "DECOMPOSITION", "REORGANIZATION"] as const;
@@ -112,6 +113,7 @@ export function parseMarkersV2(text: string): ParsedMarkers {
   let parsedAspirationName: string | null = null;
   let parsedDecomposition: DecompositionData | null = null;
   let parsedReorganization: ReorganizationPlan | null = null;
+  let parsedReplaceAspiration: string | null = null;
 
   let cleanText = text;
 
@@ -120,6 +122,13 @@ export function parseMarkersV2(text: string): ParsedMarkers {
   if (nameMatch) {
     parsedAspirationName = nameMatch[1];
     cleanText = cleanText.replace(nameMatch[0], "");
+  }
+
+  // Extract REPLACE_ASPIRATION — simple string value like ASPIRATION_NAME
+  const replaceMatch = cleanText.match(/\[\[REPLACE_ASPIRATION:"([^"]+)"\]\]/);
+  if (replaceMatch) {
+    parsedReplaceAspiration = replaceMatch[1];
+    cleanText = cleanText.replace(replaceMatch[0], "");
   }
 
   for (const type of MARKER_TYPES) {
@@ -170,8 +179,8 @@ export function parseMarkersV2(text: string): ParsedMarkers {
 
   // Strip incomplete markers at end of stream
   cleanText = cleanText
-    .replace(/\[\[(?:OPTIONS|BEHAVIORS|ACTIONS|CONTEXT|ASPIRATION_NAME|DECOMPOSITION|REORGANIZATION):?[\s\S]*$/g, "")
+    .replace(/\[\[(?:OPTIONS|BEHAVIORS|ACTIONS|CONTEXT|ASPIRATION_NAME|DECOMPOSITION|REORGANIZATION|REPLACE_ASPIRATION):?[\s\S]*$/g, "")
     .trim();
 
-  return { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName, parsedDecomposition, parsedReorganization };
+  return { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName, parsedDecomposition, parsedReorganization, parsedReplaceAspiration };
 }

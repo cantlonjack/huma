@@ -58,7 +58,36 @@ RULES:
 WHAT YOU'RE BUILDING TOWARD:
 A phased decomposition with 2-4 THIS WEEK actions that are specific enough to
 execute without Googling, informed by the operator's actual resources, timeline,
-and constraints. Not a generic lifecycle guide.`;
+and constraints. Not a generic lifecycle guide.
+
+TEMPLATE REFINEMENT:
+If the operator has template-sourced aspirations (source: "template"), they're
+starting points, not commitments. When the operator describes something that
+contradicts or replaces a template aspiration, output:
+[[REPLACE_ASPIRATION:"<new aspiration text>"]]
+This signals the client to replace the most relevant template aspiration with
+the conversation-derived one. Only output this when the operator's stated
+aspiration clearly supersedes a template — not on every new topic.
+
+METHOD INTELLIGENCE (reflect-back phase only):
+When reflecting back, evaluate whether the operator's stated approach is the
+best known method for their specific context (scale, resources, constraints,
+location). If there is a significantly better method — one with documented
+evidence, named practitioners, or clear mechanical advantage — surface it as
+part of the reflect-back. Name the source. Explain the mechanism. Map it to
+their context. Do not say "optimize" or "you should consider." Say it like a
+neighbor who's seen what actually works: specific, grounded, warm. If their
+method is solid, say nothing — don't manufacture alternatives. This fires
+during the reflect-back ONLY, not during initial context gathering.
+
+Example good method intelligence:
+"You mentioned the static coop setup. The folks who've figured out the egg game
+at your scale — they went mobile. Joel Salatin, Harvey Ussery — pasture rotation
+cuts feed costs 30% and the birds do the fertilizing. Want me to build around
+that approach instead?"
+
+When surfacing a better method, adjust the reflect-back options:
+[[OPTIONS:["Yes, show me behaviors","Tell me more about that","No, keep my approach"]]]`;
 
 // ─── Decomposition Phase Prompt ────────────────────────────────────────────
 const DECOMPOSITION_PHASE_PROMPT = `The operator confirmed their context. Now decompose into a phased system.
@@ -411,7 +440,8 @@ question to refine, with tappable options. Then reflect back the updated picture
     // Hard ceiling — decompose regardless
     phasePrompt = DECOMPOSITION_PHASE_PROMPT;
     messageCountRule = `\n\nCRITICAL: This is user message #${userMessageCount}. You have gathered enough context.
-You MUST reflect back what you heard in 2-3 sentences and then decompose.
+You MUST reflect back what you heard in 2-3 sentences (including method intelligence
+if a better approach exists) and then decompose.
 Output [[ASPIRATION_NAME:...]], [[DECOMPOSITION:{...}]], and [[ACTIONS:[...]]].
 Do NOT ask another question.`;
   } else if (userMessageCount >= 4) {
@@ -421,6 +451,9 @@ Do NOT ask another question.`;
 If you have sufficient information about scale, resources, timeline, and constraints,
 REFLECT BACK what you heard in 2-3 specific sentences and ask "That the right picture?"
 with [[OPTIONS:["That's it","Close, but...","Let me rethink"]]].
+ALSO: evaluate method intelligence during this reflect-back — if their stated approach
+has a significantly better alternative (documented, named sources, mechanical advantage),
+surface it now. If so, use [[OPTIONS:["Yes, show me behaviors","Tell me more about that","No, keep my approach"]]].
 If a critical piece is still missing, ask ONE more question — but you MUST reflect
 on your next response after this.`;
   } else if (userMessageCount >= 2) {
@@ -444,6 +477,18 @@ Do NOT decompose yet. Do NOT give advice. Just receive and begin asking.`;
     ? `\n\nThis operator has ${dayCount} days of behavioral data. Ask deeper, more specific questions. Reference their existing patterns when relevant.`
     : "";
 
+  // Check if operator has template-sourced aspirations
+  const hasTemplateAspirations = aspirations.some(
+    a => (a as Record<string, unknown>).source === "template"
+  );
+  const templateBlock = hasTemplateAspirations
+    ? `\n\nTEMPLATE ASPIRATIONS:\nSome aspirations are template-sourced (marked source: "template"). These are
+starting suggestions from the operator's archetype, not conversation-derived.
+Treat them as malleable — the operator may want to refine, replace, or confirm them.
+If the operator describes something that replaces a template aspiration, output
+[[REPLACE_ASPIRATION:"<new aspiration text>"]].`
+    : "";
+
   return `${BASE_IDENTITY}
 
 ${phasePrompt}
@@ -456,7 +501,7 @@ resonate with them. Incorporate these into your understanding — they're backgr
 that should shape your questions and decomposition. Don't address each one separately.
 
 ACTIVE ASPIRATIONS:
-${aspirationStr}
+${aspirationStr}${templateBlock}
 
 TODAY'S DATE: ${today}
 ${messageCountRule}${tabContextBlock}${behavioralContextBlock}${depthNote}`;

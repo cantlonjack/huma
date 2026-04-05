@@ -87,13 +87,18 @@ export default function DecompositionPreview({
                 {isTrigger && (
                   <p className="font-sans text-[10px] text-sage-600 uppercase tracking-wider mb-0.5">The Decision</p>
                 )}
-                <p
-                  className={`font-sans text-sm text-earth-700 font-medium ${
-                    !b.enabled && editing ? "line-through decoration-earth-400" : ""
-                  }`}
-                >
-                  {b.text}
-                </p>
+                <div className="flex items-baseline gap-2">
+                  <p
+                    className={`font-sans text-sm text-earth-700 font-medium ${
+                      !b.enabled && editing ? "line-through decoration-earth-400" : ""
+                    }`}
+                  >
+                    {b.text}
+                  </p>
+                  {(b as Behavior & { source?: string }).source === "template" && (
+                    <span className="font-sans text-[11px] text-earth-300 italic shrink-0">suggested</span>
+                  )}
+                </div>
                 {b.detail && (
                   <p className="font-sans text-xs text-earth-400 mt-0.5">{b.detail}</p>
                 )}
