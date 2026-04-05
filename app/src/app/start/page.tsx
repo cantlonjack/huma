@@ -82,6 +82,10 @@ function ArchetypeSelectionScreen({
   if (step === "fork") {
     return (
       <div className="min-h-dvh bg-sand-50 flex flex-col items-center px-6 py-10 animate-fade-in">
+        {/* Progress hint */}
+        <p className="font-serif text-earth-300 mb-6" style={{ fontSize: "10px", letterSpacing: "0.06em" }}>
+          2 of 2
+        </p>
         <div className="w-full max-w-md">
           {/* Mini-preview in top-right corner */}
           <div className="flex justify-between items-start mb-8">
@@ -148,6 +152,10 @@ function ArchetypeSelectionScreen({
   // Step 1: Archetype selection
   return (
     <div className="min-h-dvh bg-sand-50 flex flex-col items-center px-6 py-10 animate-fade-in">
+      {/* Progress hint */}
+      <p className="font-serif text-earth-300 mb-4" style={{ fontSize: "10px", letterSpacing: "0.06em" }}>
+        1 of 2
+      </p>
       {/* Mini-preview floats top-right on desktop */}
       <div className="w-full max-w-2xl relative">
         <div className="hidden md:block absolute -top-2 -right-2 z-10">
@@ -167,8 +175,8 @@ function ArchetypeSelectionScreen({
           </p>
         </div>
 
-        {/* Domain Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
+        {/* Domain Grid — 1-col on tiny screens, 2-col default, 3-col desktop */}
+        <div className="grid gap-3 mb-8" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(160px, 100%), 1fr))" }}>
           {DOMAIN_TEMPLATES.map((t) => (
             <ArchetypeCard
               key={t.name}
@@ -182,7 +190,7 @@ function ArchetypeSelectionScreen({
         </div>
 
         {/* Orientation Section */}
-        <div className="mb-8">
+        <div className="mb-28">
           <p
             className="font-sans text-earth-300 mb-3"
             style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em" }}
@@ -201,9 +209,14 @@ function ArchetypeSelectionScreen({
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Continue / Skip */}
-        <div className="flex flex-col items-center gap-3">
+      {/* Fixed bottom actions — stays visible while cards scroll */}
+      <div
+        className="fixed bottom-0 left-0 right-0 px-6 pb-6 pt-3 z-20"
+        style={{ background: "linear-gradient(transparent, #FAF8F3 30%)" }}
+      >
+        <div className="max-w-2xl mx-auto flex flex-col items-center gap-2">
           {hasSelection && (
             <button
               onClick={handleContinue}
@@ -347,6 +360,7 @@ export default function StartPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [onboardingStep, setOnboardingStep] = useState<"archetype" | "conversation">("archetype");
+  const [transitioning, setTransitioning] = useState(false);
   const [stepReady, setStepReady] = useState(false);
   const [messages, setMessages] = useState<
     (ChatMessage & { options?: string[] | null; behaviors?: Behavior[] | null; actions?: string[] | null; decomposition?: DecompositionData | null; contextNote?: boolean })[]
@@ -727,6 +741,15 @@ export default function StartPage() {
     }
   };
 
+  // Smooth crossfade from archetype screen to conversation
+  const transitionToConversation = useCallback(() => {
+    setTransitioning(true);
+    setTimeout(() => {
+      setOnboardingStep("conversation");
+      setTransitioning(false);
+    }, 300);
+  }, []);
+
   // Archetype selection handlers
   const handleArchetypeContinueWithTemplate = useCallback(
     (selected: { domains: string[]; orientations: string[] }, capitalSketch?: Record<DimensionKey, number>) => {
@@ -773,9 +796,9 @@ export default function StartPage() {
         }]);
       }
 
-      setOnboardingStep("conversation");
+      transitionToConversation();
     },
-    [knownContext]
+    [knownContext, transitionToConversation]
   );
 
   const handleArchetypeContinueBlank = useCallback(
@@ -796,14 +819,14 @@ export default function StartPage() {
         }]);
       }
 
-      setOnboardingStep("conversation");
+      transitionToConversation();
     },
-    [knownContext]
+    [knownContext, transitionToConversation]
   );
 
   const handleArchetypeSkip = useCallback(() => {
-    setOnboardingStep("conversation");
-  }, []);
+    transitionToConversation();
+  }, [transitionToConversation]);
 
   const hasMessages = messages.length > 0;
 
@@ -831,11 +854,13 @@ export default function StartPage() {
   // Step 0: Archetype selection
   if (onboardingStep === "archetype") {
     return (
-      <ArchetypeSelectionScreen
-        onContinueWithTemplate={handleArchetypeContinueWithTemplate}
-        onContinueBlank={handleArchetypeContinueBlank}
-        onSkip={handleArchetypeSkip}
-      />
+      <div className={transitioning ? "animate-crossfade-out" : ""}>
+        <ArchetypeSelectionScreen
+          onContinueWithTemplate={handleArchetypeContinueWithTemplate}
+          onContinueBlank={handleArchetypeContinueBlank}
+          onSkip={handleArchetypeSkip}
+        />
+      </div>
     );
   }
 

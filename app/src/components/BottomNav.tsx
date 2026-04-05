@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import WholeMiniIndicator from "@/components/WholeMiniIndicator";
 
 const NAV_ITEMS = [
   { href: "/today", label: "Today" },
@@ -27,18 +28,20 @@ export default function BottomNav() {
       <div className="flex items-center justify-around max-w-lg mx-auto" style={{ height: "56px" }}>
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href;
+          const isWhole = item.href === "/whole";
 
           return (
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center justify-center flex-1"
+              className="flex flex-col items-center justify-center flex-1 gap-0.5"
               style={{ minHeight: "44px", height: "56px" }}
             >
+              {isWhole && <WholeMiniIndicator />}
               <span
                 className="font-sans"
                 style={{
-                  fontSize: "13px",
+                  fontSize: isWhole ? "10px" : "13px",
                   letterSpacing: "0.12em",
                   textTransform: "uppercase" as const,
                   fontWeight: isActive ? 600 : 400,
