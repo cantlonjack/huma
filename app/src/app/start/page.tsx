@@ -1,7 +1,7 @@
 "use client";
 
 import { useStart } from "@/hooks/useStart";
-import AuthModal from "@/components/AuthModal";
+import AuthModal from "@/components/shared/AuthModal";
 import ArchetypeSelectionScreen from "@/components/onboarding/ArchetypeSelectionScreen";
 import MessageBubble from "@/components/onboarding/MessageBubble";
 import PalettePanel from "@/components/onboarding/PalettePanel";

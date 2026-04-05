@@ -1,9 +1,9 @@
 "use client";
 
 import { displayName } from "@/lib/display-name";
-import TabShell from "@/components/TabShell";
-import TodaySkeleton from "@/components/TodaySkeleton";
-import NotificationSettings from "@/components/NotificationSettings";
+import TabShell from "@/components/shared/TabShell";
+import TodaySkeleton from "@/components/today/TodaySkeleton";
+import NotificationSettings from "@/components/today/NotificationSettings";
 import { useToday, formatHeaderDate, getBehaviorChain } from "@/hooks/useToday";
 import { PatternRouteCard } from "@/components/today/PatternRouteCard";
 import { CompiledEntryRow } from "@/components/today/CompiledEntryRow";

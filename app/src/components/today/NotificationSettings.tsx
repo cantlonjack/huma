@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/components/AuthProvider";
+import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { getKnownContext, updateKnownContext } from "@/lib/supabase-v2";
 import type { NotificationPreferences } from "@/types/v2";

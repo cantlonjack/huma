@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import type { ChatMessage, Behavior, Aspiration, ReorganizationPlan } from "@/types/v2";
 import { parseMarkersV2 as parseMarkers } from "@/lib/parse-markers-v2";
-import { useAuth } from "@/components/AuthProvider";
+import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import {
   getChatMessages,

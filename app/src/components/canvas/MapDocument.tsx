@@ -3,7 +3,7 @@
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
-import ShapeChart from "@/components/ShapeChart";
+import ShapeChart from "@/components/canvas/ShapeChart";
 import CapitalRadar from "@/components/canvas/CapitalRadar";
 
 interface MapDocumentProps {

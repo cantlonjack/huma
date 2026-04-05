@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import MapDocument from "@/components/MapDocument";
+import MapDocument from "@/components/canvas/MapDocument";
 import LivingCanvas from "@/components/canvas/LivingCanvas";
 import { SAMPLE_MAP_MARKDOWN, SAMPLE_CANVAS_DATA } from "@/lib/sample-map";
 import { MAYA_MAP_MARKDOWN, MAYA_CANVAS_DATA } from "@/lib/sample-map-maya";
 import { trackEvent } from "@/lib/analytics";
-import MapToolbar from "@/components/MapToolbar";
-import ShareButton from "@/components/ShareButton";
+import MapToolbar from "@/components/canvas/MapToolbar";
+import ShareButton from "@/components/shared/ShareButton";
 
 type ViewMode = "canvas" | "document";
 type SampleProfile = "sarah" | "maya";

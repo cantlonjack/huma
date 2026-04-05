@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import ChatBubble from "@/components/ChatBubble";
-import ChatSheet from "@/components/ChatSheet";
-import NotificationPrompt from "@/components/NotificationPrompt";
-import EveningReflection from "@/components/EveningReflection";
+import ChatBubble from "@/components/chat/ChatBubble";
+import ChatSheet from "@/components/chat/ChatSheet";
+import NotificationPrompt from "@/components/today/NotificationPrompt";
+import EveningReflection from "@/components/today/EveningReflection";
 import { useNetworkStatus } from "@/lib/use-network-status";
 
 interface TabShellProps {

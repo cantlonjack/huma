@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import ErrorBoundary from "@/components/ErrorBoundary";
+import ErrorBoundary from "@/components/shared/ErrorBoundary";
 
 describe("ErrorBoundary component validation", () => {
   it("is a valid React component class that can be imported", () => {

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import WholeMiniIndicator from "@/components/WholeMiniIndicator";
+import WholeMiniIndicator from "@/components/whole/WholeMiniIndicator";
 
 const NAV_ITEMS = [
   { href: "/today", label: "Today" },

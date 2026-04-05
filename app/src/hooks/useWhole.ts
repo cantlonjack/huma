@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { HolonNode, HolonLink, HolonLayer, HolonStatus, InsightAnnotation } from "@/components/whole/WholeShape";
 import { isShareworthyInsight } from "@/components/whole/ShareworthyInsightCard";
 import type { WhyEvolutionData } from "@/components/whole/WhyEvolution";
-import { useAuth } from "@/components/AuthProvider";
+import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { displayName } from "@/lib/display-name";
 import type { Aspiration, Insight, Principle, KnownContext, Pattern, Behavior, FutureAction, FuturePhase } from "@/types/v2";

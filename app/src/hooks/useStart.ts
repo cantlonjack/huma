@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { PaletteConcept, ChatMessage, Behavior, DimensionKey } from "@/types/v2";
 import { parseMarkersV2 as parseMarkers, type DecompositionData } from "@/lib/parse-markers-v2";
-import { useAuth } from "@/components/AuthProvider";
+import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { migrateLocalStorageToSupabase } from "@/lib/supabase-v2";
 import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";

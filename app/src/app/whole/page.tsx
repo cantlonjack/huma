@@ -1,6 +1,6 @@
 "use client";
 
-import TabShell from "@/components/TabShell";
+import TabShell from "@/components/shared/TabShell";
 import WholeShape from "@/components/whole/WholeShape";
 import HolonExpandPanel from "@/components/whole/HolonExpandPanel";
 import AspirationDetailPanel from "@/components/whole/AspirationDetailPanel";
@@ -9,11 +9,11 @@ import InsightCard from "@/components/whole/InsightCard";
 import ShareworthyInsightCard from "@/components/whole/ShareworthyInsightCard";
 import WhyEvolution from "@/components/whole/WhyEvolution";
 import ArchetypeSelector from "@/components/whole/ArchetypeSelector";
-import ContextPortrait from "@/components/ContextPortrait";
+import ContextPortrait from "@/components/whole/ContextPortrait";
 import CanvasRegenerate from "@/components/whole/CanvasRegenerate";
 import ConfirmationSheet from "@/components/whole/ConfirmationSheet";
 import SettingsSheet from "@/components/whole/SettingsSheet";
-import WholeSkeleton from "@/components/WholeSkeleton";
+import WholeSkeleton from "@/components/whole/WholeSkeleton";
 import { useWhole } from "@/hooks/useWhole";
 
 export default function WholePage() {

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import type { Pattern, Aspiration, SparklineData, MergeSuggestion } from "@/types/v2";
 import { DIMENSION_COLORS, DIMENSION_LABELS } from "@/types/v2";
 import { displayName } from "@/lib/display-name";
-import Sparkline from "@/components/Sparkline";
+import Sparkline from "@/components/grow/Sparkline";
 import {
   statusLabel,
   statusColor,

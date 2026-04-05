@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import type { Aspiration } from "@/types/v2";
 import { DIMENSION_COLORS } from "@/types/v2";
 import { displayName } from "@/lib/display-name";
-import WeekRhythm from "@/components/WeekRhythm";
+import WeekRhythm from "@/components/today/WeekRhythm";
 import type { BehaviorStep } from "@/hooks/useToday";
 import { triggerCaption } from "@/hooks/useToday";
 

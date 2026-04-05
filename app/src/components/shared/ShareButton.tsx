@@ -142,7 +142,7 @@ export default function ShareButton({ className = "", canvasData }: ShareButtonP
 
   // Lazy-load ShareCard only when needed
   const ShareCardLazy = showCard
-    ? require("@/components/ShareCard").default
+    ? require("@/components/shared/ShareCard").default
     : null;
 
   return (

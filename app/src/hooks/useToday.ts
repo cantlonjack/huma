@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { Aspiration, Insight, SheetEntry } from "@/types/v2";
-import { useAuth } from "@/components/AuthProvider";
+import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { getLocalDate, getLocalDateOffset } from "@/lib/date-utils";
 import { compileSheet, type CompiledSheet } from "@/lib/sheet-compiler";

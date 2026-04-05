@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { Pattern, Aspiration, DimensionKey, SparklineData, EmergingBehavior, MergeSuggestion, MonthlyReviewData } from "@/types/v2";
 import { DIMENSION_COLORS, DIMENSION_LABELS } from "@/types/v2";
-import { useAuth } from "@/components/AuthProvider";
+import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { displayName } from "@/lib/display-name";
 import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";

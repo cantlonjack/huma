@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Source_Sans_3 } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
-import AuthProvider from "@/components/AuthProvider";
-import BottomNav from "@/components/BottomNav";
+import AuthProvider from "@/components/shared/AuthProvider";
+import BottomNav from "@/components/shared/BottomNav";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({

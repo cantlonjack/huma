@@ -2,10 +2,10 @@
 
 import { useGrow } from "@/hooks/useGrow";
 import { displayName } from "@/lib/display-name";
-import TabShell from "@/components/TabShell";
-import GrowSkeleton from "@/components/GrowSkeleton";
-import EmergenceCard from "@/components/EmergenceCard";
-import MonthlyReview from "@/components/MonthlyReview";
+import TabShell from "@/components/shared/TabShell";
+import GrowSkeleton from "@/components/grow/GrowSkeleton";
+import EmergenceCard from "@/components/grow/EmergenceCard";
+import MonthlyReview from "@/components/grow/MonthlyReview";
 import ConfirmationSheet from "@/components/whole/ConfirmationSheet";
 import PatternSection from "@/components/grow/PatternSection";
 import EmptyState from "@/components/grow/EmptyState";

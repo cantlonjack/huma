@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import MapDocument from "@/components/MapDocument";
+import MapDocument from "@/components/canvas/MapDocument";
 import LivingCanvas from "@/components/canvas/LivingCanvas";
 import type { CanvasData } from "@/engine/canvas-types";
-import MapToolbar from "@/components/MapToolbar";
-import ShareButton from "@/components/ShareButton";
+import MapToolbar from "@/components/canvas/MapToolbar";
+import ShareButton from "@/components/shared/ShareButton";
 
 interface MapClientProps {
   id: string;

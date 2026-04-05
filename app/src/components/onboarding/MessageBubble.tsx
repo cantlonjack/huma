@@ -2,7 +2,7 @@
 
 import type { ChatMessage, Behavior } from "@/types/v2";
 import type { DecompositionData } from "@/lib/parse-markers-v2";
-import DecompositionPreview from "@/components/DecompositionPreview";
+import DecompositionPreview from "@/components/onboarding/DecompositionPreview";
 
 export default function MessageBubble({
   message,
