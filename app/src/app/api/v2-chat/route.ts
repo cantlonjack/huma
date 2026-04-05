@@ -385,6 +385,7 @@ function buildSystemPrompt(
   sourceTab?: string,
   tabContext?: Record<string, unknown>,
   dayCount?: number,
+  chatMode?: string,
 ): string {
   const contextStr = Object.keys(knownContext).length > 0
     ? JSON.stringify(knownContext, null, 2)
@@ -489,6 +490,16 @@ If the operator describes something that replaces a template aspiration, output
 [[REPLACE_ASPIRATION:"<new aspiration text>"]].`
     : "";
 
+  const newAspirationBlock = chatMode === "new-aspiration"
+    ? `\n\nMODE: NEW ASPIRATION
+The operator is adding a new aspiration to their existing system. They already have
+${aspirations.length} aspiration${aspirations.length !== 1 ? "s" : ""}. Your job is to gather enough
+context about this new aspiration to decompose it into phased behaviors — but be
+efficient. They're not onboarding; they know how HUMA works. 2-3 questions usually
+suffice unless the aspiration is complex. Reference their existing aspirations when
+relevant — look for connections and dimension overlap.`
+    : "";
+
   return `${BASE_IDENTITY}
 
 ${phasePrompt}
@@ -504,7 +515,7 @@ ACTIVE ASPIRATIONS:
 ${aspirationStr}${templateBlock}
 
 TODAY'S DATE: ${today}
-${messageCountRule}${tabContextBlock}${behavioralContextBlock}${depthNote}`;
+${messageCountRule}${tabContextBlock}${behavioralContextBlock}${depthNote}${newAspirationBlock}`;
 }
 
 export async function POST(request: Request) {
@@ -532,6 +543,7 @@ export async function POST(request: Request) {
   const sourceTab = body.sourceTab as string | undefined;
   const tabContext = (body.tabContext || undefined) as Record<string, unknown> | undefined;
   const dayCount = (body.dayCount as number) || undefined;
+  const chatMode = body.chatMode as string | undefined;
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return badRequest("Messages array required.");
@@ -542,7 +554,7 @@ export async function POST(request: Request) {
     // Extract user message texts for template matching and count
     const userTexts = messages.filter(m => m.role === "user").map(m => m.content);
     const userMessageCount = userTexts.length;
-    const systemPrompt = buildSystemPrompt(knownContext, aspirations, userTexts, userMessageCount, sourceTab, tabContext, dayCount);
+    const systemPrompt = buildSystemPrompt(knownContext, aspirations, userTexts, userMessageCount, sourceTab, tabContext, dayCount, chatMode);
 
     const stream = anthropic.messages.stream({
       model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514",

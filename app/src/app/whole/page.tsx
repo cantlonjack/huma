@@ -237,6 +237,7 @@ export default function WholePage() {
   const [selectedNode, setSelectedNode] = useState<HolonNode | null>(null);
   const [archetypeSelectorOpen, setArchetypeSelectorOpen] = useState(false);
   const [chatShellOpen, setChatShellOpen] = useState(false);
+  const [chatShellMode, setChatShellMode] = useState<"default" | "new-aspiration">("default");
   const [whyEvolution, setWhyEvolution] = useState<WhyEvolutionData | null>(null);
   const [whyDate, setWhyDate] = useState<string | null>(null);
   const [shareworthyOpen, setShareworthyOpen] = useState(false);
@@ -775,9 +776,10 @@ export default function WholePage() {
 
   return (
     <TabShell
-      contextPrompt={chatShellOpen ? "Tell me what you're building and why it matters to you." : manageMode ? "What would you like to change?" : "What would you like to explore or change?"}
+      contextPrompt={chatShellMode === "new-aspiration" ? "What are you trying to make work?" : chatShellOpen ? "Tell me what you're building and why it matters to you." : manageMode ? "What would you like to change?" : "What would you like to explore or change?"}
       forceOpen={chatShellOpen}
-      onChatClose={() => setChatShellOpen(false)}
+      onChatClose={() => { setChatShellOpen(false); setChatShellMode("default"); }}
+      chatMode={chatShellMode}
       sourceTab="whole"
       tabContext={{
         archetypes,
@@ -934,18 +936,54 @@ export default function WholePage() {
                 >
                   Your shape starts here.
                 </p>
-                <a
-                  href="/start"
-                  className="font-sans"
+                <button
+                  onClick={() => {
+                    setChatShellMode("new-aspiration");
+                    setChatShellOpen(true);
+                  }}
+                  className="font-sans cursor-pointer"
                   style={{
                     fontSize: "14px",
                     color: "#B5621E",
+                    background: "none",
+                    border: "none",
                     textDecoration: "underline",
                     textUnderlineOffset: "2px",
+                    padding: 0,
                   }}
                 >
-                  Start a conversation
-                </a>
+                  Add your first aspiration
+                </button>
+              </div>
+            )}
+
+            {/* Add aspiration — visible when not empty */}
+            {!isEmpty && (
+              <div style={{ textAlign: "center", padding: "16px 24px 0" }}>
+                <button
+                  onClick={() => {
+                    setChatShellMode("new-aspiration");
+                    setChatShellOpen(true);
+                  }}
+                  className="font-sans cursor-pointer"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontSize: "13px",
+                    color: "var(--color-sage-500)",
+                    background: "none",
+                    border: "1px dashed #C8D5C9",
+                    borderRadius: "20px",
+                    padding: "8px 16px",
+                    minHeight: "36px",
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M6 1.5v9M1.5 6h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  Add aspiration
+                </button>
               </div>
             )}
 

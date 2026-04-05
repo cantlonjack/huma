@@ -1055,7 +1055,7 @@ function PatternCard({
 
 // ─── Empty State ────────────────────────────────────────────────────────────
 
-function EmptyState() {
+function EmptyState({ onAddAspiration }: { onAddAspiration: () => void }) {
   return (
     <div
       style={{
@@ -1098,18 +1098,21 @@ function EmptyState() {
       >
         As you check off behaviors on your production sheet, HUMA will surface the patterns that hold your days together.
       </p>
-      <a
-        href="/start"
-        className="font-sans"
+      <button
+        onClick={onAddAspiration}
+        className="font-sans cursor-pointer"
         style={{
           fontSize: "14px",
           color: "#B5621E",
+          background: "none",
+          border: "none",
           textDecoration: "underline",
           textUnderlineOffset: "2px",
+          padding: 0,
         }}
       >
-        Start a conversation
-      </a>
+        Add an aspiration
+      </button>
     </div>
   );
 }
@@ -1127,6 +1130,7 @@ export default function GrowPage() {
   const [sparklines, setSparklines] = useState<Map<string, SparklineData>>(new Map());
   const [emergingBehaviors, setEmergingBehaviors] = useState<EmergingBehavior[]>([]);
   const [investigatePatternId, setInvestigatePatternId] = useState<string | null>(null);
+  const [newAspirationOpen, setNewAspirationOpen] = useState(false);
   const [dismissedMerges, setDismissedMerges] = useState<Set<string>>(new Set());
   const [monthlyReview, setMonthlyReview] = useState<MonthlyReviewData | null>(null);
 
@@ -1140,6 +1144,7 @@ export default function GrowPage() {
 
   const handleChatClose = useCallback(() => {
     setInvestigatePatternId(null);
+    setNewAspirationOpen(false);
   }, []);
 
   const handleFormalize = useCallback(async (behavior: EmergingBehavior, name: string) => {
@@ -1598,12 +1603,13 @@ export default function GrowPage() {
 
   return (
     <TabShell
-      contextPrompt="What patterns are you noticing in your days?"
+      contextPrompt={newAspirationOpen ? "What are you trying to make work?" : "What patterns are you noticing in your days?"}
       sourceTab="grow"
       tabContext={tabContext}
-      forceOpen={!!investigatePatternId}
+      forceOpen={!!investigatePatternId || newAspirationOpen}
       onChatClose={handleChatClose}
       initialMessage={investigateMessage}
+      chatMode={newAspirationOpen ? "new-aspiration" : "default"}
     >
       <div
         className="min-h-dvh bg-sand-50"
@@ -1645,7 +1651,7 @@ export default function GrowPage() {
         {loading ? (
           <GrowSkeleton />
         ) : patterns.length === 0 && emergingBehaviors.length === 0 ? (
-          <EmptyState />
+          <EmptyState onAddAspiration={() => setNewAspirationOpen(true)} />
         ) : (
           <div style={{ padding: "0 16px" }}>
             {/* Emerging behaviors — "Something forming..." */}
@@ -1727,6 +1733,31 @@ export default function GrowPage() {
                 <MonthlyReview data={monthlyReview} />
               </div>
             )}
+
+            {/* Add aspiration — subtle affordance at bottom of list */}
+            <div style={{ textAlign: "center", padding: "24px 0 8px" }}>
+              <button
+                onClick={() => setNewAspirationOpen(true)}
+                className="font-sans cursor-pointer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  fontSize: "13px",
+                  color: "var(--color-sage-400)",
+                  background: "none",
+                  border: "1px dashed #C8D5C9",
+                  borderRadius: "20px",
+                  padding: "8px 16px",
+                  minHeight: "36px",
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M6 1.5v9M1.5 6h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+                Add aspiration
+              </button>
+            </div>
           </div>
         )}
       </div>

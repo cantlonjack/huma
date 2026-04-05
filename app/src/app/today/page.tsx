@@ -1061,6 +1061,7 @@ export default function TodayPage() {
   const [quickLookAspiration, setQuickLookAspiration] = useState<Aspiration | null>(null);
   const [chatContext, setChatContext] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [chatMode, setChatMode] = useState<"default" | "new-aspiration">("default");
   const [standaloneEntries, setStandaloneEntries] = useState<Array<{ behavior_text: string; dimensions?: string[] }>>([]);
   const [rhythmData, setRhythmData] = useState<Record<string, Record<number, number>>>({});
   const [disruptions, setDisruptions] = useState<Record<string, string | null>>({});
@@ -1563,7 +1564,8 @@ export default function TodayPage() {
     <TabShell
       contextPrompt={chatContext || "Tell HUMA something..."}
       forceOpen={chatOpen}
-      onChatClose={() => { setChatOpen(false); setChatContext(null); }}
+      onChatClose={() => { setChatOpen(false); setChatContext(null); setChatMode("default"); }}
+      chatMode={chatMode}
       hideBubble={aspirations.length > 0}
       sourceTab="today"
       tabContext={{
@@ -1717,6 +1719,35 @@ export default function TodayPage() {
                     {displayName(asp.clarifiedText || asp.rawText)}
                   </button>
                 ))}
+                {/* Add aspiration */}
+                <button
+                  onClick={() => {
+                    setChatMode("new-aspiration");
+                    setChatContext("What are you trying to make work?");
+                    setChatOpen(true);
+                  }}
+                  className="flex-shrink-0 cursor-pointer"
+                  style={{
+                    background: "transparent",
+                    border: "1px dashed #C8D5C9",
+                    borderRadius: "20px",
+                    padding: "10px 14px",
+                    fontSize: "13px",
+                    fontFamily: "var(--font-sans)",
+                    color: "var(--color-sage-400)",
+                    whiteSpace: "nowrap",
+                    minHeight: "44px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                  aria-label="Add aspiration"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  Add
+                </button>
               </div>
             </div>
 

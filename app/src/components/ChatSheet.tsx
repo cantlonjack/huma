@@ -16,6 +16,7 @@ import {
   updateAspirationBehaviors,
 } from "@/lib/supabase-v2";
 import { getLocalDate } from "@/lib/date-utils";
+import { getDomainTemplate, type StarterAspiration } from "@/lib/archetype-templates";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -106,9 +107,11 @@ interface ChatSheetProps {
   tabContext?: Record<string, unknown>;
   /** Pre-loaded HUMA opener message (e.g. pattern investigation). Shown once on first open. */
   initialMessage?: string;
+  /** Chat mode — "new-aspiration" starts a focused aspiration-creation conversation */
+  mode?: "default" | "new-aspiration";
 }
 
-export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tabContext, initialMessage }: ChatSheetProps) {
+export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tabContext, initialMessage, mode = "default" }: ChatSheetProps) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<RichMessage[]>([]);
   const [input, setInput] = useState("");
@@ -290,6 +293,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
           sourceTab,
           tabContext,
           dayCount,
+          ...(mode === "new-aspiration" && { chatMode: "new-aspiration" }),
         }),
       });
 
@@ -441,6 +445,22 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
   // Render the latest messages (most recent conversation)
   const recentMessages = messages.slice(-50);
 
+  // Template quick-add cards for new-aspiration mode
+  const templateSuggestions: { archetype: string; aspiration: StarterAspiration }[] = [];
+  if (mode === "new-aspiration" && loaded && recentMessages.length === 0) {
+    const archetypes = (tabContext?.archetypes as string[]) || [];
+    const existingTexts = new Set(aspirations.map(a => (a.clarifiedText || a.rawText).toLowerCase().trim()));
+    for (const arch of archetypes) {
+      const template = getDomainTemplate(arch);
+      if (!template) continue;
+      for (const starter of template.starterAspirations) {
+        if (!existingTexts.has(starter.text.toLowerCase().trim())) {
+          templateSuggestions.push({ archetype: arch, aspiration: starter });
+        }
+      }
+    }
+  }
+
   if (!open) return null;
 
   return (
@@ -531,10 +551,46 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
               />
             </div>
           ) : recentMessages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center text-center" style={{ height: "120px" }}>
+            <div className="flex flex-col items-center justify-center text-center" style={{ minHeight: "120px" }}>
               <p className="font-serif text-ink-700" style={{ fontSize: "18px", lineHeight: "1.4" }}>
-                What&apos;s on your mind?
+                {mode === "new-aspiration" ? "What are you trying to make work?" : "What\u0027s on your mind?"}
               </p>
+              {mode === "new-aspiration" && (
+                <p className="font-sans text-sage-400" style={{ fontSize: "13px", marginTop: "6px", maxWidth: "280px" }}>
+                  Describe what you want to build, change, or protect. HUMA will turn it into something operational.
+                </p>
+              )}
+              {/* Template quick-add cards */}
+              {templateSuggestions.length > 0 && (
+                <div style={{ marginTop: "20px", width: "100%", textAlign: "left" }}>
+                  <p className="font-sans" style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.14em", color: "#A8C4AA", marginBottom: "10px", textAlign: "center" }}>
+                    FROM YOUR ARCHETYPES
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {templateSuggestions.slice(0, 4).map((t, i) => (
+                      <button
+                        key={i}
+                        onClick={() => sendMessage(t.aspiration.text)}
+                        className="text-left cursor-pointer"
+                        style={{
+                          background: "#FAF8F3",
+                          border: "1px solid #E8E2D6",
+                          borderRadius: "12px",
+                          padding: "12px 16px",
+                          width: "100%",
+                        }}
+                      >
+                        <span className="font-serif" style={{ fontSize: "15px", lineHeight: "1.4", color: "#3D3B36", display: "block" }}>
+                          {t.aspiration.text}
+                        </span>
+                        <span className="font-sans" style={{ fontSize: "12px", color: "#A8C4AA", marginTop: "2px", display: "block" }}>
+                          {t.archetype} &middot; {t.aspiration.behaviors.length} behavior{t.aspiration.behaviors.length !== 1 ? "s" : ""}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             recentMessages.map((msg, idx) => {
