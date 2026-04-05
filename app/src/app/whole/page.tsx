@@ -888,36 +888,23 @@ export default function WholePage() {
         dayCount: dayNum,
       }}
     >
-      <div className="min-h-dvh bg-sand-50 flex flex-col" style={{ paddingBottom: "80px" }}>
+      <div className="min-h-dvh bg-sand-50 flex flex-col pb-20">
         {/* Header */}
-        <div className="px-6 flex items-center justify-between" style={{ paddingTop: "20px" }}>
+        <div className="px-6 flex items-center justify-between pt-5">
           <span
-            className="font-sans font-medium text-sage-500"
-            style={{ fontSize: "11px", letterSpacing: "0.4em", lineHeight: "1" }}
+            className="font-sans font-medium text-sage-500 text-[11px] tracking-[0.4em] leading-none"
           >
             HUMA
           </span>
           <div className="flex items-center gap-3">
             <span
-              className="font-sans font-medium"
-              style={{ fontSize: "11px", color: "#A8C4AA", letterSpacing: "0.1em" }}
+              className="font-sans font-medium text-[11px] text-sage-300 tracking-[0.1em]"
             >
               Day {dayNum}
             </span>
             <button
               onClick={handleManageToggle}
-              className="cursor-pointer"
-              style={{
-                width: "28px",
-                height: "28px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: manageMode ? "#EDF3ED" : "none",
-                border: "none",
-                borderRadius: "8px",
-                transition: "background 200ms",
-              }}
+              className={`cursor-pointer w-7 h-7 flex items-center justify-center border-none rounded-lg transition-[background] duration-200 ${manageMode ? "bg-[#EDF3ED]" : "bg-transparent"}`}
               aria-label={manageMode ? "Exit manage mode" : "Manage"}
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -939,18 +926,7 @@ export default function WholePage() {
             </button>
             <button
               onClick={() => setSettingsOpen(true)}
-              className="cursor-pointer"
-              style={{
-                width: "28px",
-                height: "28px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "none",
-                border: "none",
-                borderRadius: "8px",
-                transition: "background 200ms",
-              }}
+              className="cursor-pointer w-7 h-7 flex items-center justify-center bg-transparent border-none rounded-lg transition-[background] duration-200"
               aria-label="Settings"
             >
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -964,10 +940,9 @@ export default function WholePage() {
         </div>
 
         {/* Section label */}
-        <div className="px-6" style={{ marginTop: "8px" }}>
+        <div className="px-6 mt-2">
           <span
-            className="font-sans font-medium"
-            style={{ fontSize: "11px", letterSpacing: "0.18em", textTransform: "uppercase", color: "#A8C4AA" }}
+            className="font-sans font-medium text-[11px] tracking-[0.18em] uppercase text-sage-300"
           >
             WHOLE
           </span>
@@ -978,7 +953,7 @@ export default function WholePage() {
         ) : (
           <>
             {/* Profile banner */}
-            <div style={{ marginTop: "16px" }}>
+            <div className="mt-4">
               <ProfileBanner
                 name={operatorName}
                 archetypes={archetypes.length > 0 ? archetypes : undefined}
@@ -993,7 +968,7 @@ export default function WholePage() {
 
             {/* WHY Evolution suggestion */}
             {whyEvolution && whyStatement && (
-              <div style={{ marginTop: "14px" }}>
+              <div className="mt-3.5">
                 <WhyEvolution
                   originalWhy={whyStatement}
                   evolution={whyEvolution}
@@ -1006,8 +981,7 @@ export default function WholePage() {
             {/* Shape */}
             <div
               ref={containerRef}
-              className="flex items-center justify-center"
-              style={{ marginTop: "16px", width: "100%" }}
+              className="flex items-center justify-center mt-4 w-full"
             >
               <WholeShape
                 nodes={nodes}
@@ -1024,10 +998,9 @@ export default function WholePage() {
 
             {/* Empty state message */}
             {isEmpty && (
-              <div style={{ textAlign: "center", padding: "12px 24px 0" }}>
+              <div className="text-center px-6 pt-3">
                 <p
-                  className="font-serif"
-                  style={{ fontSize: "18px", fontStyle: "italic", color: "#A8C4AA", marginBottom: "12px" }}
+                  className="font-serif text-lg italic text-sage-300 mb-3"
                 >
                   Your shape starts here.
                 </p>
@@ -1036,16 +1009,7 @@ export default function WholePage() {
                     setChatShellMode("new-aspiration");
                     setChatShellOpen(true);
                   }}
-                  className="font-sans cursor-pointer"
-                  style={{
-                    fontSize: "14px",
-                    color: "#B5621E",
-                    background: "none",
-                    border: "none",
-                    textDecoration: "underline",
-                    textUnderlineOffset: "2px",
-                    padding: 0,
-                  }}
+                  className="font-sans cursor-pointer text-sm text-amber-600 bg-transparent border-none underline underline-offset-2 p-0"
                 >
                   Add your first aspiration
                 </button>
@@ -1054,25 +1018,13 @@ export default function WholePage() {
 
             {/* Add aspiration — visible when not empty */}
             {!isEmpty && (
-              <div style={{ textAlign: "center", padding: "16px 24px 0" }}>
+              <div className="text-center px-6 pt-4">
                 <button
                   onClick={() => {
                     setChatShellMode("new-aspiration");
                     setChatShellOpen(true);
                   }}
-                  className="font-sans cursor-pointer"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    fontSize: "13px",
-                    color: "var(--color-sage-500)",
-                    background: "none",
-                    border: "1px dashed #C8D5C9",
-                    borderRadius: "20px",
-                    padding: "8px 16px",
-                    minHeight: "36px",
-                  }}
+                  className="font-sans cursor-pointer inline-flex items-center gap-1.5 text-[13px] text-sage-500 bg-transparent border border-dashed border-[#C8D5C9] rounded-[20px] px-4 py-2 min-h-9"
                 >
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                     <path d="M6 1.5v9M1.5 6h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -1146,7 +1098,7 @@ export default function WholePage() {
             )}
 
             {/* Context portrait */}
-            <div className="animate-entrance-3" style={{ marginTop: "16px" }}>
+            <div className="animate-entrance-3 mt-4">
               <ContextPortrait
                 context={context}
                 onSave={handleContextSave}
@@ -1165,7 +1117,7 @@ export default function WholePage() {
 
             {/* Insight card */}
             {insight && (
-              <div style={{ marginTop: "16px" }}>
+              <div className="mt-4">
                 <InsightCard
                   insight={insight}
                   onDismiss={handleDismissInsight}
@@ -1230,39 +1182,17 @@ export default function WholePage() {
       {/* Archive undo toast */}
       {archiveToast && (
         <div
+          className="fixed bottom-[100px] left-1/2 -translate-x-1/2 bg-sand-100 text-earth-500 border-2 border-[#C8D5C9] rounded-2xl px-5 py-3 flex items-center gap-3 z-40 shadow-[0_4px_16px_rgba(0,0,0,0.08)]"
           style={{
-            position: "fixed",
-            bottom: "100px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "#F6F1E9",
-            color: "#6B6358",
-            border: "2px solid #C8D5C9",
-            borderRadius: "16px",
-            padding: "12px 20px",
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            zIndex: 40,
-            boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
             animation: "confirmation-slide-up 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
           }}
         >
-          <span className="font-sans" style={{ fontSize: "14px" }}>
+          <span className="font-sans text-sm">
             {displayName(archiveToast.label)} archived
           </span>
           <button
             onClick={handleArchiveUndo}
-            className="font-sans font-medium cursor-pointer"
-            style={{
-              background: "none",
-              border: "none",
-              color: "#B5621E",
-              fontSize: "14px",
-              padding: 0,
-              textDecoration: "underline",
-              textUnderlineOffset: "2px",
-            }}
+            className="font-sans font-medium cursor-pointer bg-transparent border-none text-amber-600 text-sm p-0 underline underline-offset-2"
           >
             Undo
           </button>

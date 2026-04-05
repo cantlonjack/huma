@@ -24,9 +24,9 @@ function statusLabel(status: Pattern["status"]): string {
 }
 
 function statusColor(status: Pattern["status"]): { bg: string; text: string } {
-  if (status === "validated") return { bg: "#E0EDE1", text: "#3A5A40" };
-  if (status === "working") return { bg: "#FFF4EC", text: "#B5621E" };
-  return { bg: "#F6F1E9", text: "#8BAF8E" };
+  if (status === "validated") return { bg: "var(--color-sage-100)", text: "var(--color-sage-700)" };
+  if (status === "working") return { bg: "var(--color-amber-100)", text: "var(--color-amber-600)" };
+  return { bg: "var(--color-sand-100)", text: "var(--color-sage-400)" };
 }
 
 function validationPercent(pattern: Pattern): number {
@@ -35,9 +35,9 @@ function validationPercent(pattern: Pattern): number {
 }
 
 function progressBarColor(status: Pattern["status"]): string {
-  if (status === "validated") return "#3A5A40";
-  if (status === "working") return "#B5621E";
-  return "#A8C4AA";
+  if (status === "validated") return "var(--color-sage-700)";
+  if (status === "working") return "var(--color-amber-600)";
+  return "var(--color-sage-300)";
 }
 
 // ─── Pattern Card ───────────────────────────────────────────────────────────
@@ -271,87 +271,36 @@ function PatternCard({
   return (
     <div
       onClick={editing ? undefined : onToggle}
-      style={{
-        background: "white",
-        border: "1px solid #DDD4C0",
-        borderRadius: "16px",
-        marginBottom: "20px",
-        overflow: "hidden",
-        cursor: editing ? "default" : hasExpandContent ? "pointer" : "default",
-      }}
+      className={`bg-white border border-sand-300 rounded-2xl mb-5 overflow-hidden ${editing ? "cursor-default" : hasExpandContent ? "cursor-pointer" : "cursor-default"}`}
     >
       {/* Header */}
-      <div
-        style={{
-          padding: "14px 16px 12px",
-          borderBottom: "1px solid #F0EBE3",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "8px",
-        }}
-      >
+      <div className="px-4 pt-3.5 pb-3 border-b border-sand-200/80 flex justify-between items-center gap-2">
         {editing ? (
           <input
             value={editName}
             onChange={e => setEditName(e.target.value)}
             onClick={e => e.stopPropagation()}
-            className="font-serif text-sage-700"
-            style={{
-              fontSize: "18px",
-              lineHeight: "1.3",
-              minWidth: 0,
-              flex: 1,
-              background: "#F6F1E9",
-              border: "1px solid #DDD4C0",
-              borderRadius: "8px",
-              padding: "4px 8px",
-              outline: "none",
-            }}
+            className="font-serif text-sage-700 text-lg leading-[1.3] min-w-0 flex-1 bg-sand-100 border border-sand-300 rounded-lg px-2 py-1 outline-none"
           />
         ) : (
           <span
-            className="font-serif text-sage-700"
-            style={{
-              fontSize: "18px",
-              lineHeight: "1.3",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              minWidth: 0,
-              flex: 1,
-            }}
+            className="font-serif text-sage-700 text-lg leading-[1.3] overflow-hidden text-ellipsis whitespace-nowrap min-w-0 flex-1"
           >
             {displayName(pattern.name)}
           </span>
         )}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, position: "relative" }}>
+        <div className="flex items-center gap-2 shrink-0 relative">
           {archetypeLabel && !editing && (
-            <span
-              className="font-sans"
-              style={{
-                fontSize: "9px",
-                fontWeight: 600,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                color: "var(--color-sage-300)",
-              }}
-            >
+            <span className="font-sans text-[9px] font-semibold tracking-[0.12em] uppercase text-sage-300">
               {archetypeLabel}
             </span>
           )}
           {!editing && (
             <span
-              className="font-sans"
+              className="font-sans text-[11px] font-semibold tracking-[0.08em] px-2.5 py-[3px] rounded-[10px] uppercase"
               style={{
-                fontSize: "11px",
-                fontWeight: 600,
-                letterSpacing: "0.08em",
-                padding: "3px 10px",
-                borderRadius: "10px",
                 background: colors.bg,
                 color: colors.text,
-                textTransform: "uppercase",
               }}
             >
               {statusLabel(pattern.status)}
@@ -359,86 +308,32 @@ function PatternCard({
           )}
           {/* Overflow menu */}
           {!editing && (
-            <div ref={menuRef} style={{ position: "relative" }}>
+            <div ref={menuRef} className="relative">
               <button
                 onClick={e => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
-                className="cursor-pointer"
-                style={{
-                  background: "none",
-                  border: "none",
-                  padding: "4px 6px",
-                  fontSize: "16px",
-                  lineHeight: 1,
-                  color: "#8C8274",
-                  letterSpacing: "2px",
-                }}
+                className="cursor-pointer bg-transparent border-none px-1.5 py-1 text-base leading-none text-ink-400 tracking-[2px]"
                 aria-label="Pattern options"
               >
                 &middot;&middot;&middot;
               </button>
               {menuOpen && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "100%",
-                    right: 0,
-                    marginTop: "4px",
-                    background: "#FAF8F3",
-                    border: "1px solid #DDD4C0",
-                    borderRadius: "12px",
-                    boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-                    zIndex: 20,
-                    minWidth: "140px",
-                    overflow: "hidden",
-                  }}
+                <div className="absolute top-full right-0 mt-1 bg-sand-50 border border-sand-300 rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] z-20 min-w-[140px] overflow-hidden"
                 >
                   <button
                     onClick={e => { e.stopPropagation(); startEditing(); }}
-                    className="font-sans cursor-pointer"
-                    style={{
-                      display: "block",
-                      width: "100%",
-                      textAlign: "left",
-                      padding: "10px 16px",
-                      fontSize: "14px",
-                      color: "#3D3B36",
-                      background: "none",
-                      border: "none",
-                      borderBottom: "1px solid #F0EBE3",
-                    }}
+                    className="font-sans cursor-pointer block w-full text-left py-2.5 px-4 text-sm text-ink-800 bg-transparent border-none border-b border-sand-200/80"
                   >
                     Edit
                   </button>
                   <button
                     onClick={e => { e.stopPropagation(); setMenuOpen(false); onArchive?.(pattern.id); }}
-                    className="font-sans cursor-pointer"
-                    style={{
-                      display: "block",
-                      width: "100%",
-                      textAlign: "left",
-                      padding: "10px 16px",
-                      fontSize: "14px",
-                      color: "#3D3B36",
-                      background: "none",
-                      border: "none",
-                      borderBottom: "1px solid #F0EBE3",
-                    }}
+                    className="font-sans cursor-pointer block w-full text-left py-2.5 px-4 text-sm text-ink-800 bg-transparent border-none border-b border-sand-200/80"
                   >
                     Archive
                   </button>
                   <button
                     onClick={e => { e.stopPropagation(); setMenuOpen(false); onRemove?.(pattern.id); }}
-                    className="font-sans cursor-pointer"
-                    style={{
-                      display: "block",
-                      width: "100%",
-                      textAlign: "left",
-                      padding: "10px 16px",
-                      fontSize: "14px",
-                      color: "var(--color-rose)",
-                      background: "none",
-                      border: "none",
-                    }}
+                    className="font-sans cursor-pointer block w-full text-left py-2.5 px-4 text-sm text-rose bg-transparent border-none"
                   >
                     Remove
                   </button>
@@ -451,94 +346,36 @@ function PatternCard({
 
       {/* Trigger + Pathway — edit mode or display mode */}
       {editing ? (
-        <div style={{ padding: "14px 16px" }} onClick={e => e.stopPropagation()}>
+        <div className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
           {/* Edit: Trigger */}
-          <div style={{ marginBottom: "14px" }}>
-            <span
-              className="font-sans"
-              style={{
-                display: "block",
-                fontSize: "9px",
-                fontWeight: 600,
-                letterSpacing: "0.18em",
-                color: "#B5621E",
-                marginBottom: "4px",
-              }}
-            >
+          <div className="mb-3.5">
+            <span className="font-sans block text-[9px] font-semibold tracking-[0.18em] text-amber-600 mb-1">
               THE DECISION
             </span>
             <input
               value={editTrigger}
               onChange={e => setEditTrigger(e.target.value)}
-              className="font-sans"
-              style={{
-                width: "100%",
-                fontSize: "15px",
-                fontWeight: 500,
-                color: "var(--color-sage-700)",
-                lineHeight: "1.4",
-                background: "#F6F1E9",
-                border: "1px solid #DDD4C0",
-                borderRadius: "8px",
-                padding: "6px 8px",
-                outline: "none",
-              }}
+              className="font-sans w-full text-[15px] font-medium text-sage-700 leading-[1.4] bg-sand-100 border border-sand-300 rounded-lg px-2 py-1.5 outline-none"
             />
           </div>
 
           {/* Edit: Golden Pathway steps */}
           <div>
-            <span
-              className="font-sans"
-              style={{
-                display: "block",
-                fontSize: "9px",
-                fontWeight: 600,
-                letterSpacing: "0.18em",
-                color: "var(--color-sage-400)",
-                marginBottom: "8px",
-              }}
-            >
+            <span className="font-sans block text-[9px] font-semibold tracking-[0.18em] text-sage-400 mb-2">
               GOLDEN PATHWAY
             </span>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div className="flex flex-col gap-2">
               {editSteps.map((step, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <div
-                    style={{
-                      width: "6px",
-                      height: "6px",
-                      borderRadius: "50%",
-                      background: "var(--color-sage-300)",
-                      flexShrink: 0,
-                    }}
-                  />
+                <div key={i} className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-sage-300 shrink-0" />
                   <input
                     value={step.text}
                     onChange={e => updateStepText(i, e.target.value)}
-                    className="font-sans text-sage-600"
-                    style={{
-                      flex: 1,
-                      fontSize: "14px",
-                      lineHeight: "1.4",
-                      background: "#F6F1E9",
-                      border: "1px solid #DDD4C0",
-                      borderRadius: "8px",
-                      padding: "4px 8px",
-                      outline: "none",
-                    }}
+                    className="font-sans text-sage-600 flex-1 text-sm leading-[1.4] bg-sand-100 border border-sand-300 rounded-lg px-2 py-1 outline-none"
                   />
                   <button
                     onClick={() => removeStep(i)}
-                    className="cursor-pointer"
-                    style={{
-                      background: "none",
-                      border: "none",
-                      fontSize: "16px",
-                      color: "#8C8274",
-                      padding: "2px 6px",
-                      lineHeight: 1,
-                    }}
+                    className="cursor-pointer bg-transparent border-none text-base text-ink-400 px-1.5 py-0.5 leading-none"
                     aria-label="Remove step"
                   >
                     &times;
@@ -547,117 +384,51 @@ function PatternCard({
               ))}
               <button
                 onClick={addStep}
-                className="font-sans cursor-pointer"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  background: "none",
-                  border: "none",
-                  padding: "4px 0",
-                  fontSize: "13px",
-                  color: "var(--color-sage-400)",
-                }}
+                className="font-sans cursor-pointer flex items-center gap-2 bg-transparent border-none py-1 text-[13px] text-sage-400"
               >
-                <span style={{ fontSize: "16px", lineHeight: 1 }}>+</span> Add step
+                <span className="text-base leading-none">+</span> Add step
               </button>
             </div>
           </div>
 
           {/* Edit: Time window */}
-          <div style={{ marginTop: "14px" }}>
-            <span
-              className="font-sans"
-              style={{
-                display: "block",
-                fontSize: "9px",
-                fontWeight: 600,
-                letterSpacing: "0.18em",
-                color: "var(--color-sage-400)",
-                marginBottom: "4px",
-              }}
-            >
+          <div className="mt-3.5">
+            <span className="font-sans block text-[9px] font-semibold tracking-[0.18em] text-sage-400 mb-1">
               TIME WINDOW
             </span>
             <input
               value={editTimeWindow}
               onChange={e => setEditTimeWindow(e.target.value)}
               placeholder="e.g. 5:15–5:45 AM"
-              className="font-sans text-sage-400"
-              style={{
-                width: "100%",
-                fontSize: "12px",
-                fontStyle: "italic",
-                background: "#F6F1E9",
-                border: "1px solid #DDD4C0",
-                borderRadius: "8px",
-                padding: "4px 8px",
-                outline: "none",
-              }}
+              className="font-sans text-sage-400 w-full text-xs italic bg-sand-100 border border-sand-300 rounded-lg px-2 py-1 outline-none"
             />
           </div>
 
           {/* Save / Cancel */}
-          <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
+          <div className="flex gap-2.5 mt-4">
             <button
               onClick={cancelEditing}
-              className="font-sans font-medium cursor-pointer"
-              style={{
-                flex: 1,
-                padding: "10px",
-                borderRadius: "10px",
-                fontSize: "14px",
-                background: "#E8E2D6",
-                color: "#6B6358",
-                border: "none",
-              }}
+              className="font-sans font-medium cursor-pointer flex-1 p-2.5 rounded-[10px] text-sm bg-sand-250 text-ink-500 border-none"
             >
               Cancel
             </button>
             <button
               onClick={saveEditing}
-              className="font-sans font-medium cursor-pointer"
-              style={{
-                flex: 1,
-                padding: "10px",
-                borderRadius: "10px",
-                fontSize: "14px",
-                background: "#B5621E",
-                color: "#FAF8F3",
-                border: "none",
-              }}
+              className="font-sans font-medium cursor-pointer flex-1 p-2.5 rounded-[10px] text-sm bg-amber-600 text-sand-50 border-none"
             >
               Save
             </button>
           </div>
         </div>
       ) : (
-        <div style={{ padding: "14px 16px" }}>
+        <div className="px-4 py-3.5">
           {/* The Decision */}
           {triggerStep && (
-            <div style={{ marginBottom: pathwaySteps.length > 0 ? "14px" : 0 }}>
-              <span
-                className="font-sans"
-                style={{
-                  display: "block",
-                  fontSize: "9px",
-                  fontWeight: 600,
-                  letterSpacing: "0.18em",
-                  color: "#B5621E",
-                  marginBottom: "4px",
-                }}
-              >
+            <div className={pathwaySteps.length > 0 ? "mb-3.5" : ""}>
+              <span className="font-sans block text-[9px] font-semibold tracking-[0.18em] text-amber-600 mb-1">
                 THE DECISION
               </span>
-              <span
-                className="font-sans"
-                style={{
-                  fontSize: "15px",
-                  fontWeight: 500,
-                  color: "var(--color-sage-700)",
-                  lineHeight: "1.4",
-                }}
-              >
+              <span className="font-sans text-[15px] font-medium text-sage-700 leading-[1.4]">
                 {triggerStep.text}
               </span>
 
@@ -667,24 +438,16 @@ function PatternCard({
                 const shared = getSharedCaption(pattern, aspirations);
                 if (dims.length === 0 && !shared) return null;
                 return (
-                  <div style={{ marginTop: "6px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <div className="mt-1.5 flex flex-col gap-1">
                     {dims.length > 0 && (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
+                      <div className="flex flex-wrap gap-2 items-center">
                         {dims.map(dim => (
-                          <div key={dim} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                          <div key={dim} className="inline-flex items-center gap-1">
                             <div
-                              style={{
-                                width: "5px",
-                                height: "5px",
-                                borderRadius: "50%",
-                                background: DIMENSION_COLORS[dim] || "#8BAF8E",
-                                flexShrink: 0,
-                              }}
+                              className="w-[5px] h-[5px] rounded-full shrink-0"
+                              style={{ background: DIMENSION_COLORS[dim] || "var(--color-sage-400)" }}
                             />
-                            <span
-                              className="font-sans"
-                              style={{ fontSize: "10px", color: "var(--color-sage-400)" }}
-                            >
+                            <span className="font-sans text-[10px] text-sage-400">
                               {DIMENSION_LABELS[dim] || dim}
                             </span>
                           </div>
@@ -692,10 +455,7 @@ function PatternCard({
                       </div>
                     )}
                     {shared && (
-                      <span
-                        className="font-sans"
-                        style={{ fontSize: "10px", fontStyle: "italic", color: "var(--color-sage-400)" }}
-                      >
+                      <span className="font-sans text-[10px] italic text-sage-400">
                         {shared}
                       </span>
                     )}
@@ -708,36 +468,14 @@ function PatternCard({
           {/* Golden Pathway */}
           {pathwaySteps.length > 0 && (
             <div>
-              <span
-                className="font-sans"
-                style={{
-                  display: "block",
-                  fontSize: "9px",
-                  fontWeight: 600,
-                  letterSpacing: "0.18em",
-                  color: "var(--color-sage-400)",
-                  marginBottom: "8px",
-                }}
-              >
+              <span className="font-sans block text-[9px] font-semibold tracking-[0.18em] text-sage-400 mb-2">
                 GOLDEN PATHWAY
               </span>
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <div className="flex flex-col gap-1.5">
                 {pathwaySteps.map((step, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                    <div
-                      style={{
-                        width: "6px",
-                        height: "6px",
-                        borderRadius: "50%",
-                        background: "var(--color-sage-300)",
-                        marginTop: "6px",
-                        flexShrink: 0,
-                      }}
-                    />
-                    <span
-                      className="font-sans text-sage-600"
-                      style={{ fontSize: "14px", lineHeight: "1.4" }}
-                    >
+                  <div key={i} className="flex items-start gap-2.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-sage-300 mt-1.5 shrink-0" />
+                    <span className="font-sans text-sage-600 text-sm leading-[1.4]">
                       {step.text}
                     </span>
                   </div>
@@ -748,36 +486,17 @@ function PatternCard({
 
           {/* Aggregate dimension row — all dimensions across all steps */}
           {allDims.length > 0 && (
-            <div
-              style={{
-                marginTop: "14px",
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "8px",
-                alignItems: "center",
-              }}
-            >
-              <span
-                className="font-sans"
-                style={{ fontSize: "11px", color: "var(--color-sage-400)" }}
-              >
+            <div className="mt-3.5 flex flex-wrap gap-2 items-center">
+              <span className="font-sans text-[11px] text-sage-400">
                 Touches
               </span>
               {allDims.map(dim => (
-                <div key={dim} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                <div key={dim} className="inline-flex items-center gap-1">
                   <div
-                    style={{
-                      width: "5px",
-                      height: "5px",
-                      borderRadius: "50%",
-                      background: DIMENSION_COLORS[dim] || "#8BAF8E",
-                      flexShrink: 0,
-                    }}
+                    className="w-[5px] h-[5px] rounded-full shrink-0"
+                    style={{ background: DIMENSION_COLORS[dim] || "var(--color-sage-400)" }}
                   />
-                  <span
-                    className="font-sans"
-                    style={{ fontSize: "11px", color: "var(--color-sage-400)" }}
-                  >
+                  <span className="font-sans text-[11px] text-sage-400">
                     {DIMENSION_LABELS[dim] || dim}
                   </span>
                 </div>
@@ -787,10 +506,7 @@ function PatternCard({
 
           {/* Time window if present (shown in collapsed state too) */}
           {pattern.timeWindow && (
-            <div
-              className="font-sans text-sage-400"
-              style={{ fontSize: "12px", marginTop: "12px", fontStyle: "italic" }}
-            >
+            <div className="font-sans text-sage-400 text-xs mt-3 italic">
               {pattern.timeWindow}
             </div>
           )}
@@ -807,37 +523,21 @@ function PatternCard({
         }}
       >
         {hasExpandContent && (
-          <div style={{ padding: "0 16px 14px", borderTop: "1px solid #F0EBE3" }}>
+          <div className="px-4 pb-3.5 border-t border-sand-200/80">
             {/* Coming Up */}
             {comingUp.length > 0 && (
-              <div style={{ paddingTop: "14px" }}>
-                <span
-                  className="font-sans"
-                  style={{
-                    display: "block",
-                    fontSize: "9px",
-                    fontWeight: 600,
-                    letterSpacing: "0.18em",
-                    color: "var(--color-sage-400)",
-                    marginBottom: "8px",
-                  }}
-                >
+              <div className="pt-3.5">
+                <span className="font-sans block text-[9px] font-semibold tracking-[0.18em] text-sage-400 mb-2">
                   COMING UP
                 </span>
-                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <div className="flex flex-col gap-1">
                   {comingUp.map((item, i) => (
                     <div key={i}>
-                      <span
-                        className="font-sans"
-                        style={{ fontSize: "13px", color: "var(--color-sage-500)", lineHeight: "1.4" }}
-                      >
+                      <span className="font-sans text-[13px] text-sage-500 leading-[1.4]">
                         {item.name}
                       </span>
                       {item.timeframe && (
-                        <span
-                          className="font-sans"
-                          style={{ fontSize: "12px", color: "var(--color-sage-400)", marginLeft: "6px" }}
-                        >
+                        <span className="font-sans text-xs text-sage-400 ml-1.5">
                           — {item.timeframe}
                         </span>
                       )}
@@ -849,34 +549,18 @@ function PatternCard({
 
             {/* Longer Arc */}
             {longerArc.length > 0 && (
-              <div style={{ paddingTop: comingUp.length > 0 ? "14px" : "14px" }}>
-                <span
-                  className="font-sans"
-                  style={{
-                    display: "block",
-                    fontSize: "9px",
-                    fontWeight: 600,
-                    letterSpacing: "0.18em",
-                    color: "var(--color-sage-400)",
-                    marginBottom: "8px",
-                  }}
-                >
+              <div className="pt-3.5">
+                <span className="font-sans block text-[9px] font-semibold tracking-[0.18em] text-sage-400 mb-2">
                   THE LONGER ARC
                 </span>
-                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <div className="flex flex-col gap-1">
                   {longerArc.map((phase, i) => (
                     <div key={i}>
-                      <span
-                        className="font-sans"
-                        style={{ fontSize: "13px", color: "var(--color-sage-500)", lineHeight: "1.4" }}
-                      >
+                      <span className="font-sans text-[13px] text-sage-500 leading-[1.4]">
                         {phase.phase}
                       </span>
                       {phase.timeframe && (
-                        <span
-                          className="font-sans"
-                          style={{ fontSize: "12px", color: "var(--color-sage-400)", marginLeft: "6px" }}
-                        >
+                        <span className="font-sans text-xs text-sage-400 ml-1.5">
                           — {phase.timeframe}
                         </span>
                       )}
@@ -890,26 +574,17 @@ function PatternCard({
       </div>
 
       {/* Validation + Sparkline */}
-      <div style={{ padding: "12px 16px", borderTop: "1px solid #F0EBE3" }}>
+      <div className="px-4 py-3 border-t border-sand-200/80">
         {/* Sparkline + progress bar row */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div className="flex items-center gap-3">
           {/* Progress bar — fills available space */}
-          <div
-            style={{
-              flex: 1,
-              height: "6px",
-              borderRadius: "3px",
-              background: "#F0EBE3",
-              overflow: "hidden",
-            }}
-          >
+          <div className="flex-1 h-1.5 rounded-[3px] bg-sand-200/80 overflow-hidden">
             <div
+              className="h-full rounded-[3px] transition-[width] duration-400"
               style={{
                 width: `${percent}%`,
-                height: "100%",
-                borderRadius: "3px",
                 background: progressBarColor(pattern.status),
-                transition: "width 400ms cubic-bezier(0.22, 1, 0.36, 1)",
+                transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
               }}
             />
           </div>
@@ -924,27 +599,11 @@ function PatternCard({
           )}
         </div>
         {/* Stats row */}
-        <div
-          className="font-sans"
-          style={{
-            fontSize: "11px",
-            color: "var(--color-sage-400)",
-            marginTop: "6px",
-            display: "flex",
-            justifyContent: "space-between",
-          }}
-        >
+        <div className="font-sans text-[11px] text-sage-400 mt-1.5 flex justify-between">
           <span>{pattern.validationCount} of {pattern.validationTarget} days</span>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div className="flex items-center gap-1.5">
             {sparkline && sparkline.trend === "rising" && (
-              <span
-                className="font-serif"
-                style={{
-                  fontSize: "11px",
-                  color: "#3A5A40",
-                  fontStyle: "italic",
-                }}
-              >
+              <span className="font-serif text-[11px] text-sage-700 italic">
                 momentum
               </span>
             )}
@@ -954,18 +613,7 @@ function PatternCard({
                   e.stopPropagation();
                   onInvestigate?.(pattern.id);
                 }}
-                className="font-serif cursor-pointer"
-                style={{
-                  fontSize: "11px",
-                  color: "#B5621E",
-                  fontStyle: "italic",
-                  background: "none",
-                  border: "none",
-                  padding: "2px 0",
-                  textDecoration: "underline",
-                  textDecorationStyle: "dotted",
-                  textUnderlineOffset: "2px",
-                }}
+                className="font-serif cursor-pointer text-[11px] text-amber-600 italic bg-transparent border-none py-0.5 underline decoration-dotted underline-offset-2"
               >
                 something changed
               </button>
@@ -977,15 +625,8 @@ function PatternCard({
 
       {/* Aspiration provenance */}
       {aspirationName && (
-        <div style={{ padding: "8px 16px 12px", borderTop: "1px solid #F0EBE3" }}>
-          <span
-            className="font-sans"
-            style={{
-              fontSize: "11px",
-              fontStyle: "italic",
-              color: "var(--color-sage-400)",
-            }}
-          >
+        <div className="px-4 pt-2 pb-3 border-t border-sand-200/80">
+          <span className="font-sans text-[11px] italic text-sage-400">
             From: {aspirationName}
           </span>
         </div>
@@ -995,54 +636,24 @@ function PatternCard({
       {mergeSuggestion && (
         <div
           onClick={(e) => e.stopPropagation()}
-          style={{
-            padding: "12px 16px",
-            borderTop: "1px solid #F0EBE3",
-            background: "#FDFAF5",
-          }}
+          className="px-4 py-3 border-t border-sand-200/80 bg-[#FDFAF5]"
         >
-          <p
-            className="font-serif"
-            style={{
-              fontSize: "13px",
-              fontStyle: "italic",
-              color: "var(--color-sage-600)",
-              lineHeight: "1.4",
-              marginBottom: "8px",
-            }}
-          >
+          <p className="font-serif text-[13px] italic text-sage-600 leading-[1.4] mb-2">
             {mergeSuggestion.sharedBehaviors.length === 1
               ? `\u201c${mergeSuggestion.sharedBehaviors[0]}\u201d also lives in ${displayName(mergeSuggestion.otherPatternName)}.`
               : `${mergeSuggestion.sharedBehaviors.length} shared behaviors with ${displayName(mergeSuggestion.otherPatternName)}.`
             }
           </p>
-          <div style={{ display: "flex", gap: "12px" }}>
+          <div className="flex gap-3">
             <button
               onClick={() => onMerge?.(pattern.id, mergeSuggestion.otherPatternId)}
-              className="font-sans cursor-pointer"
-              style={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "#B5621E",
-                background: "none",
-                border: "1px solid #B5621E",
-                borderRadius: "8px",
-                padding: "5px 14px",
-              }}
+              className="font-sans cursor-pointer text-xs font-semibold text-amber-600 bg-transparent border border-amber-600 rounded-lg py-[5px] px-3.5"
             >
               Merge
             </button>
             <button
               onClick={() => onDismissMerge?.(pattern.id, mergeSuggestion.otherPatternId)}
-              className="font-sans cursor-pointer"
-              style={{
-                fontSize: "12px",
-                fontWeight: 500,
-                color: "var(--color-sage-400)",
-                background: "none",
-                border: "none",
-                padding: "5px 8px",
-              }}
+              className="font-sans cursor-pointer text-xs font-medium text-sage-400 bg-transparent border-none py-[5px] px-2"
             >
               Keep separate
             </button>
@@ -1057,59 +668,28 @@ function PatternCard({
 
 function EmptyState({ onAddAspiration }: { onAddAspiration: () => void }) {
   return (
-    <div
-      style={{
-        padding: "48px 24px",
-        textAlign: "center",
-      }}
-    >
+    <div className="py-12 px-6 text-center">
       {/* Simple seed icon */}
-      <div
-        style={{
-          width: "56px",
-          height: "56px",
-          borderRadius: "50%",
-          background: "#E0EDE1",
-          margin: "0 auto 16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <div className="w-14 h-14 rounded-full bg-sage-100 mx-auto mb-4 flex items-center justify-center">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
           <path
             d="M12 22V12M12 12C12 9 14 6 18 4C14 6 12 9 12 12ZM12 12C12 9 10 6 6 4C10 6 12 9 12 12Z"
-            stroke="#5C7A62"
+            stroke="var(--color-sage-500)"
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
         </svg>
       </div>
-      <p
-        className="font-serif text-sage-700"
-        style={{ fontSize: "20px", lineHeight: "1.3", marginBottom: "8px" }}
-      >
+      <p className="font-serif text-sage-700 text-xl leading-[1.3] mb-2">
         Patterns emerge from your aspirations.
       </p>
-      <p
-        className="font-sans text-sage-400"
-        style={{ fontSize: "14px", lineHeight: "1.5", maxWidth: "280px", margin: "0 auto 16px" }}
-      >
+      <p className="font-sans text-sage-400 text-sm leading-normal max-w-[280px] mx-auto mb-4">
         As you check off behaviors on your production sheet, HUMA will surface the patterns that hold your days together.
       </p>
       <button
         onClick={onAddAspiration}
-        className="font-sans cursor-pointer"
-        style={{
-          fontSize: "14px",
-          color: "#B5621E",
-          background: "none",
-          border: "none",
-          textDecoration: "underline",
-          textUnderlineOffset: "2px",
-          padding: 0,
-        }}
+        className="font-sans cursor-pointer text-sm text-amber-600 bg-transparent border-none underline underline-offset-2 p-0"
       >
         Add an aspiration
       </button>
@@ -1611,36 +1191,17 @@ export default function GrowPage() {
       initialMessage={investigateMessage}
       chatMode={newAspirationOpen ? "new-aspiration" : "default"}
     >
-      <div
-        className="min-h-dvh bg-sand-50"
-        style={{ paddingTop: "24px", paddingBottom: "100px" }}
-      >
+      <div className="min-h-dvh bg-sand-50 pt-6 pb-[100px]">
         {/* Page header */}
-        <div style={{ padding: "0 16px 24px" }}>
-          <p
-            className="font-sans"
-            style={{
-              fontSize: "11px",
-              fontWeight: 600,
-              letterSpacing: "0.14em",
-              textTransform: "uppercase",
-              color: "var(--color-sage-400)",
-              marginBottom: "4px",
-            }}
-          >
+        <div className="px-4 pb-6">
+          <p className="font-sans text-[11px] font-semibold tracking-[0.14em] uppercase text-sage-400 mb-1">
             GROW
           </p>
-          <h1
-            className="font-serif text-sage-700"
-            style={{ fontSize: "26px", lineHeight: "1.2", fontWeight: 400 }}
-          >
+          <h1 className="font-serif text-sage-700 text-[26px] leading-[1.2] font-normal">
             Your patterns
           </h1>
           {!loading && patterns.length > 0 && (
-            <p
-              className="font-sans text-sage-400"
-              style={{ fontSize: "13px", marginTop: "4px" }}
-            >
+            <p className="font-sans text-sage-400 text-[13px] mt-1">
               {patterns.length} pattern{patterns.length !== 1 ? "s" : ""} &middot;{" "}
               {validated.length} validated, {working.length} working, {finding.length} finding
             </p>
@@ -1653,7 +1214,7 @@ export default function GrowPage() {
         ) : patterns.length === 0 && emergingBehaviors.length === 0 ? (
           <EmptyState onAddAspiration={() => setNewAspirationOpen(true)} />
         ) : (
-          <div style={{ padding: "0 16px" }}>
+          <div className="px-4">
             {/* Emerging behaviors — "Something forming..." */}
             {emergingBehaviors.length > 0 && (
               <EmergenceCard
@@ -1729,28 +1290,16 @@ export default function GrowPage() {
 
             {/* Monthly review — previous month's behavior grid */}
             {monthlyReview && (
-              <div style={{ marginTop: "32px" }}>
+              <div className="mt-8">
                 <MonthlyReview data={monthlyReview} />
               </div>
             )}
 
             {/* Add aspiration — subtle affordance at bottom of list */}
-            <div style={{ textAlign: "center", padding: "24px 0 8px" }}>
+            <div className="text-center pt-6 pb-2">
               <button
                 onClick={() => setNewAspirationOpen(true)}
-                className="font-sans cursor-pointer"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  fontSize: "13px",
-                  color: "var(--color-sage-400)",
-                  background: "none",
-                  border: "1px dashed #C8D5C9",
-                  borderRadius: "20px",
-                  padding: "8px 16px",
-                  minHeight: "36px",
-                }}
+                className="font-sans cursor-pointer inline-flex items-center gap-1.5 text-[13px] text-sage-400 bg-transparent border border-dashed border-sage-200 rounded-[20px] px-4 py-2 min-h-9"
               >
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path d="M6 1.5v9M1.5 6h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -1776,39 +1325,17 @@ export default function GrowPage() {
       {/* Archive undo toast */}
       {archiveToast && (
         <div
+          className="fixed bottom-[100px] left-1/2 -translate-x-1/2 bg-sand-100 text-ink-500 border-2 border-sage-200 rounded-2xl px-5 py-3 flex items-center gap-3 z-40 shadow-[0_4px_16px_rgba(0,0,0,0.08)]"
           style={{
-            position: "fixed",
-            bottom: "100px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "#F6F1E9",
-            color: "#6B6358",
-            border: "2px solid #C8D5C9",
-            borderRadius: "16px",
-            padding: "12px 20px",
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            zIndex: 40,
-            boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
             animation: "confirmation-slide-up 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
           }}
         >
-          <span className="font-sans" style={{ fontSize: "14px" }}>
+          <span className="font-sans text-sm">
             {displayName(archiveToast.name)} archived
           </span>
           <button
             onClick={handleArchiveUndo}
-            className="font-sans font-medium cursor-pointer"
-            style={{
-              background: "none",
-              border: "none",
-              color: "#B5621E",
-              fontSize: "14px",
-              padding: 0,
-              textDecoration: "underline",
-              textUnderlineOffset: "2px",
-            }}
+            className="font-sans font-medium cursor-pointer bg-transparent border-none text-amber-600 text-sm p-0 underline underline-offset-2"
           >
             Undo
           </button>
@@ -1841,7 +1368,7 @@ function groupByDimension(
     if (!groups.has(key)) {
       groups.set(key, {
         label: dim === "other" ? "Other" : DIMENSION_LABELS[dim],
-        color: dim === "other" ? "#8C8274" : DIMENSION_COLORS[dim],
+        color: dim === "other" ? "var(--color-ink-400)" : DIMENSION_COLORS[dim],
         patterns: [],
       });
     }
@@ -1886,46 +1413,19 @@ function DimensionFold({
   const [open, setOpen] = useState(false);
 
   return (
-    <div style={{ marginBottom: "12px" }}>
+    <div className="mb-3">
       <button
         onClick={() => setOpen(!open)}
-        className="font-sans cursor-pointer"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          width: "100%",
-          background: "none",
-          border: "none",
-          padding: "10px 0",
-          textAlign: "left",
-        }}
+        className="font-sans cursor-pointer flex items-center gap-2 w-full bg-transparent border-none py-2.5 text-left"
       >
         <div
-          style={{
-            width: "8px",
-            height: "8px",
-            borderRadius: "50%",
-            background: color,
-            flexShrink: 0,
-          }}
+          className="w-2 h-2 rounded-full shrink-0"
+          style={{ background: color }}
         />
-        <span
-          style={{
-            fontSize: "13px",
-            fontWeight: 600,
-            color: "var(--color-ink-600)",
-            flex: 1,
-          }}
-        >
+        <span className="text-[13px] font-semibold text-ink-600 flex-1">
           {label}
         </span>
-        <span
-          style={{
-            fontSize: "12px",
-            color: "var(--color-sage-400)",
-          }}
-        >
+        <span className="text-xs text-sage-400">
           {patterns.length} pattern{patterns.length !== 1 ? "s" : ""}
         </span>
         <svg
@@ -2022,26 +1522,17 @@ function PatternSection({
   const foldedGroups = needsFolding ? groupByDimension(folded, aspirations) : new Map();
 
   return (
-    <div style={{ marginBottom: "32px" }}>
-      <div style={{ marginBottom: "16px" }}>
-        <h2
-          className="font-serif text-sage-700"
-          style={{ fontSize: "18px", fontWeight: 400 }}
-        >
+    <div className="mb-8">
+      <div className="mb-4">
+        <h2 className="font-serif text-sage-700 text-lg font-normal">
           {title}
         </h2>
         {whySubtitle ? (
-          <p
-            className="font-serif"
-            style={{ fontSize: "13px", lineHeight: "1.4", fontStyle: "italic", color: "var(--color-sage-500)" }}
-          >
+          <p className="font-serif text-[13px] leading-[1.4] italic text-sage-500">
             {whySubtitle}
           </p>
         ) : (
-          <p
-            className="font-sans text-sage-400"
-            style={{ fontSize: "13px", lineHeight: "1.4" }}
-          >
+          <p className="font-sans text-sage-400 text-[13px] leading-[1.4]">
             {subtitle}
           </p>
         )}
@@ -2067,22 +1558,8 @@ function PatternSection({
 
       {/* Dimension folds for overflow */}
       {foldedGroups.size > 0 && (
-        <div
-          style={{
-            marginTop: "8px",
-            paddingTop: "16px",
-            borderTop: "1px solid #EDE6D8",
-          }}
-        >
-          <p
-            className="font-serif"
-            style={{
-              fontSize: "13px",
-              fontStyle: "italic",
-              color: "var(--color-sage-400)",
-              marginBottom: "8px",
-            }}
-          >
+        <div className="mt-2 pt-4 border-t border-sand-200">
+          <p className="font-serif text-[13px] italic text-sage-400 mb-2">
             {folded.length} more by dimension
           </p>
           {Array.from(foldedGroups.entries()).map(([key, group]) => (

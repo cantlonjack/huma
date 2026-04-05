@@ -83,7 +83,7 @@ function ArchetypeSelectionScreen({
     return (
       <div className="min-h-dvh bg-sand-50 flex flex-col items-center px-6 py-10 animate-fade-in">
         {/* Progress hint */}
-        <p className="font-serif text-earth-300 mb-6" style={{ fontSize: "10px", letterSpacing: "0.06em" }}>
+        <p className="font-serif text-earth-300 mb-6 text-[10px] tracking-[0.06em]">
           2 of 2
         </p>
         <div className="w-full max-w-md">
@@ -91,12 +91,11 @@ function ArchetypeSelectionScreen({
           <div className="flex justify-between items-start mb-8">
             <div className="flex-1">
               <h2
-                className="font-serif text-earth-800 mb-2"
-                style={{ fontSize: "22px", lineHeight: "1.3" }}
+                className="font-serif text-earth-800 mb-2 text-[22px] leading-[1.3]"
               >
                 Your starting shape
               </h2>
-              <p className="font-sans text-earth-400" style={{ fontSize: "13px" }}>
+              <p className="font-sans text-earth-400 text-[13px]">
                 I can pre-fill some starter aspirations from your archetypes, or you can start blank and build through conversation.
               </p>
             </div>
@@ -109,26 +108,13 @@ function ArchetypeSelectionScreen({
           <div className="flex gap-3 mb-6">
             <button
               onClick={() => onContinueWithTemplate(selected, capitalSketch)}
-              className="flex-1 py-3.5 rounded-full font-sans text-base font-medium text-sand-50 cursor-pointer"
-              style={{
-                backgroundColor: "#B5621E",
-                transition: "background-color 200ms cubic-bezier(0.22, 1, 0.36, 1)",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#C87A3A")}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#B5621E")}
+              className="flex-1 py-3.5 rounded-full font-sans text-base font-medium text-sand-50 cursor-pointer bg-amber-600 transition-colors duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-amber-500"
             >
               Start with suggestions
             </button>
             <button
               onClick={() => onContinueBlank(selected)}
-              className="flex-1 py-3.5 rounded-full font-sans text-base font-medium text-sage-700 cursor-pointer"
-              style={{
-                border: "1.5px solid var(--color-sage-300)",
-                backgroundColor: "transparent",
-                transition: "background-color 200ms cubic-bezier(0.22, 1, 0.36, 1)",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--color-sage-50, #f0f5f0)")}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+              className="flex-1 py-3.5 rounded-full font-sans text-base font-medium text-sage-700 cursor-pointer border-[1.5px] border-sage-300 bg-transparent transition-colors duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-sage-50"
             >
               Start blank
             </button>
@@ -136,8 +122,7 @@ function ArchetypeSelectionScreen({
 
           {/* Editability promise */}
           <p
-            className="text-center font-sans text-sage-400"
-            style={{ fontSize: "12px" }}
+            className="text-center font-sans text-sage-400 text-xs"
           >
             This shapes your starting point. You can change it anytime from Whole.
           </p>
@@ -153,7 +138,7 @@ function ArchetypeSelectionScreen({
   return (
     <div className="min-h-dvh bg-sand-50 flex flex-col items-center px-6 py-10 animate-fade-in">
       {/* Progress hint */}
-      <p className="font-serif text-earth-300 mb-4" style={{ fontSize: "10px", letterSpacing: "0.06em" }}>
+      <p className="font-serif text-earth-300 mb-4 text-[10px] tracking-[0.06em]">
         1 of 2
       </p>
       {/* Mini-preview floats top-right on desktop */}
@@ -165,12 +150,11 @@ function ArchetypeSelectionScreen({
         {/* Header */}
         <div className="text-center mb-10">
           <h1
-            className="font-serif text-earth-800 mb-2"
-            style={{ fontSize: "24px", lineHeight: "1.3" }}
+            className="font-serif text-earth-800 mb-2 text-2xl leading-[1.3]"
           >
             What kind of life are you running?
           </h1>
-          <p className="font-sans text-earth-400" style={{ fontSize: "14px" }}>
+          <p className="font-sans text-earth-400 text-sm">
             Pick what fits. You can change this anytime.
           </p>
         </div>
@@ -192,8 +176,7 @@ function ArchetypeSelectionScreen({
         {/* Orientation Section */}
         <div className="mb-28">
           <p
-            className="font-sans text-earth-300 mb-3"
-            style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em" }}
+            className="font-sans text-earth-300 mb-3 text-[10px] uppercase tracking-[0.08em]"
           >
             How you move
           </p>
@@ -214,27 +197,20 @@ function ArchetypeSelectionScreen({
       {/* Fixed bottom actions — stays visible while cards scroll */}
       <div
         className="fixed bottom-0 left-0 right-0 px-6 pb-6 pt-3 z-20"
-        style={{ background: "linear-gradient(transparent, #FAF8F3 30%)" }}
+        style={{ background: "linear-gradient(transparent, var(--color-sand-50) 30%)" }}
       >
         <div className="max-w-2xl mx-auto flex flex-col items-center gap-2">
           {hasSelection && (
             <button
               onClick={handleContinue}
-              className="w-full py-3.5 rounded-full font-sans text-base font-medium text-sand-50 cursor-pointer animate-fade-in"
-              style={{
-                backgroundColor: "#B5621E",
-                transition: "background-color 200ms cubic-bezier(0.22, 1, 0.36, 1)",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#C87A3A")}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#B5621E")}
+              className="w-full py-3.5 rounded-full font-sans text-base font-medium text-sand-50 cursor-pointer animate-fade-in bg-amber-600 transition-colors duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-amber-500"
             >
               Continue
             </button>
           )}
           <button
             onClick={onSkip}
-            className="font-sans text-earth-400 cursor-pointer"
-            style={{ fontSize: "13px", textDecoration: "underline" }}
+            className="font-sans text-earth-400 cursor-pointer text-[13px] underline"
           >
             Skip — just talk
           </button>
@@ -265,12 +241,11 @@ function MessageBubble({
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4 animate-fade-in`}>
       <div
-        className={`max-w-[85%] rounded-2xl px-5 py-3.5 ${
+        className={`max-w-[85%] rounded-2xl px-5 py-3.5 leading-[1.7] ${
           isUser
             ? "bg-sand-100 text-earth-800"
             : "bg-white text-earth-800"
         }`}
-        style={{ lineHeight: "1.7" }}
       >
         <p className={`${isUser ? "font-sans" : "font-serif text-lg"} text-base whitespace-pre-wrap`}>{message.content}</p>
 

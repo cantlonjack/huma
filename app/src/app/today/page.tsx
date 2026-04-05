@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { Aspiration, Behavior, FutureAction, Insight, SheetEntry } from "@/types/v2";
+import { DIMENSION_COLORS } from "@/types/v2";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { displayName } from "@/lib/display-name";
@@ -41,18 +42,7 @@ interface CheckedEntry {
   behavior_text: string;
 }
 
-// ─── Dimension dot colors per design system ─────────────────────────────────
-
-const DIMENSION_DOT_COLORS: Record<string, string> = {
-  body: "#3A5A40",
-  people: "#5C7A62",
-  money: "#B5621E",
-  home: "#2E6B8A",
-  growth: "#8A6D1E",
-  joy: "#A04040",
-  purpose: "#3A5A40",
-  identity: "#8BAF8E",
-};
+// ─── Dimension dot colors — uses shared DIMENSION_COLORS from types/v2 ─────
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -126,35 +116,27 @@ function AspirationQuickLook({
     <>
       <div className="fixed inset-0 z-[55] bg-black/15 animate-overlay-in" onClick={onClose} />
       <div
-        className="fixed bottom-0 left-0 right-0 z-[56] bg-sand-50 rounded-t-2xl border-t border-sand-300 animate-slide-up"
-        style={{ height: "40dvh" }}
+        className="fixed bottom-0 left-0 right-0 z-[56] bg-sand-50 rounded-t-2xl border-t border-sand-300 animate-slide-up h-[40dvh]"
       >
         <div
-          className="flex justify-center items-center cursor-pointer"
-          style={{ paddingTop: "8px", paddingBottom: "4px", minHeight: "44px" }}
+          className="flex justify-center items-center cursor-pointer pt-2 pb-1 min-h-[44px]"
           onClick={onClose}
         >
-          <div
-            className="bg-sand-300"
-            style={{ width: "36px", height: "4px", borderRadius: "2px" }}
-          />
+          <div className="bg-sand-300 w-9 h-1 rounded-sm" />
         </div>
-        <div className="px-6 pb-6 overflow-y-auto" style={{ maxHeight: "calc(40dvh - 40px)" }}>
-          <h3
-            className="font-serif text-sage-700"
-            style={{ fontSize: "20px", lineHeight: "1.3", wordBreak: "break-word" }}
-          >
+        <div className="px-6 pb-6 overflow-y-auto max-h-[calc(40dvh-40px)]">
+          <h3 className="font-serif text-sage-700 text-xl leading-tight break-words">
             {displayName(aspiration.clarifiedText || aspiration.rawText)}
           </h3>
           {aspiration.clarifiedText && aspiration.clarifiedText !== aspiration.rawText && (
-            <p className="font-sans text-ink-500 mt-1" style={{ fontSize: "14px", lineHeight: "1.4" }}>
+            <p className="font-sans text-ink-500 mt-1 text-sm leading-snug">
               {aspiration.rawText}
             </p>
           )}
-          <p className="font-sans text-sage-600" style={{ fontSize: "14px", marginTop: "8px" }}>
+          <p className="font-sans text-sage-600 text-sm mt-2">
             {aspiration.behaviors.length} behaviors active
           </p>
-          <p className="font-sans text-sage-400" style={{ fontSize: "14px", marginTop: "4px" }}>
+          <p className="font-sans text-sage-400 text-sm mt-1">
             {weekCompletions}/7 days this week
           </p>
         </div>
@@ -271,23 +253,15 @@ function PatternRouteCard({
   // No behavior chain fallback
   if (steps.length === 0) {
     return (
-      <div
-        style={{
-          background: "white",
-          border: "1px solid #DDD4C0",
-          borderRadius: "16px",
-          margin: "0 16px 12px",
-          overflow: "hidden",
-        }}
-      >
-        <div style={{ padding: "14px 16px 10px", borderBottom: "1px solid #F0EBE3" }}>
-          <span className="font-serif text-sage-700" style={{ fontSize: "18px", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+      <div className="bg-white border border-sand-300 rounded-2xl mx-4 mb-3 overflow-hidden">
+        <div className="px-4 pt-3.5 pb-2.5 border-b border-sand-200">
+          <span className="font-serif text-sage-700 text-lg block truncate">
             {displayName(aspiration.clarifiedText || aspiration.rawText)}
           </span>
         </div>
-        <div style={{ padding: "14px 16px" }}>
-          <div style={{ padding: "10px 16px" }}>
-            <span className="font-sans text-sage-600" style={{ fontSize: "14px" }}>
+        <div className="px-4 pt-3.5 pb-4">
+          <div className="px-4 py-2.5">
+            <span className="font-sans text-sage-600 text-sm">
               {displayName(aspiration.clarifiedText || aspiration.rawText)}
             </span>
           </div>
@@ -295,13 +269,9 @@ function PatternRouteCard({
             onClick={() =>
               onOpenChat(`Let's map out ${displayName(aspiration.clarifiedText || aspiration.rawText)}. What does doing this actually look like day to day?`)
             }
-            className="cursor-pointer"
-            style={{ padding: "4px 16px 10px" }}
+            className="cursor-pointer px-4 pt-1 pb-2.5"
           >
-            <span
-              className="font-serif italic text-sage-400"
-              style={{ fontSize: "13px" }}
-            >
+            <span className="font-serif italic text-sage-400 text-[13px]">
               Still mapping your route.
             </span>
           </button>
@@ -314,33 +284,14 @@ function PatternRouteCard({
   const estimatedMinutes = (aspiration as unknown as Record<string, unknown>).estimated_minutes as number | undefined;
 
   return (
-    <div
-      style={{
-        background: "white",
-        border: "1px solid #DDD4C0",
-        borderRadius: "16px",
-        margin: "0 16px 12px",
-        overflow: "hidden",
-      }}
-    >
+    <div className="bg-white border border-sand-300 rounded-2xl mx-4 mb-3 overflow-hidden">
       {/* Card header */}
-      <div
-        style={{
-          padding: "14px 16px 10px",
-          borderBottom: "1px solid #F0EBE3",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "baseline",
-        }}
-      >
-        <span
-          className="font-serif text-sage-700"
-          style={{ fontSize: "18px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0, flex: 1 }}
-        >
+      <div className="px-4 pt-3.5 pb-2.5 border-b border-sand-200 flex justify-between items-baseline">
+        <span className="font-serif text-sage-700 text-lg truncate min-w-0 flex-1">
           {displayName(aspiration.clarifiedText || aspiration.rawText)}
         </span>
         {estimatedMinutes && (
-          <span className="font-sans text-sage-400 flex-shrink-0" style={{ fontSize: "12px", marginLeft: "8px" }}>
+          <span className="font-sans text-sage-400 flex-shrink-0 text-xs ml-2">
             ~{estimatedMinutes} min
           </span>
         )}
@@ -350,17 +301,12 @@ function PatternRouteCard({
       {showCompletion ? (
         <button
           onClick={() => setShowCompletion(false)}
-          className="w-full cursor-pointer"
-          style={{
-            padding: "20px 16px",
-            background: "linear-gradient(135deg, #EBF3EC, #F6F1E9)",
-            textAlign: "center",
-          }}
+          className="w-full cursor-pointer py-5 px-4 bg-gradient-to-br from-sage-50 to-sand-100 text-center"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ margin: "0 auto 8px" }}>
-            <path d="M5 13l4 4L19 7" stroke="#5C7A62" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="mx-auto mb-2">
+            <path d="M5 13l4 4L19 7" stroke="var(--color-sage-500)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span className="font-serif italic text-sage-600" style={{ fontSize: "16px" }}>
+          <span className="font-serif italic text-sage-600 text-base">
             Done for today.
           </span>
         </button>
@@ -376,31 +322,17 @@ function PatternRouteCard({
               <button
                 key={`${aspiration.id}-${i}`}
                 onClick={() => handleToggle(step.text)}
-                className="w-full text-left cursor-pointer"
+                className={`w-full text-left cursor-pointer flex items-start gap-2 px-4 transition-[background] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isTrigger ? "py-3" : "py-2.5"} ${isTrigger && !isChecked ? "bg-gradient-to-br from-amber-100/40 to-amber-100" : "bg-transparent"}`}
                 style={{
-                  padding: isTrigger ? "12px 16px" : "10px 16px",
-                  borderBottom: i < steps.length - 1 ? "1px solid #F0EBE3" : "none",
-                  background: isTrigger && !isChecked ? "linear-gradient(135deg, #FFFAF4, #FFF4E6)" : "transparent",
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "8px",
-                  transition: "background 300ms cubic-bezier(0.22, 1, 0.36, 1)",
+                  borderBottom: i < steps.length - 1 ? "1px solid var(--color-sand-200)" : "none",
                 }}
               >
                 {/* Text content */}
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="flex-1 min-w-0">
                   {/* Trigger badge */}
                   {isTrigger && (
                     <span
-                      className={`font-sans ${isChecked ? "text-ink-200" : "text-amber-600"}`}
-                      style={{
-                        display: "block",
-                        fontSize: "9px",
-                        fontWeight: 600,
-                        letterSpacing: "0.18em",
-                        marginBottom: "2px",
-                        transition: "color 300ms cubic-bezier(0.22, 1, 0.36, 1)",
-                      }}
+                      className={`block font-sans text-[9px] font-semibold tracking-[0.18em] mb-0.5 transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isChecked ? "text-ink-200" : "text-amber-600"}`}
                     >
                       THE DECISION
                     </span>
@@ -408,17 +340,7 @@ function PatternRouteCard({
 
                   {/* Step text */}
                   <span
-                    className={`font-sans ${isChecked ? "text-ink-200" : (isTrigger ? "text-sage-700" : "text-sage-600")}`}
-                    style={{
-                      fontSize: isTrigger ? "15px" : "14px",
-                      fontWeight: isTrigger ? 500 : 400,
-                      textDecorationLine: isChecked ? "line-through" : "none",
-                      textDecorationColor: "#C4BAA8",
-                      textDecorationThickness: "1px",
-                      display: "block",
-                      lineHeight: "1.4",
-                      transition: "color 300ms cubic-bezier(0.22, 1, 0.36, 1)",
-                    }}
+                    className={`block font-sans leading-snug transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isTrigger ? "text-[15px] font-medium" : "text-sm"} ${isChecked ? "text-ink-200 line-through decoration-ink-200 decoration-1" : (isTrigger ? "text-sage-700" : "text-sage-600")}`}
                   >
                     {step.text}
                   </span>
@@ -428,14 +350,7 @@ function PatternRouteCard({
                     const caption = triggerCaption(step, allAspirations, aspiration.id);
                     return caption ? (
                       <span
-                        className={`font-sans ${isChecked ? "text-ink-200" : "text-sage-400"}`}
-                        style={{
-                          display: "block",
-                          fontSize: "11px",
-                          fontStyle: "italic",
-                          marginTop: "2px",
-                          transition: "color 300ms cubic-bezier(0.22, 1, 0.36, 1)",
-                        }}
+                        className={`block font-sans text-[11px] italic mt-0.5 transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isChecked ? "text-ink-200" : "text-sage-400"}`}
                       >
                         {caption}
                       </span>
@@ -444,16 +359,7 @@ function PatternRouteCard({
 
                   {/* Micro-counter */}
                   {showMicro && wc && (
-                    <span
-                      className="font-sans animate-fade-in"
-                      style={{
-                        display: "block",
-                        fontSize: "11px",
-                        fontStyle: "italic",
-                        color: "var(--color-sage-400)",
-                        marginTop: "2px",
-                      }}
-                    >
+                    <span className="block font-sans text-[11px] italic text-sage-400 mt-0.5 animate-fade-in">
                       {step.text} &middot; {wc.completed} of 7 days this week
                     </span>
                   )}
@@ -461,27 +367,15 @@ function PatternRouteCard({
 
                 {/* Dimension dots */}
                 {step.dimensions.length > 0 && (
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "3px",
-                      alignItems: "center",
-                      flexShrink: 0,
-                      marginTop: isTrigger ? "10px" : "2px",
-                    }}
-                  >
+                  <div className={`flex gap-[3px] items-center flex-shrink-0 ${isTrigger ? "mt-2.5" : "mt-0.5"}`}>
                     {step.dimensions.map(dim => (
                       <div
                         key={dim}
                         title={dim}
-                        className={glowingStep === step.text ? "animate-dim-glow" : ""}
+                        className={`size-1.5 rounded-full transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${glowingStep === step.text ? "animate-dim-glow" : ""}`}
                         style={{
-                          width: "6px",
-                          height: "6px",
-                          borderRadius: "50%",
-                          background: DIMENSION_DOT_COLORS[dim] || "#8BAF8E",
+                          background: DIMENSION_COLORS[dim as keyof typeof DIMENSION_COLORS] || "var(--color-sage-400)",
                           opacity: isChecked && glowingStep !== step.text ? 0.35 : 1,
-                          transition: "opacity 300ms cubic-bezier(0.22, 1, 0.36, 1)",
                         }}
                       />
                     ))}
@@ -517,29 +411,17 @@ function PatternRouteCard({
           <>
             {/* Dimension summary */}
             {allDims.length > 0 && (
-              <div
-                style={{
-                  padding: "6px 14px 0",
-                  borderTop: "1px solid #F0EBE3",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
-                <div style={{ display: "flex", gap: "3px", flexShrink: 0 }}>
+              <div className="px-3.5 pt-1.5 border-t border-sand-200 flex items-center gap-1.5">
+                <div className="flex gap-[3px] flex-shrink-0">
                   {allDims.map(dim => (
                     <div
                       key={dim}
-                      style={{
-                        width: "5px",
-                        height: "5px",
-                        borderRadius: "50%",
-                        background: DIMENSION_DOT_COLORS[dim] || "#8BAF8E",
-                      }}
+                      className="size-[5px] rounded-full"
+                      style={{ background: DIMENSION_COLORS[dim as keyof typeof DIMENSION_COLORS] || "var(--color-sage-400)" }}
                     />
                   ))}
                 </div>
-                <span className="font-sans text-sage-400" style={{ fontSize: "11px" }}>
+                <span className="font-sans text-sage-400 text-[11px]">
                   Touches {allDims.map(d => LABELS[d] || d).join(", ")}
                 </span>
               </div>
@@ -547,16 +429,10 @@ function PatternRouteCard({
 
             {/* Window + validation strip */}
             <div
-              style={{
-                padding: allDims.length > 0 ? "6px 14px 10px" : "10px 14px",
-                borderTop: allDims.length > 0 ? "none" : "1px solid #F0EBE3",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
+              className={`px-3.5 flex justify-between items-center ${allDims.length > 0 ? "pt-1.5 pb-2.5" : "py-2.5 border-t border-sand-200"}`}
             >
               {/* Left: timing */}
-              <span className="font-sans text-sage-400" style={{ fontSize: "12px" }}>
+              <span className="font-sans text-sage-400 text-xs">
                 {aspiration.triggerData?.window
                   ? `${aspiration.triggerData.window}${aspiration.triggerData.failureNote ? ` · ${aspiration.triggerData.failureNote}` : ""}`
                   : ""}
@@ -564,11 +440,7 @@ function PatternRouteCard({
 
               {/* Right: validation */}
               <span
-                className="font-sans"
-                style={{
-                  fontSize: "12px",
-                  color: validationStatus === "adjusting" ? "#B5621E" : (validationStatus === "active" ? "var(--color-sage-400)" : "var(--color-sage-500)"),
-                }}
+                className={`font-sans text-xs ${validationStatus === "adjusting" ? "text-amber-600" : (validationStatus === "active" ? "text-sage-400" : "text-sage-500")}`}
               >
                 {thirtyDayCount}/30 &middot; {validationStatus}
               </span>
@@ -598,31 +470,19 @@ function RerouteCard({
     : `Completed ${weekCompletions} of 7 days this week`;
 
   return (
-    <div
-      style={{
-        borderLeft: "3px solid #B5621E",
-        background: "var(--color-amber-100)",
-        borderRadius: "0 12px 12px 0",
-        padding: "14px 16px",
-        margin: "0 16px 12px",
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-        <span
-          className="font-sans"
-          style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.15em", color: "#B5621E" }}
-        >
+    <div className="border-l-[3px] border-l-amber-600 bg-amber-100 rounded-r-xl px-4 py-3.5 mx-4 mb-3">
+      <div className="flex justify-between items-baseline">
+        <span className="font-sans text-[11px] font-semibold tracking-[0.15em] text-amber-600">
           REROUTE NEEDED
         </span>
-        <span className="font-sans text-sage-600" style={{ fontSize: "13px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "60%" }}>{name}</span>
+        <span className="font-sans text-sage-600 text-[13px] truncate max-w-[60%]">{name}</span>
       </div>
-      <p className="font-sans italic text-sage-500" style={{ fontSize: "13px", marginTop: "6px" }}>
+      <p className="font-sans italic text-sage-500 text-[13px] mt-1.5">
         {reason}
       </p>
       <button
         onClick={() => onOpenChat(`Let's look at ${name}. It's been stalling — what's getting in the way?`)}
-        className="font-sans cursor-pointer"
-        style={{ fontSize: "13px", color: "#B5621E", marginTop: "4px", background: "none", border: "none", padding: "8px 0", minHeight: "44px" }}
+        className="font-sans cursor-pointer text-[13px] text-amber-600 mt-1 bg-transparent border-none py-2 min-h-[44px]"
       >
         Adjust route &rarr;
       </button>
@@ -642,31 +502,20 @@ function InsightCard({
   onDismiss: () => void;
 }) {
   return (
-    <div
-      className="animate-entrance-2"
-      style={{
-        background: "var(--color-sand-100)",
-        borderLeft: "3px solid var(--color-sage-600)",
-        borderRadius: "0 12px 12px 0",
-        padding: "14px 16px",
-        margin: "0 16px 12px",
-      }}
-    >
-      <p className="font-serif text-ink-700" style={{ fontSize: "15px", lineHeight: "1.6" }}>
+    <div className="animate-entrance-2 bg-sand-100 border-l-[3px] border-l-sage-600 rounded-r-xl px-4 py-3.5 mx-4 mb-3">
+      <p className="font-serif text-ink-700 text-[15px] leading-relaxed">
         {insight.text}
       </p>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
+      <div className="flex justify-between items-center mt-2.5">
         <button
           onClick={onTellMore}
-          className="font-sans font-medium text-sage-500 cursor-pointer hover:text-sage-700 transition-colors"
-          style={{ fontSize: "13px", background: "none", border: "none", padding: "8px 0", minHeight: "44px" }}
+          className="font-sans font-medium text-sage-500 cursor-pointer hover:text-sage-700 transition-colors text-[13px] bg-transparent border-none py-2 min-h-[44px]"
         >
           Tell me more &rarr;
         </button>
         <button
           onClick={onDismiss}
-          className="font-sans text-sage-300 cursor-pointer hover:text-sage-500 transition-colors"
-          style={{ fontSize: "16px", background: "none", border: "none", padding: "8px", minHeight: "44px", minWidth: "44px", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}
+          className="font-sans text-sage-300 cursor-pointer hover:text-sage-500 transition-colors text-base bg-transparent border-none p-2 min-h-[44px] min-w-[44px] flex items-center justify-center leading-none"
           aria-label="Dismiss insight"
         >
           &times;
@@ -728,62 +577,24 @@ function ComingUpSection({ items }: { items: ComingUpItem[] }) {
   if (items.length === 0) return null;
 
   return (
-    <div style={{ padding: "0 16px", marginTop: "12px", marginBottom: "16px" }}>
-      <span
-        className="font-sans"
-        style={{
-          fontSize: "11px",
-          fontWeight: 600,
-          letterSpacing: "0.22em",
-          color: "var(--color-ink-300)",
-          display: "block",
-          marginBottom: "10px",
-        }}
-      >
+    <div className="px-4 mt-3 mb-4">
+      <span className="block font-sans text-[11px] font-semibold tracking-[0.22em] text-ink-300 mb-2.5">
         COMING UP
       </span>
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div className="flex flex-col gap-2">
         {items.map((item, i) => (
           <div
             key={i}
-            style={{
-              borderLeft: "2px solid var(--color-sage-300)",
-              background: "var(--color-sand-100)",
-              borderRadius: "0 8px 8px 0",
-              padding: "12px 16px",
-            }}
+            className="border-l-2 border-l-sage-300 bg-sand-100 rounded-r-lg px-4 py-3"
           >
-            <span
-              className="font-sans"
-              style={{
-                fontSize: "11px",
-                color: "var(--color-sage-400)",
-                letterSpacing: "0.05em",
-              }}
-            >
+            <span className="font-sans text-[11px] text-sage-400 tracking-wide">
               {item.aspirationName} &middot; {item.action.timeframe}
             </span>
-            <p
-              className="font-serif"
-              style={{
-                fontSize: "16px",
-                lineHeight: "1.4",
-                color: "var(--color-ink-700)",
-                marginTop: "4px",
-              }}
-            >
+            <p className="font-serif text-base leading-snug text-ink-700 mt-1">
               {item.action.name}
             </p>
             {item.action.detail && (
-              <p
-                className="font-sans"
-                style={{
-                  fontSize: "13px",
-                  lineHeight: "1.5",
-                  color: "var(--color-ink-500)",
-                  marginTop: "2px",
-                }}
-              >
+              <p className="font-sans text-[13px] leading-normal text-ink-500 mt-0.5">
                 {item.action.detail}
               </p>
             )}
@@ -808,47 +619,25 @@ function StandaloneBehaviorRow({
   return (
     <button
       onClick={onToggle}
-      className="w-full cursor-pointer"
-      style={{
-        background: "white",
-        border: "1px solid #DDD4C0",
-        borderRadius: "10px",
-        padding: "10px 16px",
-        margin: "0 16px 6px",
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        maxWidth: "calc(100% - 32px)",
-        transition: "background 300ms cubic-bezier(0.22, 1, 0.36, 1)",
-      }}
+      className="w-full cursor-pointer bg-white border border-sand-300 rounded-[10px] px-4 py-2.5 mx-4 mb-1.5 flex items-center gap-3 max-w-[calc(100%-32px)] transition-[background] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
     >
       {/* Text */}
       <span
-        className={`font-sans flex-1 text-left ${isChecked ? "text-ink-200" : "text-sage-600"}`}
-        style={{
-          fontSize: "14px",
-          textDecorationLine: isChecked ? "line-through" : "none",
-          textDecorationColor: "#C4BAA8",
-          textDecorationThickness: "1px",
-          transition: "color 300ms cubic-bezier(0.22, 1, 0.36, 1)",
-        }}
+        className={`font-sans flex-1 text-left text-sm transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isChecked ? "text-ink-200 line-through decoration-ink-200 decoration-1" : "text-sage-600"}`}
       >
         {entry.behavior_text}
       </span>
 
       {/* Dimension dots */}
       {entry.dimensions && entry.dimensions.length > 0 && (
-        <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+        <div className="flex gap-1 flex-shrink-0">
           {entry.dimensions.map(dim => (
             <div
               key={dim}
+              className="size-1.5 rounded-full transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
               style={{
-                width: "6px",
-                height: "6px",
-                borderRadius: "50%",
-                background: DIMENSION_DOT_COLORS[dim] || "#8BAF8E",
+                background: DIMENSION_COLORS[dim as keyof typeof DIMENSION_COLORS] || "var(--color-sage-400)",
                 opacity: isChecked ? 0.35 : 1,
-                transition: "opacity 300ms cubic-bezier(0.22, 1, 0.36, 1)",
               }}
             />
           ))}
@@ -876,15 +665,7 @@ function CompiledEntryRow({
 
   return (
     <div
-      style={{
-        borderLeft: isTrigger ? "3px solid #B5621E" : "3px solid transparent",
-        background: isTrigger
-          ? "var(--color-sand-100)"
-          : "transparent",
-        borderRadius: isTrigger ? "0 8px 8px 0" : "0",
-        padding: isTrigger ? "20px 20px" : "18px 20px 18px 23px",
-        transition: "background 200ms cubic-bezier(0.22, 1, 0.36, 1)",
-      }}
+      className={`transition-[background] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${isTrigger ? "border-l-[3px] border-l-amber-600 bg-sand-100 rounded-r-lg p-5" : "border-l-[3px] border-l-transparent bg-transparent py-[18px] pr-5 pl-[23px]"}`}
     >
       {/* Tap row */}
       <div
@@ -896,17 +677,7 @@ function CompiledEntryRow({
       >
         {/* Headline — Cormorant Garamond */}
         <span
-          className={`font-serif ${isChecked ? "text-ink-200" : (isTrigger ? "text-ink-900" : "text-ink-800")}`}
-          style={{
-            fontSize: isTrigger ? "19px" : "17px",
-            lineHeight: "1.3",
-            fontWeight: isTrigger ? 600 : 500,
-            display: "block",
-            textDecorationLine: isChecked ? "line-through" : "none",
-            textDecorationColor: "#C4BAA8",
-            textDecorationThickness: "1px",
-            transition: "color 300ms cubic-bezier(0.22, 1, 0.36, 1)",
-          }}
+          className={`block font-serif leading-tight transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isTrigger ? "text-[19px] font-semibold" : "text-[17px] font-medium"} ${isChecked ? "text-ink-200 line-through decoration-ink-200 decoration-1" : (isTrigger ? "text-ink-900" : "text-ink-800")}`}
         >
           {entry.headline || entry.behaviorText}
         </span>
@@ -914,16 +685,8 @@ function CompiledEntryRow({
         {/* Detail preview — Source Sans 3, visible without tap */}
         {hasDetail && !isChecked && (
           <p
-            className="font-sans"
-            style={{
-              fontSize: "14px",
-              lineHeight: "1.5",
-              color: "var(--color-ink-500)",
-              marginTop: "4px",
-              maxHeight: expanded ? "200px" : "1.5em",
-              overflow: "hidden",
-              transition: "max-height 250ms cubic-bezier(0.22, 1, 0.36, 1)",
-            }}
+            className="font-sans text-sm leading-normal text-ink-500 mt-1 overflow-hidden transition-[max-height] duration-[250ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+            style={{ maxHeight: expanded ? "200px" : "1.5em" }}
           >
             {entry.detail as string}
           </p>
@@ -936,16 +699,9 @@ function CompiledEntryRow({
             tabIndex={0}
             onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
             onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); setExpanded(true); } }}
-            className="cursor-pointer"
-            style={{
-              padding: "4px 0 0",
-              display: "block",
-            }}
+            className="block cursor-pointer pt-1"
           >
-            <span
-              className="font-sans"
-              style={{ fontSize: "12px", color: "var(--color-ink-300)" }}
-            >
+            <span className="font-sans text-xs text-ink-300">
               more &darr;
             </span>
           </span>
@@ -953,17 +709,14 @@ function CompiledEntryRow({
 
         {/* Dimension dots — inline below text */}
         {entry.dimensions && entry.dimensions.length > 0 && (
-          <div style={{ display: "flex", gap: "5px", marginTop: "8px" }}>
+          <div className="flex gap-[5px] mt-2">
             {entry.dimensions.map(dim => (
               <div
                 key={dim}
+                className="size-1.5 rounded-full transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
                 style={{
-                  width: "6px",
-                  height: "6px",
-                  borderRadius: "50%",
-                  background: DIMENSION_DOT_COLORS[dim] || "#8BAF8E",
+                  background: DIMENSION_COLORS[dim as keyof typeof DIMENSION_COLORS] || "var(--color-sage-400)",
                   opacity: isChecked ? 0.35 : 1,
-                  transition: "opacity 300ms cubic-bezier(0.22, 1, 0.36, 1)",
                 }}
               />
             ))}
@@ -989,55 +742,26 @@ function TransitionCard({
   const names = signal.decliningAspirations.map(a => a.name);
 
   return (
-    <div
-      style={{
-        margin: "0 16px 20px",
-        padding: "16px 20px",
-        background: "var(--color-sand-100)",
-        borderRadius: "12px",
-        borderLeft: "3px solid var(--color-ink-300)",
-      }}
-    >
-      <p
-        className="font-serif text-ink-700"
-        style={{ fontSize: "17px", lineHeight: "1.35", margin: 0 }}
-      >
+    <div className="mx-4 mb-5 px-5 py-4 bg-sand-100 rounded-xl border-l-[3px] border-l-ink-300">
+      <p className="font-serif text-ink-700 text-[17px] leading-tight">
         Something shifted
       </p>
-      <p
-        className="font-sans text-ink-400"
-        style={{ fontSize: "13px", lineHeight: "1.5", marginTop: "6px" }}
-      >
+      <p className="font-sans text-ink-400 text-[13px] leading-normal mt-1.5">
         {count === 2
           ? `${names[0]} and ${names[1]} both dropped in the same stretch.`
           : `${count} parts of your system dropped at once — ${names.slice(0, 2).join(", ")}${count > 2 ? `, and ${count - 2} more` : ""}.`}
         {" "}That&apos;s not discipline. That&apos;s context.
       </p>
-      <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
+      <div className="flex gap-3 mt-3">
         <button
           onClick={onOpen}
-          className="font-sans cursor-pointer"
-          style={{
-            fontSize: "13px",
-            fontWeight: 600,
-            color: "var(--color-amber-600)",
-            background: "none",
-            border: "none",
-            padding: 0,
-          }}
+          className="font-sans cursor-pointer text-[13px] font-semibold text-amber-600 bg-transparent border-none p-0"
         >
           Let&apos;s look at it
         </button>
         <button
           onClick={onDismiss}
-          className="font-sans cursor-pointer"
-          style={{
-            fontSize: "13px",
-            color: "var(--color-ink-300)",
-            background: "none",
-            border: "none",
-            padding: 0,
-          }}
+          className="font-sans cursor-pointer text-[13px] text-ink-300 bg-transparent border-none p-0"
         >
           Not now
         </button>
@@ -1585,40 +1309,20 @@ export default function TodayPage() {
         ...(transitionSignal && chatOpen && { transition: transitionSignal }),
       }}
     >
-      <div className="min-h-dvh bg-sand-50 flex flex-col" style={{ paddingBottom: "140px" }}>
+      <div className="min-h-dvh bg-sand-50 flex flex-col pb-[140px]">
         {/* Header bar — 44px */}
-        <div
-          style={{
-            height: "44px",
-            borderBottom: "1px solid #DDD4C0",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "0 16px",
-          }}
-        >
-          <span
-            className="font-sans font-medium text-sage-500"
-            style={{ fontSize: "11px", letterSpacing: "0.4em", lineHeight: "1" }}
-          >
+        <div className="h-[44px] border-b border-sand-300 flex justify-between items-center px-4">
+          <span className="font-sans font-medium text-sage-500 text-[11px] tracking-[0.4em] leading-none">
             H U M A
           </span>
-          <span className="font-sans text-sage-400" style={{ fontSize: "11px" }}>
+          <span className="font-sans text-sage-400 text-[11px]">
             {formatHeaderDate(date)} &middot; Day {dayCount}
           </span>
         </div>
 
         {/* Section label: TODAY */}
-        <div style={{ padding: "16px 16px 8px" }}>
-          <span
-            className="font-sans"
-            style={{
-              fontSize: "11px",
-              fontWeight: 600,
-              letterSpacing: "0.22em",
-              color: "var(--color-ink-300)",
-            }}
-          >
+        <div className="px-4 pt-4 pb-2">
+          <span className="font-sans text-[11px] font-semibold tracking-[0.22em] text-ink-300">
             TODAY
           </span>
         </div>
@@ -1628,51 +1332,24 @@ export default function TodayPage() {
           <TodaySkeleton />
         ) : aspirations.length === 0 ? (
           /* ─── Empty State ─── */
-          <div
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "24px",
-              padding: "0 24px",
-            }}
-          >
+          <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6">
             {/* SVG illustration */}
             <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
               <circle cx="40" cy="40" r="38" stroke="var(--color-sage-200)" strokeWidth="1.5" strokeDasharray="6 4" />
               <circle cx="40" cy="40" r="4" fill="var(--color-sage-300)" />
             </svg>
 
-            <p
-              className="font-serif italic text-sage-600"
-              style={{ fontSize: "20px", textAlign: "center", maxWidth: "240px" }}
-            >
+            <p className="font-serif italic text-sage-600 text-xl text-center max-w-60">
               Nothing scheduled yet.
             </p>
 
-            <p
-              className="font-sans text-sage-400"
-              style={{ fontSize: "14px", textAlign: "center", maxWidth: "260px", lineHeight: "1.5" }}
-            >
+            <p className="font-sans text-sage-400 text-sm text-center max-w-[260px] leading-normal">
               Start a conversation and HUMA will build your first day.
             </p>
 
             <button
               onClick={() => router.push("/start?fresh=1")}
-              className="font-sans cursor-pointer"
-              style={{
-                width: "100%",
-                maxWidth: "280px",
-                background: "var(--color-amber-600)",
-                color: "white",
-                fontSize: "15px",
-                fontWeight: 600,
-                borderRadius: "8px",
-                padding: "14px",
-                border: "none",
-              }}
+              className="font-sans cursor-pointer w-full max-w-[280px] bg-amber-600 text-white text-[15px] font-semibold rounded-lg py-3.5 border-none"
             >
               What&apos;s going on?
             </button>
@@ -1681,13 +1358,13 @@ export default function TodayPage() {
           <>
             {/* Status Line */}
             {activeCount > 0 && (
-              <div className="animate-entrance-1" style={{ padding: "0 16px 8px" }}>
+              <div className="animate-entrance-1 px-4 pb-2">
                 {adjustingCount > 0 ? (
-                  <span className="font-sans" style={{ fontSize: "13px", color: "#B5621E" }}>
+                  <span className="font-sans text-[13px] text-amber-600">
                     &#9679; {adjustingCount} need{adjustingCount === 1 ? "s" : ""} attention
                   </span>
                 ) : (
-                  <span className="font-sans text-sage-500" style={{ fontSize: "13px" }}>
+                  <span className="font-sans text-sage-500 text-[13px]">
                     <span className="text-sage-400">&#9679;</span> On route &middot; {activeCount} pattern{activeCount !== 1 ? "s" : ""} active
                   </span>
                 )}
@@ -1695,26 +1372,13 @@ export default function TodayPage() {
             )}
 
             {/* Aspiration Ribbon */}
-            <div className="hide-scrollbar overflow-x-auto" style={{ marginBottom: "12px", WebkitOverflowScrolling: "touch" }}>
-              <div className="flex gap-2 animate-entrance-1" style={{ paddingLeft: "16px", paddingRight: "16px" }}>
+            <div className="hide-scrollbar overflow-x-auto mb-3" style={{ WebkitOverflowScrolling: "touch" }}>
+              <div className="flex gap-2 animate-entrance-1 px-4">
                 {aspirations.map(asp => (
                   <button
                     key={asp.id}
                     onClick={() => setQuickLookAspiration(asp)}
-                    className="flex-shrink-0 cursor-pointer"
-                    style={{
-                      background: "var(--color-sand-100)",
-                      border: "1px solid #DDD4C0",
-                      borderRadius: "20px",
-                      padding: "10px 14px",
-                      fontSize: "13px",
-                      fontFamily: "var(--font-sans)",
-                      color: "var(--color-sage-600)",
-                      whiteSpace: "nowrap",
-                      minHeight: "44px",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
+                    className="flex-shrink-0 cursor-pointer bg-sand-100 border border-sand-300 rounded-full px-3.5 py-2.5 text-[13px] font-sans text-sage-600 whitespace-nowrap min-h-[44px] flex items-center"
                   >
                     {displayName(asp.clarifiedText || asp.rawText)}
                   </button>
@@ -1726,21 +1390,7 @@ export default function TodayPage() {
                     setChatContext("What are you trying to make work?");
                     setChatOpen(true);
                   }}
-                  className="flex-shrink-0 cursor-pointer"
-                  style={{
-                    background: "transparent",
-                    border: "1px dashed #C8D5C9",
-                    borderRadius: "20px",
-                    padding: "10px 14px",
-                    fontSize: "13px",
-                    fontFamily: "var(--font-sans)",
-                    color: "var(--color-sage-400)",
-                    whiteSpace: "nowrap",
-                    minHeight: "44px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                  }}
+                  className="flex-shrink-0 cursor-pointer bg-transparent border border-dashed border-sage-200 rounded-full px-3.5 py-2.5 text-[13px] font-sans text-sage-400 whitespace-nowrap min-h-[44px] flex items-center gap-1"
                   aria-label="Add aspiration"
                 >
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -1762,22 +1412,8 @@ export default function TodayPage() {
 
             {/* Through-line header */}
             {throughLine && compiledEntries.length > 0 && (
-              <div
-                className="animate-entrance-2"
-                style={{
-                  padding: "0 20px 20px",
-                }}
-              >
-                <p
-                  className="font-serif italic"
-                  style={{
-                    fontSize: "16px",
-                    lineHeight: "1.55",
-                    color: "var(--color-ink-600)",
-                    maxWidth: "480px",
-                    letterSpacing: "0.01em",
-                  }}
-                >
+              <div className="animate-entrance-2 px-5 pb-5">
+                <p className="font-serif italic text-base leading-relaxed text-ink-600 max-w-[480px] tracking-[0.01em]">
                   {throughLine}
                 </p>
               </div>
@@ -1794,14 +1430,8 @@ export default function TodayPage() {
 
             {/* Compiled Sheet Entries */}
             {compiledEntries.length > 0 ? (
-              <div style={{ margin: "0 16px 16px" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "6px",
-                  }}
-                >
+              <div className="mx-4 mb-4">
+                <div className="flex flex-col gap-1.5">
                   {compiledEntries.map((entry, i) => {
                     const isChecked = checkedEntries.has(`${entry.aspirationId}:${entry.behaviorKey}`);
                     return (
@@ -1824,11 +1454,8 @@ export default function TodayPage() {
               </div>
             ) : sheetCompiling ? (
               /* Compiling indicator — subtle, not a spinner */
-              <div style={{ padding: "0 16px 12px" }}>
-                <p
-                  className="font-serif italic text-sage-400 animate-entrance-2"
-                  style={{ fontSize: "14px" }}
-                >
+              <div className="px-4 pb-3">
+                <p className="font-serif italic text-sage-400 animate-entrance-2 text-sm">
                   Building your day...
                 </p>
               </div>
@@ -1887,16 +1514,8 @@ export default function TodayPage() {
             {/* Standalone Behaviors (conditional) */}
             {standaloneEntries.length > 0 && (
               <>
-                <div style={{ padding: "16px 16px 8px" }}>
-                  <span
-                    className="font-sans"
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      letterSpacing: "0.22em",
-                      color: "var(--color-ink-300)",
-                    }}
-                  >
+                <div className="px-4 pt-4 pb-2">
+                  <span className="font-sans text-[11px] font-semibold tracking-[0.22em] text-ink-300">
                     TODAY&apos;S BEHAVIORS
                   </span>
                 </div>
@@ -1913,20 +1532,10 @@ export default function TodayPage() {
 
             {/* Notification settings link — only for subscribed operators */}
             {pushState === "subscribed" && (
-              <div style={{ padding: "24px 16px 0", textAlign: "center" }}>
+              <div className="px-4 pt-6 text-center">
                 <button
                   onClick={() => setNotifSettingsOpen(true)}
-                  className="font-sans cursor-pointer"
-                  style={{
-                    fontSize: 12,
-                    color: "#8A7D6B",
-                    background: "none",
-                    border: "none",
-                    padding: 0,
-                    textDecoration: "underline",
-                    textDecorationColor: "#DDD4C0",
-                    textUnderlineOffset: "3px",
-                  }}
+                  className="font-sans cursor-pointer text-xs text-earth-400 bg-transparent border-none p-0 underline decoration-sand-300 underline-offset-[3px]"
                 >
                   Notification settings
                 </button>
@@ -1938,45 +1547,18 @@ export default function TodayPage() {
         {/* Bottom Prompt Bar — persistent, above nav */}
         {!loading && aspirations.length > 0 && (
           <div
-            className="fixed left-0 right-0 z-40"
-            style={{
-              bottom: "calc(56px + env(safe-area-inset-bottom, 0px))",
-              background: "var(--color-sand-50)",
-              borderTop: "1px solid #DDD4C0",
-              padding: "10px 16px",
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-            }}
+            className="fixed left-0 right-0 z-40 bg-sand-50 border-t border-sand-300 px-4 py-2.5 flex items-center gap-2.5"
+            style={{ bottom: "calc(56px + env(safe-area-inset-bottom, 0px))" }}
           >
             <button
               onClick={() => openChatWithContext(null)}
-              className="flex-1 text-left cursor-pointer"
-              style={{
-                background: "white",
-                border: "1px solid #DDD4C0",
-                borderRadius: "20px",
-                padding: "8px 14px",
-                fontSize: "14px",
-                fontFamily: "var(--font-sans)",
-                color: "var(--color-sage-300)",
-              }}
+              className="flex-1 text-left cursor-pointer bg-white border border-sand-300 rounded-full px-3.5 py-2 text-sm font-sans text-sage-300"
             >
               Tell HUMA something...
             </button>
             <button
               onClick={() => openChatWithContext(null)}
-              className="cursor-pointer flex-shrink-0"
-              style={{
-                background: "var(--color-amber-600)",
-                borderRadius: "50%",
-                width: "32px",
-                height: "32px",
-                border: "none",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              className="cursor-pointer flex-shrink-0 bg-amber-600 rounded-full size-8 border-none flex items-center justify-center"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="19" x2="12" y2="5" />
