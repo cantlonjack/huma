@@ -5,7 +5,7 @@ import type { DimensionKey } from "@/types/v2";
 import ArchetypeCard from "@/components/onboarding/ArchetypeCard";
 import WholeMiniPreview from "@/components/onboarding/WholeMiniPreview";
 import CapitalSketch from "@/components/onboarding/CapitalSketch";
-import { DOMAIN_TEMPLATES, ORIENTATION_TEMPLATES } from "@/lib/archetype-templates";
+import { DOMAIN_TEMPLATES, ORIENTATION_TEMPLATES } from "@/data/archetype-templates";
 
 export default function ArchetypeSelectionScreen({
   onContinueWithTemplate,

@@ -16,7 +16,7 @@ import {
   updateAspirationBehaviors,
 } from "@/lib/supabase-v2";
 import { getLocalDate } from "@/lib/date-utils";
-import { getDomainTemplate, type StarterAspiration } from "@/lib/archetype-templates";
+import { getDomainTemplate, type StarterAspiration } from "@/data/archetype-templates";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 

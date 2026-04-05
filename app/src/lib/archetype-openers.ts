@@ -1,4 +1,4 @@
-import { getDomainTemplate } from "./archetype-templates";
+import { getDomainTemplate } from "@/data/archetype-templates";
 
 // ─── Archetype-Aware Opening Messages ──────────────────────────────────────
 // When the operator selects archetypes, HUMA opens with context instead of

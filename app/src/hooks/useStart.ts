@@ -8,7 +8,7 @@ import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { migrateLocalStorageToSupabase } from "@/lib/supabase-v2";
 import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
-import { prePopulateFromArchetypes } from "@/lib/archetype-templates";
+import { prePopulateFromArchetypes } from "@/data/archetype-templates";
 import { getArchetypeOpener, getTemplateAspirationNames } from "@/lib/archetype-openers";
 
 // ---- Palette Acknowledgments ------------------------------------------------

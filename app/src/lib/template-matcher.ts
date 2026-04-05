@@ -1,4 +1,4 @@
-import { decompositionTemplates, type DecompositionTemplate, type AspirationVariant } from "@/engine/decomposition-templates";
+import { decompositionTemplates, type DecompositionTemplate, type AspirationVariant } from "@/data/decomposition-templates";
 
 /**
  * Match operator aspiration text to the closest decomposition template.

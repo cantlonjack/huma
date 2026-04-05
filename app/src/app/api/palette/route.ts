@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { paletteConcepts } from "@/engine/palette-concepts";
+import { paletteConcepts } from "@/data/palette-concepts";
 import type { PaletteConcept } from "@/types/v2";
 
 // Adapt engine concepts to V2 type (same shape, different module)

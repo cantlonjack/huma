@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { DOMAIN_TEMPLATES, ORIENTATION_TEMPLATES } from "@/lib/archetype-templates";
+import { DOMAIN_TEMPLATES, ORIENTATION_TEMPLATES } from "@/data/archetype-templates";
 
 interface ArchetypeSelectorProps {
   open: boolean;
