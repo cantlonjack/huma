@@ -53,21 +53,17 @@ export default function CanvasRegenerate({ onGenerated, existingCanvas }: Canvas
   }, [onGenerated]);
 
   return (
-    <div className="mx-6" style={{ marginTop: "20px" }}>
+    <div className="mx-6 mt-5">
       {/* Section header */}
-      <div className="flex items-center justify-between" style={{ marginBottom: "12px" }}>
-        <span
-          className="font-sans font-medium"
-          style={{ fontSize: "11px", letterSpacing: "0.18em", textTransform: "uppercase", color: "#A8C4AA" }}
-        >
+      <div className="flex items-center justify-between mb-3">
+        <span className="font-sans font-medium text-[11px] tracking-[0.18em] uppercase text-sage-300">
           LIVING CANVAS
         </span>
 
         {state !== "generating" && (
           <button
             onClick={regenerate}
-            className="font-sans text-sage-600 hover:text-sage-700 transition-colors"
-            style={{ fontSize: "12px", letterSpacing: "0.05em" }}
+            className="font-sans text-sage-600 hover:text-sage-700 transition-colors text-xs tracking-[0.05em]"
           >
             {canvas ? "Refresh" : "Generate from your data"}
           </button>
@@ -76,29 +72,10 @@ export default function CanvasRegenerate({ onGenerated, existingCanvas }: Canvas
 
       {/* Generating state */}
       {state === "generating" && (
-        <div
-          className="rounded-xl flex items-center justify-center"
-          style={{
-            background: "#F5F1EA",
-            padding: "32px 24px",
-            minHeight: "180px",
-          }}
-        >
+        <div className="rounded-xl flex items-center justify-center bg-sand-100 px-6 py-8 min-h-[180px]">
           <div className="flex flex-col items-center gap-3">
-            <div
-              className="rounded-full"
-              style={{
-                width: "32px",
-                height: "32px",
-                border: "2px solid var(--color-sage-300)",
-                borderTopColor: "var(--color-sage-600)",
-                animation: "spin 1s linear infinite",
-              }}
-            />
-            <span
-              className="font-serif"
-              style={{ fontSize: "14px", fontStyle: "italic", color: "#8C8274" }}
-            >
+            <div className="rounded-full w-8 h-8 border-2 border-sage-300 border-t-sage-600 animate-spin" />
+            <span className="font-serif text-sm italic text-earth-400">
               Reading your patterns...
             </span>
           </div>
@@ -107,14 +84,8 @@ export default function CanvasRegenerate({ onGenerated, existingCanvas }: Canvas
 
       {/* Error state */}
       {state === "error" && error && (
-        <div
-          className="rounded-xl"
-          style={{
-            background: "#F5F1EA",
-            padding: "16px 20px",
-          }}
-        >
-          <p className="font-sans" style={{ fontSize: "13px", color: "#8C8274" }}>
+        <div className="rounded-xl bg-sand-100 px-5 py-4">
+          <p className="font-sans text-[13px] text-earth-400">
             {error}
           </p>
         </div>
@@ -123,33 +94,20 @@ export default function CanvasRegenerate({ onGenerated, existingCanvas }: Canvas
       {/* Canvas result: capital radar + essence */}
       {state === "done" && canvas && (
         <div
-          className="rounded-xl"
-          style={{
-            background: "#F5F1EA",
-            padding: "24px 20px",
-            animation: "entrance 600ms cubic-bezier(0.22, 1, 0.36, 1)",
-          }}
+          className="rounded-xl bg-sand-100 px-5 py-6"
+          style={{ animation: "entrance 600ms cubic-bezier(0.22, 1, 0.36, 1)" }}
         >
           {/* Essence phrase */}
           {canvas.essence?.phrase && (
-            <p
-              className="font-serif text-center"
-              style={{
-                fontSize: "16px",
-                fontStyle: "italic",
-                color: "#3A5A40",
-                lineHeight: 1.5,
-                marginBottom: "20px",
-              }}
-            >
+            <p className="font-serif text-center text-base italic text-sage-700 leading-normal mb-5">
               &ldquo;{canvas.essence.phrase}&rdquo;
             </p>
           )}
 
           {/* Capital Radar */}
           {canvas.capitalProfile && canvas.capitalProfile.length > 0 && (
-            <div className="flex justify-center" style={{ marginBottom: "16px" }}>
-              <Suspense fallback={<div style={{ width: 240, height: 240 }} />}>
+            <div className="flex justify-center mb-4">
+              <Suspense fallback={<div className="w-60 h-60" />}>
                 <CapitalRadar
                   profile={canvas.capitalProfile}
                   size={240}
@@ -162,27 +120,17 @@ export default function CanvasRegenerate({ onGenerated, existingCanvas }: Canvas
 
           {/* QoL nodes */}
           {canvas.qolNodes && canvas.qolNodes.length > 0 && (
-            <div style={{ marginTop: "16px" }}>
-              <span
-                className="font-sans font-medium"
-                style={{ fontSize: "10px", letterSpacing: "0.15em", color: "#A8C4AA", textTransform: "uppercase" }}
-              >
+            <div className="mt-4">
+              <span className="font-sans font-medium text-[10px] tracking-[0.15em] text-sage-300 uppercase">
                 Quality of Life
               </span>
-              <div className="flex flex-wrap gap-2" style={{ marginTop: "8px" }}>
+              <div className="flex flex-wrap gap-2 mt-2">
                 {canvas.qolNodes.map((node, i) => {
                   const text = typeof node === "string" ? node : node.statement;
                   return (
                     <span
                       key={i}
-                      className="font-sans rounded-full"
-                      style={{
-                        fontSize: "12px",
-                        padding: "4px 12px",
-                        background: "#EBF3EC",
-                        border: "1px solid #C4D9C6",
-                        color: "#3A5A40",
-                      }}
+                      className="font-sans rounded-full text-xs px-3 py-1 bg-sage-50 border border-sage-200 text-sage-700"
                     >
                       {text}
                     </span>
@@ -194,25 +142,15 @@ export default function CanvasRegenerate({ onGenerated, existingCanvas }: Canvas
 
           {/* Production nodes */}
           {canvas.productionNodes && canvas.productionNodes.length > 0 && (
-            <div style={{ marginTop: "12px" }}>
-              <span
-                className="font-sans font-medium"
-                style={{ fontSize: "10px", letterSpacing: "0.15em", color: "#A8C4AA", textTransform: "uppercase" }}
-              >
+            <div className="mt-3">
+              <span className="font-sans font-medium text-[10px] tracking-[0.15em] text-sage-300 uppercase">
                 What You&apos;re Building
               </span>
-              <div className="flex flex-wrap gap-2" style={{ marginTop: "8px" }}>
+              <div className="flex flex-wrap gap-2 mt-2">
                 {canvas.productionNodes.map((node, i) => (
                   <span
                     key={i}
-                    className="font-sans rounded-full"
-                    style={{
-                      fontSize: "12px",
-                      padding: "4px 12px",
-                      background: "#F5F1EA",
-                      border: "1px solid #D9D0C4",
-                      color: "#6B6358",
-                    }}
+                    className="font-sans rounded-full text-xs px-3 py-1 bg-sand-100 border border-sand-300 text-earth-500"
                   >
                     {node}
                   </span>
@@ -223,17 +161,7 @@ export default function CanvasRegenerate({ onGenerated, existingCanvas }: Canvas
 
           {/* Closing */}
           {canvas.closing && (
-            <p
-              className="font-serif"
-              style={{
-                fontSize: "13px",
-                fontStyle: "italic",
-                color: "#8C8274",
-                lineHeight: 1.5,
-                marginTop: "16px",
-                textAlign: "center",
-              }}
-            >
+            <p className="font-serif text-[13px] italic text-earth-400 leading-normal mt-4 text-center">
               {canvas.closing}
             </p>
           )}
@@ -244,24 +172,12 @@ export default function CanvasRegenerate({ onGenerated, existingCanvas }: Canvas
       {state === "idle" && (
         <button
           onClick={regenerate}
-          className="w-full rounded-xl text-center transition-colors hover:bg-sand-200"
-          style={{
-            background: "#F5F1EA",
-            padding: "24px 20px",
-            border: "1px dashed #C4D9C6",
-            cursor: "pointer",
-          }}
+          className="w-full rounded-xl text-center transition-colors hover:bg-sand-200 bg-sand-100 px-5 py-6 border border-dashed border-sage-200 cursor-pointer"
         >
-          <p
-            className="font-serif"
-            style={{ fontSize: "15px", fontStyle: "italic", color: "#5C7A62" }}
-          >
+          <p className="font-serif text-[15px] italic text-sage-500">
             See your Living Canvas
           </p>
-          <p
-            className="font-sans"
-            style={{ fontSize: "12px", color: "#A89E90", marginTop: "4px" }}
-          >
+          <p className="font-sans text-xs text-earth-300 mt-1">
             Generated from your actual behavioral data
           </p>
         </button>

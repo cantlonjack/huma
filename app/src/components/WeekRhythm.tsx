@@ -32,29 +32,13 @@ export default function WeekRhythm({ dayCounts, disruption, onDisruptionTap }: W
   const today = new Date().getDay(); // 0=Sun..6=Sat
 
   return (
-    <div style={{ padding: "0 14px" }}>
+    <div className="px-3.5">
       {/* Toggle */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="cursor-pointer"
-        style={{
-          background: "none",
-          border: "none",
-          padding: "6px 0 2px",
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-        }}
+        className="cursor-pointer bg-transparent border-none px-0 pt-1.5 pb-0.5 flex items-center gap-1"
       >
-        <span
-          className="font-sans"
-          style={{
-            fontSize: "10px",
-            fontWeight: 500,
-            letterSpacing: "0.12em",
-            color: "var(--color-sage-400)",
-          }}
-        >
+        <span className="font-sans text-[10px] font-medium tracking-[0.12em] text-sage-400">
           RHYTHM
         </span>
         <svg
@@ -73,63 +57,26 @@ export default function WeekRhythm({ dayCounts, disruption, onDisruptionTap }: W
 
       {/* Rhythm row */}
       {expanded && (
-        <div
-          className="animate-fade-in"
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "12px",
-            padding: "4px 0 6px",
-          }}
-        >
+        <div className="animate-fade-in flex justify-center gap-3 pt-1 pb-1.5">
           {DAYS.map(dow => {
             const count = dayCounts[dow] || 0;
             const { fill, border } = dotStyle(count);
             const isToday = dow === today;
 
             return (
-              <div
-                key={dow}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: "3px",
-                }}
-              >
+              <div key={dow} className="flex flex-col items-center gap-[3px]">
                 {/* Completion dot */}
                 <div
-                  style={{
-                    width: "12px",
-                    height: "12px",
-                    borderRadius: "50%",
-                    background: fill,
-                    border,
-                    transition: "all 200ms cubic-bezier(0.22, 1, 0.36, 1)",
-                  }}
+                  className="w-3 h-3 rounded-full transition-all duration-200"
+                  style={{ background: fill, border }}
                 />
                 {/* Day label */}
-                <span
-                  className="font-sans"
-                  style={{
-                    fontSize: "9px",
-                    color: "var(--color-sage-400)",
-                    lineHeight: 1,
-                  }}
-                >
+                <span className="font-sans text-[9px] text-sage-400 leading-none">
                   {DAY_LABELS[dow]}
                 </span>
                 {/* Today indicator */}
                 {isToday && (
-                  <div
-                    style={{
-                      width: "3px",
-                      height: "3px",
-                      borderRadius: "50%",
-                      background: "var(--color-sage-400)",
-                      marginTop: "-1px",
-                    }}
-                  />
+                  <div className="w-[3px] h-[3px] rounded-full bg-sage-400 -mt-px" />
                 )}
               </div>
             );
@@ -141,22 +88,9 @@ export default function WeekRhythm({ dayCounts, disruption, onDisruptionTap }: W
       {expanded && disruption && (
         <button
           onClick={onDisruptionTap}
-          className="cursor-pointer"
-          style={{
-            background: "none",
-            border: "none",
-            padding: "2px 0 4px",
-            display: "block",
-          }}
+          className="cursor-pointer bg-transparent border-none px-0 pt-0.5 pb-1 block"
         >
-          <span
-            className="font-sans"
-            style={{
-              fontSize: "11px",
-              fontStyle: "italic",
-              color: "var(--color-sage-400)",
-            }}
-          >
+          <span className="font-sans text-[11px] italic text-sage-400">
             {disruption}
           </span>
         </button>

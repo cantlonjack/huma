@@ -89,13 +89,8 @@ export default function SpatialPill({
         y={y + 1}
         textAnchor="middle"
         dominantBaseline="central"
-        className="font-sans"
-        style={{
-          fontSize: "0.7rem",
-          fontWeight: 500,
-          fill: style.textColor,
-          pointerEvents: "none",
-        }}
+        className="font-sans text-[0.7rem] font-medium pointer-events-none"
+        style={{ fill: style.textColor }}
       >
         {displayText}
       </text>
@@ -117,12 +112,7 @@ export default function SpatialPill({
             y={y - pillHeight / 2 - 20}
             textAnchor="middle"
             dominantBaseline="central"
-            className="font-sans"
-            style={{
-              fontSize: "0.65rem",
-              fontWeight: 400,
-              fill: "var(--color-sand-50)",
-            }}
+            className="font-sans text-[0.65rem] font-normal fill-sand-50"
           >
             {text}
           </text>

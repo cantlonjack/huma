@@ -47,12 +47,8 @@ export default function SpatialCanvas({ data }: SpatialCanvasProps) {
   return (
     <div
       ref={containerRef}
-      className="spatial-canvas-container relative w-full mx-auto"
-      style={{
-        height: containerHeight,
-        maxWidth: "1080px",
-        background: "var(--color-sand-50)",
-      }}
+      className="spatial-canvas-container relative w-full mx-auto max-w-[1080px] bg-sand-50"
+      style={{ height: containerHeight }}
     >
       <svg
         viewBox={`0 0 ${viewBox.width} ${viewBox.height}`}

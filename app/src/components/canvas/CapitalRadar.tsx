@@ -246,7 +246,7 @@ export default function CapitalRadar({
             stroke={isHovered ? "var(--color-sage-700)" : "var(--color-sand-300)"}
             strokeWidth={isHovered ? "1" : "0.5"}
             opacity={isDimmed ? 0.25 : 0.4}
-            style={{ transition: "all 200ms ease" }}
+            className="transition-all duration-200"
           />
         );
       })}
@@ -274,7 +274,7 @@ export default function CapitalRadar({
             r={isHovered ? 5 : 4}
             fill={isHovered ? "var(--color-sage-700)" : "var(--color-sage-600)"}
             opacity={isDimmed ? 0.4 : 1}
-            style={{ transition: "all 200ms ease" }}
+            className="transition-all duration-200"
           />
         );
       })}
@@ -295,7 +295,7 @@ export default function CapitalRadar({
               y2={end.y}
               stroke="transparent"
               strokeWidth="16"
-              style={{ cursor: "pointer" }}
+              className="cursor-pointer"
               onMouseEnter={(e) => handleAxisHover(i, e)}
               onMouseMove={(e) => handleAxisHover(i, e)}
               onMouseLeave={() => handleAxisHover(null)}
@@ -305,14 +305,12 @@ export default function CapitalRadar({
               y={label.y}
               textAnchor={label.anchor}
               dominantBaseline="central"
-              className="font-sans"
+              className="font-sans cursor-pointer transition-all duration-200"
               style={{
                 fontSize: size > 200 ? "0.65rem" : "0.5rem",
                 fontWeight: isHovered ? 600 : 500,
                 fill: isHovered ? "var(--color-sage-700)" : "var(--color-earth-600)",
                 opacity: isDimmed ? 0.4 : 1,
-                transition: "all 200ms ease",
-                cursor: "pointer",
               }}
               onMouseEnter={(e) => handleAxisHover(i, e)}
               onMouseMove={(e) => handleAxisHover(i, e)}
@@ -357,12 +355,8 @@ export default function CapitalRadar({
                 <text
                   x={tx + 8}
                   y={ty + 14}
-                  className="font-sans"
-                  style={{
-                    fontSize,
-                    fill: "var(--color-sand-50)",
-                    pointerEvents: "none",
-                  }}
+                  className="font-sans pointer-events-none fill-sand-50"
+                  style={{ fontSize }}
                 >
                   {displayText}
                 </text>

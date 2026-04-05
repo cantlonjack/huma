@@ -50,12 +50,7 @@ export default function SpatialEssence({
         x={cx}
         y={cy - 14}
         textAnchor="middle"
-        className="font-serif"
-        style={{
-          fontSize: "1.1rem",
-          fontWeight: 500,
-          fill: "var(--color-sage-800)",
-        }}
+        className="font-serif text-[1.1rem] font-medium fill-sage-800"
       >
         {name}
       </text>
@@ -65,12 +60,7 @@ export default function SpatialEssence({
         x={cx}
         y={cy + 6}
         textAnchor="middle"
-        className="font-sans"
-        style={{
-          fontSize: "0.7rem",
-          fontWeight: 400,
-          fill: "var(--color-earth-500)",
-        }}
+        className="font-sans text-[0.7rem] font-normal fill-earth-500"
       >
         {land}
       </text>
@@ -80,13 +70,7 @@ export default function SpatialEssence({
         x={cx}
         y={cy + 26}
         textAnchor="middle"
-        className="font-serif"
-        style={{
-          fontSize: "0.75rem",
-          fontWeight: 300,
-          fontStyle: "italic",
-          fill: "var(--color-sage-600)",
-        }}
+        className="font-serif text-[0.75rem] font-light italic fill-sage-600"
       >
         {phrase}
       </text>

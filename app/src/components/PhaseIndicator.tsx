@@ -34,14 +34,7 @@ export default function PhaseIndicator({ currentPhase }: PhaseIndicatorProps) {
         })}
       </div>
       {current && (
-        <span
-          className="mt-2 text-sage-400 uppercase"
-          style={{
-            fontFamily: "var(--font-sans)",
-            fontSize: "0.6rem",
-            letterSpacing: "0.18em",
-          }}
-        >
+        <span className="mt-2 text-sage-400 uppercase font-sans text-[0.6rem] tracking-[0.18em]">
           {current.label}
         </span>
       )}
