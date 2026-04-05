@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import TabShell from "@/components/TabShell";
 import WholeShape, { type HolonNode, type HolonLink, type HolonLayer, type HolonStatus, type InsightAnnotation } from "@/components/whole/WholeShape";
 import HolonExpandPanel from "@/components/whole/HolonExpandPanel";
+import AspirationDetailPanel from "@/components/whole/AspirationDetailPanel";
 import ProfileBanner from "@/components/whole/ProfileBanner";
 import InsightCard from "@/components/whole/InsightCard";
 import ShareworthyInsightCard, { isShareworthyInsight } from "@/components/whole/ShareworthyInsightCard";
@@ -18,7 +19,7 @@ import WholeSkeleton from "@/components/WholeSkeleton";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { displayName } from "@/lib/display-name";
-import type { Aspiration, Insight, Principle, KnownContext } from "@/types/v2";
+import type { Aspiration, Insight, Principle, KnownContext, Pattern, Behavior, FutureAction, FuturePhase } from "@/types/v2";
 import type { CanvasData } from "@/engine/canvas-types";
 import {
   getAllAspirations,
@@ -46,6 +47,10 @@ import {
   clearLocalStorageContext,
   clearAllUserData,
   clearAllLocalStorage,
+  updateAspirationName,
+  updateAspirationBehaviors,
+  updateAspirationFuture,
+  getPatternsByAspiration,
   type AspirationCorrelation,
 } from "@/lib/supabase-v2";
 
@@ -250,6 +255,7 @@ export default function WholePage() {
     label: string;
   } | null>(null);
   const [archiveToast, setArchiveToast] = useState<{ id: string; label: string } | null>(null);
+  const [selectedAspirationPatterns, setSelectedAspirationPatterns] = useState<Pattern[]>([]);
   const archivedAspirationRef = useRef<Aspiration | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [shapeWidth, setShapeWidth] = useState(340);
@@ -484,8 +490,32 @@ export default function WholePage() {
   const shapeHeight = Math.round(shapeWidth * 0.75);
 
   const handleNodeTap = useCallback((node: HolonNode) => {
-    setSelectedNode((prev) => (prev?.id === node.id ? null : node));
-  }, []);
+    setSelectedNode((prev) => {
+      if (prev?.id === node.id) return null;
+      // Load patterns for aspiration nodes
+      if (node.type === "aspiration") {
+        setSelectedAspirationPatterns([]);
+        if (user) {
+          const supabase = createClient();
+          if (supabase) {
+            getPatternsByAspiration(supabase, user.id, node.id)
+              .then(setSelectedAspirationPatterns)
+              .catch(() => {});
+          }
+        } else {
+          // Pre-auth: load patterns from localStorage
+          try {
+            const stored = localStorage.getItem("huma-v2-patterns");
+            if (stored) {
+              const all = JSON.parse(stored) as Pattern[];
+              setSelectedAspirationPatterns(all.filter((p) => p.aspirationId === node.id));
+            }
+          } catch { /* */ }
+        }
+      }
+      return node;
+    });
+  }, [user]);
 
   const handleDismissInsight = useCallback(async () => {
     if (!insight || !user) return;
@@ -561,6 +591,71 @@ export default function WholePage() {
       }
     }
   }, [rawContext, context, user]);
+
+  // ── Aspiration detail panel handlers ──
+
+  const clearCachedSheet = useCallback(() => {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      localStorage.removeItem(`huma-v2-sheet-${today}`);
+    } catch { /* */ }
+  }, []);
+
+  const updateLocalAspiration = useCallback((id: string, patch: Partial<Aspiration>) => {
+    setAspirations((prev) => prev.map((a) => (a.id === id ? { ...a, ...patch } : a)));
+    // Also update localStorage
+    try {
+      const stored = localStorage.getItem("huma-v2-aspirations");
+      if (stored) {
+        const all = JSON.parse(stored) as Aspiration[];
+        const updated = all.map((a) => (a.id === id ? { ...a, ...patch } : a));
+        localStorage.setItem("huma-v2-aspirations", JSON.stringify(updated));
+      }
+    } catch { /* */ }
+  }, []);
+
+  const handleAspirationNameSave = useCallback(async (aspirationId: string, name: string) => {
+    updateLocalAspiration(aspirationId, { clarifiedText: name });
+    clearCachedSheet();
+    if (user) {
+      const supabase = createClient();
+      if (supabase) {
+        try { await updateAspirationName(supabase, user.id, aspirationId, name); } catch { /* */ }
+      }
+    }
+  }, [user, updateLocalAspiration, clearCachedSheet]);
+
+  const handleAspirationStatusChange = useCallback(async (aspirationId: string, status: Aspiration["status"]) => {
+    updateLocalAspiration(aspirationId, { status });
+    clearCachedSheet();
+    if (user) {
+      const supabase = createClient();
+      if (supabase) {
+        try { await updateAspirationStatus(supabase, user.id, aspirationId, status); } catch { /* */ }
+      }
+    }
+  }, [user, updateLocalAspiration, clearCachedSheet]);
+
+  const handleAspirationBehaviorsSave = useCallback(async (aspirationId: string, behaviors: Behavior[]) => {
+    updateLocalAspiration(aspirationId, { behaviors });
+    clearCachedSheet();
+    if (user) {
+      const supabase = createClient();
+      if (supabase) {
+        try { await updateAspirationBehaviors(supabase, user.id, aspirationId, behaviors); } catch { /* */ }
+      }
+    }
+  }, [user, updateLocalAspiration, clearCachedSheet]);
+
+  const handleAspirationFutureSave = useCallback(async (aspirationId: string, comingUp: FutureAction[], longerArc: FuturePhase[]) => {
+    updateLocalAspiration(aspirationId, { comingUp, longerArc });
+    if (user) {
+      const supabase = createClient();
+      if (supabase) {
+        try { await updateAspirationFuture(supabase, user.id, aspirationId, comingUp, longerArc); } catch { /* */ }
+      }
+    }
+  }, [user, updateLocalAspiration]);
 
   // WHY evolution: accept evolved WHY
   const handleWhyEvolutionAccept = useCallback(async (newWhy: string) => {
@@ -987,8 +1082,34 @@ export default function WholePage() {
               </div>
             )}
 
-            {/* Expand panel */}
-            {selectedFullNode && (
+            {/* Expand panel — aspiration detail panel for aspirations, HolonExpandPanel for others */}
+            {selectedFullNode && selectedFullNode.type === "aspiration" && (() => {
+              const asp = aspirations.find((a) => a.id === selectedFullNode.id);
+              return asp ? (
+                <AspirationDetailPanel
+                  aspiration={asp}
+                  patterns={selectedAspirationPatterns}
+                  status={selectedFullNode.status}
+                  onClose={() => setSelectedNode(null)}
+                  onNameSave={(name) => handleAspirationNameSave(asp.id, name)}
+                  onStatusChange={(status) => handleAspirationStatusChange(asp.id, status)}
+                  onBehaviorsSave={(behaviors) => handleAspirationBehaviorsSave(asp.id, behaviors)}
+                  onFutureSave={(comingUp, longerArc) => handleAspirationFutureSave(asp.id, comingUp, longerArc)}
+                  manageMode={manageMode}
+                  onArchive={
+                    manageMode
+                      ? () => setConfirmAction({ type: "archive", id: asp.id, label: selectedFullNode.label })
+                      : undefined
+                  }
+                  onDelete={
+                    manageMode
+                      ? () => setConfirmAction({ type: "delete", id: asp.id, label: selectedFullNode.label })
+                      : undefined
+                  }
+                />
+              ) : null;
+            })()}
+            {selectedFullNode && selectedFullNode.type !== "aspiration" && (
               <HolonExpandPanel
                 id={selectedFullNode.id}
                 label={selectedFullNode.label}
@@ -1004,15 +1125,10 @@ export default function WholePage() {
                 value={selectedFullNode.description}
                 onValueSave={selectedFullNode.type === "context" ? (v) => handleFoundationSave(selectedFullNode.id, v) : undefined}
                 manageMode={manageMode}
-                onArchive={
-                  manageMode && selectedFullNode.type === "aspiration"
-                    ? () => setConfirmAction({ type: "archive", id: selectedFullNode.id, label: selectedFullNode.label })
-                    : undefined
-                }
                 onDelete={
-                  manageMode && (selectedFullNode.type === "aspiration" || selectedFullNode.type === "principle")
+                  manageMode && selectedFullNode.type === "principle"
                     ? () => setConfirmAction({
-                        type: selectedFullNode.type === "principle" ? "delete-principle" : "delete",
+                        type: "delete-principle",
                         id: selectedFullNode.id,
                         label: selectedFullNode.label,
                       })

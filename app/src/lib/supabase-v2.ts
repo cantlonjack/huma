@@ -254,6 +254,39 @@ export async function updateAspirationBehaviors(
     .eq("user_id", userId);
 }
 
+/** Update an aspiration's name (clarified_text). */
+export async function updateAspirationName(
+  supabase: SupabaseClient,
+  userId: string,
+  aspirationId: string,
+  name: string,
+) {
+  await supabase
+    .from("aspirations")
+    .update({ clarified_text: name, updated_at: new Date().toISOString() })
+    .eq("id", aspirationId)
+    .eq("user_id", userId);
+}
+
+/** Update aspiration future phases (coming_up and longer_arc). */
+export async function updateAspirationFuture(
+  supabase: SupabaseClient,
+  userId: string,
+  aspirationId: string,
+  comingUp: Aspiration["comingUp"],
+  longerArc: Aspiration["longerArc"],
+) {
+  await supabase
+    .from("aspirations")
+    .update({
+      coming_up: comingUp || [],
+      longer_arc: longerArc || [],
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", aspirationId)
+    .eq("user_id", userId);
+}
+
 // ─── Chat Messages ───────────────────────────────────────────────────────────
 
 export async function getChatMessages(
