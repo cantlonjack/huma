@@ -1,4 +1,4 @@
-import type { Behavior, DimensionKey, KnownContext } from "@/types/v2";
+import type { Aspiration, Behavior, DimensionKey, KnownContext, Pattern, PatternStep } from "@/types/v2";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -539,4 +539,86 @@ export function getDomainTemplate(name: string): DomainArchetypeTemplate | undef
 /** Look up an orientation template by name */
 export function getOrientationTemplate(name: string): OrientationArchetypeTemplate | undefined {
   return ORIENTATION_TEMPLATES.find((t) => t.name === name);
+}
+
+// ─── Pre-population ────────────────────────────────────────────────────────
+
+export interface PrePopulationResult {
+  aspirations: Aspiration[];
+  patterns: Pattern[];
+  contextHints: Partial<KnownContext>;
+}
+
+/**
+ * Generate starter aspirations, patterns, and context hints from selected archetypes.
+ * Domain archetypes contribute starter aspirations and context; orientation archetypes
+ * are stored but don't generate aspirations.
+ */
+export function prePopulateFromArchetypes(
+  selectedDomains: string[],
+  _selectedOrientations: string[]
+): PrePopulationResult {
+  const aspirations: Aspiration[] = [];
+  const patterns: Pattern[] = [];
+  let contextHints: Partial<KnownContext> = {};
+  const now = new Date().toISOString();
+
+  for (const domainName of selectedDomains) {
+    const template = getDomainTemplate(domainName);
+    if (!template) continue;
+
+    // Merge context hints (later archetypes override earlier ones)
+    contextHints = { ...contextHints, ...template.contextHints };
+
+    // Take up to 2 starter aspirations per domain archetype
+    const starters = template.starterAspirations.slice(0, 2);
+    for (const starter of starters) {
+      const aspirationId = crypto.randomUUID();
+
+      // Build full behaviors from the starter template
+      const behaviors: Behavior[] = starter.behaviors.map((b) => ({
+        key: b.key,
+        text: b.text,
+        frequency: b.frequency,
+        dimensions: b.dimensions,
+      }));
+
+      aspirations.push({
+        id: aspirationId,
+        rawText: starter.text,
+        clarifiedText: starter.text,
+        title: starter.text,
+        behaviors,
+        dimensionsTouched: starter.dimensions,
+        status: "active",
+        stage: "active",
+        source: "template",
+      });
+
+      // Create a pattern if 2+ behaviors exist (first behavior as trigger)
+      if (behaviors.length >= 2) {
+        const steps: PatternStep[] = behaviors.map((b, i) => ({
+          behaviorKey: b.key,
+          text: b.text,
+          order: i,
+          isTrigger: i === 0,
+        }));
+
+        patterns.push({
+          id: crypto.randomUUID(),
+          aspirationId,
+          name: starter.text,
+          trigger: behaviors[0].text,
+          steps,
+          validationCount: 0,
+          validationTarget: 30,
+          status: "finding",
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+    }
+  }
+
+  return { aspirations, patterns, contextHints };
 }

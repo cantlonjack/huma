@@ -96,6 +96,7 @@ export interface Aspiration {
   dimensionsTouched: DimensionKey[];
   status: "active" | "paused" | "completed" | "dropped" | "archived";
   stage: "active" | "planning" | "someday";
+  source?: "conversation" | "template";  // How this aspiration was created
   funnel?: AspirationFunnel;
   triggerData?: AspirationTrigger;
 }

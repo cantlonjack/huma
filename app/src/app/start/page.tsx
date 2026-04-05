@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import type { PaletteConcept, ChatMessage, Behavior } from "@/types/v2";
+import type { PaletteConcept, ChatMessage, Behavior, DimensionKey } from "@/types/v2";
 import { parseMarkersV2 as parseMarkers, type DecompositionData } from "@/lib/parse-markers-v2";
 import { useAuth } from "@/components/AuthProvider";
 import AuthModal from "@/components/AuthModal";
@@ -11,7 +11,9 @@ import { migrateLocalStorageToSupabase } from "@/lib/supabase-v2";
 import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
 import DecompositionPreview from "@/components/DecompositionPreview";
 import ArchetypeCard from "@/components/onboarding/ArchetypeCard";
-import { DOMAIN_TEMPLATES, ORIENTATION_TEMPLATES } from "@/lib/archetype-templates";
+import WholeMiniPreview from "@/components/onboarding/WholeMiniPreview";
+import CapitalSketch from "@/components/onboarding/CapitalSketch";
+import { DOMAIN_TEMPLATES, ORIENTATION_TEMPLATES, prePopulateFromArchetypes } from "@/lib/archetype-templates";
 
 // ─── Palette Acknowledgments ─────────────────────────────────────────────────
 
@@ -36,15 +38,24 @@ function getPaletteAcknowledgment(concept: PaletteConcept): string {
 // ─── Archetype Selection Screen ─────────────────────────────────────────────
 
 function ArchetypeSelectionScreen({
-  onContinue,
+  onContinueWithTemplate,
+  onContinueBlank,
   onSkip,
 }: {
-  onContinue: (selected: { domains: string[]; orientations: string[] }) => void;
+  onContinueWithTemplate: (selected: { domains: string[]; orientations: string[] }, capitalSketch?: Record<DimensionKey, number>) => void;
+  onContinueBlank: (selected: { domains: string[]; orientations: string[] }) => void;
   onSkip: () => void;
 }) {
   const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
   const [selectedOrientations, setSelectedOrientations] = useState<string[]>([]);
-  const [showPromise, setShowPromise] = useState(false);
+  const [step, setStep] = useState<"select" | "fork">("select");
+  const [capitalSketch, setCapitalSketch] = useState<Record<DimensionKey, number> | undefined>();
+
+  // Compute preview dimensions from selected archetype templates
+  const previewDimensions: DimensionKey[][] = selectedDomains.flatMap((name) => {
+    const tmpl = DOMAIN_TEMPLATES.find((t) => t.name === name);
+    return tmpl ? tmpl.starterAspirations.slice(0, 2).map((a) => a.dimensions) : [];
+  });
 
   const hasSelection = selectedDomains.length > 0 || selectedOrientations.length > 0;
 
@@ -61,15 +72,87 @@ function ArchetypeSelectionScreen({
   };
 
   const handleContinue = () => {
-    setShowPromise(true);
-    setTimeout(() => {
-      onContinue({ domains: selectedDomains, orientations: selectedOrientations });
-    }, 1800);
+    setStep("fork");
   };
 
+  const selected = { domains: selectedDomains, orientations: selectedOrientations };
+
+  // Step 2: Template vs blank fork
+  if (step === "fork") {
+    return (
+      <div className="min-h-dvh bg-sand-50 flex flex-col items-center px-6 py-10 animate-fade-in">
+        <div className="w-full max-w-md">
+          {/* Mini-preview in top-right corner */}
+          <div className="flex justify-between items-start mb-8">
+            <div className="flex-1">
+              <h2
+                className="font-serif text-earth-800 mb-2"
+                style={{ fontSize: "22px", lineHeight: "1.3" }}
+              >
+                Your starting shape
+              </h2>
+              <p className="font-sans text-earth-400" style={{ fontSize: "13px" }}>
+                I can pre-fill some starter aspirations from your archetypes, or you can start blank and build through conversation.
+              </p>
+            </div>
+            <div className="ml-4 shrink-0">
+              <WholeMiniPreview aspirationDimensions={previewDimensions} />
+            </div>
+          </div>
+
+          {/* Template / Blank buttons */}
+          <div className="flex gap-3 mb-6">
+            <button
+              onClick={() => onContinueWithTemplate(selected, capitalSketch)}
+              className="flex-1 py-3.5 rounded-full font-sans text-base font-medium text-sand-50 cursor-pointer"
+              style={{
+                backgroundColor: "#B5621E",
+                transition: "background-color 200ms cubic-bezier(0.22, 1, 0.36, 1)",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#C87A3A")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#B5621E")}
+            >
+              Start with suggestions
+            </button>
+            <button
+              onClick={() => onContinueBlank(selected)}
+              className="flex-1 py-3.5 rounded-full font-sans text-base font-medium text-sage-700 cursor-pointer"
+              style={{
+                border: "1.5px solid var(--color-sage-300)",
+                backgroundColor: "transparent",
+                transition: "background-color 200ms cubic-bezier(0.22, 1, 0.36, 1)",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--color-sage-50, #f0f5f0)")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+            >
+              Start blank
+            </button>
+          </div>
+
+          {/* Editability promise */}
+          <p
+            className="text-center font-sans text-sage-400"
+            style={{ fontSize: "12px" }}
+          >
+            This shapes your starting point. You can change it anytime from Whole.
+          </p>
+
+          {/* Capital sketch (collapsible) */}
+          <CapitalSketch onChange={(sketch) => setCapitalSketch(sketch)} />
+        </div>
+      </div>
+    );
+  }
+
+  // Step 1: Archetype selection
   return (
     <div className="min-h-dvh bg-sand-50 flex flex-col items-center px-6 py-10 animate-fade-in">
-      <div className="w-full max-w-2xl">
+      {/* Mini-preview floats top-right on desktop */}
+      <div className="w-full max-w-2xl relative">
+        <div className="hidden md:block absolute -top-2 -right-2 z-10">
+          <WholeMiniPreview aspirationDimensions={previewDimensions} />
+        </div>
+
         {/* Header */}
         <div className="text-center mb-10">
           <h1
@@ -142,19 +225,6 @@ function ArchetypeSelectionScreen({
             Skip — just talk
           </button>
         </div>
-
-        {/* Editability Promise */}
-        {showPromise && (
-          <p
-            className="text-center mt-6 font-sans text-sage-400"
-            style={{
-              fontSize: "12px",
-              animation: "promise-flash 1.8s cubic-bezier(0.22, 1, 0.36, 1) forwards",
-            }}
-          >
-            This shapes your starting point. You can change it anytime from Whole.
-          </p>
-        )}
       </div>
     </div>
   );
@@ -639,7 +709,45 @@ export default function StartPage() {
   };
 
   // Archetype selection handlers
-  const handleArchetypeContinue = useCallback(
+  const handleArchetypeContinueWithTemplate = useCallback(
+    (selected: { domains: string[]; orientations: string[] }, capitalSketch?: Record<DimensionKey, number>) => {
+      const archetypes = [...selected.domains, ...selected.orientations];
+
+      // Pre-populate from templates
+      const { aspirations, patterns, contextHints } = prePopulateFromArchetypes(
+        selected.domains,
+        selected.orientations
+      );
+
+      // Build updated context: archetype names + context hints + optional capital sketch
+      const updatedContext: Record<string, unknown> = { ...knownContext, ...contextHints, archetypes };
+      if (capitalSketch) {
+        updatedContext.capitalSketch = capitalSketch;
+      }
+      setKnownContext(updatedContext);
+
+      // Persist everything to localStorage
+      localStorage.setItem("huma-v2-known-context", JSON.stringify(updatedContext));
+      if (aspirations.length > 0) {
+        // Merge with any existing aspirations (shouldn't be any at this point)
+        const existing = (() => {
+          try {
+            const raw = localStorage.getItem("huma-v2-aspirations");
+            return raw ? JSON.parse(raw) : [];
+          } catch { return []; }
+        })();
+        localStorage.setItem("huma-v2-aspirations", JSON.stringify([...existing, ...aspirations]));
+      }
+      if (patterns.length > 0) {
+        localStorage.setItem("huma-v2-patterns", JSON.stringify(patterns));
+      }
+
+      setOnboardingStep("conversation");
+    },
+    [knownContext]
+  );
+
+  const handleArchetypeContinueBlank = useCallback(
     (selected: { domains: string[]; orientations: string[] }) => {
       const archetypes = [...selected.domains, ...selected.orientations];
       const updatedContext = { ...knownContext, archetypes };
@@ -681,7 +789,8 @@ export default function StartPage() {
   if (onboardingStep === "archetype") {
     return (
       <ArchetypeSelectionScreen
-        onContinue={handleArchetypeContinue}
+        onContinueWithTemplate={handleArchetypeContinueWithTemplate}
+        onContinueBlank={handleArchetypeContinueBlank}
         onSkip={handleArchetypeSkip}
       />
     );
