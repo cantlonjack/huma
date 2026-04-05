@@ -105,7 +105,7 @@ export default function WholeMiniIndicator() {
       viewBox={`0 0 ${size} ${size}`}
       fill="none"
       aria-hidden="true"
-      style={{ display: "block" }}
+      className="block"
     >
       {/* Membrane outline */}
       <circle
@@ -116,9 +116,7 @@ export default function WholeMiniIndicator() {
         strokeWidth={1}
         fill="none"
         opacity={hasDots ? 0.5 : 0.25}
-        style={{
-          transition: "opacity 600ms cubic-bezier(0.22, 1, 0.36, 1)",
-        }}
+        className="transition-opacity duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
       />
 
       {/* Center nucleus */}
@@ -138,9 +136,7 @@ export default function WholeMiniIndicator() {
             r={nodeR}
             fill={color}
             opacity={0.7}
-            style={{
-              transition: "all 600ms cubic-bezier(0.22, 1, 0.36, 1)",
-            }}
+            className="transition-all duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
           />
         );
       })}

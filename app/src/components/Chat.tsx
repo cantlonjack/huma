@@ -112,10 +112,7 @@ export default function Chat({
           {/* Streaming response */}
           {isLoading && streamingContent && (
             <div aria-live="polite">
-              <div
-                className="rounded-xl p-4 bg-sand-100"
-                style={{ maxWidth: "85%" }}
-              >
+              <div className="rounded-xl p-4 bg-sand-100 max-w-[85%]">
                 <div className="font-serif text-[1.05rem] leading-[1.8] text-earth-700 whitespace-pre-wrap">
                   {streamingContent}
                   <span
@@ -132,10 +129,7 @@ export default function Chat({
             <div className="flex items-center" role="status">
               <span className="sr-only">HUMA is thinking...</span>
               <div
-                className="w-3 h-3 rounded-full animate-[typing-pulse_1.5s_ease-in-out_infinite]"
-                style={{
-                  background: "radial-gradient(circle, var(--color-sage-400), var(--color-sage-300))",
-                }}
+                className="w-3 h-3 rounded-full animate-[typing-pulse_1.5s_ease-in-out_infinite] bg-[radial-gradient(circle,var(--color-sage-400),var(--color-sage-300))]"
                 aria-hidden="true"
               />
             </div>
@@ -195,10 +189,7 @@ export default function Chat({
 function MessageBlock({ message }: { message: Message }) {
   if (message.role === "assistant") {
     return (
-      <div
-        className="rounded-xl p-4 bg-sand-100"
-        style={{ maxWidth: "85%" }}
-      >
+      <div className="rounded-xl p-4 bg-sand-100 max-w-[85%]">
         <div className="font-serif text-[1.05rem] leading-[1.8] text-earth-700 whitespace-pre-wrap">
           {message.content}
         </div>
@@ -207,10 +198,8 @@ function MessageBlock({ message }: { message: Message }) {
   }
 
   return (
-    <div
-      className="border-l-2 border-sage-300 pl-3 text-earth-600 leading-relaxed whitespace-pre-wrap"
-      style={{ maxWidth: "85%", marginLeft: "auto" }}
-    >
+    <div className="border-l-2 border-sage-300 pl-3 text-earth-600 leading-relaxed whitespace-pre-wrap max-w-[85%] ml-auto">
+
       {message.content}
     </div>
   );
@@ -223,14 +212,8 @@ function PhaseDivider({ phaseId }: { phaseId: string }) {
   return (
     <div className="flex items-center my-8 animate-[fadeIn_0.6s_ease]">
       <div className="flex-1 h-px bg-sage-200" />
-      <span
-        className="mx-4 px-3 py-1 rounded-full bg-sage-50 text-sage-500 uppercase"
-        style={{
-          fontSize: "0.65rem",
-          letterSpacing: "0.15em",
-          fontFamily: "var(--font-sans)",
-        }}
-      >
+      <span className="mx-4 px-3 py-1 rounded-full bg-sage-50 text-sage-500 uppercase text-[0.65rem] tracking-[0.15em] font-sans">
+
         {phaseInfo.label}
       </span>
       <div className="flex-1 h-px bg-sage-200" />

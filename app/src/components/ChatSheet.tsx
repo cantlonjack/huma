@@ -467,30 +467,22 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
     <div className="fixed inset-0 z-[60]">
       {/* Backdrop */}
       <div
-        className="absolute inset-0"
-        style={{
-          background: "rgba(0,0,0,0.3)",
-          animation: "chatsheet-backdrop-in 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
-        }}
+        className="absolute inset-0 bg-black/30 animate-[chatsheet-backdrop-in_320ms_cubic-bezier(0.22,1,0.36,1)_forwards]"
         onClick={onClose}
       />
 
       {/* Sheet */}
       <div
         ref={sheetRef}
-        className="absolute left-0 right-0 flex flex-col"
+        className="absolute left-0 right-0 flex flex-col bg-sand-50 rounded-t-[20px] animate-[chatsheet-slide-up_320ms_cubic-bezier(0.22,1,0.36,1)_forwards]"
         style={{
           bottom: keyboardOffset > 0 ? `${keyboardOffset}px` : "0",
           maxHeight: keyboardOffset > 0 ? `calc(100vh - ${keyboardOffset}px)` : "85vh",
-          background: "#FAF8F3",
-          borderRadius: "20px 20px 0 0",
-          animation: "chatsheet-slide-up 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
         }}
       >
         {/* Drag handle */}
         <div
-          className="flex items-center justify-center cursor-grab"
-          style={{ padding: "16px 0 4px", minHeight: "44px" }}
+          className="flex items-center justify-center cursor-grab pt-4 pb-1 min-h-11"
           onTouchStart={handleDragStart}
           onTouchMove={handleDragMove}
           onTouchEnd={handleDragEnd}
@@ -498,39 +490,17 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
           onMouseMove={handleDragMove}
           onMouseUp={handleDragEnd}
         >
-          <div
-            style={{
-              width: "36px",
-              height: "4px",
-              borderRadius: "2px",
-              background: "#DDD4C0",
-            }}
-          />
+          <div className="w-9 h-1 rounded-sm bg-sand-300" />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between" style={{ padding: "8px 20px 12px" }}>
-          <span
-            className="font-sans font-medium"
-            style={{ fontSize: "11px", letterSpacing: "0.4em", color: "#6B8F71" }}
-          >
+        <div className="flex items-center justify-between px-5 pt-2 pb-3">
+          <span className="font-sans font-medium text-[11px] tracking-[0.4em] text-sage-450">
             HUMA
           </span>
           <button
             onClick={onClose}
-            className="cursor-pointer"
-            style={{
-              width: "44px",
-              height: "44px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "none",
-              border: "none",
-              fontSize: "18px",
-              color: "#8C8274",
-              marginRight: "-8px",
-            }}
+            className="flex items-center justify-center w-11 h-11 bg-transparent border-none text-lg text-earth-400 -mr-2 cursor-pointer"
             aria-label="Close chat"
           >
             &times;
@@ -540,50 +510,39 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
         {/* Messages */}
         <div
           ref={scrollRef}
-          className="flex-1 overflow-y-auto"
-          style={{ padding: "0 20px 12px" }}
+          className="flex-1 overflow-y-auto px-5 pb-3"
         >
           {!loaded ? (
-            <div className="flex items-center justify-center" style={{ height: "120px" }}>
-              <span
-                className="rounded-full animate-dot-pulse"
-                style={{ width: "8px", height: "8px", background: "#6B8F71" }}
-              />
+            <div className="flex items-center justify-center h-[120px]">
+              <span className="w-2 h-2 rounded-full bg-sage-450 animate-dot-pulse" />
             </div>
           ) : recentMessages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center text-center" style={{ minHeight: "120px" }}>
-              <p className="font-serif text-ink-700" style={{ fontSize: "18px", lineHeight: "1.4" }}>
+            <div className="flex flex-col items-center justify-center text-center min-h-[120px]">
+              <p className="font-serif text-ink-700 text-lg leading-[1.4]">
                 {mode === "new-aspiration" ? "What are you trying to make work?" : "What\u0027s on your mind?"}
               </p>
               {mode === "new-aspiration" && (
-                <p className="font-sans text-sage-400" style={{ fontSize: "13px", marginTop: "6px", maxWidth: "280px" }}>
+                <p className="font-sans text-sage-400 text-[13px] mt-1.5 max-w-[280px]">
                   Describe what you want to build, change, or protect. HUMA will turn it into something operational.
                 </p>
               )}
               {/* Template quick-add cards */}
               {templateSuggestions.length > 0 && (
-                <div style={{ marginTop: "20px", width: "100%", textAlign: "left" }}>
-                  <p className="font-sans" style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.14em", color: "#A8C4AA", marginBottom: "10px", textAlign: "center" }}>
+                <div className="mt-5 w-full text-left">
+                  <p className="font-sans text-[11px] font-semibold tracking-[0.14em] text-sage-300 mb-2.5 text-center">
                     FROM YOUR ARCHETYPES
                   </p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div className="flex flex-col gap-2">
                     {templateSuggestions.slice(0, 4).map((t, i) => (
                       <button
                         key={i}
                         onClick={() => sendMessage(t.aspiration.text)}
-                        className="text-left cursor-pointer"
-                        style={{
-                          background: "#FAF8F3",
-                          border: "1px solid #E8E2D6",
-                          borderRadius: "12px",
-                          padding: "12px 16px",
-                          width: "100%",
-                        }}
+                        className="text-left cursor-pointer bg-sand-50 border border-sand-250 rounded-xl px-4 py-3 w-full"
                       >
-                        <span className="font-serif" style={{ fontSize: "15px", lineHeight: "1.4", color: "#3D3B36", display: "block" }}>
+                        <span className="font-serif text-[15px] leading-[1.4] text-earth-650 block">
                           {t.aspiration.text}
                         </span>
-                        <span className="font-sans" style={{ fontSize: "12px", color: "#A8C4AA", marginTop: "2px", display: "block" }}>
+                        <span className="font-sans text-xs text-sage-300 mt-0.5 block">
                           {t.archetype} &middot; {t.aspiration.behaviors.length} behavior{t.aspiration.behaviors.length !== 1 ? "s" : ""}
                         </span>
                       </button>
@@ -598,8 +557,8 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
               if (msg.role === "user") {
                 return (
                   <div key={msg.id} className="flex justify-end mb-3">
-                    <div style={{ maxWidth: "80%", background: "#F0EDE4", borderRadius: "12px", padding: "12px 16px" }}>
-                      <p className="font-sans" style={{ fontSize: "14px", lineHeight: "1.6", color: "#52504A" }}>
+                    <div className="max-w-[80%] bg-sand-200/70 rounded-xl px-4 py-3">
+                      <p className="font-sans text-sm leading-relaxed text-earth-500">
                         {msg.content}
                       </p>
                     </div>
@@ -608,14 +567,14 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
               }
               const rich = msg as RichMessage;
               return (
-                <div key={msg.id} className="mb-3" style={{ maxWidth: "680px" }}>
-                  <p className="font-serif whitespace-pre-wrap" style={{ fontSize: "16px", lineHeight: "1.7", color: "#3D3B36" }}>
+                <div key={msg.id} className="mb-3 max-w-[680px]">
+                  <p className="font-serif whitespace-pre-wrap text-base leading-[1.7] text-earth-650">
                     {msg.content}
                   </p>
 
                   {msg.contextExtracted && Object.keys(msg.contextExtracted).length > 0 && (
-                    <div className="mt-2 inline-flex items-center rounded-full" style={{ padding: "4px 12px", background: "#EDF3ED" }}>
-                      <span className="font-sans font-medium" style={{ fontSize: "12px", color: "#3A5A40" }}>
+                    <div className="mt-2 inline-flex items-center rounded-full px-3 py-1 bg-sage-50">
+                      <span className="font-sans font-medium text-xs text-sage-700">
                         Context added: {Object.entries(msg.contextExtracted).map(([k, v]) => `${k}: ${v}`).join(", ")}
                       </span>
                     </div>
@@ -626,15 +585,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
                     <button
                       key={i}
                       onClick={() => sendMessage(opt)}
-                      className="mt-2 mr-2 text-left font-sans cursor-pointer"
-                      style={{
-                        padding: "12px 16px",
-                        fontSize: "14px",
-                        color: "#3D3B36",
-                        borderRadius: "12px",
-                        border: "1px solid #DDD4C0",
-                        background: "#FAF8F3",
-                      }}
+                      className="mt-2 mr-2 text-left font-sans cursor-pointer px-4 py-3 text-sm text-earth-650 rounded-xl border border-sand-300 bg-sand-50"
                     >
                       {opt}
                     </button>
@@ -642,11 +593,11 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
 
                   {/* Behaviors */}
                   {isLast && rich.behaviors?.map((b, i) => (
-                    <div key={i} className="mt-2 flex items-start gap-3" style={{ padding: "12px 16px", borderRadius: "12px", border: "1px solid #E8E2D6", background: "#FAF8F3" }}>
-                      <span className="mt-0.5 flex-shrink-0 rounded-full" style={{ width: "20px", height: "20px", border: "2px solid #DDD4C0" }} />
+                    <div key={i} className="mt-2 flex items-start gap-3 px-4 py-3 rounded-xl border border-sand-250 bg-sand-50">
+                      <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 border-sand-300" />
                       <div>
-                        <p className="font-sans font-medium" style={{ fontSize: "14px", color: "#3D3B36" }}>{b.text}</p>
-                        {b.detail && <p className="font-sans" style={{ fontSize: "12px", color: "#8C8274", marginTop: "2px" }}>{b.detail}</p>}
+                        <p className="font-sans font-medium text-sm text-earth-650">{b.text}</p>
+                        {b.detail && <p className="font-sans text-xs text-earth-400 mt-0.5">{b.detail}</p>}
                       </div>
                     </div>
                   ))}
@@ -659,11 +610,8 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
           {streaming && recentMessages.length > 0 &&
             recentMessages[recentMessages.length - 1]?.role === "huma" &&
             recentMessages[recentMessages.length - 1]?.content === "" && (
-            <div style={{ paddingTop: "12px" }}>
-              <span
-                className="rounded-full animate-dot-pulse"
-                style={{ width: "8px", height: "8px", background: "#6B8F71", display: "block" }}
-              />
+            <div className="pt-3">
+              <span className="block w-2 h-2 rounded-full bg-sage-450 animate-dot-pulse" />
             </div>
           )}
 
@@ -677,19 +625,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
                 setMessages(prev => prev.filter((m, i) => !(i === prev.length - 1 && m.role === "huma" && m.content.includes("went wrong" ))));
                 sendMessage(msg);
               }}
-              className="font-sans cursor-pointer"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                marginTop: "8px",
-                padding: "8px 16px",
-                fontSize: "13px",
-                color: "#B5621E",
-                background: "var(--color-amber-100)",
-                border: "1px solid #F5D4B3",
-                borderRadius: "20px",
-              }}
+              className="font-sans cursor-pointer inline-flex items-center gap-1.5 mt-2 px-4 py-2 text-[13px] text-amber-600 bg-amber-100 border border-amber-200 rounded-full"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="23 4 23 10 17 10" />
@@ -701,8 +637,8 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
         </div>
 
         {/* Input bar */}
-        <div style={{ padding: "8px 16px", paddingBottom: keyboardOffset > 0 ? "8px" : "calc(12px + env(safe-area-inset-bottom, 0px))", borderTop: "1px solid #E8E2D6" }}>
-          <div className="flex items-center gap-3" style={{ background: "white", borderRadius: "16px", padding: "12px 16px", border: "1px solid #DDD4C0" }}>
+        <div className="px-4 pt-2 border-t border-sand-250" style={{ paddingBottom: keyboardOffset > 0 ? "8px" : "calc(12px + env(safe-area-inset-bottom, 0px))" }}>
+          <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border border-sand-300">
             <input
               ref={inputRef}
               type="text"
@@ -713,8 +649,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
               disabled={streaming}
               enterKeyHint="send"
               autoComplete="off"
-              className="flex-1 font-sans bg-transparent focus:outline-none disabled:opacity-50"
-              style={{ fontSize: "16px", lineHeight: "1.4", color: "#3D3B36" }}
+              className="flex-1 font-sans bg-transparent focus:outline-none disabled:opacity-50 text-base leading-[1.4] text-earth-650"
             />
             <button
               onClick={() => sendMessage(input)}

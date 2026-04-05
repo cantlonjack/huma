@@ -22,25 +22,10 @@ export default function EmergenceCard({
   if (behaviors.length === 0) return null;
 
   return (
-    <div style={{ marginBottom: "32px" }}>
+    <div className="mb-8">
       {/* Section header — italic Cormorant Garamond on sand-100 */}
-      <div
-        style={{
-          background: "#F6F1E9",
-          borderRadius: "10px",
-          padding: "12px 16px",
-          marginBottom: "16px",
-        }}
-      >
-        <p
-          className="font-serif"
-          style={{
-            fontSize: "17px",
-            fontStyle: "italic",
-            color: "var(--color-sage-500)",
-            lineHeight: "1.3",
-          }}
-        >
+      <div className="bg-sand-100 rounded-[10px] px-4 py-3 mb-4">
+        <p className="font-serif text-[17px] italic text-sage-500 leading-[1.3]">
           Something forming&hellip;
         </p>
       </div>
@@ -52,51 +37,19 @@ export default function EmergenceCard({
         return (
           <div
             key={b.behaviorKey}
-            style={{
-              background: "#F6F1E9",
-              border: "1px solid #EDE6D8",
-              borderRadius: "12px",
-              marginBottom: "8px",
-              overflow: "hidden",
-              transition: "all 300ms cubic-bezier(0.22, 1, 0.36, 1)",
-            }}
+            className="bg-sand-100 border border-sand-200 rounded-xl mb-2 overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
           >
             {/* Collapsed: mysterious teaser */}
             <button
               onClick={() => setRevealedKey(isRevealed ? null : b.behaviorKey)}
-              className="cursor-pointer"
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "14px 16px",
-                background: "none",
-                border: "none",
-                textAlign: "left",
-              }}
+              className="cursor-pointer w-full flex items-center justify-between px-4 py-3.5 bg-transparent border-none text-left"
             >
-              <div style={{ flex: 1 }}>
-                <p
-                  className="font-serif"
-                  style={{
-                    fontSize: "15px",
-                    fontStyle: "italic",
-                    color: "var(--color-sage-700)",
-                    lineHeight: "1.3",
-                  }}
-                >
+              <div className="flex-1">
+                <p className="font-serif text-[15px] italic text-sage-700 leading-[1.3]">
                   {isRevealed ? b.behaviorName : "A pattern is forming"}
                 </p>
                 {!isRevealed && (
-                  <p
-                    className="font-sans"
-                    style={{
-                      fontSize: "12px",
-                      color: "var(--color-sage-400)",
-                      marginTop: "2px",
-                    }}
-                  >
+                  <p className="font-sans text-xs text-sage-400 mt-0.5">
                     {b.completedDays} of {b.totalDays} days
                   </p>
                 )}
@@ -107,12 +60,7 @@ export default function EmergenceCard({
                 height="16"
                 viewBox="0 0 16 16"
                 fill="none"
-                style={{
-                  transform: isRevealed ? "rotate(180deg)" : "rotate(0deg)",
-                  transition: "transform 300ms cubic-bezier(0.22, 1, 0.36, 1)",
-                  flexShrink: 0,
-                  marginLeft: "8px",
-                }}
+                className={`shrink-0 ml-2 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isRevealed ? "rotate-180" : "rotate-0"}`}
               >
                 <path
                   d="M4 6L8 10L12 6"
@@ -126,67 +74,30 @@ export default function EmergenceCard({
 
             {/* Revealed: behavior details + formalize/dismiss */}
             {isRevealed && (
-              <div
-                style={{
-                  padding: "0 16px 14px",
-                  animation: "emergenceReveal 300ms cubic-bezier(0.22, 1, 0.36, 1)",
-                }}
-              >
+              <div className="px-4 pb-3.5 animate-[emergenceReveal_300ms_cubic-bezier(0.22,1,0.36,1)]">
                 {/* Consistency bar */}
-                <div style={{ marginBottom: "10px" }}>
-                  <div
-                    style={{
-                      height: "4px",
-                      borderRadius: "2px",
-                      background: "#EDE6D8",
-                      overflow: "hidden",
-                    }}
-                  >
+                <div className="mb-2.5">
+                  <div className="h-1 rounded-sm bg-sand-200 overflow-hidden">
                     <div
-                      style={{
-                        width: `${Math.round((b.completedDays / b.totalDays) * 100)}%`,
-                        height: "100%",
-                        borderRadius: "2px",
-                        background: "var(--color-sage-400)",
-                        transition: "width 400ms cubic-bezier(0.22, 1, 0.36, 1)",
-                      }}
+                      className="h-full rounded-sm bg-sage-400 transition-[width] duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                      style={{ width: `${Math.round((b.completedDays / b.totalDays) * 100)}%` }}
                     />
                   </div>
-                  <p
-                    className="font-sans"
-                    style={{
-                      fontSize: "11px",
-                      color: "var(--color-sage-400)",
-                      marginTop: "4px",
-                    }}
-                  >
+                  <p className="font-sans text-[11px] text-sage-400 mt-1">
                     {b.completedDays} of {b.totalDays} days — consistent enough to name
                   </p>
                 </div>
 
                 {/* Dimensions touched */}
                 {b.dimensions.length > 0 && (
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "6px",
-                      flexWrap: "wrap",
-                      marginBottom: "12px",
-                    }}
-                  >
+                  <div className="flex gap-1.5 flex-wrap mb-3">
                     {b.dimensions.map((dim: DimensionKey) => (
                       <span
                         key={dim}
-                        className="font-sans"
+                        className="font-sans text-[10px] font-semibold tracking-[0.06em] uppercase rounded-sm px-1.5 py-0.5"
                         style={{
-                          fontSize: "10px",
-                          fontWeight: 600,
-                          letterSpacing: "0.06em",
-                          textTransform: "uppercase",
                           color: DIMENSION_COLORS[dim],
                           background: `${DIMENSION_COLORS[dim]}18`,
-                          borderRadius: "4px",
-                          padding: "2px 6px",
                         }}
                       >
                         {DIMENSION_LABELS[dim]}
@@ -197,25 +108,14 @@ export default function EmergenceCard({
 
                 {/* Formalize input */}
                 {isFormalizing ? (
-                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <div className="flex gap-2 items-center">
                     <input
                       type="text"
                       value={patternName}
                       onChange={(e) => setPatternName(e.target.value)}
                       placeholder="Name this pattern"
                       autoFocus
-                      className="font-serif"
-                      style={{
-                        flex: 1,
-                        fontSize: "14px",
-                        fontStyle: "italic",
-                        padding: "8px 12px",
-                        border: "1px solid #DDD4C0",
-                        borderRadius: "8px",
-                        background: "white",
-                        color: "var(--color-sage-700)",
-                        outline: "none",
-                      }}
+                      className="font-serif flex-1 text-sm italic px-3 py-2 border border-sand-300 rounded-lg bg-white text-sage-700 outline-none"
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && patternName.trim()) {
                           onFormalize(b, patternName.trim());
@@ -239,38 +139,19 @@ export default function EmergenceCard({
                         }
                       }}
                       disabled={!patternName.trim()}
-                      className="font-sans cursor-pointer"
-                      style={{
-                        fontSize: "13px",
-                        fontWeight: 600,
-                        color: patternName.trim() ? "white" : "var(--color-sage-300)",
-                        background: patternName.trim() ? "var(--color-sage-700)" : "#EDE6D8",
-                        border: "none",
-                        borderRadius: "8px",
-                        padding: "8px 14px",
-                        transition: "all 200ms ease",
-                      }}
+                      className={`font-sans cursor-pointer text-[13px] font-semibold border-none rounded-lg px-3.5 py-2 transition-all duration-200 ${patternName.trim() ? "text-white bg-sage-700" : "text-sage-300 bg-sand-200"}`}
                     >
                       Save
                     </button>
                   </div>
                 ) : (
-                  <div style={{ display: "flex", gap: "8px" }}>
+                  <div className="flex gap-2">
                     <button
                       onClick={() => {
                         setFormalizingKey(b.behaviorKey);
                         setPatternName("");
                       }}
-                      className="font-sans cursor-pointer"
-                      style={{
-                        fontSize: "13px",
-                        fontWeight: 600,
-                        color: "var(--color-sage-700)",
-                        background: "white",
-                        border: "1px solid #DDD4C0",
-                        borderRadius: "8px",
-                        padding: "8px 14px",
-                      }}
+                      className="font-sans cursor-pointer text-[13px] font-semibold text-sage-700 bg-white border border-sand-300 rounded-lg px-3.5 py-2"
                     >
                       Name it
                     </button>
@@ -279,14 +160,7 @@ export default function EmergenceCard({
                         onDismiss(b.behaviorKey);
                         setRevealedKey(null);
                       }}
-                      className="font-sans cursor-pointer"
-                      style={{
-                        fontSize: "13px",
-                        color: "var(--color-sage-400)",
-                        background: "none",
-                        border: "none",
-                        padding: "8px 10px",
-                      }}
+                      className="font-sans cursor-pointer text-[13px] text-sage-400 bg-transparent border-none px-2.5 py-2"
                     >
                       Not yet
                     </button>
@@ -298,16 +172,10 @@ export default function EmergenceCard({
         );
       })}
 
-      <style jsx>{`
+      <style>{`
         @keyframes emergenceReveal {
-          from {
-            opacity: 0;
-            transform: translateY(-8px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(-8px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>

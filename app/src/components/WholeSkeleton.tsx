@@ -3,21 +3,18 @@ export default function WholeSkeleton() {
   return (
     <div aria-hidden="true" role="presentation">
       {/* Profile banner skeleton */}
-      <div style={{ padding: "0 24px", marginTop: "16px" }}>
+      <div className="px-6 mt-4">
         {/* Name */}
-        <div className="skeleton" style={{ width: "40%", height: "22px", marginBottom: "8px" }} />
+        <div className="skeleton w-[40%] h-[22px] mb-2" />
         {/* Archetypes */}
-        <div className="skeleton" style={{ width: "55%", height: "14px", marginBottom: "12px" }} />
+        <div className="skeleton w-[55%] h-3.5 mb-3" />
         {/* WHY statement */}
-        <div className="skeleton" style={{ width: "80%", height: "14px", marginBottom: "4px" }} />
-        <div className="skeleton" style={{ width: "60%", height: "14px" }} />
+        <div className="skeleton w-[80%] h-3.5 mb-1" />
+        <div className="skeleton w-[60%] h-3.5" />
       </div>
 
       {/* Shape placeholder — concentric circles */}
-      <div
-        className="flex items-center justify-center"
-        style={{ marginTop: "24px", width: "100%", height: "280px" }}
-      >
+      <div className="flex items-center justify-center mt-6 w-full h-[280px]">
         <svg width="280" height="280" viewBox="0 0 280 280" fill="none">
           {/* Foundation ring */}
           <circle

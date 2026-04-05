@@ -9,20 +9,8 @@ export default function ChatBubble({ onClick }: ChatBubbleProps) {
     <button
       onClick={onClick}
       aria-label="Open chat"
-      className="fixed z-50 cursor-pointer"
-      style={{
-        bottom: "calc(72px + env(safe-area-inset-bottom, 0px))",
-        right: "16px",
-        width: "52px",
-        height: "52px",
-        borderRadius: "50%",
-        background: "#B5621E",
-        border: "none",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
+      className="fixed z-50 cursor-pointer right-4 w-[52px] h-[52px] rounded-full bg-amber-600 border-none shadow-md flex items-center justify-center"
+      style={{ bottom: "calc(72px + env(safe-area-inset-bottom, 0px))" }}
     >
       <svg
         width="22"

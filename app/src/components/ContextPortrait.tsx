@@ -31,26 +31,12 @@ function RemoveButton({ onClick, size = 14 }: { onClick: () => void; size?: numb
     <button
       onClick={(e) => { e.stopPropagation(); onClick(); }}
       aria-label="Remove"
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: `${size + 6}px`,
-        height: `${size + 6}px`,
-        background: "none",
-        border: "none",
-        borderRadius: "50%",
-        cursor: "pointer",
-        padding: 0,
-        flexShrink: 0,
-        transition: "background 150ms",
-      }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--color-sand-200, #EDE6D8)"; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+      className="inline-flex items-center justify-center bg-transparent border-none rounded-full cursor-pointer p-0 shrink-0 transition-colors duration-150 hover:bg-sand-200"
+      style={{ width: `${size + 6}px`, height: `${size + 6}px` }}
     >
       <svg width={size} height={size} viewBox="0 0 14 14" fill="none">
-        <line x1="4" y1="4" x2="10" y2="10" stroke="var(--color-earth-300, #A89A86)" strokeWidth="1.5" strokeLinecap="round" />
-        <line x1="10" y1="4" x2="4" y2="10" stroke="var(--color-earth-300, #A89A86)" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="4" y1="4" x2="10" y2="10" stroke="var(--color-earth-300)" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="10" y1="4" x2="4" y2="10" stroke="var(--color-earth-300)" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
     </button>
   );
@@ -103,16 +89,8 @@ function EditableText({
       onChange={(e) => setDraft(e.target.value)}
       onBlur={commit}
       onKeyDown={(e) => { if (e.key === "Enter") commit(); }}
-      className="font-sans outline-none w-full"
-      style={{
-        ...style,
-        cursor: "text",
-        background: "var(--color-sand-200, #EDE6D8)",
-        borderRadius: "4px",
-        padding: "2px 4px",
-        margin: "-2px -4px",
-        border: "none",
-      }}
+      className="font-sans outline-none w-full cursor-text bg-sand-200 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 border-none"
+      style={style}
     />
   );
 }
@@ -157,22 +135,14 @@ function InlineAddField({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "4px" }}>
+    <div className="flex flex-col gap-1 mt-1">
       <input
         ref={inputRef}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); if (e.key === "Escape") onCancel(); }}
         placeholder={placeholders[fieldKey] || "Value"}
-        className="font-sans outline-none"
-        style={{
-          fontSize: "14px",
-          color: "var(--color-sage-600, #4A6E50)",
-          background: "var(--color-sand-200, #EDE6D8)",
-          borderRadius: "4px",
-          padding: "4px 8px",
-          border: "none",
-        }}
+        className="font-sans outline-none text-sm text-sage-600 bg-sand-200 rounded-sm px-2 py-1 border-none"
       />
       {needsDetail && (
         <input
@@ -180,46 +150,19 @@ function InlineAddField({
           onChange={(e) => setDetail(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); if (e.key === "Escape") onCancel(); }}
           placeholder={detailPlaceholders[fieldKey] || "Detail"}
-          className="font-sans outline-none"
-          style={{
-            fontSize: "13px",
-            color: "var(--color-sage-500, #5E8A63)",
-            background: "var(--color-sand-200, #EDE6D8)",
-            borderRadius: "4px",
-            padding: "4px 8px",
-            border: "none",
-          }}
+          className="font-sans outline-none text-[13px] text-sage-500 bg-sand-200 rounded-sm px-2 py-1 border-none"
         />
       )}
-      <div style={{ display: "flex", gap: "8px", marginTop: "2px" }}>
+      <div className="flex gap-2 mt-0.5">
         <button
           onClick={handleSubmit}
-          className="font-sans"
-          style={{
-            fontSize: "12px",
-            fontWeight: 600,
-            color: "#FAF8F3",
-            background: "var(--color-amber-600, #B5621E)",
-            border: "none",
-            borderRadius: "6px",
-            padding: "4px 12px",
-            cursor: "pointer",
-          }}
+          className="font-sans text-xs font-semibold text-sand-50 bg-amber-600 border-none rounded-md px-3 py-1 cursor-pointer"
         >
           Add
         </button>
         <button
           onClick={onCancel}
-          className="font-sans"
-          style={{
-            fontSize: "12px",
-            color: "var(--color-earth-500, #6B6358)",
-            background: "var(--color-sand-200, #EDE6D8)",
-            border: "none",
-            borderRadius: "6px",
-            padding: "4px 12px",
-            cursor: "pointer",
-          }}
+          className="font-sans text-xs text-earth-500 bg-sand-200 border-none rounded-md px-3 py-1 cursor-pointer"
         >
           Cancel
         </button>
@@ -232,16 +175,7 @@ function InlineAddField({
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span
-      className="font-sans font-medium block"
-      style={{
-        fontSize: "9px",
-        letterSpacing: "0.14em",
-        textTransform: "uppercase",
-        color: "var(--color-sage-400, #8BAF8E)",
-        marginBottom: "4px",
-      }}
-    >
+    <span className="font-sans font-medium block text-[9px] tracking-[0.14em] uppercase text-sage-400 mb-1">
       {children}
     </span>
   );
@@ -263,9 +197,9 @@ function buildSummary(ctx: KnownContext): string {
 
 const contentStyle: React.CSSProperties = {
   fontSize: "14px",
-  color: "var(--color-sage-600, #4A6E50)",
   lineHeight: "1.5",
 };
+const contentClassName = "text-sage-600";
 
 export default function ContextPortrait({ context, onSave, manageMode, onRemoveField }: ContextPortraitProps) {
   const [addingField, setAddingField] = useState<string | null>(null);
@@ -379,7 +313,7 @@ export default function ContextPortrait({ context, onSave, manageMode, onRemoveF
   // ── Section renderer with optional remove ──
 
   const renderSectionHeader = (label: string, fieldKey: string) => (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+    <div className="flex items-center justify-between">
       <SectionLabel>{label}</SectionLabel>
       {manageMode && onRemoveField && (
         <RemoveButton onClick={() => handleRemoveField(fieldKey)} />
@@ -388,27 +322,16 @@ export default function ContextPortrait({ context, onSave, manageMode, onRemoveF
   );
 
   return (
-    <div
-      style={{
-        margin: "0 16px",
-        padding: "16px",
-        background: "var(--color-sand-100, #F6F1E9)",
-        border: "1px solid var(--color-sand-300, #DDD4C0)",
-        borderRadius: "16px",
-      }}
-    >
+    <div className="mx-4 p-4 bg-sand-100 border border-sand-300 rounded-2xl">
       {/* Summary line */}
       {summary && (
-        <p
-          className="font-sans"
-          style={{ fontSize: "12px", color: "var(--color-sage-400, #8BAF8E)", marginBottom: "12px" }}
-        >
+        <p className="font-sans text-xs text-sage-400 mb-3">
           {summary}
         </p>
       )}
 
       {/* Sections */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+      <div className="flex flex-col gap-3">
         {hasPlace && (
           <div>
             {renderSectionHeader("Place", "place")}
@@ -441,15 +364,15 @@ export default function ContextPortrait({ context, onSave, manageMode, onRemoveF
 
         {hasPeople && (
           <div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div className="flex items-center justify-between">
               <SectionLabel>People</SectionLabel>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            <div className="flex flex-col gap-1">
               {context.people!
                 .filter((p) => p.name)
                 .map((person, i) => (
-                  <div key={i} className="font-sans" style={{ ...contentStyle, display: "flex", alignItems: "center", gap: "4px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px", flex: 1, minWidth: 0 }}>
+                  <div key={i} className={`font-sans flex items-center gap-1 ${contentClassName}`} style={contentStyle}>
+                    <div className="flex items-center gap-1 flex-1 min-w-0">
                       <EditableText
                         value={person.name}
                         onSave={(v) => savePerson(i, { ...person, name: v })}
@@ -457,7 +380,7 @@ export default function ContextPortrait({ context, onSave, manageMode, onRemoveF
                       />
                       {person.role && (
                         <>
-                          <span style={{ color: "var(--color-sage-400, #8BAF8E)" }}>·</span>
+                          <span className="text-sage-400">·</span>
                           <EditableText
                             value={person.role}
                             onSave={(v) => savePerson(i, { ...person, role: v })}
@@ -516,15 +439,15 @@ export default function ContextPortrait({ context, onSave, manageMode, onRemoveF
 
         {hasResources && (
           <div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div className="flex items-center justify-between">
               <SectionLabel>Resources</SectionLabel>
             </div>
-            <ul style={{ margin: 0, paddingLeft: "16px" }}>
+            <ul className="m-0 pl-4">
               {context.resources!
                 .filter(Boolean)
                 .map((res, i) => (
-                  <li key={i} style={{ ...contentStyle, marginBottom: "2px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                  <li key={i} className={`mb-0.5 ${contentClassName}`} style={contentStyle}>
+                    <div className="flex items-center gap-1">
                       <EditableText
                         value={res}
                         onSave={(v) => saveResource(i, v)}
@@ -557,24 +480,11 @@ export default function ContextPortrait({ context, onSave, manageMode, onRemoveF
 
       {/* Add context affordance */}
       {missingFields.length > 0 && !addingField && (
-        <div style={{ marginTop: "16px", position: "relative" }}>
+        <div className="mt-4 relative">
           <button
             onClick={() => setAddMenuOpen((prev) => !prev)}
             aria-label="Add context"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "36px",
-              height: "36px",
-              borderRadius: "50%",
-              border: "1.5px solid var(--color-sage-400, #8BAF8E)",
-              background: "none",
-              cursor: "pointer",
-              transition: "background 150ms",
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--color-sage-50, #EDF3ED)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+            className="flex items-center justify-center w-9 h-9 rounded-full border-[1.5px] border-sage-400 bg-transparent cursor-pointer transition-colors duration-150 hover:bg-sage-50"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <line x1="8" y1="3" x2="8" y2="13" stroke="var(--color-sage-400, #8BAF8E)" strokeWidth="1.5" strokeLinecap="round" />
@@ -587,42 +497,15 @@ export default function ContextPortrait({ context, onSave, manageMode, onRemoveF
             <>
               {/* Backdrop to close menu */}
               <div
-                style={{ position: "fixed", inset: 0, zIndex: 9 }}
+                className="fixed inset-0 z-[9]"
                 onClick={() => setAddMenuOpen(false)}
               />
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: "44px",
-                  left: 0,
-                  background: "var(--color-sand-50, #FAF8F3)",
-                  border: "1px solid var(--color-sand-300, #DDD4C0)",
-                  borderRadius: "12px",
-                  padding: "4px 0",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                  zIndex: 10,
-                  minWidth: "140px",
-                }}
-              >
+              <div className="absolute bottom-11 left-0 bg-sand-50 border border-sand-300 rounded-xl py-1 shadow-[0_4px_12px_rgba(0,0,0,0.08)] z-10 min-w-[140px]">
                 {missingFields.map((opt) => (
                   <button
                     key={opt.key + (opt.arrayItem ? "-add" : "")}
                     onClick={() => { setAddingField(opt.key); setAddMenuOpen(false); }}
-                    className="font-sans"
-                    style={{
-                      display: "block",
-                      width: "100%",
-                      textAlign: "left",
-                      padding: "8px 16px",
-                      fontSize: "13px",
-                      color: "var(--color-earth-600, #5A5047)",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      transition: "background 100ms",
-                    }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--color-sand-100, #F6F1E9)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+                    className="font-sans block w-full text-left px-4 py-2 text-[13px] text-earth-600 bg-transparent border-none cursor-pointer transition-colors duration-100 hover:bg-sand-100"
                   >
                     {opt.label}
                   </button>
@@ -635,16 +518,7 @@ export default function ContextPortrait({ context, onSave, manageMode, onRemoveF
 
       {/* Empty state when manage mode is on but no content */}
       {!hasAnything && manageMode && (
-        <p
-          className="font-sans"
-          style={{
-            fontSize: "13px",
-            color: "var(--color-earth-400, #8A7D6E)",
-            fontStyle: "italic",
-            textAlign: "center",
-            margin: "8px 0",
-          }}
-        >
+        <p className="font-sans text-[13px] text-earth-400 italic text-center my-2">
           No context yet
         </p>
       )}
