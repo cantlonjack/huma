@@ -245,7 +245,7 @@ export default function EveningReflection() {
 
         {response ? (
           /* ─── Response state ─── */
-          <div>
+          <div aria-live="polite">
             <p
               className="font-serif"
               style={{
@@ -328,6 +328,7 @@ export default function EveningReflection() {
                 ref={inputRef}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
+                aria-label="Reflection notes"
                 placeholder={
                   selected === "shifted"
                     ? "What changed?"

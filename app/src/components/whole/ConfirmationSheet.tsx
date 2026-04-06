@@ -47,6 +47,9 @@ export default function ConfirmationSheet({
     >
       <div
         ref={sheetRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         className="w-full max-w-[440px] bg-sand-50 rounded-t-2xl px-5 pt-6 pb-8"
         style={{
           animation: "confirmation-slide-up 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards",

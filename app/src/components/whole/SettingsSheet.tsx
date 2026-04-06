@@ -151,6 +151,9 @@ export default function SettingsSheet({
     >
       <div
         ref={sheetRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Settings"
         className="w-full max-w-[440px] bg-sand-50 rounded-t-2xl px-5 pt-6 pb-8"
         style={{
           animation:

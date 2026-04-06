@@ -21,6 +21,9 @@ export function AspirationQuickLook({
     <>
       <div className="fixed inset-0 z-[55] bg-black/15 animate-overlay-in" onClick={onClose} />
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={displayName(aspiration.clarifiedText || aspiration.rawText)}
         className="fixed bottom-0 left-0 right-0 z-[56] bg-sand-50 rounded-t-2xl border-t border-sand-300 animate-slide-up h-[40dvh]"
       >
         <div

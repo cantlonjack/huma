@@ -133,6 +133,7 @@ export default function PatternCard({
             value={editName}
             onChange={e => setEditName(e.target.value)}
             onClick={e => e.stopPropagation()}
+            aria-label="Pattern name"
             className="font-serif text-sage-700 text-lg leading-[1.3] min-w-0 flex-1 bg-sand-100 border border-sand-300 rounded-lg px-2 py-1 outline-none"
           />
         ) : (
@@ -208,6 +209,7 @@ export default function PatternCard({
             <input
               value={editTrigger}
               onChange={e => setEditTrigger(e.target.value)}
+              aria-label="Trigger decision"
               className="font-sans w-full text-[15px] font-medium text-sage-700 leading-[1.4] bg-sand-100 border border-sand-300 rounded-lg px-2 py-1.5 outline-none"
             />
           </div>
@@ -224,6 +226,7 @@ export default function PatternCard({
                   <input
                     value={step.text}
                     onChange={e => updateStepText(i, e.target.value)}
+                    aria-label={`Step ${i + 1}`}
                     className="font-sans text-sage-600 flex-1 text-sm leading-[1.4] bg-sand-100 border border-sand-300 rounded-lg px-2 py-1 outline-none"
                   />
                   <button
@@ -253,6 +256,7 @@ export default function PatternCard({
               value={editTimeWindow}
               onChange={e => setEditTimeWindow(e.target.value)}
               placeholder="e.g. 5:15–5:45 AM"
+              aria-label="Time window"
               className="font-sans text-sage-400 w-full text-xs italic bg-sand-100 border border-sand-300 rounded-lg px-2 py-1 outline-none"
             />
           </div>

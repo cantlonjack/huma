@@ -45,6 +45,7 @@ export default function TodayPage() {
       }}
     >
       <div className="min-h-dvh bg-sand-50 flex flex-col pb-[140px]">
+        <h1 className="sr-only">Today</h1>
         {/* Header bar — 44px */}
         <div className="h-[44px] border-b border-sand-300 flex justify-between items-center px-4">
           <span className="font-sans font-medium text-sage-500 text-[11px] tracking-[0.4em] leading-none">

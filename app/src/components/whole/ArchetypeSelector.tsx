@@ -113,6 +113,9 @@ export default function ArchetypeSelector({
 
       {/* Sheet */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Your Archetypes"
         className="absolute bottom-0 left-0 right-0 flex flex-col max-h-[85vh] bg-sand-50 rounded-t-[20px]"
         style={{
           animation: "archselector-slide-up 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards",

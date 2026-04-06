@@ -474,6 +474,9 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
       {/* Sheet */}
       <div
         ref={sheetRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Chat with HUMA"
         className="absolute left-0 right-0 flex flex-col bg-sand-50 rounded-t-[20px] animate-[chatsheet-slide-up_320ms_cubic-bezier(0.22,1,0.36,1)_forwards]"
         style={{
           bottom: keyboardOffset > 0 ? `${keyboardOffset}px` : "0",
@@ -510,6 +513,8 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
         {/* Messages */}
         <div
           ref={scrollRef}
+          aria-live="polite"
+          aria-relevant="additions"
           className="flex-1 overflow-y-auto px-5 pb-3"
         >
           {!loaded ? (
@@ -610,7 +615,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
           {streaming && recentMessages.length > 0 &&
             recentMessages[recentMessages.length - 1]?.role === "huma" &&
             recentMessages[recentMessages.length - 1]?.content === "" && (
-            <div className="pt-3">
+            <div className="pt-3" role="status" aria-label="HUMA is thinking">
               <span className="block w-2 h-2 rounded-full bg-sage-450 animate-dot-pulse" />
             </div>
           )}
@@ -646,6 +651,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={contextPrompt || "What's on your mind?"}
+              aria-label="Message"
               disabled={streaming}
               enterKeyHint="send"
               autoComplete="off"

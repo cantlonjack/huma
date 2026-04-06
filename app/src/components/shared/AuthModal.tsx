@@ -63,6 +63,9 @@ export default function AuthModal({ open, onClose, onAuthenticated }: AuthModalP
 
           {/* Modal */}
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Save your day"
             className="relative bg-sand-50 rounded-2xl shadow-lg max-w-sm w-full p-8"
             initial={{ opacity: 0, y: 20, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -108,6 +111,7 @@ export default function AuthModal({ open, onClose, onAuthenticated }: AuthModalP
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="your@email.com"
+                    aria-label="Email address"
                     required
                     autoFocus
                     className="w-full px-4 py-3 rounded-lg border border-sand-300 bg-white text-earth-800 font-sans text-base placeholder:text-earth-300 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors"

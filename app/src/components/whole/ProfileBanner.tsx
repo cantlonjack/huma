@@ -89,6 +89,7 @@ export default function ProfileBanner({
               onChange={(e) => setWhyDraft(e.target.value)}
               onBlur={handleWhySave}
               onKeyDown={(e) => { if (e.key === "Enter") handleWhySave(); if (e.key === "Escape") setEditingWhy(false); }}
+              aria-label="WHY statement"
               className="font-serif w-full text-center text-[15px] italic text-sage-700 bg-white border border-sage-450 rounded-lg py-2 px-3 outline-none"
             />
           </div>

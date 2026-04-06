@@ -42,6 +42,7 @@ export default function WholePage() {
       }}
     >
       <div className="min-h-dvh bg-sand-50 flex flex-col pb-20">
+        <h1 className="sr-only">Whole</h1>
         {/* Header */}
         <div className="px-6 flex items-center justify-between pt-5">
           <span className="font-sans font-medium text-sage-500 text-[11px] tracking-[0.4em] leading-none">HUMA</span>

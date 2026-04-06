@@ -89,6 +89,7 @@ function EditableText({
       onChange={(e) => setDraft(e.target.value)}
       onBlur={commit}
       onKeyDown={(e) => { if (e.key === "Enter") commit(); }}
+      aria-label="Edit value"
       className="font-sans outline-none w-full cursor-text bg-sand-200 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 border-none"
       style={style}
     />
