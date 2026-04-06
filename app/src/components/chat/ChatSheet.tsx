@@ -2,6 +2,9 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import type { ChatMessage, Behavior, Aspiration, ReorganizationPlan } from "@/types/v2";
+import type { HumaContext } from "@/types/context";
+import { createEmptyContext } from "@/types/context";
+import { mergeContext, dimensionsTouched, migrateFromKnownContext } from "@/lib/context-model";
 import { parseMarkersV2 as parseMarkers } from "@/lib/parse-markers-v2";
 import { MAX_MESSAGE_LENGTH } from "@/lib/constants";
 import { useAuth } from "@/components/shared/AuthProvider";
@@ -118,9 +121,12 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [knownContext, setKnownContext] = useState<Record<string, unknown>>({});
+  const [humaContext, setHumaContext] = useState<HumaContext>(createEmptyContext());
   const [aspirations, setAspirations] = useState<Aspiration[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
+  // Dimensions that were just updated — shown briefly as a growth indicator
+  const [recentDimensions, setRecentDimensions] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -211,6 +217,28 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
         } catch { /* fresh */ }
       }
 
+      // Hydrate HumaContext: check for stored structured context, or migrate from old format
+      try {
+        const storedHuma = localStorage.getItem("huma-v2-huma-context");
+        if (storedHuma) {
+          setHumaContext(JSON.parse(storedHuma));
+        } else {
+          // Migrate from old KnownContext format
+          const oldCtx = localStorage.getItem("huma-v2-known-context");
+          if (oldCtx) {
+            const parsed = JSON.parse(oldCtx);
+            // Detect if it's already HumaContext-shaped (has _version) or old flat format
+            if (parsed._version) {
+              setHumaContext(parsed as HumaContext);
+            } else {
+              const migrated = migrateFromKnownContext(parsed);
+              setHumaContext(migrated);
+              localStorage.setItem("huma-v2-huma-context", JSON.stringify(migrated));
+            }
+          }
+        }
+      } catch { /* fresh context */ }
+
       setLoaded(true);
     }
     loadState();
@@ -238,8 +266,9 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
     if (messages.length > 0) {
       localStorage.setItem("huma-v2-chat-messages", JSON.stringify(messages));
       localStorage.setItem("huma-v2-known-context", JSON.stringify(knownContext));
+      localStorage.setItem("huma-v2-huma-context", JSON.stringify(humaContext));
     }
-  }, [messages, knownContext, loaded]);
+  }, [messages, knownContext, humaContext, loaded]);
 
   // Close on Escape
   useEffect(() => {
@@ -292,6 +321,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
         body: JSON.stringify({
           messages: newMessages.map(m => ({ role: m.role === "huma" ? "assistant" : m.role, content: m.content })),
           knownContext,
+          humaContext,
           aspirations: aspirations.map(a => ({ rawText: a.rawText, clarifiedText: a.clarifiedText, status: a.status })),
           sourceTab,
           tabContext,
@@ -338,8 +368,21 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
       }
 
       if (parsedContext) {
+        // Legacy flat merge for backward compat
         const newContext = { ...knownContext, ...parsedContext };
         setKnownContext(newContext);
+
+        // Deep merge into structured HumaContext
+        const touched = dimensionsTouched(parsedContext as Partial<HumaContext>);
+        const updatedHuma = mergeContext(humaContext, parsedContext as Partial<HumaContext>, "conversation");
+        setHumaContext(updatedHuma);
+
+        // Show which dimensions grew — visible for 4 seconds
+        if (touched.length > 0) {
+          setRecentDimensions(touched);
+          setTimeout(() => setRecentDimensions([]), 4000);
+        }
+
         if (user) {
           const supabase = createClient();
           if (supabase) updateKnownContext(supabase, user.id, newContext).catch(() => {});
@@ -399,7 +442,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
     } finally {
       setStreaming(false);
     }
-  }, [messages, streaming, knownContext, aspirations, user]);
+  }, [messages, streaming, knownContext, humaContext, aspirations, user]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -614,6 +657,15 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
             })
           )}
 
+          {/* Context growth indicator */}
+          {recentDimensions.length > 0 && (
+            <div className="flex items-center gap-1.5 py-2 animate-[fade-in_300ms_ease-out]">
+              <span className="font-sans text-[11px] font-medium tracking-wide text-sage-400">
+                HUMA now knows: {recentDimensions.map(d => d.toLowerCase()).join(", ")}
+              </span>
+            </div>
+          )}
+
           {/* Streaming indicator */}
           {streaming && recentMessages.length > 0 &&
             recentMessages[recentMessages.length - 1]?.role === "huma" &&
@@ -684,6 +736,10 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
         @keyframes chatsheet-backdrop-in {
           from { opacity: 0; }
           to { opacity: 1; }
+        }
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>

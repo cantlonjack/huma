@@ -3,6 +3,9 @@ import { isRateLimited } from "@/lib/rate-limit";
 import { rateLimited, serviceUnavailable, internalError } from "@/lib/api-error";
 import { v2ChatSchema } from "@/lib/schemas";
 import { parseBody } from "@/lib/schemas/parse";
+import type { HumaContext } from "@/types/context";
+import { createEmptyContext } from "@/types/context";
+import { contextForPrompt, completenessHint, contextCompleteness } from "@/lib/context-model";
 
 // ─── Base Identity ─────────────────────────────────────────────────────────
 const BASE_IDENTITY = `You are HUMA. You help people run their lives as one connected system.
@@ -10,9 +13,9 @@ const BASE_IDENTITY = `You are HUMA. You help people run their lives as one conn
 You are not a chatbot that gives advice. You are infrastructure that designs
 systems specific to this person's resources, constraints, timeline, and context.
 
-When someone tells you what they want, you don't produce a how-to guide. You
-design their specific system by asking enough questions to understand their
-situation, then decomposing into phased actions that are relevant RIGHT NOW.
+Your primary job is BUILDING THE CONTEXT MODEL — understanding this person's
+whole situation across every dimension of their life. Decomposition into
+behaviors is a secondary output that happens naturally once context is rich.
 
 Voice: The fence-post neighbor. Warm, direct, specific, spare.
 - One question per message. Never two.
@@ -25,10 +28,65 @@ Voice: The fence-post neighbor. Warm, direct, specific, spare.
 - Never explain your methodology or framework.
 - Say the minimum. The space around the words is part of the message.`;
 
-// ─── Conversation Phase Prompt ─────────────────────────────────────────────
-const CONVERSATION_PHASE_PROMPT = `You are in the context-gathering phase. The operator stated an aspiration.
-Your job is to ask enough specific questions to design their system — not to
-produce generic steps.
+// ─── Open Mode Prompt ─────────────────────────────────────────────────────
+// Default mode: build the context model through natural conversation.
+const OPEN_MODE_PROMPT = `You are in OPEN MODE. Your job is to have a natural conversation that builds
+the context model — understanding this person's whole situation.
+
+This is NOT an interrogation. Follow the user's lead. When they talk about one
+area of life, listen and absorb. When there's a natural opening, gently explore
+a dimension you know little about. The conversation should feel like catching up
+with a neighbor, not filling out an intake form.
+
+THE CONTEXT MODEL HAS 9 DIMENSIONS:
+Body (health, capacity, sleep, nutrition)
+People (household, community, professional connections)
+Money (income, enterprises, constraints, debt/savings, financial goals)
+Home (location, type, resources, infrastructure, land)
+Growth (skills, gaps, current learning, interests)
+Joy (what energizes, what drains, rhythms of restoration)
+Purpose (WHY statement, contribution, vision, values)
+Identity (archetypes, roles, culture)
+Time (life stage, available time blocks, schedule constraints)
+
+RULES:
+- Follow the user's lead. If they want to talk about their garden, talk about
+  their garden — and notice what it tells you about home, body, money, time.
+- When there's a natural pause or shift, ask about a sparse dimension. Do it
+  conversationally: "What does the rest of your day usually look like?" not
+  "Tell me about your time management."
+- Extract context after EVERY exchange where you learn something new:
+  [[CONTEXT:{...}]]
+  Structure the JSON to match the context model dimensions:
+  {"body": {"sleep": "6 hours"}, "home": {"location": "rural Michigan"}, ...}
+  Only include dimensions where you learned something new. Don't repeat known context.
+- Offer tappable options when the answer space is bounded:
+  [[OPTIONS:["Option A","Option B","Option C"]]]
+- When the user says something that implies an aspiration ("I want to...",
+  "I'm trying to...", "I need to..."), acknowledge it naturally. If the context
+  is rich enough in the relevant dimensions, you can offer to make a plan:
+  "I can turn that into something operational if you want."
+  [[OPTIONS:["Yes, let's plan it","Not yet, just thinking out loud","Tell me what you'd need to know first"]]]
+- If they want to plan but context is thin, ask the SPECIFIC missing questions:
+  "Before I can make that specific to you — how many people are you cooking for?"
+  Not generic questions. Questions whose answers change the plan.
+- When extracting financial context, structure it under the money dimension:
+  [[CONTEXT:{"money":{"income":"$85k combined","constraints":["$400/month food budget"]}}]]
+
+WHAT MAKES THIS WORK:
+Every message you receive teaches you something. A person who says "my wife works
+nights" has told you about people (household member), time (constraint), and
+potentially body (solo parenting fatigue). Extract ALL the dimensions a statement
+touches, not just the obvious one.
+
+TONE:
+Curious, not clinical. Present, not probing. You're learning about a life,
+not conducting an assessment.`;
+
+// ─── Focus Mode Prompt ────────────────────────────────────────────────────
+// Activated when user wants to plan something specific.
+const FOCUS_MODE_PROMPT = `You are in FOCUS MODE. The operator wants to make a plan for something specific.
+Your job is to gather enough context to decompose into phased actions, then do it.
 
 INTERNAL CATEGORIZATION (never tell the operator):
 - Daily practice (eat better, morning routine, sleep, movement) → 2-3 questions
@@ -36,59 +94,49 @@ INTERNAL CATEGORIZATION (never tell the operator):
 - Life system (income change, career transition, debt, relationships) → 4-6 questions
 - Vague / emotional ("I'm exhausted", "everything's stuck") → 2-3 exploring questions BEFORE categorizing
 
+READINESS CHECK — before decomposing, verify you have enough context:
+1. Look at what you already know from the context model (provided below).
+2. For THIS specific aspiration, do you know: scale, relevant resources,
+   timeline (what's possible RIGHT NOW), and hard constraints?
+3. If any critical piece is missing, ask for it. Be specific about what you need
+   and why it changes the plan.
+   Example: User says "I want to eat better." You know nothing about household,
+   kitchen, or budget → ask "How many people are you cooking for?" NOT decompose
+   with generic behaviors.
+4. Use what you already know. If the context model says they live in rural Michigan
+   with 2 acres and a wife who works nights — reference that. Don't ask again.
+
 RULES:
 - Ask ONE question per message.
-- Offer tappable options in this format: [Option A] [Option B] [Option C]
-  Encode as: [[OPTIONS:["Option A","Option B","Option C"]]]
-- Each question must build on previous answers. Never ask something they already told you.
-- You need at minimum: scale, resources they already have, timeline awareness
-  (what's possible RIGHT NOW given date and location), and any hard constraints.
-- NEVER decompose after only one question for anything more complex than a
-  simple daily habit.
+- Offer tappable options: [[OPTIONS:["Option A","Option B","Option C"]]]
+- Each question must build on previous answers AND the existing context model.
+  Never ask something you already know.
+- Extract new context as you learn it: [[CONTEXT:{...}]]
 - When you have enough context to design a specific system, reflect back what
   you heard in 2-3 sentences using their own words and details, then ask
   "That the right picture?" Offer: [[OPTIONS:["That's it","Close, but...","Let me rethink"]]]
-- The reflect-back must sound like a fence-post neighbor restating their plan,
-  NOT an AI summarizing a transcript. Be specific: names, numbers, places, timing.
-- When the operator adds context (freezer contents, schedule, budget, etc.), extract it:
-  [[CONTEXT:{"key":"value"}]]
-- When the operator mentions money, budget, income, expenses, debt, or financial
-  constraints, extract structured financial context:
-  [[CONTEXT:{"financial":{"situation":"tight budget","constraints":["$200/week groceries"],"rhythm":"paid bi-weekly Fridays"}}]]
-  Financial details make the production sheet dramatically more specific.
-
-WHAT YOU'RE BUILDING TOWARD:
-A phased decomposition with 2-4 THIS WEEK actions that are specific enough to
-execute without Googling, informed by the operator's actual resources, timeline,
-and constraints. Not a generic lifecycle guide.
+- The reflect-back must sound like a fence-post neighbor restating their plan.
+  Be specific: names, numbers, places, timing.
 
 TEMPLATE REFINEMENT:
 If the operator has template-sourced aspirations (source: "template"), they're
-starting points, not commitments. When the operator describes something that
-contradicts or replaces a template aspiration, output:
+starting points, not commitments. When the conversation diverges, output:
 [[REPLACE_ASPIRATION:"<new aspiration text>"]]
-This signals the client to replace the most relevant template aspiration with
-the conversation-derived one. Only output this when the operator's stated
-aspiration clearly supersedes a template — not on every new topic.
 
 METHOD INTELLIGENCE (reflect-back phase only):
 When reflecting back, evaluate whether the operator's stated approach is the
-best known method for their specific context (scale, resources, constraints,
-location). If there is a significantly better method — one with documented
-evidence, named practitioners, or clear mechanical advantage — surface it as
-part of the reflect-back. Name the source. Explain the mechanism. Map it to
-their context. Do not say "optimize" or "you should consider." Say it like a
-neighbor who's seen what actually works: specific, grounded, warm. If their
-method is solid, say nothing — don't manufacture alternatives. This fires
-during the reflect-back ONLY, not during initial context gathering.
+best known method for their specific context. If there is a significantly better
+method — one with documented evidence, named practitioners, or clear mechanical
+advantage — surface it. Name the source. Explain the mechanism. Map it to their
+context. If their method is solid, say nothing.
 
-Example good method intelligence:
+Example:
 "You mentioned the static coop setup. The folks who've figured out the egg game
 at your scale — they went mobile. Joel Salatin, Harvey Ussery — pasture rotation
 cuts feed costs 30% and the birds do the fertilizing. Want me to build around
 that approach instead?"
 
-When surfacing a better method, adjust the reflect-back options:
+When surfacing a better method:
 [[OPTIONS:["Yes, show me behaviors","Tell me more about that","No, keep my approach"]]]`;
 
 // ─── Decomposition Phase Prompt ────────────────────────────────────────────
@@ -144,6 +192,11 @@ RULES:
   resources, location, constraints, and timeline. Never generic.
 - dimensions: Map each behavior to the life dimensions it touches (lowercase:
   body, people, money, home, growth, joy, purpose, identity).
+
+IMPORTANT: Use everything you know from the context model. If you know they live
+in Zone 5b, reference planting dates. If you know they have a $400/month food
+budget, reference it. If you know their wife works nights, design around that.
+The whole point of building context is that decompositions become specific.
 
 Before the JSON markers, write a brief conversational intro (1-2 sentences) framing
 what you've designed. Do NOT write a long explanation.`;
@@ -201,11 +254,8 @@ function buildBehavioralContext(
   const parts: string[] = [];
   parts.push(`Operator has been using HUMA for ${dayCount} days.`);
 
-  // Extract validation metrics from tabContext
   const weekCounts = tabContext?.weekCounts as Record<string, { completed: number; total: number }> | undefined;
   const stalledAspirations = tabContext?.stalledAspirations as string[] | undefined;
-
-  // Compute per-aspiration completion rates from tabContext aspirations
   const tabAspirations = tabContext?.aspirations as Array<{
     id: string;
     name: string;
@@ -239,7 +289,6 @@ function buildBehavioralContext(
     parts.push(`Working patterns (above 70%): ${working.join("; ")}.`);
   }
 
-  // Strongest trigger — highest week count
   if (weekCounts) {
     let strongest: { text: string; count: number } | null = null;
     for (const [text, wc] of Object.entries(weekCounts)) {
@@ -252,12 +301,10 @@ function buildBehavioralContext(
     }
   }
 
-  // Stalled / adjusting patterns
   if (stalledAspirations && stalledAspirations.length > 0) {
     parts.push(`These have been flagged for rerouting: ${stalledAspirations.join(", ")}.`);
   }
 
-  // Only return if we have more than just the day count
   return parts.length > 1
     ? `\n\nBEHAVIORAL DATA:\n${parts.join("\n")}`
     : "";
@@ -272,7 +319,7 @@ function buildTabContextBlock(
 
   const parts: string[] = [];
 
-  // ─── Shared identity context (all tabs) ──────────────────────────────
+  // Shared identity context (all tabs)
   if (tabContext?.archetypes && Array.isArray(tabContext.archetypes) && tabContext.archetypes.length > 0) {
     const archs = tabContext.archetypes as string[];
     const archLabel = archs.length === 1 ? archs[0] : `${archs[0]} / ${archs[1]}`;
@@ -282,7 +329,7 @@ function buildTabContextBlock(
     parts.push(`Their WHY statement: "${tabContext.whyStatement}"`);
   }
 
-  // ─── Reorganization mode (any tab) ──────────────────────────────────────
+  // Reorganization mode (any tab)
   const transitionData = tabContext?.transition as {
     severity?: string;
     decliningAspirations?: Array<{ id: string; name: string; completionRate: number; previousRate: number; drop: number }>;
@@ -327,7 +374,6 @@ Help them see connections between parts, not just individual items.`);
       parts.push(`Their principles: ${(tabContext.principles as string[]).join("; ")}`);
     }
   } else if (sourceTab === "grow") {
-    // Check if this is a pattern investigation ("What changed?" flow)
     const selected = tabContext?.selectedPattern as {
       name?: string; trigger?: string; steps?: string[];
       status?: string; validationCount?: number; validationTarget?: number;
@@ -345,21 +391,20 @@ PATTERN UNDER INVESTIGATION:
 - Source aspiration: ${selected.aspirationName || "unknown"}
 - Trend: dropping (consistency declined over the past 14 days)
 
-YOUR ROLE: Help the operator figure out what changed in their life that caused this pattern to drop off. This is NOT about motivation or trying harder. Something in their context shifted — a schedule change, a new commitment, a season change, an emotional shift, a logistical barrier.
+YOUR ROLE: Help the operator figure out what changed in their life that caused this pattern to drop off. This is NOT about motivation or trying harder. Something in their context shifted.
 
 APPROACH:
 1. Ask what changed — one question, direct, specific to the pattern's trigger
 2. Listen for the systemic cause (not the symptom)
 3. If context has shifted, suggest a revised decomposition that accounts for the new reality
-4. The pattern may need to evolve, not be forced back. "Maybe the 6am version isn't available right now. What time IS available?"
 
-TONE: Curious, not concerned. Investigative, not motivational. This is a design problem, not a discipline problem.
+TONE: Curious, not concerned. Investigative, not motivational.
 
 NEVER say: "Don't be too hard on yourself" / "That's okay" / "Life gets busy" / "Try to get back on track"
 DO say: "What shifted?" / "When did the [trigger] stop fitting?" / "What does [time of day] look like now?"
 
 Use [[DECOMPOSITION:...]] marker if the operator describes changed context that warrants a revised behavior set.
-Use [[CONTEXT:...]] marker to capture any new context revealed (schedule changes, new commitments, etc).`);
+Use [[CONTEXT:...]] marker to capture any new context revealed.`);
     } else {
       parts.push(`The operator opened chat from the GROW tab (patterns view).
 Tone: forward-looking, pattern-aware. They're looking at how their behaviors connect.
@@ -379,6 +424,35 @@ Help them see which patterns are forming, what triggers are working, and where t
     : "";
 }
 
+// ─── Detect Conversation Mode ──────────────────────────────────────────────
+// Returns "open" | "focus" based on conversation content and state.
+function detectMode(
+  conversationTexts: string[],
+  chatMode?: string,
+  aspirations?: Array<{ rawText: string; clarifiedText: string; status: string }>,
+): "open" | "focus" {
+  // Explicit new-aspiration mode
+  if (chatMode === "new-aspiration") return "focus";
+
+  // Check if recent messages indicate aspiration intent
+  const recent = conversationTexts.slice(-3).join(" ").toLowerCase();
+  const aspirationSignals = [
+    "i want to", "i need to", "help me", "i'm trying to",
+    "let's plan", "let's make a plan", "make me a plan",
+    "can you help me with", "i want help with",
+    "decompose", "turn that into", "make it operational",
+    "yes, let's plan",
+  ];
+
+  if (aspirationSignals.some(signal => recent.includes(signal))) {
+    return "focus";
+  }
+
+  return "open";
+}
+
+// ─── Build System Prompt ──────────────────────────────────────────────────
+
 function buildSystemPrompt(
   knownContext: Record<string, unknown>,
   aspirations: Array<{ rawText: string; clarifiedText: string; status: string }>,
@@ -388,10 +462,21 @@ function buildSystemPrompt(
   tabContext?: Record<string, unknown>,
   dayCount?: number,
   chatMode?: string,
+  humaContext?: HumaContext,
 ): string {
-  const contextStr = Object.keys(knownContext).length > 0
-    ? JSON.stringify(knownContext, null, 2)
-    : "None yet — this is a new conversation.";
+  // Use HumaContext if available, fall back to old format
+  const ctx = humaContext || createEmptyContext();
+  const hasStructuredContext = !!(humaContext && humaContext._version);
+
+  const contextProse = hasStructuredContext
+    ? contextForPrompt(ctx)
+    : (Object.keys(knownContext).length > 0
+      ? JSON.stringify(knownContext, null, 2)
+      : "No context yet — this is a new conversation.");
+
+  const contextHint = hasStructuredContext
+    ? completenessHint(ctx)
+    : "";
 
   const aspirationStr = aspirations.length > 0
     ? aspirations.map(a => `- ${a.clarifiedText || a.rawText} (${a.status})`).join("\n")
@@ -405,6 +490,9 @@ function buildSystemPrompt(
   const lastUserMessage = conversationTexts[conversationTexts.length - 1]?.toLowerCase().trim() || "";
   const isConfirmation = ["that's it", "thats it", "that is it", "yes", "yeah", "yep", "correct", "exactly", "perfect"].includes(lastUserMessage);
   const isAdjustment = lastUserMessage.startsWith("close") || lastUserMessage === "close, but..." || lastUserMessage === "close, but";
+
+  // Detect conversation mode
+  const mode = detectMode(conversationTexts, chatMode, aspirations);
 
   // Build the phase-appropriate prompt
   let phasePrompt: string;
@@ -425,52 +513,83 @@ function buildSystemPrompt(
     } else {
       messageCountRule = `\n\nThis is message #${userMessageCount}. Continue the reorganization conversation. Ask ONE follow-up question about the shift, building on what they've said. When you have enough context to suggest release/protect/revise, do so.`;
     }
-  } else
+  } else if (mode === "open") {
+    // ─── Open mode: context building conversation ────────────────────────
+    phasePrompt = OPEN_MODE_PROMPT;
 
-  // Adaptive minimum: operators with 30+ days of data get deeper conversations
-  if (isConfirmation && userMessageCount >= (((dayCount && dayCount >= 30) ? 4 : 3))) {
-    // Operator confirmed — decompose now
-    phasePrompt = DECOMPOSITION_PHASE_PROMPT;
-    messageCountRule = `\n\nCRITICAL: The operator just confirmed with "${lastUserMessage}". DECOMPOSE NOW.
+    if (userMessageCount === 1) {
+      messageCountRule = `\n\nThis is message #1. Receive what they said warmly in one sentence.
+Then ask ONE conversational question about their situation. Pick the most
+natural follow-up to what they shared — not the most "efficient" question.
+Offer tappable options if the answer space is bounded: [[OPTIONS:[...]]]
+Extract any context you already learned: [[CONTEXT:{...}]]`;
+    } else if (userMessageCount <= 4) {
+      messageCountRule = `\n\nThis is message #${userMessageCount}. Continue the conversation naturally.
+Extract context from what they told you: [[CONTEXT:{...}]]
+Follow their thread, then when there's a natural opening, explore a sparse
+dimension. Don't force it. The conversation IS the product right now.`;
+    } else {
+      messageCountRule = `\n\nThis is message #${userMessageCount}. The conversation is flowing well.
+Keep extracting context: [[CONTEXT:{...}]]
+You've been talking for a while now — if the operator hasn't mentioned wanting
+to plan anything, that's fine. The context model is growing, and that's valuable.
+If they DO signal an aspiration ("I want to...", "I need to..."), offer to plan
+it — but only if you have enough context in the relevant dimensions.`;
+    }
+  } else {
+    // ─── Focus mode: aspiration decomposition ────────────────────────────
+
+    // Check readiness for decomposition
+    let readinessNote = "";
+    if (hasStructuredContext) {
+      const comp = contextCompleteness(ctx);
+      if (comp.sparseDimensions.length >= 5 && userMessageCount <= 2) {
+        readinessNote = `\n\nREADINESS WARNING: The context model is very thin (${comp.overall}% complete).
+You're missing data on: ${comp.sparseDimensions.join(", ")}.
+Any decomposition you produce now will be generic. Ask the specific questions
+whose answers would change the plan — don't decompose until you can make it
+specific to this person.`;
+      }
+    }
+
+    if (isConfirmation && userMessageCount >= (((dayCount && dayCount >= 30) ? 4 : 3))) {
+      phasePrompt = DECOMPOSITION_PHASE_PROMPT;
+      messageCountRule = `\n\nCRITICAL: The operator just confirmed with "${lastUserMessage}". DECOMPOSE NOW.
 Output [[ASPIRATION_NAME:...]], [[DECOMPOSITION:{...}]], and [[ACTIONS:[...]]].
 Do NOT ask another question. Do NOT output [[OPTIONS:[...]]].`;
-  } else if (isAdjustment) {
-    // Operator said "Close, but..." — ask one refinement question
-    phasePrompt = CONVERSATION_PHASE_PROMPT;
-    messageCountRule = `\n\nThe operator said their picture is close but not quite right. Ask ONE specific
+    } else if (isAdjustment) {
+      phasePrompt = FOCUS_MODE_PROMPT;
+      messageCountRule = `\n\nThe operator said their picture is close but not quite right. Ask ONE specific
 question to refine, with tappable options. Then reflect back the updated picture.`;
-  } else if (userMessageCount >= 7) {
-    // Hard ceiling — decompose regardless
-    phasePrompt = DECOMPOSITION_PHASE_PROMPT;
-    messageCountRule = `\n\nCRITICAL: This is user message #${userMessageCount}. You have gathered enough context.
+    } else if (userMessageCount >= 7) {
+      phasePrompt = DECOMPOSITION_PHASE_PROMPT;
+      messageCountRule = `\n\nCRITICAL: This is user message #${userMessageCount}. You have gathered enough context.
 You MUST reflect back what you heard in 2-3 sentences (including method intelligence
 if a better approach exists) and then decompose.
 Output [[ASPIRATION_NAME:...]], [[DECOMPOSITION:{...}]], and [[ACTIONS:[...]]].
 Do NOT ask another question.`;
-  } else if (userMessageCount >= 4) {
-    // Enough context for most aspirations — check if ready to reflect
-    phasePrompt = CONVERSATION_PHASE_PROMPT;
-    messageCountRule = `\n\nThis is user message #${userMessageCount}. You likely have enough context now.
+    } else if (userMessageCount >= 4) {
+      phasePrompt = FOCUS_MODE_PROMPT;
+      messageCountRule = `\n\nThis is user message #${userMessageCount}. You likely have enough context now.
 If you have sufficient information about scale, resources, timeline, and constraints,
 REFLECT BACK what you heard in 2-3 specific sentences and ask "That the right picture?"
 with [[OPTIONS:["That's it","Close, but...","Let me rethink"]]].
-ALSO: evaluate method intelligence during this reflect-back — if their stated approach
-has a significantly better alternative (documented, named sources, mechanical advantage),
-surface it now. If so, use [[OPTIONS:["Yes, show me behaviors","Tell me more about that","No, keep my approach"]]].
-If a critical piece is still missing, ask ONE more question — but you MUST reflect
-on your next response after this.`;
-  } else if (userMessageCount >= 2) {
-    // Still gathering — keep asking
-    phasePrompt = CONVERSATION_PHASE_PROMPT;
-    messageCountRule = `\n\nThis is user message #${userMessageCount}. Continue gathering context.
-Ask ONE specific question with tappable [[OPTIONS:[...]]]. Build on what they've told you.
-You need to understand their scale, resources, timeline, and constraints before decomposing.`;
-  } else {
-    // First message
-    phasePrompt = CONVERSATION_PHASE_PROMPT;
-    messageCountRule = `\n\nThis is user message #1. Acknowledge what they said in one sentence
-and ask your FIRST context question with 3-4 tappable [[OPTIONS:[...]]].
-Do NOT decompose yet. Do NOT give advice. Just receive and begin asking.`;
+ALSO: evaluate method intelligence during this reflect-back.
+If a critical piece is still missing, ask ONE more question.${readinessNote}`;
+    } else if (userMessageCount >= 2) {
+      phasePrompt = FOCUS_MODE_PROMPT;
+      messageCountRule = `\n\nThis is user message #${userMessageCount}. Continue gathering context for this aspiration.
+Ask ONE specific question with tappable [[OPTIONS:[...]]]. Build on what they've told you
+AND what you already know from the context model.
+You need: scale, resources, timeline, and constraints before decomposing.${readinessNote}`;
+    } else {
+      phasePrompt = FOCUS_MODE_PROMPT;
+      messageCountRule = `\n\nThis is user message #1. Acknowledge what they said in one sentence.
+Check the context model — you may already know a lot about their situation.
+If you have what you need for a specific decomposition, say so and offer to
+reflect back. If not, ask your FIRST context question with 3-4 tappable
+[[OPTIONS:[...]]]. Do NOT decompose yet. Do NOT give advice.${readinessNote}`;
+    }
   }
 
   const tabContextBlock = buildTabContextBlock(sourceTab, tabContext);
@@ -480,7 +599,6 @@ Do NOT decompose yet. Do NOT give advice. Just receive and begin asking.`;
     ? `\n\nThis operator has ${dayCount} days of behavioral data. Ask deeper, more specific questions. Reference their existing patterns when relevant.`
     : "";
 
-  // Check if operator has template-sourced aspirations
   const hasTemplateAspirations = aspirations.some(
     a => (a as Record<string, unknown>).source === "template"
   );
@@ -502,16 +620,17 @@ suffice unless the aspiration is complex. Reference their existing aspirations w
 relevant — look for connections and dimension overlap.`
     : "";
 
+  // Context hint about what dimensions are sparse
+  const contextHintBlock = contextHint
+    ? `\n\nCONTEXT COMPLETENESS:\n${contextHint}`
+    : "";
+
   return `${BASE_IDENTITY}
 
 ${phasePrompt}
 
-KNOWN CONTEXT:
-${contextStr}
-
-If the known context includes "paletteSelections", these are topics the operator indicated
-resonate with them. Incorporate these into your understanding — they're background context
-that should shape your questions and decomposition. Don't address each one separately.
+WHAT YOU KNOW ABOUT THIS PERSON:
+${contextProse}${contextHintBlock}
 
 ACTIVE ASPIRATIONS:
 ${aspirationStr}${templateBlock}
@@ -534,14 +653,23 @@ export async function POST(request: Request) {
 
   const parsed = await parseBody(request, v2ChatSchema);
   if (parsed.error) return parsed.error;
-  const { messages, knownContext, aspirations, sourceTab, tabContext, dayCount, chatMode } = parsed.data;
+  const { messages, knownContext, aspirations, sourceTab, tabContext, dayCount, chatMode, humaContext } = parsed.data;
 
   try {
     const anthropic = new Anthropic();
-    // Extract user message texts for template matching and count
     const userTexts = messages.filter(m => m.role === "user").map(m => m.content);
     const userMessageCount = userTexts.length;
-    const systemPrompt = buildSystemPrompt(knownContext, aspirations, userTexts, userMessageCount, sourceTab, tabContext, dayCount, chatMode);
+
+    // Parse humaContext if it came as JSON
+    let parsedHumaContext: HumaContext | undefined;
+    if (humaContext && typeof humaContext === "object") {
+      parsedHumaContext = humaContext as unknown as HumaContext;
+    }
+
+    const systemPrompt = buildSystemPrompt(
+      knownContext, aspirations, userTexts, userMessageCount,
+      sourceTab, tabContext, dayCount, chatMode, parsedHumaContext,
+    );
 
     const stream = anthropic.messages.stream({
       model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514",
