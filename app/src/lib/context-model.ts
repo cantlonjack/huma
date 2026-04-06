@@ -416,7 +416,9 @@ export function contextForPrompt(context: HumaContext): string {
   if (context.decisions.length > 0) {
     const recent = context.decisions.slice(-5).map((d) => {
       let desc = `${d.date}: ${d.description}`;
+      if (d.reasoning) desc += ` (${d.reasoning})`;
       if (d.outcome) desc += ` → Outcome: ${d.outcome}`;
+      else if (d.followUpDue) desc += ` [follow-up: ${d.followUpDue}]`;
       return desc;
     });
     sections.push(`RECENT DECISIONS:\n${recent.join("\n")}`);

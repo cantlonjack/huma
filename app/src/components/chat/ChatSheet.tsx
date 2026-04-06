@@ -359,7 +359,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
         });
       }
 
-      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedReorganization } = parseMarkers(fullResponse);
+      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedReorganization, parsedDecision } = parseMarkers(fullResponse);
 
       const finalHumaMsg: ChatMessage = { ...humaMsg, content: cleanText, contextExtracted: parsedContext || undefined };
       if (user) {
@@ -416,6 +416,30 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
         if (supabase) {
           applyReorganization(supabase, user.id, parsedReorganization, aspirations, setAspirations);
         }
+      }
+
+      // Handle decision output — save to context model
+      if (parsedDecision) {
+        const today = new Date();
+        const followUpDate = new Date(today);
+        followUpDate.setDate(followUpDate.getDate() + 42); // ~6 weeks
+
+        const decision = {
+          id: crypto.randomUUID(),
+          date: today.toISOString().split("T")[0],
+          description: parsedDecision.description,
+          reasoning: parsedDecision.reasoning,
+          frameworksSurfaced: parsedDecision.frameworks_surfaced,
+          followUpDue: followUpDate.toISOString().split("T")[0],
+        };
+
+        const updatedHuma = {
+          ...humaContext,
+          decisions: [...(humaContext.decisions || []), decision],
+          _lastUpdated: today.toISOString(),
+        };
+        setHumaContext(updatedHuma);
+        localStorage.setItem("huma-v2-huma-context", JSON.stringify(updatedHuma));
       }
 
       setMessages(prev => {

@@ -17,6 +17,12 @@ export interface DecompositionData {
   longer_arc: FuturePhase[];
 }
 
+export interface ParsedDecision {
+  description: string;
+  reasoning: string;
+  frameworks_surfaced: string[];
+}
+
 export interface ParsedMarkers {
   cleanText: string;
   parsedOptions: string[] | null;
@@ -27,9 +33,10 @@ export interface ParsedMarkers {
   parsedDecomposition: DecompositionData | null;
   parsedReorganization: ReorganizationPlan | null;
   parsedReplaceAspiration: string | null;
+  parsedDecision: ParsedDecision | null;
 }
 
-const MARKER_TYPES = ["OPTIONS", "BEHAVIORS", "ACTIONS", "CONTEXT", "ASPIRATION_NAME", "DECOMPOSITION", "REORGANIZATION"] as const;
+const MARKER_TYPES = ["OPTIONS", "BEHAVIORS", "ACTIONS", "CONTEXT", "ASPIRATION_NAME", "DECOMPOSITION", "REORGANIZATION", "DECISION"] as const;
 
 /**
  * Extract a single marker from text by finding [[TYPE: then scanning forward
@@ -114,6 +121,7 @@ export function parseMarkersV2(text: string): ParsedMarkers {
   let parsedDecomposition: DecompositionData | null = null;
   let parsedReorganization: ReorganizationPlan | null = null;
   let parsedReplaceAspiration: string | null = null;
+  let parsedDecision: ParsedDecision | null = null;
 
   let cleanText = text;
 
@@ -154,6 +162,9 @@ export function parseMarkersV2(text: string): ParsedMarkers {
         case "REORGANIZATION":
           parsedReorganization = result.json as ReorganizationPlan;
           break;
+        case "DECISION":
+          parsedDecision = result.json as ParsedDecision;
+          break;
       }
       cleanText = cleanText.replace(result.fullMatch, "");
     }
@@ -179,8 +190,8 @@ export function parseMarkersV2(text: string): ParsedMarkers {
 
   // Strip incomplete markers at end of stream
   cleanText = cleanText
-    .replace(/\[\[(?:OPTIONS|BEHAVIORS|ACTIONS|CONTEXT|ASPIRATION_NAME|DECOMPOSITION|REORGANIZATION|REPLACE_ASPIRATION):?[\s\S]*$/g, "")
+    .replace(/\[\[(?:OPTIONS|BEHAVIORS|ACTIONS|CONTEXT|ASPIRATION_NAME|DECOMPOSITION|REORGANIZATION|REPLACE_ASPIRATION|DECISION):?[\s\S]*$/g, "")
     .trim();
 
-  return { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName, parsedDecomposition, parsedReorganization, parsedReplaceAspiration };
+  return { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName, parsedDecomposition, parsedReorganization, parsedReplaceAspiration, parsedDecision };
 }

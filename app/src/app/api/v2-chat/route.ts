@@ -424,18 +424,97 @@ Help them see which patterns are forming, what triggers are working, and where t
     : "";
 }
 
+// ─── Decision Mode Prompt ────────────────────────────────────────────────
+// Activated when user brings a decision to HUMA. The 7 Holistic Management
+// testing questions run invisibly — Claude surfaces only the 1-2 most
+// relevant tensions naturally in conversation.
+const DECISION_MODE_PROMPT = `You are in DECISION MODE. The operator is thinking through a decision.
+Your job is to help them see this decision through the lens of their whole context —
+not to give generic advice.
+
+INVISIBLE FRAMEWORK — run these 7 tests internally. NEVER list them, name them,
+or present them as a checklist. Surface only the 1-2 most relevant tensions
+naturally, as observations a thoughtful neighbor would make:
+
+1. CAUSE & EFFECT: Is this addressing the root cause or a symptom?
+2. WEAK LINK: Is this the current bottleneck (social, biological, or financial)? Does it address it?
+3. MARGINAL REACTION: Where does the next dollar/hour produce the greatest return right now? Is this the best use of this resource?
+4. GROSS PROFIT ANALYSIS: How does this rank against alternatives in return per unit of management attention?
+5. ENERGY SOURCE: Is this running on renewable inputs (skills, relationships, land) or purchased/depleting inputs?
+6. SUSTAINABILITY: Does this leave the resource base (health, relationships, finances, land, skills) in better or worse condition?
+7. SOCIETY & CULTURE: Does this align with their values, their household, and their community?
+
+PLUS WHOLE-CONTEXT FIT:
+- Does this align with their WHY, their long-term vision, and their current constraints?
+- Does this conflict with or support existing aspirations and milestones?
+- What does the financial picture say about timing?
+
+YOUR APPROACH:
+- Listen to the decision they're considering
+- Run the 7 tests against what you know about their life
+- Surface the 1-2 most relevant tensions AS OBSERVATIONS, not as framework output
+  Example: "That could work. One thing worth considering — you mentioned wanting a barn in Year 4.
+  This $3,000 now pushes that timeline back about six months."
+- Reference THEIR specifics: names, numbers, places, constraints, timeline
+- If context is thin in areas critical to the decision, ask for the specific missing piece
+- Help them think through alternatives if the tests reveal a better path
+- When they reach a decision, log it
+
+TONE: The fence-post neighbor who's been watching the whole operation.
+Not "here are your options" but "given what I know about your situation..."
+
+DECISION LOGGING:
+When the operator makes a decision (signals like "yeah let's do that", "I'm going with",
+"that's what I'll do", "decided"), output a decision marker:
+[[DECISION:{"description":"What they decided","reasoning":"Why — in their words and context","frameworks_surfaced":["weak_link","marginal_reaction"]}]]
+
+The frameworks_surfaced array uses these keys: cause_effect, weak_link, marginal_reaction,
+gross_profit, energy_source, sustainability, society_culture.
+Only include the 1-2 you actually surfaced in conversation.
+
+Also extract any new context learned: [[CONTEXT:{...}]]
+
+NEVER:
+- List the 7 tests or name the framework
+- Say "from a sustainability perspective" or "the weak link here is"
+- Present a decision matrix or pros/cons list
+- Give generic advice that ignores their specific context
+- Rush to a recommendation — help them think, don't think for them
+
+DO:
+- Reference specific details from their context model
+- Name real numbers, dates, and people
+- Point out connections they might not see
+- Trust them to make the final call`;
+
 // ─── Detect Conversation Mode ──────────────────────────────────────────────
-// Returns "open" | "focus" based on conversation content and state.
+// Returns "open" | "focus" | "decision" based on conversation content and state.
 function detectMode(
   conversationTexts: string[],
   chatMode?: string,
   aspirations?: Array<{ rawText: string; clarifiedText: string; status: string }>,
-): "open" | "focus" {
-  // Explicit new-aspiration mode
+): "open" | "focus" | "decision" {
+  // Explicit mode overrides
   if (chatMode === "new-aspiration") return "focus";
+  if (chatMode === "decision") return "decision";
+
+  // Check if recent messages indicate decision intent
+  const recent = conversationTexts.slice(-3).join(" ").toLowerCase();
+
+  const decisionSignals = [
+    "i'm thinking about", "i'm considering", "should i",
+    "help me decide", "what do you think about",
+    "is it worth", "would it make sense to",
+    "i'm debating", "i'm torn between", "weighing",
+    "trying to decide", "not sure if i should",
+    "what would you do", "does it make sense to",
+  ];
+
+  if (decisionSignals.some(signal => recent.includes(signal))) {
+    return "decision";
+  }
 
   // Check if recent messages indicate aspiration intent
-  const recent = conversationTexts.slice(-3).join(" ").toLowerCase();
   const aspirationSignals = [
     "i want to", "i need to", "help me", "i'm trying to",
     "let's plan", "let's make a plan", "make me a plan",
@@ -501,6 +580,27 @@ function buildSystemPrompt(
   // ─── Reorganization mode ──────────────────────────────────────────────
   const isReorganization = !!(tabContext?.transition as Record<string, unknown> | undefined)?.decliningAspirations;
 
+  // Check for decisions that need follow-up
+  let decisionFollowUpBlock = "";
+  if (ctx.decisions && ctx.decisions.length > 0) {
+    const today = new Date();
+    const pendingFollowUps = ctx.decisions.filter(d => {
+      if (d.outcome) return false; // already has outcome
+      if (!d.followUpDue) return false;
+      return new Date(d.followUpDue) <= today;
+    });
+    if (pendingFollowUps.length > 0) {
+      const followUpLines = pendingFollowUps.map(d =>
+        `- "${d.description}" (decided ${d.date}) — follow-up was due ${d.followUpDue}`
+      );
+      decisionFollowUpBlock = `\n\nDECISION FOLLOW-UPS DUE:
+The following past decisions are due for a check-in. When there's a natural moment,
+ask how it worked out. One at a time. Not as a list — as genuine curiosity.
+${followUpLines.join("\n")}
+When they share the outcome, extract it: [[CONTEXT:{"decisions":[{"id":"${pendingFollowUps[0].id}","outcome":"what happened","outcomeDate":"${today.toISOString().split("T")[0]}"}]}]]`;
+    }
+  }
+
   if (isReorganization) {
     phasePrompt = REORGANIZATION_PROMPT;
 
@@ -512,6 +612,31 @@ function buildSystemPrompt(
       messageCountRule = `\n\nThis is the first message. Name the pattern you see (multiple things dropping together) in 1-2 sentences. Ask one direct question: what changed? Offer: [[OPTIONS:["New job / schedule","Relationship shift","Health thing","Something else"]]]`;
     } else {
       messageCountRule = `\n\nThis is message #${userMessageCount}. Continue the reorganization conversation. Ask ONE follow-up question about the shift, building on what they've said. When you have enough context to suggest release/protect/revise, do so.`;
+    }
+  } else if (mode === "decision") {
+    // ─── Decision mode: holistic decision support ───────────────────────
+    phasePrompt = DECISION_MODE_PROMPT;
+
+    if (userMessageCount === 1) {
+      messageCountRule = `\n\nThis is message #1. They're bringing a decision to you.
+Acknowledge what they're considering in one sentence. Then surface the SINGLE most
+relevant tension from their context — something specific that a generic advisor
+wouldn't know. If critical context is missing for this decision, ask for the ONE
+piece that would most change your perspective. Extract any new context: [[CONTEXT:{...}]]`;
+    } else if (isConfirmation && userMessageCount >= 3) {
+      messageCountRule = `\n\nThe operator has made their decision. Affirm it briefly — one sentence,
+no cheerleading. Then log it:
+[[DECISION:{"description":"...","reasoning":"...","frameworks_surfaced":["..."]}]]
+Set followUpDue to ~6 weeks from today. Extract any context: [[CONTEXT:{...}]]`;
+    } else if (userMessageCount >= 5) {
+      messageCountRule = `\n\nThis is message #${userMessageCount}. You've explored this enough.
+If they haven't decided yet, reflect back the key tension in 1-2 sentences and ask
+what they're leaning toward. If they have decided, log it with [[DECISION:{...}]].`;
+    } else {
+      messageCountRule = `\n\nThis is message #${userMessageCount}. Continue exploring the decision.
+Surface ONE more relevant tension from their context — a specific detail, not a generic
+consideration. Ask ONE question that helps them see a connection they might be missing.
+Extract any new context: [[CONTEXT:{...}]]`;
     }
   } else if (mode === "open") {
     // ─── Open mode: context building conversation ────────────────────────
@@ -636,7 +761,7 @@ ACTIVE ASPIRATIONS:
 ${aspirationStr}${templateBlock}
 
 TODAY'S DATE: ${today}
-${messageCountRule}${tabContextBlock}${behavioralContextBlock}${depthNote}${newAspirationBlock}`;
+${messageCountRule}${tabContextBlock}${behavioralContextBlock}${depthNote}${newAspirationBlock}${decisionFollowUpBlock}`;
 }
 
 export async function POST(request: Request) {
