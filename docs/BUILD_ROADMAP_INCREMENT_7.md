@@ -608,7 +608,7 @@ Final session: ensure all three phases work together as one coherent experience.
 
 ```
 START OF SESSION:
-□ Read CURRENT_STATE.md
+□ Read workspaces/code.md
 □ Read this increment plan — find your session
 □ Read the relevant design documents listed in the phase header
 □ Check for regressions from last session
@@ -622,7 +622,7 @@ DURING SESSION:
 END OF SESSION:
 □ TypeScript: 0 errors
 □ Production build: clean
-□ Update CURRENT_STATE.md
+□ Update workspaces/code.md if routes, API, components, or data layer changed structurally
 □ Commit with session number in message
 ```
 

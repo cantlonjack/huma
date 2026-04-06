@@ -163,3 +163,12 @@ Pre-auth: all data in localStorage. On auth: `migrateLocalStorageToSupabase()` m
 - `getPatterns` / `savePattern` / `updatePattern` / `deletePattern` -- Pattern CRUD
 - `extractPatternFromAspiration` / `extractPatternsFromAspirations` -- Auto-create patterns from decompositions (`lib/pattern-extraction.ts`)
 - `migrateLocalStorageToSupabase` -- Auth migration (safe: preserves localStorage on failure, includes patterns)
+
+---
+
+## Known Constraints
+
+- **Evening reflection** requires at least 1 check-off in today's cached sheet and evening hour reached (default 5pm, configurable via notification preferences). Will not appear on fresh accounts or before evening.
+- **Behavioral insights** (`/api/insight`) require 7+ days of data.
+- **Migrations required:** Run `009_aspiration_phases.sql`, `010_patterns.sql`, AND `011_push_subscriptions.sql` in Supabase. Code handles missing tables gracefully.
+- **Env vars for cron:** `CRON_SECRET`, `SUPABASE_SERVICE_ROLE_KEY` must be set in Vercel. VAPID keys also required for push notifications.

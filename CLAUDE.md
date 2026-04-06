@@ -37,4 +37,4 @@ Life infrastructure — shows how the parts of your life connect and which daily
 Before building anything: **Does this reduce cognitive load and reveal connections?**
 
 ## Session Protocol
-At END of every session: update docs/CURRENT_STATE.md and commit with session changes.
+At END of every session: commit session changes. Current state lives in `workspaces/code.md` — update it only if routes, API, components, or data layer changed structurally.

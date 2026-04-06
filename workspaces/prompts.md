@@ -105,12 +105,8 @@ systems specific to this person's resources, constraints, timeline, and context.
 
 ---
 
-## Voice Quick Reference (for prompt writing)
+## Voice (for prompt writing)
 
-**Banned:** "I hear you saying..." / "Great question!" / "Based on what you've shared..." / "You might want to consider..." / "You've got this!" / "As an AI..."
-
-**Banned vocabulary:** optimize, productivity, hack, goals, accountability, mindset, journey, empower, wellness, actionable, transformative
-
-**Use:** "what's working," "where the leverage is," "that's a design problem, not a discipline problem"
+Full spec: `docs/HUMA_VOICE_BIBLE.md`. Enforcement: invoke the **huma-voice** skill.
 
 **Emotional arc:** Recognition → Clarity → Confidence → Agency. The operator is always the protagonist.

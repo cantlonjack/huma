@@ -7,7 +7,7 @@ Roadmap, session planning, resolved decisions, and current state tracking. Read 
 
 For V2 foundation (read FIRST for product decisions): `docs/HUMA_V2_FOUNDATION.md`
 For full roadmap detail: `docs/BUILD_ROADMAP.md` (Inc 1-6), `docs/BUILD_ROADMAP_INCREMENT_7.md` (Inc 7)
-For current state: `docs/CURRENT_STATE.md`
+For current state: `workspaces/code.md`
 
 ---
 
@@ -34,8 +34,8 @@ HUMA is infrastructure for running your life as one connected system. Not a well
 | **HUMA_PATTERN_LIBRARY.md** | RPPL patterns, pattern evolution |
 | **HUMA_INTELLECTUAL_LINEAGE.md** | Source traditions |
 
-### Archived (do not consult)
-`HUMA_PRODUCT_SURFACE.md`, `HUMA_TECHNICAL_SPECIFICATION.md`, `HUMA_USER_JOURNEY.md`, `HUMA_COMPLETE_CONTEXT.md`
+### Archived
+Superseded docs removed in Session 70. Available in git history if needed.
 
 ---
 
@@ -98,8 +98,4 @@ For full session-by-session detail, read `docs/BUILD_ROADMAP_INCREMENT_7.md`.
 
 ## Session Protocol
 
-At END of every session:
-1. Update `docs/CURRENT_STATE.md` with current state of every route and known bugs
-2. Commit it with the session's other changes
-
-This file is the bridge between CC and the strategic Claude instance.
+At END of every session: commit session changes. Current state lives in `workspaces/code.md` — update it only if routes, API, components, or data layer changed structurally.

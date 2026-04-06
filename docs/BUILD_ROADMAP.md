@@ -43,7 +43,7 @@ The conversation engine gathers context, decomposes aspirations into phased beha
 
 4. **Ship the core loop tight before expanding.** Today tab → Insight engine → Whole tab → Grow tab. That's the priority order because that's the operator's frequency of use (80% / 10% / 10%).
 
-5. **Context handoff is sacred.** Every session ends with `CURRENT_STATE.md` updated and a commit. The next session starts cold and still knows where to go.
+5. **Context handoff is sacred.** Every session ends with a commit. Current state lives in `workspaces/code.md`.
 
 ---
 
@@ -528,7 +528,7 @@ _Goal: Performance, monitoring, and the data foundation for population-level pat
 
 ```
 START OF SESSION:
-□ Read CURRENT_STATE.md
+□ Read workspaces/code.md
 □ Read this roadmap — find your session
 □ Open blueprint v3 (docs/references/huma-blueprint-v3.html) for UI reference
 □ Check for any new bugs or regressions from last session
@@ -542,7 +542,7 @@ DURING SESSION:
 END OF SESSION:
 □ TypeScript: 0 errors
 □ Production build: clean
-□ Update CURRENT_STATE.md
+□ Update workspaces/code.md if routes, API, components, or data layer changed structurally
 □ Update this roadmap (check off completed items, note scope changes)
 □ Commit with session number in message
 ```

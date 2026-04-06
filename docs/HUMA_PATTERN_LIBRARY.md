@@ -1136,7 +1136,6 @@ The pattern library is alive. These 12 seeds are the beginning. The operators gr
 
 ## Research Protocol
 
-New patterns are discovered through the huma-researcher skill's DISCOVER program.
 Every candidate pattern must:
 
 1. Score 16/20 minimum on the completeness checklist (10 required + 6 quality)
@@ -1148,8 +1147,6 @@ Patterns enter the library at confidence level "seed" and advance through
 
 Discovery methods: Source Tradition Mining, Cross-Domain Translation,
 Structural Gap Analysis, Cascade Discovery, Failure Mode Analysis.
-
-See .claude/skills/huma-researcher/SKILL.md for the full protocol.
 
 ---
 
