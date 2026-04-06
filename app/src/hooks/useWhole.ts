@@ -45,6 +45,7 @@ import {
   fetchPrinciples,
   fetchCorrelations,
   fetchRecentInsights,
+  fetchPatterns,
 } from "@/lib/queries";
 
 // ─── Return type ────────────────────────────────────────────────────────────
@@ -66,13 +67,18 @@ export interface UseWholeReturn {
   correlations: AspirationCorrelation[];
   historicalInsights: InsightAnnotation[];
 
+  // All patterns (for context view)
+  allPatterns: Pattern[];
+
   // UI state
   loaded: boolean;
   computing: boolean;
+  viewMode: "brief" | "map";
   selectedNode: HolonNode | null;
   archetypeSelectorOpen: boolean;
   chatShellOpen: boolean;
-  chatShellMode: "default" | "new-aspiration";
+  chatShellMode: "default" | "new-aspiration" | "dimension";
+  chatShellDimension: string | null;
   whyEvolution: WhyEvolutionData | null;
   shareworthyOpen: boolean;
   regeneratedCanvas: CanvasData | null;
@@ -116,11 +122,13 @@ export interface UseWholeReturn {
   handleArchiveUndo: () => Promise<void>;
   handleSettingsAction: (action: "clear-chat" | "clear-context" | "start-fresh") => Promise<void>;
   handleContextFieldRemove: (fieldPath: string) => Promise<void>;
+  handleTellMore: (dimension: string) => void;
 
   // Setters needed by JSX
+  setViewMode: React.Dispatch<React.SetStateAction<"brief" | "map">>;
   setArchetypeSelectorOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setChatShellOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setChatShellMode: React.Dispatch<React.SetStateAction<"default" | "new-aspiration">>;
+  setChatShellMode: React.Dispatch<React.SetStateAction<"default" | "new-aspiration" | "dimension">>;
   setSelectedNode: React.Dispatch<React.SetStateAction<HolonNode | null>>;
   setShareworthyOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setRegeneratedCanvas: React.Dispatch<React.SetStateAction<CanvasData | null>>;
@@ -151,8 +159,10 @@ export function useWhole(): UseWholeReturn {
   const [computing, setComputing] = useState(false);
   const [selectedNode, setSelectedNode] = useState<HolonNode | null>(null);
   const [archetypeSelectorOpen, setArchetypeSelectorOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"brief" | "map">("brief");
   const [chatShellOpen, setChatShellOpen] = useState(false);
-  const [chatShellMode, setChatShellMode] = useState<"default" | "new-aspiration">("default");
+  const [chatShellMode, setChatShellMode] = useState<"default" | "new-aspiration" | "dimension">("default");
+  const [chatShellDimension, setChatShellDimension] = useState<string | null>(null);
   const [whyEvolution, setWhyEvolution] = useState<WhyEvolutionData | null>(null);
   const [shareworthyOpen, setShareworthyOpen] = useState(false);
   const [regeneratedCanvas, setRegeneratedCanvas] = useState<CanvasData | null>(null);
@@ -207,6 +217,13 @@ export function useWhole(): UseWholeReturn {
     queryFn: () => fetchCorrelations(userId!),
     enabled: !!userId,
   });
+
+  const { data: patternsData } = useQuery({
+    queryKey: queryKeys.patterns(userId),
+    queryFn: () => fetchPatterns(userId),
+    enabled: true,
+  });
+  const allPatterns = patternsData?.patterns ?? [];
 
   const { data: serverHistoricalInsights = [] } = useQuery({
     queryKey: queryKeys.recentInsights(userId ?? "__anon"),
@@ -657,6 +674,12 @@ export function useWhole(): UseWholeReturn {
     clearCachedSheet();
   }, [user, rawContext]);
 
+  const handleTellMore = useCallback((dimension: string) => {
+    setChatShellDimension(dimension);
+    setChatShellMode("dimension");
+    setChatShellOpen(true);
+  }, []);
+
   const selectedFullNode = selectedNode ? nodes.find((n) => n.id === selectedNode.id) : null;
 
   return {
@@ -672,12 +695,15 @@ export function useWhole(): UseWholeReturn {
     operatorName,
     correlations,
     historicalInsights,
+    allPatterns,
     loaded,
     computing,
+    viewMode,
     selectedNode,
     archetypeSelectorOpen,
     chatShellOpen,
     chatShellMode,
+    chatShellDimension,
     whyEvolution,
     shareworthyOpen,
     regeneratedCanvas,
@@ -713,6 +739,8 @@ export function useWhole(): UseWholeReturn {
     handleArchiveUndo,
     handleSettingsAction,
     handleContextFieldRemove,
+    handleTellMore,
+    setViewMode,
     setArchetypeSelectorOpen,
     setChatShellOpen,
     setChatShellMode,

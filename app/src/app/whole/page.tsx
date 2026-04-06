@@ -10,6 +10,10 @@ import ShareworthyInsightCard from "@/components/whole/ShareworthyInsightCard";
 import WhyEvolution from "@/components/whole/WhyEvolution";
 import ArchetypeSelector from "@/components/whole/ArchetypeSelector";
 import ContextPortrait from "@/components/whole/ContextPortrait";
+import ContextBrief from "@/components/whole/ContextBrief";
+import AspirationsList from "@/components/whole/AspirationsList";
+import PatternsList from "@/components/whole/PatternsList";
+import DimensionMiniShape from "@/components/whole/DimensionMiniShape";
 import CanvasRegenerate from "@/components/whole/CanvasRegenerate";
 import ConfirmationSheet from "@/components/whole/ConfirmationSheet";
 import SettingsSheet from "@/components/whole/SettingsSheet";
@@ -18,16 +22,28 @@ import { useWhole } from "@/hooks/useWhole";
 import { mapAspirationStatus, contextFieldForNodeId } from "@/lib/whole-utils";
 import { isShareworthyInsight } from "@/components/whole/ShareworthyInsightCard";
 import { displayName } from "@/lib/display-name";
+import { DIMENSION_LABELS } from "@/types/v2";
+import type { DimensionKey } from "@/types/v2";
 
 export default function WholePage() {
   const w = useWhole();
 
+  const chatPrompt = w.chatShellMode === "new-aspiration"
+    ? "What are you trying to make work?"
+    : w.chatShellMode === "dimension" && w.chatShellDimension
+      ? `Tell me about your ${DIMENSION_LABELS[w.chatShellDimension as DimensionKey]?.toLowerCase() || w.chatShellDimension}. What should HUMA know?`
+      : w.chatShellOpen
+        ? "Tell me what you're building and why it matters to you."
+        : w.manageMode
+          ? "What would you like to change?"
+          : "What would you like to explore or change?";
+
   return (
     <TabShell
-      contextPrompt={w.chatShellMode === "new-aspiration" ? "What are you trying to make work?" : w.chatShellOpen ? "Tell me what you're building and why it matters to you." : w.manageMode ? "What would you like to change?" : "What would you like to explore or change?"}
+      contextPrompt={chatPrompt}
       forceOpen={w.chatShellOpen}
       onChatClose={() => { w.setChatShellOpen(false); w.setChatShellMode("default"); }}
-      chatMode={w.chatShellMode}
+      chatMode={w.chatShellMode === "dimension" ? "default" : w.chatShellMode}
       sourceTab="whole"
       tabContext={{
         archetypes: w.archetypes,
@@ -43,11 +59,41 @@ export default function WholePage() {
     >
       <div className="min-h-dvh bg-sand-50 flex flex-col pb-20">
         <h1 className="sr-only">Whole</h1>
+
         {/* Header */}
         <div className="px-6 flex items-center justify-between pt-5">
           <span className="font-sans font-medium text-sage-500 text-[11px] tracking-[0.4em] leading-none">HUMA</span>
           <div className="flex items-center gap-3">
             <span className="font-sans font-medium text-[11px] text-sage-300 tracking-[0.1em]">Day {w.dayNum}</span>
+
+            {/* View toggle */}
+            <button
+              onClick={() => w.setViewMode(w.viewMode === "brief" ? "map" : "brief")}
+              className="cursor-pointer w-7 h-7 flex items-center justify-center bg-transparent border-none rounded-lg transition-[background] duration-200 hover:bg-[#EDF3ED]"
+              aria-label={w.viewMode === "brief" ? "Map view" : "Brief view"}
+            >
+              {w.viewMode === "brief" ? (
+                /* Map icon */
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="9" cy="9" r="3" stroke="#A8C4AA" strokeWidth="1.3" />
+                  <circle cx="4" cy="5" r="1.5" stroke="#A8C4AA" strokeWidth="1" />
+                  <circle cx="14" cy="6" r="1.5" stroke="#A8C4AA" strokeWidth="1" />
+                  <circle cx="5" cy="14" r="1.5" stroke="#A8C4AA" strokeWidth="1" />
+                  <circle cx="13" cy="13" r="1.5" stroke="#A8C4AA" strokeWidth="1" />
+                  <line x1="6.5" y1="7" x2="7" y2="7.5" stroke="#A8C4AA" strokeWidth="0.8" />
+                  <line x1="11.5" y1="7.5" x2="12" y2="7" stroke="#A8C4AA" strokeWidth="0.8" />
+                </svg>
+              ) : (
+                /* Brief/document icon */
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="3" y="2" width="12" height="14" rx="2" stroke="#A8C4AA" strokeWidth="1.3" />
+                  <line x1="6" y1="6" x2="12" y2="6" stroke="#A8C4AA" strokeWidth="1" strokeLinecap="round" />
+                  <line x1="6" y1="9" x2="12" y2="9" stroke="#A8C4AA" strokeWidth="1" strokeLinecap="round" />
+                  <line x1="6" y1="12" x2="10" y2="12" stroke="#A8C4AA" strokeWidth="1" strokeLinecap="round" />
+                </svg>
+              )}
+            </button>
+
             <button
               onClick={w.handleManageToggle}
               className={`cursor-pointer w-7 h-7 flex items-center justify-center border-none rounded-lg transition-[background] duration-200 ${w.manageMode ? "bg-[#EDF3ED]" : "bg-transparent"}`}
@@ -73,9 +119,18 @@ export default function WholePage() {
           </div>
         </div>
 
-        {/* Section label */}
-        <div className="px-6 mt-2">
+        {/* Section label + mini shape */}
+        <div className="px-6 mt-2 flex items-center justify-between">
           <span className="font-sans font-medium text-[11px] tracking-[0.18em] uppercase text-sage-300">WHOLE</span>
+          {w.loaded && w.viewMode === "brief" && !w.isEmpty && (
+            <DimensionMiniShape
+              context={w.context}
+              aspirations={w.aspirations}
+              whyStatement={w.whyStatement}
+              archetypes={w.archetypes}
+              size={48}
+            />
+          )}
         </div>
 
         {!w.loaded ? (
@@ -87,7 +142,7 @@ export default function WholePage() {
               <ProfileBanner
                 name={w.operatorName}
                 archetypes={w.archetypes.length > 0 ? w.archetypes : undefined}
-                whyStatement={w.whyStatement || undefined}
+                whyStatement={w.viewMode === "map" ? (w.whyStatement || undefined) : undefined}
                 computing={w.computing}
                 onArchetypeTap={() => w.setArchetypeSelectorOpen(true)}
                 onWhySave={w.handleWhySave}
@@ -108,131 +163,182 @@ export default function WholePage() {
               </div>
             )}
 
-            {/* Shape */}
-            <div ref={w.containerRef} className="flex items-center justify-center mt-4 w-full">
-              <WholeShape
-                nodes={w.nodes}
-                links={w.holonLinks}
-                annotations={w.historicalInsights}
-                width={w.shapeWidth}
-                height={w.shapeHeight}
-                onNodeTap={w.handleNodeTap}
-                selectedNodeId={w.selectedNode?.id}
-                isEmpty={w.isEmpty}
-                manageMode={w.manageMode}
-              />
-            </div>
-
-            {/* Empty state message */}
-            {w.isEmpty && (
-              <div className="text-center px-6 pt-3">
-                <p className="font-serif text-lg italic text-sage-300 mb-3">Your shape starts here.</p>
-                <button
-                  onClick={() => { w.setChatShellMode("new-aspiration"); w.setChatShellOpen(true); }}
-                  className="font-sans cursor-pointer text-sm text-amber-600 bg-transparent border-none underline underline-offset-2 p-0"
-                >
-                  Add your first aspiration
-                </button>
-              </div>
-            )}
-
-            {/* Add aspiration -- visible when not empty */}
-            {!w.isEmpty && (
-              <div className="text-center px-6 pt-4">
-                <button
-                  onClick={() => { w.setChatShellMode("new-aspiration"); w.setChatShellOpen(true); }}
-                  className="font-sans cursor-pointer inline-flex items-center gap-1.5 text-[13px] text-sage-500 bg-transparent border border-dashed border-[#C8D5C9] rounded-[20px] px-4 py-2 min-h-9"
-                >
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M6 1.5v9M1.5 6h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                  Add aspiration
-                </button>
-              </div>
-            )}
-
-            {/* Expand panel -- aspiration detail panel for aspirations, HolonExpandPanel for others */}
-            {w.selectedFullNode && w.selectedFullNode.type === "aspiration" && (() => {
-              const asp = w.aspirations.find((a) => a.id === w.selectedFullNode!.id);
-              return asp ? (
-                <AspirationDetailPanel
-                  aspiration={asp}
-                  patterns={w.selectedAspirationPatterns}
-                  status={w.selectedFullNode!.status}
-                  onClose={() => w.setSelectedNode(null)}
-                  onNameSave={(name) => w.handleAspirationNameSave(asp.id, name)}
-                  onStatusChange={(status) => w.handleAspirationStatusChange(asp.id, status)}
-                  onBehaviorsSave={(behaviors) => w.handleAspirationBehaviorsSave(asp.id, behaviors)}
-                  onFutureSave={(comingUp, longerArc) => w.handleAspirationFutureSave(asp.id, comingUp, longerArc)}
-                  manageMode={w.manageMode}
-                  onArchive={
-                    w.manageMode
-                      ? () => w.setConfirmAction({ type: "archive", id: asp.id, label: w.selectedFullNode!.label })
-                      : undefined
-                  }
-                  onDelete={
-                    w.manageMode
-                      ? () => w.setConfirmAction({ type: "delete", id: asp.id, label: w.selectedFullNode!.label })
-                      : undefined
-                  }
+            {/* ─── Brief View (default) ─── */}
+            {w.viewMode === "brief" && (
+              <div className="mt-5 flex flex-col gap-6">
+                {/* Context brief — the living document */}
+                <ContextBrief
+                  context={w.context}
+                  aspirations={w.aspirations}
+                  whyStatement={w.whyStatement}
+                  archetypes={w.archetypes}
+                  operatorName={w.operatorName}
+                  onTellMore={w.handleTellMore}
                 />
-              ) : null;
-            })()}
-            {w.selectedFullNode && w.selectedFullNode.type !== "aspiration" && (
-              <HolonExpandPanel
-                id={w.selectedFullNode.id}
-                label={w.selectedFullNode.label}
-                description={w.selectedFullNode.description}
-                status={w.selectedFullNode.status}
-                type={w.selectedFullNode.type}
-                dimensions={w.selectedFullNode.dimensions}
-                onClose={() => w.setSelectedNode(null)}
-                archetype={w.archetypes.join(" · ") || undefined}
-                whyStatement={w.whyStatement || undefined}
-                onArchetypeSave={() => w.setArchetypeSelectorOpen(true)}
-                onWhySave={w.handleWhySave}
-                value={w.selectedFullNode.description}
-                onValueSave={w.selectedFullNode.type === "context" ? (v) => w.handleFoundationSave(w.selectedFullNode!.id, v) : undefined}
-                manageMode={w.manageMode}
-                onDelete={
-                  w.manageMode && w.selectedFullNode.type === "principle"
-                    ? () => w.setConfirmAction({
-                        type: "delete-principle",
-                        id: w.selectedFullNode!.id,
-                        label: w.selectedFullNode!.label,
-                      })
-                    : undefined
-                }
-                onClearContext={
-                  w.manageMode && w.selectedFullNode.type === "context"
-                    ? () => {
-                        const field = contextFieldForNodeId(w.selectedFullNode!.id);
-                        if (field) w.setConfirmAction({ type: "clear-context", id: field, label: w.selectedFullNode!.label });
+
+                {/* Aspirations */}
+                <AspirationsList aspirations={w.aspirations} />
+
+                {/* Patterns — your operating system */}
+                <PatternsList patterns={w.allPatterns} />
+
+                {/* Context portrait — editable fields (manage mode) */}
+                {w.manageMode && (
+                  <div className="animate-entrance-3">
+                    <ContextPortrait
+                      context={w.context}
+                      onSave={w.handleContextSave}
+                      manageMode={w.manageMode}
+                      onRemoveField={w.handleContextFieldRemove}
+                    />
+                  </div>
+                )}
+
+                {/* Add aspiration */}
+                <div className="text-center px-6">
+                  <button
+                    onClick={() => { w.setChatShellMode("new-aspiration"); w.setChatShellOpen(true); }}
+                    className="font-sans cursor-pointer inline-flex items-center gap-1.5 text-[13px] text-sage-500 bg-transparent border border-dashed border-[#C8D5C9] rounded-[20px] px-4 py-2 min-h-9"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M6 1.5v9M1.5 6h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                    Add aspiration
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ─── Map View (force-directed graph) ─── */}
+            {w.viewMode === "map" && (
+              <>
+                {/* Shape */}
+                <div ref={w.containerRef} className="flex items-center justify-center mt-4 w-full">
+                  <WholeShape
+                    nodes={w.nodes}
+                    links={w.holonLinks}
+                    annotations={w.historicalInsights}
+                    width={w.shapeWidth}
+                    height={w.shapeHeight}
+                    onNodeTap={w.handleNodeTap}
+                    selectedNodeId={w.selectedNode?.id}
+                    isEmpty={w.isEmpty}
+                    manageMode={w.manageMode}
+                  />
+                </div>
+
+                {/* Empty state message */}
+                {w.isEmpty && (
+                  <div className="text-center px-6 pt-3">
+                    <p className="font-serif text-lg italic text-sage-300 mb-3">Your shape starts here.</p>
+                    <button
+                      onClick={() => { w.setChatShellMode("new-aspiration"); w.setChatShellOpen(true); }}
+                      className="font-sans cursor-pointer text-sm text-amber-600 bg-transparent border-none underline underline-offset-2 p-0"
+                    >
+                      Add your first aspiration
+                    </button>
+                  </div>
+                )}
+
+                {/* Add aspiration -- visible when not empty */}
+                {!w.isEmpty && (
+                  <div className="text-center px-6 pt-4">
+                    <button
+                      onClick={() => { w.setChatShellMode("new-aspiration"); w.setChatShellOpen(true); }}
+                      className="font-sans cursor-pointer inline-flex items-center gap-1.5 text-[13px] text-sage-500 bg-transparent border border-dashed border-[#C8D5C9] rounded-[20px] px-4 py-2 min-h-9"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M6 1.5v9M1.5 6h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
+                      Add aspiration
+                    </button>
+                  </div>
+                )}
+
+                {/* Expand panel -- aspiration detail panel for aspirations, HolonExpandPanel for others */}
+                {w.selectedFullNode && w.selectedFullNode.type === "aspiration" && (() => {
+                  const asp = w.aspirations.find((a) => a.id === w.selectedFullNode!.id);
+                  return asp ? (
+                    <AspirationDetailPanel
+                      aspiration={asp}
+                      patterns={w.selectedAspirationPatterns}
+                      status={w.selectedFullNode!.status}
+                      onClose={() => w.setSelectedNode(null)}
+                      onNameSave={(name) => w.handleAspirationNameSave(asp.id, name)}
+                      onStatusChange={(status) => w.handleAspirationStatusChange(asp.id, status)}
+                      onBehaviorsSave={(behaviors) => w.handleAspirationBehaviorsSave(asp.id, behaviors)}
+                      onFutureSave={(comingUp, longerArc) => w.handleAspirationFutureSave(asp.id, comingUp, longerArc)}
+                      manageMode={w.manageMode}
+                      onArchive={
+                        w.manageMode
+                          ? () => w.setConfirmAction({ type: "archive", id: asp.id, label: w.selectedFullNode!.label })
+                          : undefined
                       }
-                    : undefined
-                }
-              />
+                      onDelete={
+                        w.manageMode
+                          ? () => w.setConfirmAction({ type: "delete", id: asp.id, label: w.selectedFullNode!.label })
+                          : undefined
+                      }
+                    />
+                  ) : null;
+                })()}
+                {w.selectedFullNode && w.selectedFullNode.type !== "aspiration" && (
+                  <HolonExpandPanel
+                    id={w.selectedFullNode.id}
+                    label={w.selectedFullNode.label}
+                    description={w.selectedFullNode.description}
+                    status={w.selectedFullNode.status}
+                    type={w.selectedFullNode.type}
+                    dimensions={w.selectedFullNode.dimensions}
+                    onClose={() => w.setSelectedNode(null)}
+                    archetype={w.archetypes.join(" · ") || undefined}
+                    whyStatement={w.whyStatement || undefined}
+                    onArchetypeSave={() => w.setArchetypeSelectorOpen(true)}
+                    onWhySave={w.handleWhySave}
+                    value={w.selectedFullNode.description}
+                    onValueSave={w.selectedFullNode.type === "context" ? (v) => w.handleFoundationSave(w.selectedFullNode!.id, v) : undefined}
+                    manageMode={w.manageMode}
+                    onDelete={
+                      w.manageMode && w.selectedFullNode.type === "principle"
+                        ? () => w.setConfirmAction({
+                            type: "delete-principle",
+                            id: w.selectedFullNode!.id,
+                            label: w.selectedFullNode!.label,
+                          })
+                        : undefined
+                    }
+                    onClearContext={
+                      w.manageMode && w.selectedFullNode.type === "context"
+                        ? () => {
+                            const field = contextFieldForNodeId(w.selectedFullNode!.id);
+                            if (field) w.setConfirmAction({ type: "clear-context", id: field, label: w.selectedFullNode!.label });
+                          }
+                        : undefined
+                    }
+                  />
+                )}
+
+                {/* Context portrait */}
+                <div className="animate-entrance-3 mt-4">
+                  <ContextPortrait
+                    context={w.context}
+                    onSave={w.handleContextSave}
+                    manageMode={w.manageMode}
+                    onRemoveField={w.handleContextFieldRemove}
+                  />
+                </div>
+
+                {/* Canvas regeneration */}
+                {w.user && w.aspirations.length > 0 && (
+                  <CanvasRegenerate
+                    onGenerated={w.setRegeneratedCanvas}
+                    existingCanvas={w.regeneratedCanvas}
+                  />
+                )}
+              </>
             )}
 
-            {/* Context portrait */}
-            <div className="animate-entrance-3 mt-4">
-              <ContextPortrait
-                context={w.context}
-                onSave={w.handleContextSave}
-                manageMode={w.manageMode}
-                onRemoveField={w.handleContextFieldRemove}
-              />
-            </div>
-
-            {/* Canvas regeneration */}
-            {w.user && w.aspirations.length > 0 && (
-              <CanvasRegenerate
-                onGenerated={w.setRegeneratedCanvas}
-                existingCanvas={w.regeneratedCanvas}
-              />
-            )}
-
-            {/* Insight card */}
+            {/* Insight card — shown in both views */}
             {w.insight && (
               <div className="mt-4">
                 <InsightCard
