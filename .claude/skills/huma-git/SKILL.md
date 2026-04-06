@@ -1,6 +1,6 @@
 ---
 name: huma-git
-description: Use for any git operation in HUMA — reviewing diffs before commit, creating architecture-aware commits, reviewing PRs. Classifies changes by HUMA's 4-layer architecture, voice-checks prompt/copy changes, validates enterprise templates, and enforces commit conventions. Triggers on commit, diff, review, PR, merge, staged, what changed.
+description: Use for any git operation in HUMA — reviewing diffs before commit, creating architecture-aware commits, reviewing PRs. Classifies changes by HUMA's 4-layer architecture and enforces commit conventions. Voice and template checks live in huma-preflight. Triggers on commit, diff, review, PR, merge, staged, what changed.
 ---
 
 # HUMA Git Workflow
@@ -32,10 +32,8 @@ Every changed file maps to a HUMA architecture layer:
 1. `git status` + `git diff --staged` (or `git diff` if nothing staged)
 2. **Change Map:** List files with [M]odified/[A]dded/[D]eleted + layer
 3. **Layer Summary:** One sentence per layer touched
-4. **Voice Check:** If prompt/copy files changed, scan MODIFIED LINES ONLY
-5. **Template Check:** If enterprise data changed, validate completeness
-6. **Concerns:** Flag unfinished work, scope creep, missing files, sensitive data
-7. **Commit Suggestion:** What to stage, message draft, whether to split
+4. **Concerns:** Flag unfinished work, scope creep, missing files, sensitive data
+5. **Commit Suggestion:** What to stage, message draft, whether to split
 
 ### Output
 
@@ -43,13 +41,13 @@ Every changed file maps to a HUMA architecture layer:
 ═══ HUMA DIFF REVIEW ═══
 CHANGE MAP: [files + layers]
 LAYERS: [summaries]
-VOICE: [CLEAN / X violations]
-TEMPLATES: [N/A / VALID / X issues]
 CONCERNS: [NONE / X items]
 SUGGESTED COMMIT: [message + staging advice]
 READY: [YES / FIX FIRST]
 ═══════════════════════
 ```
+
+> Voice and template checks are handled by **huma-preflight**. Run preflight before deploy/merge.
 
 ## Mode 2: Commit
 
@@ -58,11 +56,9 @@ READY: [YES / FIX FIRST]
 ### Steps
 
 1. Classify changes by layer (if not already done in diff review)
-2. Voice-lint modified prompt/copy files (report violations, don't silently commit them)
-3. Validate enterprise templates if changed
-4. Suggest `npx tsc --noEmit` if engine TS changed (don't block, just flag)
-5. Draft commit message
-6. Show for approval, then execute
+2. Suggest `npx tsc --noEmit` if engine TS changed (don't block, just flag)
+3. Draft commit message
+4. Show for approval, then execute
 
 ### Commit Message Format
 
@@ -109,13 +105,12 @@ Voice linter caught forbidden vocabulary in the subtitle.
 1. Get diff (`git diff main...HEAD` or `gh pr diff <number>`)
 2. Read every changed file in full (not just diff — context matters)
 3. Classify by layer, flag if too many layers (suggest split)
-4. Voice compliance on all operator-facing text
-5. Seven Principles check (Wholeness, Essence Before Action, Nodal, Developmental, Multi-Capital, Permanence-to-Flexibility, Open Knowledge)
-6. Enterprise template validation if changed
-7. Phase transition integrity if `phases.ts` changed
-8. Type safety (any `any` introduced? type assertions?)
-9. Design system compliance
-10. Breaking change detection
+4. Seven Principles check (Wholeness, Essence Before Action, Nodal, Developmental, Multi-Capital, Permanence-to-Flexibility, Open Knowledge)
+5. Phase transition integrity if `phases.ts` changed
+6. Type safety (any `any` introduced? type assertions?)
+7. Breaking change detection
+
+> Voice, enterprise template, and design system checks are handled by **huma-preflight**. Run preflight before merge.
 
 ### Output
 
@@ -125,12 +120,9 @@ PR: [title/branch]
 Files: [count]  Layers: [list]
 
 ARCHITECTURE:    [CLEAN / MULTI — justified / SPLIT RECOMMENDED]
-VOICE:           [CLEAN / X violations]
 PRINCIPLES:      [list scored UPHOLDS/NEUTRAL/UNDERMINES]
-ENTERPRISE:      [N/A / VALID / X issues]
 PHASES:          [N/A / INTACT / X issues]
 TYPES:           [CLEAN / X concerns]
-DESIGN:          [N/A / CONSISTENT / X issues]
 BREAKING:        [NONE / X detected]
 
 VERDICT: [APPROVE / REQUEST CHANGES / BLOCK]
@@ -138,6 +130,8 @@ ACTION ITEMS: [numbered, severity-ordered]
 STRENGTHS: [at least one]
 ═══════════════════════
 ```
+
+> Run **huma-preflight** separately for voice, enterprise, design, and accessibility checks.
 
 ### Review tone
 

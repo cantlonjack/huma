@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import type { EmergingBehavior, DimensionKey } from "@/types/v2";
 import { DIMENSION_COLORS, DIMENSION_LABELS } from "@/types/v2";
 
@@ -10,7 +10,7 @@ interface EmergenceCardProps {
   onDismiss: (behaviorKey: string) => void;
 }
 
-export default function EmergenceCard({
+const EmergenceCard = memo(function EmergenceCard({
   behaviors,
   onFormalize,
   onDismiss,
@@ -180,4 +180,6 @@ export default function EmergenceCard({
       `}</style>
     </div>
   );
-}
+});
+
+export default EmergenceCard;

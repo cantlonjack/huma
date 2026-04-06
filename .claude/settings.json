@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreCommit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd app && npx tsc --noEmit 2>&1 | tail -20",
+            "description": "Type-check before commit",
+            "blocking": true
+          }
+        ]
+      }
+    ]
+  }
+}

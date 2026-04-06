@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, memo } from "react";
 import type { Aspiration, Behavior, Pattern, FutureAction, FuturePhase, DimensionKey } from "@/types/v2";
 import { DIMENSION_COLORS, DIMENSION_LABELS } from "@/types/v2";
 import type { HolonStatus } from "./WholeShape";
@@ -103,7 +103,7 @@ function EditableText({
 
 // ─── Behavior row ───────────────────────────────────────────────────────────
 
-function BehaviorRow({
+const BehaviorRow = memo(function BehaviorRow({
   behavior,
   isTrigger,
   linkedPattern,
@@ -190,7 +190,7 @@ function BehaviorRow({
       </div>
     </div>
   );
-}
+});
 
 // ─── Add behavior row ───────────────────────────────────────────────────────
 

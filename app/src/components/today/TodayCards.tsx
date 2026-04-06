@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import type { Aspiration, Insight } from "@/types/v2";
 import { DIMENSION_COLORS } from "@/types/v2";
 import { displayName } from "@/lib/display-name";
@@ -55,7 +56,7 @@ export function AspirationQuickLook({
 
 // ─── Reroute Card ───────────────────────────────────────────────────────────
 
-export function RerouteCard({
+export const RerouteCard = memo(function RerouteCard({
   aspiration,
   weekCompletions,
   onOpenChat,
@@ -89,7 +90,7 @@ export function RerouteCard({
       </button>
     </div>
   );
-}
+});
 
 // ─── Insight Card ───────────────────────────────────────────────────────────
 
@@ -162,7 +163,7 @@ export function ComingUpSection({ items }: { items: ComingUpItem[] }) {
 
 // ─── Standalone Behavior Row ────────────────────────────────────────────────
 
-export function StandaloneBehaviorRow({
+export const StandaloneBehaviorRow = memo(function StandaloneBehaviorRow({
   entry,
   isChecked,
   onToggle,
@@ -198,7 +199,7 @@ export function StandaloneBehaviorRow({
       )}
     </button>
   );
-}
+});
 
 // ─── Transition Card ────────────────────────────────────────────────────────
 

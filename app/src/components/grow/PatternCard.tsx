@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import type { Pattern, Aspiration, SparklineData, MergeSuggestion } from "@/types/v2";
 import { DIMENSION_COLORS, DIMENSION_LABELS } from "@/types/v2";
 import { displayName } from "@/lib/display-name";
@@ -18,7 +18,7 @@ import {
   getSharedCaption,
 } from "@/hooks/useGrow";
 
-export default function PatternCard({
+const PatternCard = memo(function PatternCard({
   pattern,
   aspirations,
   expanded,
@@ -519,4 +519,6 @@ export default function PatternCard({
       )}
     </div>
   );
-}
+});
+
+export default PatternCard;

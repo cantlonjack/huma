@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, memo } from "react";
 import { type Message, type Phase, PHASES } from "@/engine/types";
 import { MAX_MESSAGE_LENGTH } from "@/lib/constants";
 
@@ -188,7 +188,7 @@ export default function Chat({
   );
 }
 
-function MessageBlock({ message }: { message: Message }) {
+const MessageBlock = memo(function MessageBlock({ message }: { message: Message }) {
   if (message.role === "assistant") {
     return (
       <div className="rounded-xl p-4 bg-sand-100 max-w-[85%]">
@@ -205,7 +205,7 @@ function MessageBlock({ message }: { message: Message }) {
       {message.content}
     </div>
   );
-}
+});
 
 function PhaseDivider({ phaseId }: { phaseId: string }) {
   const phaseInfo = PHASES.find((p) => p.id === phaseId);
