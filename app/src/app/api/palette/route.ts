@@ -1,6 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { paletteConcepts } from "@/data/palette-concepts";
 import type { PaletteConcept } from "@/types/v2";
+import { paletteSchema } from "@/lib/schemas";
+import { parseBody } from "@/lib/schemas/parse";
 
 // Adapt engine concepts to V2 type (same shape, different module)
 const PALETTE_CONCEPTS: PaletteConcept[] = paletteConcepts as unknown as PaletteConcept[];
@@ -10,15 +12,9 @@ export async function POST(request: Request) {
     return Response.json({ error: "Service temporarily unavailable" }, { status: 503 });
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = await request.json() as Record<string, unknown>;
-  } catch {
-    return Response.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-
-  const conversationSoFar = (body.conversationSoFar || []) as string[];
-  const selectedConcepts = (body.selectedConcepts || []) as string[];
+  const parsed = await parseBody(request, paletteSchema);
+  if (parsed.error) return parsed.error;
+  const { conversationSoFar, selectedConcepts } = parsed.data;
 
   if (conversationSoFar.length === 0) {
     return Response.json({ concepts: [] });

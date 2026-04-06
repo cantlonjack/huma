@@ -1,31 +1,13 @@
 import { NextResponse } from "next/server";
 import { getRedis } from "@/lib/redis";
 import { createServerSupabase } from "@/lib/supabase-server";
-
-interface MapPayload {
-  markdown: string;
-  canvasData?: unknown;
-  name: string;
-  location: string;
-  enterpriseCount: number;
-  createdAt: string;
-}
+import { mapSaveSchema } from "@/lib/schemas";
+import { parseBody } from "@/lib/schemas/parse";
 
 export async function POST(request: Request) {
-  let body: MapPayload;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-
-  if (!body.markdown || typeof body.markdown !== "string") {
-    return NextResponse.json({ error: "markdown required" }, { status: 400 });
-  }
-  const totalSize = body.markdown.length + (body.canvasData ? JSON.stringify(body.canvasData).length : 0);
-  if (totalSize > 200_000) {
-    return NextResponse.json({ error: "Map too large" }, { status: 400 });
-  }
+  const parsed = await parseBody(request, mapSaveSchema);
+  if (parsed.error) return parsed.error;
+  const body = parsed.data;
 
   const id = crypto.randomUUID();
 

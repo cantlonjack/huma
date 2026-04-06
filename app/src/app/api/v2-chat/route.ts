@@ -1,6 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { isRateLimited } from "@/lib/rate-limit";
-import { rateLimited, badRequest, serviceUnavailable, internalError } from "@/lib/api-error";
+import { rateLimited, serviceUnavailable, internalError } from "@/lib/api-error";
+import { v2ChatSchema } from "@/lib/schemas";
+import { parseBody } from "@/lib/schemas/parse";
 
 // ─── Base Identity ─────────────────────────────────────────────────────────
 const BASE_IDENTITY = `You are HUMA. You help people run their lives as one connected system.
@@ -530,24 +532,9 @@ export async function POST(request: Request) {
     return rateLimited();
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = await request.json() as Record<string, unknown>;
-  } catch {
-    return badRequest("Invalid JSON.");
-  }
-
-  const messages = body.messages as Array<{ role: string; content: string }>;
-  const knownContext = (body.knownContext || {}) as Record<string, unknown>;
-  const aspirations = (body.aspirations || []) as Array<{ rawText: string; clarifiedText: string; status: string }>;
-  const sourceTab = body.sourceTab as string | undefined;
-  const tabContext = (body.tabContext || undefined) as Record<string, unknown> | undefined;
-  const dayCount = (body.dayCount as number) || undefined;
-  const chatMode = body.chatMode as string | undefined;
-
-  if (!Array.isArray(messages) || messages.length === 0) {
-    return badRequest("Messages array required.");
-  }
+  const parsed = await parseBody(request, v2ChatSchema);
+  if (parsed.error) return parsed.error;
+  const { messages, knownContext, aspirations, sourceTab, tabContext, dayCount, chatMode } = parsed.data;
 
   try {
     const anthropic = new Anthropic();

@@ -3,37 +3,8 @@ import { buildFullPrompt, buildDocumentPrompt } from "@/engine/phases";
 import { buildCanvasDataPrompt } from "@/engine/canvas-prompt";
 import { type Phase, type ConversationContext } from "@/engine/types";
 import { isRateLimited } from "@/lib/rate-limit";
-
-// ─── Validation ───
-
-const VALID_PHASES = new Set<string>([
-  "ikigai", "holistic-context", "landscape",
-  "enterprise-map", "nodal-interventions", "operational-design", "complete",
-]);
-
-function validateRequest(body: unknown): { valid: true; data: Record<string, unknown> } | { valid: false; error: string } {
-  if (!body || typeof body !== "object") {
-    return { valid: false, error: "Invalid request body" };
-  }
-  const data = body as Record<string, unknown>;
-
-  if (!Array.isArray(data.messages) || data.messages.length === 0) {
-    return { valid: false, error: "Messages array required" };
-  }
-  if (data.messages.length > 100) {
-    return { valid: false, error: "Too many messages" };
-  }
-  for (const msg of data.messages) {
-    if (!msg || typeof msg !== "object") return { valid: false, error: "Invalid message format" };
-    const m = msg as Record<string, unknown>;
-    if (m.role !== "user" && m.role !== "assistant") return { valid: false, error: "Invalid message role" };
-    if (typeof m.content !== "string" || m.content.length > 50_000) return { valid: false, error: "Invalid message content" };
-  }
-  if (data.phase && !VALID_PHASES.has(data.phase as string)) {
-    return { valid: false, error: "Invalid phase" };
-  }
-  return { valid: true, data };
-}
+import { legacyChatSchema } from "@/lib/schemas";
+import { parseBody } from "@/lib/schemas/parse";
 
 // ─── Handler ───
 
@@ -59,25 +30,9 @@ export async function POST(request: Request) {
   }
 
   // Parse and validate
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return new Response(
-      JSON.stringify({ error: "Invalid JSON" }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
-    );
-  }
-
-  const validation = validateRequest(body);
-  if (!validation.valid) {
-    return new Response(
-      JSON.stringify({ error: validation.error }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
-    );
-  }
-
-  const { messages, phase, context, generateDocument, generateCanvas, syntheses } = validation.data;
+  const parsed = await parseBody(request, legacyChatSchema);
+  if (parsed.error) return parsed.error;
+  const { messages, phase, context, generateDocument, generateCanvas, syntheses } = parsed.data;
 
   try {
     const anthropic = new Anthropic();

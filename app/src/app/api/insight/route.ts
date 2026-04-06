@@ -1,5 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { badRequest, serviceUnavailable, internalError } from "@/lib/api-error";
+import { serviceUnavailable, internalError } from "@/lib/api-error";
+import { insightSchema, type InsightRequest } from "@/lib/schemas";
+import { parseBody } from "@/lib/schemas/parse";
 
 interface BehaviorEntry {
   date: string;
@@ -121,16 +123,9 @@ export async function POST(request: Request) {
     return serviceUnavailable();
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = await request.json() as Record<string, unknown>;
-  } catch {
-    return badRequest("Invalid JSON.");
-  }
-
-  const name = (body.name || "there") as string;
-  const entries = (body.entries || []) as BehaviorEntry[];
-  const behaviorMeta = (body.behaviorMeta || []) as BehaviorMeta[];
+  const parsed = await parseBody(request, insightSchema);
+  if (parsed.error) return parsed.error;
+  const { name, entries, behaviorMeta } = parsed.data;
 
   if (entries.length === 0 || behaviorMeta.length === 0) {
     return Response.json({ insight: null });

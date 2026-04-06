@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import type { ChatMessage, Behavior, Aspiration, ReorganizationPlan } from "@/types/v2";
 import { parseMarkersV2 as parseMarkers } from "@/lib/parse-markers-v2";
+import { MAX_MESSAGE_LENGTH } from "@/lib/constants";
 import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import {
@@ -252,12 +253,14 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
 
   // Send message
   const sendMessage = useCallback(async (text: string) => {
-    if (!text.trim() || streaming) return;
+    const trimmed = text.trim();
+    if (!trimmed || streaming) return;
+    if (trimmed.length > MAX_MESSAGE_LENGTH) return;
 
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
       role: "user",
-      content: text.trim(),
+      content: trimmed,
       createdAt: new Date().toISOString(),
     };
 

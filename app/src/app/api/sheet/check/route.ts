@@ -1,19 +1,11 @@
 import { createServerSupabase } from "@/lib/supabase-server";
+import { sheetCheckSchema } from "@/lib/schemas";
+import { parseBody } from "@/lib/schemas/parse";
 
 export async function POST(request: Request) {
-  let body: Record<string, unknown>;
-  try {
-    body = await request.json() as Record<string, unknown>;
-  } catch {
-    return Response.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-
-  const entryId = body.entryId as string;
-  const checked = body.checked as boolean;
-
-  if (!entryId || typeof checked !== "boolean") {
-    return Response.json({ error: "entryId and checked required" }, { status: 400 });
-  }
+  const parsed = await parseBody(request, sheetCheckSchema);
+  if (parsed.error) return parsed.error;
+  const { entryId, checked } = parsed.data;
 
   try {
     const supabase = await createServerSupabase();

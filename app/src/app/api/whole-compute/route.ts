@@ -1,5 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { badRequest, internalError } from "@/lib/api-error";
+import { internalError } from "@/lib/api-error";
+import { wholeComputeSchema } from "@/lib/schemas";
+import { parseBody } from "@/lib/schemas/parse";
 
 const client = new Anthropic();
 
@@ -38,17 +40,12 @@ Respond with JSON only:
 
 export async function POST(request: Request) {
   try {
-    const { contextData, compute, originalWhy, behavioralSummary } = await request.json();
-
-    if (!contextData || typeof contextData !== "string") {
-      return badRequest("No context data provided.");
-    }
+    const parsed = await parseBody(request, wholeComputeSchema);
+    if (parsed.error) return parsed.error;
+    const { contextData, compute, originalWhy, behavioralSummary } = parsed.data;
 
     // ─── WHY Evolution ────────────────────────────────────────────────
     if (compute === "why-evolve") {
-      if (!originalWhy || !behavioralSummary) {
-        return badRequest("why-evolve requires originalWhy and behavioralSummary.");
-      }
 
       const prompt = `Original WHY: "${originalWhy}"
 

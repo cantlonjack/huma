@@ -1,7 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { isRateLimited } from "@/lib/rate-limit";
 import { matchTemplate, getSpecificityHints } from "@/lib/template-matcher";
-import { rateLimited, badRequest, serviceUnavailable, internalError } from "@/lib/api-error";
+import { rateLimited, serviceUnavailable, internalError } from "@/lib/api-error";
+import { sheetCompileSchema } from "@/lib/schemas";
+import { parseBody } from "@/lib/schemas/parse";
 import type { KnownContext, SheetCompileRequest } from "@/types/v2";
 
 // ─── Season derivation ────────────────────────────────────────────────────
@@ -386,24 +388,19 @@ export async function POST(request: Request) {
     }
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = await request.json() as Record<string, unknown>;
-  } catch {
-    return badRequest("Invalid JSON.");
-  }
-
-  const req = body as Partial<SheetCompileRequest>;
-  const name = req.name || "there";
-  const aspirations = req.aspirations || [];
-  const knownContext = (req.knownContext || {}) as KnownContext;
-  const recentHistory = (req.recentHistory || []) as RecentEntry[];
-  const conversationMessages = req.conversationMessages || [];
+  const parsed = await parseBody(request, sheetCompileSchema);
+  if (parsed.error) return parsed.error;
+  const req = parsed.data;
+  const name = req.name;
+  const aspirations = req.aspirations;
+  const knownContext = req.knownContext as KnownContext;
+  const recentHistory = req.recentHistory as RecentEntry[];
+  const conversationMessages = req.conversationMessages;
   // Date should always come from the client (local timezone). UTC fallback only as last resort.
   const date = req.date || new Date().toISOString().split("T")[0];
-  const dayCount = req.dayCount || 1;
-  const archetypes = req.archetypes || [];
-  const whyStatement = req.whyStatement || "";
+  const dayCount = req.dayCount;
+  const archetypes = req.archetypes;
+  const whyStatement = req.whyStatement;
 
   if (aspirations.length === 0) {
     return Response.json({ entries: [], date });

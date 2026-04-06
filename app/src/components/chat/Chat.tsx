@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { type Message, type Phase, PHASES } from "@/engine/types";
+import { MAX_MESSAGE_LENGTH } from "@/lib/constants";
 
 const INPUT_PLACEHOLDERS: Record<Phase, string> = {
   ikigai: "Share what comes to mind\u2026",
@@ -67,6 +68,7 @@ export default function Chat({
     e.preventDefault();
     const trimmed = input.trim();
     if (!trimmed || isLoading) return;
+    if (trimmed.length > MAX_MESSAGE_LENGTH) return;
     onSend(trimmed);
     setInput("");
     if (textareaRef.current) {
