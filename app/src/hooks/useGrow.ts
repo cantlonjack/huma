@@ -1,14 +1,22 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import type { Pattern, Aspiration, DimensionKey, SparklineData, EmergingBehavior, MergeSuggestion, MonthlyReviewData } from "@/types/v2";
 import { DIMENSION_COLORS, DIMENSION_LABELS } from "@/types/v2";
 import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { displayName } from "@/lib/display-name";
-import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
 import { findDropOffDate, formatDropDate, getAspirationName } from "@/lib/grow-utils";
-import { getPatterns, getAspirations, getPatternSparklines, detectEmergingBehaviors, savePattern, detectMergeCandidates, mergePatterns, getMonthlyReviewData, updatePattern, deletePattern } from "@/lib/supabase-v2";
+import { savePattern, detectMergeCandidates, mergePatterns, updatePattern, deletePattern } from "@/lib/supabase-v2";
+import {
+  queryKeys,
+  fetchPatterns,
+  fetchKnownContext,
+  fetchSparklines,
+  fetchEmergingBehaviors,
+  fetchMonthlyReview,
+} from "@/lib/queries";
 
 // Re-export helpers from their canonical location for backwards compatibility
 export {
@@ -71,18 +79,68 @@ export interface UseGrowReturn {
 
 export function useGrow(): UseGrowReturn {
   const { user, loading: authLoading } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [patterns, setPatterns] = useState<Pattern[]>([]);
-  const [aspirations, setAspirations] = useState<Aspiration[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [archetypes, setArchetypes] = useState<string[]>([]);
-  const [whyStatement, setWhyStatement] = useState<string | null>(null);
-  const [sparklines, setSparklines] = useState<Map<string, SparklineData>>(new Map());
-  const [emergingBehaviors, setEmergingBehaviors] = useState<EmergingBehavior[]>([]);
   const [investigatePatternId, setInvestigatePatternId] = useState<string | null>(null);
   const [newAspirationOpen, setNewAspirationOpen] = useState(false);
   const [dismissedMerges, setDismissedMerges] = useState<Set<string>>(new Set());
-  const [monthlyReview, setMonthlyReview] = useState<MonthlyReviewData | null>(null);
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+  const [archiveToast, setArchiveToast] = useState<{ id: string; name: string } | null>(null);
+  const archivedPatternRef = useRef<Pattern | null>(null);
+
+  // Local overrides for optimistic updates to patterns/emerging
+  const [localPatterns, setLocalPatterns] = useState<Pattern[] | null>(null);
+  const [localEmerging, setLocalEmerging] = useState<EmergingBehavior[] | null>(null);
+
+  const userId = user?.id ?? null;
+  const enabled = !authLoading;
+
+  // ─── React Query: Data Loading ──────────────────────────────────────────
+
+  const { data: patternData, isLoading: patternLoading } = useQuery({
+    queryKey: queryKeys.patterns(userId),
+    queryFn: () => fetchPatterns(userId),
+    enabled,
+  });
+
+  const serverPatterns = patternData?.patterns ?? [];
+  const patterns = localPatterns ?? serverPatterns;
+  const aspirations = patternData?.aspirations ?? [];
+
+  const { data: ctxData } = useQuery({
+    queryKey: queryKeys.knownContext(userId),
+    queryFn: () => fetchKnownContext(userId),
+    enabled,
+  });
+
+  const archetypes = (() => {
+    const saved = ctxData?.archetypes as string[] | undefined;
+    return saved && Array.isArray(saved) && saved.length > 0 ? saved : [];
+  })();
+  const whyStatement = (ctxData?.why_statement as string) || null;
+
+  const { data: sparklines = new Map<string, SparklineData>() } = useQuery({
+    queryKey: queryKeys.sparklines(userId ?? "__anon"),
+    queryFn: () => fetchSparklines(userId!, patterns),
+    enabled: enabled && !!userId && patterns.length > 0,
+  });
+
+  const { data: serverEmerging = [] } = useQuery({
+    queryKey: queryKeys.emergingBehaviors(userId ?? "__anon"),
+    queryFn: () => fetchEmergingBehaviors(userId!, patterns, aspirations),
+    enabled: enabled && !!userId,
+  });
+
+  const emergingBehaviors = localEmerging ?? serverEmerging;
+
+  const { data: monthlyReview = null } = useQuery({
+    queryKey: queryKeys.monthlyReview(userId ?? "__anon"),
+    queryFn: () => fetchMonthlyReview(userId!, aspirations),
+    enabled: enabled && !!userId,
+  });
+
+  const loading = patternLoading;
+
+  // ─── Handlers ───────────────────────────────────────────────────────────
 
   const handleToggleExpand = useCallback((id: string) => {
     setExpandedId(prev => prev === id ? null : id);
@@ -116,7 +174,6 @@ export function useGrow(): UseGrowReturn {
       updatedAt: new Date().toISOString(),
     };
 
-    // Save to Supabase if authenticated
     if (user) {
       try {
         const sb = createClient();
@@ -124,7 +181,6 @@ export function useGrow(): UseGrowReturn {
       } catch { /* fall through to localStorage */ }
     }
 
-    // Save to localStorage as fallback
     try {
       const saved = localStorage.getItem("huma-v2-patterns");
       const all = saved ? JSON.parse(saved) : [];
@@ -132,13 +188,11 @@ export function useGrow(): UseGrowReturn {
       localStorage.setItem("huma-v2-patterns", JSON.stringify(all));
     } catch { /* non-critical */ }
 
-    // Update local state
-    setPatterns(prev => [...prev, newPattern]);
-    setEmergingBehaviors(prev => prev.filter(b => b.behaviorKey !== behavior.behaviorKey));
-  }, [user]);
+    setLocalPatterns(prev => [...(prev ?? patterns), newPattern]);
+    setLocalEmerging(prev => (prev ?? emergingBehaviors).filter(b => b.behaviorKey !== behavior.behaviorKey));
+  }, [user, patterns, emergingBehaviors]);
 
   const handleDismissEmergence = useCallback((behaviorKey: string) => {
-    // Persist dismissal so it doesn't reappear this session
     try {
       const saved = localStorage.getItem("huma-v2-dismissed-emergences");
       const dismissed: string[] = saved ? JSON.parse(saved) : [];
@@ -148,8 +202,8 @@ export function useGrow(): UseGrowReturn {
       }
     } catch { /* non-critical */ }
 
-    setEmergingBehaviors(prev => prev.filter(b => b.behaviorKey !== behaviorKey));
-  }, []);
+    setLocalEmerging(prev => (prev ?? emergingBehaviors).filter(b => b.behaviorKey !== behaviorKey));
+  }, [emergingBehaviors]);
 
   const handleMerge = useCallback(async (primaryId: string, secondaryId: string) => {
     if (!user) return;
@@ -157,25 +211,21 @@ export function useGrow(): UseGrowReturn {
       const sb = createClient();
       if (!sb) return;
       const merged = await mergePatterns(sb, user.id, primaryId, secondaryId, patterns);
-      // Update local state: replace primary, remove secondary
-      setPatterns(prev =>
-        prev.filter(p => p.id !== secondaryId).map(p => p.id === primaryId ? merged : p)
+      setLocalPatterns(prev =>
+        (prev ?? patterns).filter(p => p.id !== secondaryId).map(p => p.id === primaryId ? merged : p)
       );
     } catch {
-      // Fallback: just dismiss the suggestion
       setDismissedMerges(prev => new Set(prev).add(`${primaryId}:${secondaryId}`));
     }
   }, [user, patterns]);
 
   const handleDismissMerge = useCallback((patternId: string, otherPatternId: string) => {
-    // Dismiss both directions
     setDismissedMerges(prev => {
       const next = new Set(prev);
       next.add(`${patternId}:${otherPatternId}`);
       next.add(`${otherPatternId}:${patternId}`);
       return next;
     });
-    // Persist dismissals
     try {
       const key = "huma-v2-dismissed-merges";
       const saved = localStorage.getItem(key);
@@ -185,30 +235,22 @@ export function useGrow(): UseGrowReturn {
     } catch { /* non-critical */ }
   }, []);
 
-  // ─── Pattern management: update, archive, remove ────────────────────────
-  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
-  const [archiveToast, setArchiveToast] = useState<{ id: string; name: string } | null>(null);
-  const archivedPatternRef = useRef<Pattern | null>(null);
-
   const handlePatternUpdate = useCallback(async (
     patternId: string,
     updates: Partial<Pick<Pattern, "name" | "trigger" | "steps" | "timeWindow">>
   ) => {
-    // Update local state immediately
-    setPatterns(prev => prev.map(p => {
+    setLocalPatterns(prev => (prev ?? patterns).map(p => {
       if (p.id !== patternId) return p;
       return { ...p, ...updates, updatedAt: new Date().toISOString() };
     }));
 
-    // Persist to Supabase
     if (user) {
       try {
         const sb = createClient();
         if (sb) await updatePattern(sb, patternId, user.id, updates);
-      } catch { /* non-critical, local state already updated */ }
+      } catch { /* non-critical */ }
     }
 
-    // Persist to localStorage for pre-auth
     try {
       const saved = localStorage.getItem("huma-v2-patterns");
       if (saved) {
@@ -217,20 +259,16 @@ export function useGrow(): UseGrowReturn {
         localStorage.setItem("huma-v2-patterns", JSON.stringify(updated));
       }
     } catch { /* non-critical */ }
-  }, [user]);
+  }, [user, patterns]);
 
   const handlePatternArchive = useCallback(async (patternId: string) => {
     const pat = patterns.find(p => p.id === patternId);
     if (!pat) return;
 
-    // Store for undo
     archivedPatternRef.current = pat;
-
-    // Remove from view
-    setPatterns(prev => prev.filter(p => p.id !== patternId));
+    setLocalPatterns(prev => (prev ?? patterns).filter(p => p.id !== patternId));
     setArchiveToast({ id: patternId, name: pat.name });
 
-    // Delete from Supabase (re-saved on undo)
     if (user) {
       try {
         const sb = createClient();
@@ -238,7 +276,6 @@ export function useGrow(): UseGrowReturn {
       } catch { /* non-critical */ }
     }
 
-    // Remove from localStorage
     try {
       const saved = localStorage.getItem("huma-v2-patterns");
       if (saved) {
@@ -247,13 +284,11 @@ export function useGrow(): UseGrowReturn {
       }
     } catch { /* non-critical */ }
 
-    // Clear cached sheet to force recompile
     try {
       const today = new Date().toISOString().slice(0, 10);
       localStorage.removeItem(`huma-v2-sheet-${today}`);
     } catch { /* non-critical */ }
 
-    // Auto-dismiss toast after 5 seconds
     setTimeout(() => {
       setArchiveToast(prev => prev?.id === patternId ? null : prev);
     }, 5000);
@@ -264,10 +299,8 @@ export function useGrow(): UseGrowReturn {
     const restored = archivedPatternRef.current;
     archivedPatternRef.current = null;
 
-    // Add back to local state
-    setPatterns(prev => [...prev, restored]);
+    setLocalPatterns(prev => [...(prev ?? patterns), restored]);
 
-    // Re-save to Supabase
     if (user) {
       try {
         const sb = createClient();
@@ -275,7 +308,6 @@ export function useGrow(): UseGrowReturn {
       } catch { /* non-critical */ }
     }
 
-    // Re-add to localStorage
     try {
       const saved = localStorage.getItem("huma-v2-patterns");
       const all: Pattern[] = saved ? JSON.parse(saved) : [];
@@ -284,7 +316,7 @@ export function useGrow(): UseGrowReturn {
     } catch { /* non-critical */ }
 
     setArchiveToast(null);
-  }, [user, archiveToast]);
+  }, [user, archiveToast, patterns]);
 
   const handlePatternRemove = useCallback((patternId: string) => {
     setConfirmRemoveId(patternId);
@@ -295,10 +327,8 @@ export function useGrow(): UseGrowReturn {
     const patternId = confirmRemoveId;
     setConfirmRemoveId(null);
 
-    // Remove from local state
-    setPatterns(prev => prev.filter(p => p.id !== patternId));
+    setLocalPatterns(prev => (prev ?? patterns).filter(p => p.id !== patternId));
 
-    // Delete from Supabase
     if (user) {
       try {
         const sb = createClient();
@@ -306,7 +336,6 @@ export function useGrow(): UseGrowReturn {
       } catch { /* non-critical */ }
     }
 
-    // Remove from localStorage
     try {
       const saved = localStorage.getItem("huma-v2-patterns");
       if (saved) {
@@ -315,12 +344,11 @@ export function useGrow(): UseGrowReturn {
       }
     } catch { /* non-critical */ }
 
-    // Clear cached sheet to force recompile
     try {
       const today = new Date().toISOString().slice(0, 10);
       localStorage.removeItem(`huma-v2-sheet-${today}`);
     } catch { /* non-critical */ }
-  }, [user, confirmRemoveId]);
+  }, [user, confirmRemoveId, patterns]);
 
   const confirmRemovePatternObj = confirmRemoveId ? patterns.find(p => p.id === confirmRemoveId) : null;
 
@@ -328,7 +356,6 @@ export function useGrow(): UseGrowReturn {
   const mergeSuggestions = (() => {
     if (patterns.length < 2) return new Map<string, MergeSuggestion>();
     const all = detectMergeCandidates(patterns);
-    // Load persisted dismissals on first render
     let persisted: string[] = [];
     try {
       const saved = localStorage.getItem("huma-v2-dismissed-merges");
@@ -343,134 +370,6 @@ export function useGrow(): UseGrowReturn {
     }
     return map;
   })();
-
-  // ─── Data Loading ───────────────────────────────────────────────────────
-  useEffect(() => {
-    if (authLoading) return;
-
-    async function loadData() {
-      setLoading(true);
-      let loadedPatterns: Pattern[] = [];
-      let loadedAspirations: Aspiration[] = [];
-
-      const supabase = user ? createClient() : null;
-
-      // Load patterns from Supabase
-      if (supabase && user) {
-        try {
-          loadedPatterns = await getPatterns(supabase, user.id);
-        } catch { /* fallback to localStorage */ }
-      }
-
-      // Fallback: localStorage patterns
-      if (loadedPatterns.length === 0) {
-        try {
-          const saved = localStorage.getItem("huma-v2-patterns");
-          if (saved) loadedPatterns = JSON.parse(saved);
-        } catch { /* fresh */ }
-      }
-
-      // If still no patterns, try extracting from aspirations
-      if (loadedPatterns.length === 0) {
-        if (supabase && user) {
-          try {
-            loadedAspirations = await getAspirations(supabase, user.id);
-          } catch { /* fallback */ }
-        }
-
-        if (loadedAspirations.length === 0) {
-          try {
-            const saved = localStorage.getItem("huma-v2-aspirations");
-            if (saved) loadedAspirations = JSON.parse(saved);
-          } catch { /* fresh */ }
-        }
-
-        if (loadedAspirations.length > 0) {
-          loadedPatterns = extractPatternsFromAspirations(loadedAspirations);
-        }
-      } else {
-        // Still load aspirations for context
-        if (supabase && user) {
-          try {
-            loadedAspirations = await getAspirations(supabase, user.id);
-          } catch { /* non-critical */ }
-        }
-        if (loadedAspirations.length === 0) {
-          try {
-            const saved = localStorage.getItem("huma-v2-aspirations");
-            if (saved) loadedAspirations = JSON.parse(saved);
-          } catch { /* fresh */ }
-        }
-      }
-
-      setPatterns(loadedPatterns);
-      setAspirations(loadedAspirations);
-
-      // Load archetypes + WHY for chat context and display
-      let loadedArchetypes: string[] = [];
-      let loadedWhy: string | null = null;
-      if (supabase && user) {
-        try {
-          const { getKnownContext } = await import("@/lib/supabase-v2");
-          const ctx = await getKnownContext(supabase, user.id);
-          const savedArchs = ctx.archetypes as string[] | undefined;
-          if (savedArchs?.length) loadedArchetypes = savedArchs;
-          if (ctx.why_statement) loadedWhy = ctx.why_statement as string;
-        } catch { /* non-critical */ }
-      }
-      if (loadedArchetypes.length === 0 || !loadedWhy) {
-        try {
-          const localCtx = localStorage.getItem("huma-v2-known-context");
-          if (localCtx) {
-            const parsed = JSON.parse(localCtx);
-            if (parsed.archetypes?.length > 0 && loadedArchetypes.length === 0) loadedArchetypes = parsed.archetypes;
-            if (parsed.why_statement && !loadedWhy) loadedWhy = parsed.why_statement;
-          }
-        } catch { /* fresh */ }
-      }
-      setArchetypes(loadedArchetypes);
-      setWhyStatement(loadedWhy);
-
-      // Load sparkline data for all patterns (requires auth + behavior_log)
-      if (supabase && user && loadedPatterns.length > 0) {
-        try {
-          const sparklineData = await getPatternSparklines(supabase, user.id, loadedPatterns);
-          const map = new Map<string, SparklineData>();
-          for (const s of sparklineData) map.set(s.patternId, s);
-          setSparklines(map);
-        } catch { /* non-critical — sparklines are a progressive enhancement */ }
-      }
-
-      // Detect emerging behaviors (requires auth + behavior_log data)
-      if (supabase && user) {
-        try {
-          const emerging = await detectEmergingBehaviors(
-            supabase, user.id, loadedPatterns, loadedAspirations
-          );
-          // Filter out previously dismissed emergences
-          let dismissed: string[] = [];
-          try {
-            const saved = localStorage.getItem("huma-v2-dismissed-emergences");
-            if (saved) dismissed = JSON.parse(saved);
-          } catch { /* fresh */ }
-          const filtered = emerging.filter(b => !dismissed.includes(b.behaviorKey));
-          setEmergingBehaviors(filtered);
-        } catch { /* non-critical */ }
-      }
-
-      // Monthly review (requires auth + behavior_log history)
-      if (supabase && user) {
-        try {
-          const review = await getMonthlyReviewData(supabase, user.id, loadedAspirations);
-          setMonthlyReview(review);
-        } catch { /* non-critical */ }
-      }
-
-      setLoading(false);
-    }
-
-    loadData();
-  }, [user, authLoading]);
 
   // ─── Day count ─────────────────────────────────────────────────────────
   const dayCount = (() => {
@@ -522,7 +421,6 @@ export function useGrow(): UseGrowReturn {
     ? sparklines.get(investigatePatternId) ?? null
     : null;
 
-  // Build the initial HUMA message for dropping pattern investigation
   let investigateMessage: string | undefined;
   if (investigatePattern && investigateSparkline?.trend === "dropping") {
     const dropDate = findDropOffDate(investigateSparkline.points);
@@ -530,7 +428,6 @@ export function useGrow(): UseGrowReturn {
     investigateMessage = `Your ${displayName(investigatePattern.name)} dropped off${dateStr}. What changed?`;
   }
 
-  // Enrich tabContext with selected pattern details when investigating
   if (investigatePattern && investigateSparkline) {
     tabContext.selectedPattern = {
       id: investigatePattern.id,
@@ -552,7 +449,6 @@ export function useGrow(): UseGrowReturn {
   const finding = patterns.filter(p => p.status === "finding");
 
   return {
-    // State
     loading,
     patterns,
     aspirations,
@@ -566,8 +462,6 @@ export function useGrow(): UseGrowReturn {
     monthlyReview,
     archiveToast,
     confirmRemoveId,
-
-    // Derived
     dayCount,
     tabContext,
     investigatePattern,
@@ -578,12 +472,8 @@ export function useGrow(): UseGrowReturn {
     finding,
     mergeSuggestions,
     confirmRemovePattern: confirmRemovePatternObj,
-
-    // Setters
     setNewAspirationOpen,
     setConfirmRemoveId,
-
-    // Handlers
     handleToggleExpand,
     handleInvestigate,
     handleChatClose,

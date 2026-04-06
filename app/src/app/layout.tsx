@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Source_Sans_3 } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import AuthProvider from "@/components/shared/AuthProvider";
+import QueryProvider from "@/components/shared/QueryProvider";
 import BottomNav from "@/components/shared/BottomNav";
 import "./globals.css";
 
@@ -55,6 +56,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${cormorant.variable} ${sourceSans.variable} font-sans antialiased`}>
+        <QueryProvider>
         <AuthProvider>
           <a href="#main-content" className="skip-nav">Skip to main content</a>
           <main id="main-content">
@@ -62,6 +64,7 @@ export default function RootLayout({
           </main>
           <BottomNav />
         </AuthProvider>
+        </QueryProvider>
         <Analytics />
       </body>
     </html>

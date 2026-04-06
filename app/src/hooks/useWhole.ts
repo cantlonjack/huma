@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import type { HolonNode, HolonLink, InsightAnnotation } from "@/components/whole/WholeShape";
 import type { WhyEvolutionData } from "@/components/whole/WhyEvolution";
 import { useAuth } from "@/components/shared/AuthProvider";
@@ -11,17 +12,10 @@ import type { CanvasData } from "@/engine/canvas-types";
 import { buildNodes, computeDimensionLinks, serializeContext } from "@/lib/whole-utils";
 import { withSupabase, clearCachedSheet, updateLocalAspiration as updateLocalAspirationStorage } from "@/lib/persist";
 import {
-  getAllAspirations,
-  getKnownContext,
-  getUndeliveredInsight,
   markInsightDelivered,
-  getWhyStatement,
   updateWhyStatement,
   updateKnownContext,
-  getPrinciples,
-  getAspirationCorrelations,
   getBehavioralSummary,
-  getRecentInsights,
   archiveAspiration,
   deleteAspiration,
   updateAspirationStatus,
@@ -42,6 +36,16 @@ import {
   getPatternsByAspiration,
   type AspirationCorrelation,
 } from "@/lib/supabase-v2";
+import {
+  queryKeys,
+  fetchAllAspirations,
+  fetchKnownContext,
+  fetchUndeliveredInsight,
+  fetchWhyStatement,
+  fetchPrinciples,
+  fetchCorrelations,
+  fetchRecentInsights,
+} from "@/lib/queries";
 
 // ─── Return type ────────────────────────────────────────────────────────────
 
@@ -134,24 +138,22 @@ export interface UseWholeReturn {
 export function useWhole(): UseWholeReturn {
   const { user } = useAuth();
   const router = useRouter();
-  const [aspirations, setAspirations] = useState<Aspiration[]>([]);
-  const [context, setContext] = useState<KnownContext>({});
-  const [rawContext, setRawContext] = useState<Record<string, unknown>>({});
-  const [principles, setPrinciples] = useState<Principle[]>([]);
+  const userId = user?.id ?? null;
+
+  // Local overrides for optimistic updates
+  const [localAspirations, setLocalAspirations] = useState<Aspiration[] | null>(null);
+  const [localContext, setLocalContext] = useState<Record<string, unknown> | null>(null);
+  const [localPrinciples, setLocalPrinciples] = useState<Principle[] | null>(null);
+  const [localWhyStatement, setLocalWhyStatement] = useState<string | null | undefined>(undefined);
+  const [localArchetypes, setLocalArchetypes] = useState<string[] | null>(null);
+
   const [insight, setInsight] = useState<Insight | null>(null);
-  const [whyStatement, setWhyStatement] = useState<string | null>(null);
-  const [archetypes, setArchetypes] = useState<string[]>([]);
-  const [operatorName, setOperatorName] = useState("");
-  const [correlations, setCorrelations] = useState<AspirationCorrelation[]>([]);
-  const [historicalInsights, setHistoricalInsights] = useState<InsightAnnotation[]>([]);
-  const [loaded, setLoaded] = useState(false);
   const [computing, setComputing] = useState(false);
   const [selectedNode, setSelectedNode] = useState<HolonNode | null>(null);
   const [archetypeSelectorOpen, setArchetypeSelectorOpen] = useState(false);
   const [chatShellOpen, setChatShellOpen] = useState(false);
   const [chatShellMode, setChatShellMode] = useState<"default" | "new-aspiration">("default");
   const [whyEvolution, setWhyEvolution] = useState<WhyEvolutionData | null>(null);
-  const [whyDate, setWhyDate] = useState<string | null>(null);
   const [shareworthyOpen, setShareworthyOpen] = useState(false);
   const [regeneratedCanvas, setRegeneratedCanvas] = useState<CanvasData | null>(null);
   const [manageMode, setManageMode] = useState(false);
@@ -168,7 +170,95 @@ export function useWhole(): UseWholeReturn {
   const [shapeWidth, setShapeWidth] = useState(340);
   const computeCalledRef = useRef(false);
 
-  // Measure container width
+  // ─── React Query: Data Loading ──────────────────────────────────────────
+
+  const { data: serverAspirations = [], isLoading: aspLoading } = useQuery({
+    queryKey: queryKeys.allAspirations(userId),
+    queryFn: () => fetchAllAspirations(userId),
+    enabled: true,
+  });
+
+  const { data: serverContext = {}, isLoading: ctxLoading } = useQuery({
+    queryKey: queryKeys.knownContext(userId),
+    queryFn: () => fetchKnownContext(userId),
+    enabled: true,
+  });
+
+  const { data: serverInsight } = useQuery({
+    queryKey: queryKeys.undeliveredInsight(userId),
+    queryFn: () => fetchUndeliveredInsight(userId),
+    enabled: !!userId,
+  });
+
+  const { data: whyData } = useQuery({
+    queryKey: queryKeys.whyStatement(userId ?? "__anon"),
+    queryFn: () => fetchWhyStatement(userId!),
+    enabled: !!userId,
+  });
+
+  const { data: serverPrinciples = [] } = useQuery({
+    queryKey: queryKeys.principles(userId ?? "__anon"),
+    queryFn: () => fetchPrinciples(userId!),
+    enabled: !!userId,
+  });
+
+  const { data: serverCorrelations = [] } = useQuery({
+    queryKey: queryKeys.correlations(userId ?? "__anon"),
+    queryFn: () => fetchCorrelations(userId!),
+    enabled: !!userId,
+  });
+
+  const { data: serverHistoricalInsights = [] } = useQuery({
+    queryKey: queryKeys.recentInsights(userId ?? "__anon"),
+    queryFn: () => fetchRecentInsights(userId!, 3),
+    enabled: !!userId,
+  });
+
+  // ─── Resolved state (local overrides > server) ─────────────────────────
+
+  const aspirations = localAspirations ?? serverAspirations;
+  const rawContext = localContext ?? serverContext;
+  const context = rawContext as KnownContext;
+  const principles = localPrinciples ?? serverPrinciples;
+  const correlations = serverCorrelations;
+
+  const serverWhyStatement = whyData?.whyStatement ?? null;
+  const whyDate = whyData?.whyDate ?? null;
+  const whyStatement = localWhyStatement !== undefined ? localWhyStatement : serverWhyStatement;
+
+  const serverArchetypes = (() => {
+    const saved = rawContext.archetypes as string[] | undefined;
+    return saved && Array.isArray(saved) && saved.length > 0 ? saved : [];
+  })();
+  const archetypes = localArchetypes ?? serverArchetypes;
+
+  const operatorName = (() => {
+    const nameFromCtx = (rawContext as Record<string, unknown>).operator_name as string
+      || (rawContext as Record<string, unknown>).name as string;
+    if (nameFromCtx) return nameFromCtx;
+    if (user?.email) return user.email.split("@")[0];
+    return "";
+  })();
+
+  const historicalInsights: InsightAnnotation[] = useMemo(() => {
+    if (serverHistoricalInsights.length === 0) return [];
+    return serverHistoricalInsights.map((ins: { id: string; text: string; dimensionsInvolved: unknown }) => ({
+      id: ins.id,
+      text: ins.text,
+      dimensionsInvolved: ins.dimensionsInvolved as string[],
+    }));
+  }, [serverHistoricalInsights]);
+
+  // Sync server insight to local state
+  useEffect(() => {
+    if (serverInsight !== undefined) {
+      setInsight(serverInsight);
+    }
+  }, [serverInsight]);
+
+  const loaded = !aspLoading && !ctxLoading;
+
+  // ─── Measure container width ──────────────────────────────────────────
   useEffect(() => {
     const measure = () => {
       if (containerRef.current) {
@@ -188,97 +278,11 @@ export function useWhole(): UseWholeReturn {
     }
   }, [loaded]);
 
-  // Load data
-  useEffect(() => {
-    async function load() {
-      let localAspirations: Aspiration[] = [];
-      let localContext: KnownContext = {};
-      let localRawContext: Record<string, unknown> = {};
-
-      try {
-        const asp = localStorage.getItem("huma-v2-aspirations");
-        if (asp) localAspirations = JSON.parse(asp);
-        const ctx = localStorage.getItem("huma-v2-known-context");
-        if (ctx) {
-          localRawContext = JSON.parse(ctx);
-          localContext = localRawContext as KnownContext;
-        }
-      } catch { /* fresh */ }
-
-      if (user) {
-        const supabase = createClient();
-        if (supabase) {
-          try {
-            const [dbAspirations, dbContext, dbInsight, dbWhy, dbPrinciples, dbCorrelations, dbHistoricalInsights] = await Promise.all([
-              getAllAspirations(supabase, user.id),
-              getKnownContext(supabase, user.id),
-              getUndeliveredInsight(supabase, user.id),
-              getWhyStatement(supabase, user.id),
-              getPrinciples(supabase, user.id),
-              getAspirationCorrelations(supabase, user.id),
-              getRecentInsights(supabase, user.id, 3),
-            ]);
-
-            if (dbAspirations.length > 0) setAspirations(dbAspirations);
-            else setAspirations(localAspirations);
-
-            const typedCtx = dbContext as KnownContext;
-            setRawContext(dbContext);
-            if (Object.keys(dbContext).length > 0) setContext(typedCtx);
-            else { setContext(localContext); setRawContext(localRawContext); }
-
-            setInsight(dbInsight);
-            setWhyStatement(dbWhy.whyStatement);
-            setWhyDate(dbWhy.whyDate);
-            setPrinciples(dbPrinciples);
-            setCorrelations(dbCorrelations);
-
-            // Map historical insights to annotations
-            if (dbHistoricalInsights.length > 0) {
-              setHistoricalInsights(
-                dbHistoricalInsights.map((ins) => ({
-                  id: ins.id,
-                  text: ins.text,
-                  dimensionsInvolved: ins.dimensionsInvolved as string[],
-                })),
-              );
-            }
-
-            const nameFromCtx = (dbContext as Record<string, unknown>).operator_name as string
-              || (dbContext as Record<string, unknown>).name as string;
-            if (nameFromCtx) setOperatorName(nameFromCtx);
-            else if (user.email) setOperatorName(user.email.split("@")[0]);
-
-            // Load saved archetypes
-            const saved = (dbContext as Record<string, unknown>).archetypes as string[] | undefined;
-            if (saved && Array.isArray(saved) && saved.length > 0) setArchetypes(saved);
-          } catch {
-            setAspirations(localAspirations);
-            setContext(localContext);
-            setRawContext(localRawContext);
-          }
-        }
-      } else {
-        setAspirations(localAspirations);
-        setContext(localContext);
-        setRawContext(localRawContext);
-
-        // Load saved archetypes from localStorage
-        const saved = localRawContext.archetypes as string[] | undefined;
-        if (saved && Array.isArray(saved) && saved.length > 0) setArchetypes(saved);
-      }
-
-      setLoaded(true);
-    }
-    load();
-  }, [user]);
-
-  // Compute archetype + WHY suggestions when data is loaded
+  // ─── Compute archetype + WHY suggestions when data is loaded ──────────
   useEffect(() => {
     if (!loaded || computeCalledRef.current) return;
 
     const contextStr = serializeContext(rawContext, aspirations);
-    // Only compute if there's meaningful context and nothing is already set
     const needsArchetype = archetypes.length === 0;
     const needsWhy = !whyStatement;
     if (!contextStr || contextStr.length < 20 || (!needsArchetype && !needsWhy)) return;
@@ -298,10 +302,10 @@ export function useWhole(): UseWholeReturn {
       .then((res) => res.json())
       .then((data) => {
         if (data.archetypes?.suggested && needsArchetype) {
-          setArchetypes(data.archetypes.suggested);
+          setLocalArchetypes(data.archetypes.suggested);
         }
         if (data.why && needsWhy) {
-          setWhyStatement(data.why);
+          setLocalWhyStatement(data.why);
         }
       })
       .catch(() => { /* silent fallback */ })
@@ -314,7 +318,6 @@ export function useWhole(): UseWholeReturn {
   useEffect(() => {
     if (!loaded || !user || !whyStatement || !whyDate || whyEvolveCalledRef.current) return;
 
-    // Check if 28+ days have passed since WHY was set
     const daysSinceWhy = Math.floor(
       (Date.now() - new Date(whyDate).getTime()) / 86400000,
     );
@@ -322,7 +325,6 @@ export function useWhole(): UseWholeReturn {
 
     whyEvolveCalledRef.current = true;
 
-    // Check if already dismissed this cycle (localStorage flag reset monthly)
     const dismissKey = `huma-why-evolve-dismissed-${whyDate}`;
     if (localStorage.getItem(dismissKey)) return;
 
@@ -332,7 +334,6 @@ export function useWhole(): UseWholeReturn {
     (async () => {
       try {
         const summary = await getBehavioralSummary(supabase, user.id, aspirations);
-        // Need at least 7 active days to have meaningful data
         if (summary.totalDays < 7) return;
 
         const summaryText = [
@@ -381,7 +382,7 @@ export function useWhole(): UseWholeReturn {
   const nodes = buildNodes(aspirations, context, principles, operatorName);
   const isEmpty = aspirations.length === 0 && Object.keys(context).length === 0 && principles.length === 0;
 
-  // Build links: behavioral correlations if available, dimension overlap as fallback
+  // Build links
   const holonLinks: HolonLink[] = useMemo(() => {
     if (correlations.length > 0) {
       return correlations.map((c) => ({
@@ -390,7 +391,6 @@ export function useWhole(): UseWholeReturn {
         weight: c.weight,
       }));
     }
-    // Fallback: dimension overlap for pre-auth / new users
     return computeDimensionLinks(aspirations);
   }, [correlations, aspirations]);
 
@@ -399,7 +399,6 @@ export function useWhole(): UseWholeReturn {
   const handleNodeTap = useCallback((node: HolonNode) => {
     setSelectedNode((prev) => {
       if (prev?.id === node.id) return null;
-      // Load patterns for aspiration nodes
       if (node.type === "aspiration") {
         setSelectedAspirationPatterns([]);
         if (user) {
@@ -410,7 +409,6 @@ export function useWhole(): UseWholeReturn {
               .catch(() => {});
           }
         } else {
-          // Pre-auth: load patterns from localStorage
           try {
             const stored = localStorage.getItem("huma-v2-patterns");
             if (stored) {
@@ -430,34 +428,29 @@ export function useWhole(): UseWholeReturn {
     await withSupabase(user, (sb) => markInsightDelivered(sb, insight.id, user!.id));
   }, [insight, user]);
 
-  // Save archetypes
   const handleArchetypeSave = useCallback(async (selected: string[]) => {
-    setArchetypes(selected);
+    setLocalArchetypes(selected);
     const updated = { ...rawContext, archetypes: selected };
-    setRawContext(updated);
+    setLocalContext(updated);
     localStorage.setItem("huma-v2-known-context", JSON.stringify(updated));
     await withSupabase(user, (sb, uid) => updateKnownContext(sb, uid, updated));
   }, [rawContext, user]);
 
-  // Save WHY statement
   const handleWhySave = useCallback(async (value: string) => {
-    setWhyStatement(value);
+    setLocalWhyStatement(value);
     const updated = { ...rawContext, why_statement: value };
-    setRawContext(updated);
+    setLocalContext(updated);
     localStorage.setItem("huma-v2-known-context", JSON.stringify(updated));
     await withSupabase(user, (sb, uid) => updateWhyStatement(sb, uid, value));
   }, [rawContext, user]);
 
-  // Save full context (from ContextPortrait)
   const handleContextSave = useCallback(async (updatedCtx: KnownContext) => {
     const merged = { ...rawContext, ...updatedCtx };
-    setRawContext(merged);
-    setContext(merged as KnownContext);
+    setLocalContext(merged);
     localStorage.setItem("huma-v2-known-context", JSON.stringify(merged));
     await withSupabase(user, (sb, uid) => updateKnownContext(sb, uid, merged));
   }, [rawContext, user]);
 
-  // Save foundation value to context
   const handleFoundationSave = useCallback(async (nodeId: string, value: string) => {
     const updated = { ...rawContext };
     if (nodeId === "ctx-place") {
@@ -469,8 +462,7 @@ export function useWhole(): UseWholeReturn {
     } else if (nodeId === "ctx-health") {
       updated.health = { detail: value };
     }
-    setRawContext(updated);
-    setContext(updated as KnownContext);
+    setLocalContext(updated);
     localStorage.setItem("huma-v2-known-context", JSON.stringify(updated));
     await withSupabase(user, (sb, uid) => updateKnownContext(sb, uid, updated));
   }, [rawContext, context, user]);
@@ -478,9 +470,12 @@ export function useWhole(): UseWholeReturn {
   // ── Aspiration detail panel handlers ──
 
   const updateLocalAspiration = useCallback((id: string, patch: Partial<Aspiration>) => {
-    setAspirations((prev) => prev.map((a) => (a.id === id ? { ...a, ...patch } : a)));
+    setLocalAspirations(prev => {
+      const base = prev ?? aspirations;
+      return base.map((a) => (a.id === id ? { ...a, ...patch } : a));
+    });
     updateLocalAspirationStorage(id, patch);
-  }, []);
+  }, [aspirations]);
 
   const handleAspirationNameSave = useCallback(async (aspirationId: string, name: string) => {
     updateLocalAspiration(aspirationId, { clarifiedText: name });
@@ -505,26 +500,22 @@ export function useWhole(): UseWholeReturn {
     await withSupabase(user, (sb, uid) => updateAspirationFuture(sb, uid, aspirationId, comingUp, longerArc));
   }, [user, updateLocalAspiration]);
 
-  // WHY evolution: accept evolved WHY
   const handleWhyEvolutionAccept = useCallback(async (newWhy: string) => {
-    setWhyStatement(newWhy);
+    setLocalWhyStatement(newWhy);
     setWhyEvolution(null);
     const updated = { ...rawContext, why_statement: newWhy };
-    setRawContext(updated);
+    setLocalContext(updated);
     localStorage.setItem("huma-v2-known-context", JSON.stringify(updated));
     await withSupabase(user, (sb, uid) => updateWhyStatement(sb, uid, newWhy));
   }, [rawContext, user]);
 
-  // WHY evolution: dismiss (keep original)
   const handleWhyEvolutionDismiss = useCallback(() => {
     setWhyEvolution(null);
-    // Mark dismissed for this WHY cycle so it doesn't re-appear
     if (whyDate) {
       localStorage.setItem(`huma-why-evolve-dismissed-${whyDate}`, "1");
     }
   }, [whyDate]);
 
-  // WHY tap when no context — open chat with pre-filled prompt
   const handleWhyTapNoContext = useCallback(() => {
     setChatShellOpen(true);
   }, []);
@@ -548,7 +539,6 @@ export function useWhole(): UseWholeReturn {
     const supabase = user ? createClient() : null;
 
     if (type === "archive") {
-      // Store aspiration for undo before removing
       const asp = aspirations.find(a => a.id === id);
       if (asp) archivedAspirationRef.current = asp;
 
@@ -556,9 +546,8 @@ export function useWhole(): UseWholeReturn {
         try { await archiveAspiration(supabase, user.id, id); } catch { /* */ }
       }
       archiveLocalAspiration(id);
-      setAspirations((prev) => prev.filter((a) => a.id !== id));
+      setLocalAspirations(prev => (prev ?? aspirations).filter((a) => a.id !== id));
 
-      // Show undo toast
       setArchiveToast({ id, label: confirmAction.label });
       setTimeout(() => {
         setArchiveToast(prev => prev?.id === id ? null : prev);
@@ -568,42 +557,40 @@ export function useWhole(): UseWholeReturn {
         try { await deleteAspiration(supabase, user.id, id); } catch { /* */ }
       }
       removeLocalAspiration(id);
-      setAspirations((prev) => prev.filter((a) => a.id !== id));
+      setLocalAspirations(prev => (prev ?? aspirations).filter((a) => a.id !== id));
     } else if (type === "clear-context") {
-      // id is the field path like "place", "work", "stage", "health"
       if (supabase && user) {
         try { await removeContextField(supabase, user.id, id); } catch { /* */ }
       }
       removeLocalContextField(id);
       const updated = { ...rawContext };
       delete (updated as Record<string, unknown>)[id];
-      setRawContext(updated);
-      setContext(updated as KnownContext);
+      setLocalContext(updated);
       localStorage.setItem("huma-v2-known-context", JSON.stringify(updated));
     } else if (type === "delete-principle") {
       if (supabase) {
         try { await deletePrinciple(supabase, id); } catch { /* */ }
       }
-      setPrinciples((prev) => prev.filter((p) => `principle-${p.id}` !== id && p.id !== id));
+      setLocalPrinciples(prev => (prev ?? principles).filter((p) => `principle-${p.id}` !== id && p.id !== id));
     }
 
     clearCachedSheet();
 
     setSelectedNode(null);
     setConfirmAction(null);
-  }, [confirmAction, user, rawContext, aspirations]);
+  }, [confirmAction, user, rawContext, aspirations, principles]);
 
   const handleArchiveUndo = useCallback(async () => {
     if (!archiveToast || !archivedAspirationRef.current) return;
     const restored = archivedAspirationRef.current;
     archivedAspirationRef.current = null;
 
-    setAspirations(prev => [...prev, restored]);
+    setLocalAspirations(prev => [...(prev ?? aspirations), restored]);
     await withSupabase(user, (sb, uid) => updateAspirationStatus(sb, uid, restored.id, "active"));
     restoreLocalAspiration(restored.id);
 
     setArchiveToast(null);
-  }, [user, archiveToast]);
+  }, [user, archiveToast, aspirations]);
 
   const handleSettingsAction = useCallback(async (action: "clear-chat" | "clear-context" | "start-fresh") => {
     if (action === "clear-chat") {
@@ -620,10 +607,9 @@ export function useWhole(): UseWholeReturn {
         }).eq("id", ctx.id);
       });
       clearLocalStorageContext();
-      setContext({});
-      setRawContext({});
-      setWhyStatement(null);
-      setArchetypes([]);
+      setLocalContext({});
+      setLocalWhyStatement(null);
+      setLocalArchetypes([]);
     } else if (action === "start-fresh") {
       await withSupabase(user, (sb, uid) => clearAllUserData(sb, uid));
       clearAllLocalStorage();
@@ -642,11 +628,9 @@ export function useWhole(): UseWholeReturn {
     setSettingsOpen(false);
   }, [user, router]);
 
-  // Handle context field removal from ContextPortrait
   const handleContextFieldRemove = useCallback(async (fieldPath: string) => {
     const supabase = user ? createClient() : null;
 
-    // Handle array element removal: "people[2]" or top-level "place"
     const arrayMatch = fieldPath.match(/^(\w+)\[(\d+)\]$/);
 
     if (supabase && user) {
@@ -667,8 +651,7 @@ export function useWhole(): UseWholeReturn {
       delete (updated as Record<string, unknown>)[fieldPath];
     }
 
-    setRawContext(updated);
-    setContext(updated as KnownContext);
+    setLocalContext(updated);
     localStorage.setItem("huma-v2-known-context", JSON.stringify(updated));
 
     clearCachedSheet();

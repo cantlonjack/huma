@@ -2,25 +2,31 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Aspiration, Insight, SheetEntry } from "@/types/v2";
 import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
-import { getLocalDate, getLocalDateOffset } from "@/lib/date-utils";
+import { getLocalDate } from "@/lib/date-utils";
 import { compileSheet, type CompiledSheet } from "@/lib/sheet-compiler";
 import { usePush } from "@/lib/use-push";
 import {
-  getAspirations,
-  getKnownContext,
-  getUndeliveredInsight,
   computeStructuralInsight,
   markInsightDelivered,
   logBehaviorCheckoff,
   getBehaviorWeekCounts,
-  getBehaviorDayOfWeekCounts,
-  getRecentCompletionDays,
 } from "@/lib/supabase-v2";
 import { detectTransition } from "@/lib/transition-detection";
 import type { TransitionSignal } from "@/types/v2";
+import {
+  queryKeys,
+  fetchAspirations,
+  fetchKnownContext,
+  fetchUndeliveredInsight,
+  fetchCheckedEntries,
+  fetchWeekCounts,
+  fetchThirtyDayCounts,
+  fetchRhythmData,
+} from "@/lib/queries";
 
 // Re-export types and helpers from their canonical locations for backwards compatibility
 export type { BehaviorStep, ComingUpItem } from "@/lib/today-utils";
@@ -81,280 +87,123 @@ export interface UseTodayReturn {
 
 export function useToday(): UseTodayReturn {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user, loading: authLoading } = useAuth();
-  const [loading, setLoading] = useState(true);
   const [date] = useState(() => getLocalDate());
-  const [aspirations, setAspirations] = useState<Aspiration[]>([]);
-  const [insight, setInsight] = useState<Insight | null>(null);
-  const [checkedEntries, setCheckedEntries] = useState<Set<string>>(new Set());
-  const [weekCounts, setWeekCounts] = useState<Record<string, { completed: number; total: number }>>({});
-  const [thirtyDayCounts, setThirtyDayCounts] = useState<Record<string, number>>({});
   const [quickLookAspiration, setQuickLookAspiration] = useState<Aspiration | null>(null);
   const [chatContext, setChatContext] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMode, setChatMode] = useState<"default" | "new-aspiration">("default");
-  const [standaloneEntries, setStandaloneEntries] = useState<Array<{ behavior_text: string; dimensions?: string[] }>>([]);
-  const [rhythmData, setRhythmData] = useState<Record<string, Record<number, number>>>({});
-  const [disruptions, setDisruptions] = useState<Record<string, string | null>>({});
-  const [archetypes, setArchetypes] = useState<string[]>([]);
-  const [whyStatementForChat, setWhyStatementForChat] = useState<string | null>(null);
   const [compiledEntries, setCompiledEntries] = useState<SheetEntry[]>([]);
   const [throughLine, setThroughLine] = useState<string | null>(null);
   const [sheetCompiling, setSheetCompiling] = useState(false);
   const [notifSettingsOpen, setNotifSettingsOpen] = useState(false);
   const [transitionSignal, setTransitionSignal] = useState<TransitionSignal | null>(null);
+  const [insight, setInsight] = useState<Insight | null>(null);
   const insightMarkedRef = useRef(false);
   const sheetCompiledRef = useRef(false);
   const { state: pushState } = usePush(user?.id ?? null);
 
   const dayCount = getDayCount();
+  const userId = user?.id ?? null;
+  const enabled = !authLoading;
 
-  // ─── Data Loading ───────────────────────────────────────────────────────
+  // ─── React Query: Data Loading ──────────────────────────────────────────
+
+  const { data: aspirations = [], isLoading: aspLoading } = useQuery({
+    queryKey: queryKeys.aspirations(userId),
+    queryFn: () => fetchAspirations(userId),
+    enabled,
+  });
+
+  const { data: ctxData, isLoading: ctxLoading } = useQuery({
+    queryKey: queryKeys.knownContext(userId),
+    queryFn: () => fetchKnownContext(userId),
+    enabled,
+  });
+
+  const archetypes = (() => {
+    const saved = ctxData?.archetypes as string[] | undefined;
+    return saved && Array.isArray(saved) && saved.length > 0 ? saved : [];
+  })();
+
+  const whyStatementForChat = (ctxData?.why_statement as string) || null;
+
+  const { data: checkedData } = useQuery({
+    queryKey: queryKeys.checkedEntries(userId ?? "__anon", date),
+    queryFn: () => fetchCheckedEntries(userId!, date),
+    enabled: enabled && !!userId,
+  });
+
+  const [localChecked, setLocalChecked] = useState<Set<string> | null>(null);
+  const checkedEntries = localChecked ?? checkedData?.checked ?? new Set<string>();
+  const standaloneEntries = checkedData?.standaloneEntries ?? [];
+
+  // Reset local overrides when server data arrives
   useEffect(() => {
-    if (authLoading) return;
-    async function loadData() {
-      setLoading(true);
-      let asps: Aspiration[] = [];
-      let insightData: Insight | null = null;
-      const checked = new Set<string>();
+    if (checkedData) setLocalChecked(null);
+  }, [checkedData]);
 
-      const supabase = user ? createClient() : null;
+  const { data: weekCounts = {} } = useQuery({
+    queryKey: queryKeys.weekCounts(userId ?? "__anon"),
+    queryFn: () => fetchWeekCounts(userId!),
+    enabled: enabled && !!userId,
+  });
 
-      // Load aspirations
-      if (supabase && user) {
-        try {
-          asps = await getAspirations(supabase, user.id);
-        } catch { /* fallback */ }
+  const { data: thirtyDayCounts = {} } = useQuery({
+    queryKey: queryKeys.thirtyDayCounts(userId ?? "__anon", aspirations.map(a => a.id)),
+    queryFn: () => fetchThirtyDayCounts(userId!, aspirations),
+    enabled: enabled && !!userId && aspirations.length > 0,
+  });
+
+  const { data: rhythmResult } = useQuery({
+    queryKey: queryKeys.rhythmData(userId ?? "__anon"),
+    queryFn: () => fetchRhythmData(userId!, aspirations, dayCount),
+    enabled: enabled && !!userId && aspirations.length > 0 && dayCount >= 7,
+  });
+
+  const rhythmData = rhythmResult?.rhythm ?? {};
+  const disruptions = rhythmResult?.disruptions ?? {};
+
+  // ─── Insight Loading (has side effects — keep as effect) ────────────────
+
+  const { data: serverInsight } = useQuery({
+    queryKey: queryKeys.undeliveredInsight(userId),
+    queryFn: () => fetchUndeliveredInsight(userId),
+    enabled: enabled && aspirations.length > 0,
+  });
+
+  useEffect(() => {
+    if (aspirations.length === 0) return;
+
+    let insightData = serverInsight ?? null;
+
+    if (!insightData) {
+      insightData = computeStructuralInsight(aspirations, whyStatementForChat);
+      if (insightData) {
+        localStorage.setItem("huma-v2-pending-insight", JSON.stringify(insightData));
       }
-
-      if (asps.length === 0) {
-        try {
-          const saved = localStorage.getItem("huma-v2-aspirations");
-          if (saved) asps = JSON.parse(saved);
-        } catch { /* fresh */ }
-      }
-
-      // Filter to working/active/adjusting
-      asps = asps.filter(a => {
-        const status = a.funnel?.validationStatus || "working";
-        return status === "working" || status === "active" || status === "adjusting";
-      });
-
-      // Sort by trigger_time ASC nulls last, then name ASC
-      asps.sort((a, b) => {
-        const aTime = a.triggerData?.window || "";
-        const bTime = b.triggerData?.window || "";
-        if (aTime && !bTime) return -1;
-        if (!aTime && bTime) return 1;
-        if (aTime && bTime && aTime !== bTime) return aTime.localeCompare(bTime);
-        const aName = a.clarifiedText || a.rawText;
-        const bName = b.clarifiedText || b.rawText;
-        return aName.localeCompare(bName);
-      });
-
-      setAspirations(asps);
-
-      // Load archetypes + WHY for chat context
-      if (supabase && user) {
-        try {
-          const ctx = await getKnownContext(supabase, user.id);
-          const savedArchs = ctx.archetypes as string[] | undefined;
-          if (savedArchs && Array.isArray(savedArchs) && savedArchs.length > 0) setArchetypes(savedArchs);
-          if (ctx.why_statement) setWhyStatementForChat(ctx.why_statement as string);
-        } catch { /* non-critical */ }
-      }
-      if (archetypes.length === 0 || !whyStatementForChat) {
-        try {
-          const localCtx = localStorage.getItem("huma-v2-known-context");
-          if (localCtx) {
-            const parsed = JSON.parse(localCtx);
-            if (parsed.archetypes?.length > 0 && archetypes.length === 0) setArchetypes(parsed.archetypes);
-            if (parsed.why_statement && !whyStatementForChat) setWhyStatementForChat(parsed.why_statement);
-          }
-        } catch { /* fresh */ }
-      }
-
-      // Load today's checked entries from sheet_entries
-      if (supabase && user) {
-        try {
-          const { data: todayEntries } = await supabase
-            .from("sheet_entries")
-            .select("aspiration_id, behavior_text, checked")
-            .eq("user_id", user.id)
-            .eq("date", date)
-            .eq("checked", true);
-
-          if (todayEntries) {
-            for (const entry of todayEntries) {
-              if (entry.aspiration_id && entry.behavior_text) {
-                checked.add(`${entry.aspiration_id}:${entry.behavior_text}`);
-              }
-            }
-          }
-        } catch { /* non-critical */ }
-
-        // Load standalone behaviors (aspiration_id IS NULL)
-        try {
-          const { data: standalone } = await supabase
-            .from("sheet_entries")
-            .select("behavior_text, detail, checked")
-            .eq("user_id", user.id)
-            .eq("date", date)
-            .is("aspiration_id", null);
-
-          if (standalone && standalone.length > 0) {
-            setStandaloneEntries(standalone.map(s => ({
-              behavior_text: s.behavior_text,
-              dimensions: (s.detail as Record<string, unknown>)?.dimensions as string[] || [],
-            })));
-            for (const s of standalone) {
-              if (s.checked) {
-                checked.add(`:${s.behavior_text}`);
-              }
-            }
-          }
-        } catch { /* non-critical */ }
-      }
-
-      // Also check localStorage for today's checks
-      try {
-        const cached = localStorage.getItem(`huma-v2-sheet-${date}`);
-        if (cached) {
-          const entries = JSON.parse(cached);
-          for (const e of entries) {
-            if (e.checked && e.behaviorText) {
-              const key = `${e.aspirationId || ""}:${e.behaviorText}`;
-              checked.add(key);
-            }
-          }
-        }
-      } catch { /* skip */ }
-
-      setCheckedEntries(checked);
-
-      // Load week counts
-      if (supabase && user) {
-        try {
-          const counts = await getBehaviorWeekCounts(supabase, user.id);
-          setWeekCounts(counts);
-        } catch { /* non-critical */ }
-      }
-
-      // Load 30-day counts per aspiration
-      if (supabase && user) {
-        try {
-          const thirtyDaysAgo = getLocalDateOffset(30);
-          const { data: logData } = await supabase
-            .from("behavior_log")
-            .select("behavior_key, completed")
-            .eq("user_id", user.id)
-            .gte("date", thirtyDaysAgo)
-            .eq("completed", true);
-
-          if (logData) {
-            const counts: Record<string, number> = {};
-            for (const row of logData) {
-              for (const asp of asps) {
-                for (const b of asp.behaviors) {
-                  if (b.key === row.behavior_key || b.text === row.behavior_key) {
-                    counts[asp.id] = (counts[asp.id] || 0) + 1;
-                  }
-                }
-              }
-            }
-            setThirtyDayCounts(counts);
-          }
-        } catch { /* non-critical */ }
-      }
-
-      // Load day-of-week rhythm + disruption detection
-      if (supabase && user && asps.length > 0 && dayCount >= 7) {
-        try {
-          const rhythmResults: Record<string, Record<number, number>> = {};
-          const disruptionResults: Record<string, string | null> = {};
-
-          await Promise.all(asps.map(async (asp) => {
-            const [dowCounts, last7, last3] = await Promise.all([
-              getBehaviorDayOfWeekCounts(supabase, user.id, asp.id),
-              getRecentCompletionDays(supabase, user.id, asp.id, 7),
-              getRecentCompletionDays(supabase, user.id, asp.id, 3),
-            ]);
-            rhythmResults[asp.id] = dowCounts;
-
-            if (last7 >= 4 && last3 === 0) {
-              disruptionResults[asp.id] = "3 days since last \u2014 what changed?";
-            } else {
-              disruptionResults[asp.id] = null;
-            }
-          }));
-
-          setRhythmData(rhythmResults);
-          setDisruptions(disruptionResults);
-        } catch { /* non-critical */ }
-      }
-
-      // Load unread insight
-      if (asps.length > 0) {
-        if (supabase && user) {
-          try {
-            const existing = await getUndeliveredInsight(supabase, user.id);
-            if (existing) {
-              insightData = existing;
-            }
-          } catch { /* fall through */ }
-        }
-
-        if (!insightData) {
-          try {
-            const localInsight = localStorage.getItem("huma-v2-pending-insight");
-            if (localInsight) {
-              insightData = JSON.parse(localInsight);
-            }
-          } catch { /* compute fresh */ }
-        }
-
-        if (!insightData) {
-          let whyStatement: string | null = null;
-          if (supabase && user) {
-            try {
-              const ctx = await getKnownContext(supabase, user.id);
-              whyStatement = (ctx.why_statement as string) || null;
-            } catch { /* non-critical */ }
-          }
-          if (!whyStatement) {
-            try {
-              const localCtx = localStorage.getItem("huma-v2-known-context");
-              if (localCtx) {
-                const parsed = JSON.parse(localCtx);
-                whyStatement = parsed.why_statement || null;
-              }
-            } catch { /* fresh */ }
-          }
-          insightData = computeStructuralInsight(asps, whyStatement);
-          if (insightData) {
-            localStorage.setItem("huma-v2-pending-insight", JSON.stringify(insightData));
-          }
-        }
-      }
-
-      setInsight(insightData);
-
-      // Mark insight as shown
-      if (insightData && supabase && user && !insightMarkedRef.current) {
-        insightMarkedRef.current = true;
-        try {
-          await supabase
-            .from("insights")
-            .update({ shown_at: new Date().toISOString() })
-            .eq("id", insightData.id)
-            .eq("user_id", user.id);
-        } catch { /* non-critical */ }
-      }
-
-      setLoading(false);
     }
-    loadData();
-  }, [user, authLoading, date]);
+
+    setInsight(insightData);
+
+    // Mark insight as shown
+    if (insightData && user && !insightMarkedRef.current) {
+      insightMarkedRef.current = true;
+      const supabase = createClient();
+      if (supabase) {
+        supabase
+          .from("insights")
+          .update({ shown_at: new Date().toISOString() })
+          .eq("id", insightData.id)
+          .eq("user_id", user.id)
+          .then(() => {});
+      }
+    }
+  }, [serverInsight, aspirations, whyStatementForChat, user]);
+
+  // Loading = any primary query still loading
+  const loading = aspLoading || ctxLoading;
 
   // ─── Sheet Compilation ─────────────────────────────────────────────────
   useEffect(() => {
@@ -455,8 +304,10 @@ export function useToday(): UseTodayReturn {
     (aspirationId: string, stepText: string, checked: boolean) => {
       const key = `${aspirationId}:${stepText}`;
 
-      setCheckedEntries(prev => {
-        const next = new Set(prev);
+      // Optimistic update
+      setLocalChecked(prev => {
+        const base = prev ?? checkedData?.checked ?? new Set<string>();
+        const next = new Set(base);
         if (checked) next.add(key);
         else next.delete(key);
         return next;
@@ -494,23 +345,26 @@ export function useToday(): UseTodayReturn {
           }
 
           logBehaviorCheckoff(supabase, user.id, stepText, stepText, aspirationId || null, date, checked)
-            .then(() => getBehaviorWeekCounts(supabase, user.id))
-            .then(counts => setWeekCounts(counts))
+            .then(() => {
+              // Invalidate week counts to refetch fresh data
+              queryClient.invalidateQueries({ queryKey: queryKeys.weekCounts(user.id) });
+            })
             .catch(() => {});
         }
       }
     },
-    [user, date]
+    [user, date, checkedData, queryClient]
   );
 
   // ─── Standalone toggle ──────────────────────────────────────────────────
   const handleToggleStandalone = useCallback(
     (behaviorText: string) => {
       const key = `:${behaviorText}`;
-      const wasChecked = checkedEntries.has(key);
+      const currentChecked = localChecked ?? checkedData?.checked ?? new Set<string>();
+      const wasChecked = currentChecked.has(key);
 
-      setCheckedEntries(prev => {
-        const next = new Set(prev);
+      setLocalChecked(() => {
+        const next = new Set(currentChecked);
         if (wasChecked) next.delete(key);
         else next.add(key);
         return next;
@@ -531,7 +385,7 @@ export function useToday(): UseTodayReturn {
         }
       }
     },
-    [user, date, checkedEntries]
+    [user, date, localChecked, checkedData]
   );
 
   // ─── Chat open handler ─────────────────────────────────────────────────
