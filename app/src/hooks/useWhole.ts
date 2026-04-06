@@ -2,14 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import type { HolonNode, HolonLink, HolonLayer, HolonStatus, InsightAnnotation } from "@/components/whole/WholeShape";
-import { isShareworthyInsight } from "@/components/whole/ShareworthyInsightCard";
+import type { HolonNode, HolonLink, InsightAnnotation } from "@/components/whole/WholeShape";
 import type { WhyEvolutionData } from "@/components/whole/WhyEvolution";
 import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
-import { displayName } from "@/lib/display-name";
 import type { Aspiration, Insight, Principle, KnownContext, Pattern, Behavior, FutureAction, FuturePhase } from "@/types/v2";
 import type { CanvasData } from "@/engine/canvas-types";
+import { buildNodes, computeDimensionLinks, serializeContext } from "@/lib/whole-utils";
+import { withSupabase, clearCachedSheet, updateLocalAspiration as updateLocalAspirationStorage } from "@/lib/persist";
 import {
   getAllAspirations,
   getKnownContext,
@@ -42,183 +42,6 @@ import {
   getPatternsByAspiration,
   type AspirationCorrelation,
 } from "@/lib/supabase-v2";
-
-// ─── Data → Nodes ──────────────────────────────────────────────────────────
-
-function mapAspirationStatus(asp: Aspiration): HolonStatus {
-  const vs = asp.funnel?.validationStatus;
-  if (vs === "working") return "working";
-  if (vs === "finding") return "finding";
-  if (vs === "no_path") return "no_path";
-  if (vs === "adjusting") return "adjusting";
-  if (asp.stage === "someday") return "no_path";
-  return "active";
-}
-
-function aspirationLayer(asp: Aspiration): HolonLayer {
-  const status = mapAspirationStatus(asp);
-  if (status === "no_path" || asp.stage === "someday") return "vision";
-  return "patterns";
-}
-
-function aspirationRadius(asp: Aspiration): number {
-  const status = mapAspirationStatus(asp);
-  if (status === "working") return 28;
-  if (status === "active") return 24;
-  if (status === "finding") return 20;
-  return 18;
-}
-
-function buildNodes(
-  aspirations: Aspiration[],
-  context: KnownContext,
-  principles: Principle[],
-  operatorName: string,
-): HolonNode[] {
-  const nodes: HolonNode[] = [];
-
-  // Identity nucleus
-  nodes.push({
-    id: "__identity__",
-    label: operatorName || "You",
-    layer: "identity",
-    status: "active",
-    r: 36,
-    type: "identity",
-  });
-
-  // Aspirations → Patterns or Vision
-  for (const asp of aspirations) {
-    const status = mapAspirationStatus(asp);
-    const dims = asp.dimensionsTouched || [];
-    const behaviorDims = asp.behaviors?.flatMap((b) => b.dimensions?.map((d) => d.dimension) || []) || [];
-    const allDims = [...new Set([...dims, ...behaviorDims])];
-
-    nodes.push({
-      id: asp.id,
-      label: displayName(asp.clarifiedText || asp.rawText),
-      layer: aspirationLayer(asp),
-      status,
-      r: aspirationRadius(asp),
-      type: "aspiration",
-      description: asp.rawText,
-      dimensions: allDims,
-    });
-  }
-
-  // Principles
-  for (const p of principles) {
-    if (!p.active) continue;
-    nodes.push({
-      id: `principle-${p.id}`,
-      label: displayName(p.text),
-      layer: "principles",
-      status: "active",
-      r: 20,
-      type: "principle",
-      description: p.text,
-    });
-  }
-
-  // Foundation items from context
-  if (context.place?.name) {
-    nodes.push({
-      id: "ctx-place",
-      label: context.place.name,
-      layer: "foundation",
-      status: "working",
-      r: 22,
-      type: "context",
-      description: context.place.detail || context.place.name,
-    });
-  }
-  if (context.work?.title) {
-    nodes.push({
-      id: "ctx-work",
-      label: context.work.title,
-      layer: "foundation",
-      status: "working",
-      r: 20,
-      type: "context",
-      description: context.work.detail || context.work.title,
-    });
-  }
-  if (context.stage?.label) {
-    nodes.push({
-      id: "ctx-stage",
-      label: context.stage.label,
-      layer: "foundation",
-      status: "active",
-      r: 18,
-      type: "context",
-      description: context.stage.detail || context.stage.label,
-    });
-  }
-  if (context.health?.detail) {
-    nodes.push({
-      id: "ctx-health",
-      label: "Health",
-      layer: "foundation",
-      status: "active",
-      r: 16,
-      type: "context",
-      description: context.health.detail,
-    });
-  }
-
-  return nodes;
-}
-
-// Compute dimension-overlap links as fallback when no behavioral data exists
-function computeDimensionLinks(aspirations: Aspiration[]): HolonLink[] {
-  const links: HolonLink[] = [];
-  for (let i = 0; i < aspirations.length; i++) {
-    for (let j = i + 1; j < aspirations.length; j++) {
-      const aDims = new Set(aspirations[i].dimensionsTouched || []);
-      const bDims = new Set(aspirations[j].dimensionsTouched || []);
-      if (aDims.size === 0 || bDims.size === 0) continue;
-
-      let overlap = 0;
-      for (const d of aDims) if (bDims.has(d)) overlap++;
-      if (overlap === 0) continue;
-
-      const weight = overlap / Math.min(aDims.size, bDims.size);
-      if (weight >= 0.4) {
-        links.push({
-          sourceId: aspirations[i].id,
-          targetId: aspirations[j].id,
-          weight: Math.round(weight * 100) / 100,
-        });
-      }
-    }
-  }
-  return links;
-}
-
-// Serialize context for AI prompt
-function serializeContext(
-  ctx: Record<string, unknown>,
-  aspirations: Aspiration[],
-): string {
-  const parts: string[] = [];
-  for (const [k, v] of Object.entries(ctx)) {
-    if (v && typeof v === "object") parts.push(`${k}: ${JSON.stringify(v)}`);
-    else if (v) parts.push(`${k}: ${v}`);
-  }
-  if (aspirations.length > 0) {
-    parts.push("Aspirations: " + aspirations.map((a) => a.clarifiedText || a.rawText).join("; "));
-  }
-  return parts.join("\n") || "";
-}
-
-// Map context node IDs to field paths
-function contextFieldForNodeId(nodeId: string): string | null {
-  if (nodeId === "ctx-place") return "place";
-  if (nodeId === "ctx-work") return "work";
-  if (nodeId === "ctx-stage") return "stage";
-  if (nodeId === "ctx-health") return "health";
-  return null;
-}
 
 // ─── Return type ────────────────────────────────────────────────────────────
 
@@ -304,11 +127,6 @@ export interface UseWholeReturn {
     label: string;
   } | null>>;
 
-  // Helper re-exports
-  mapAspirationStatus: (asp: Aspiration) => HolonStatus;
-  contextFieldForNodeId: (nodeId: string) => string | null;
-  isShareworthyInsight: typeof isShareworthyInsight;
-  displayName: typeof displayName;
 }
 
 // ─── Hook ───────────────────────────────────────────────────────────────────
@@ -609,10 +427,7 @@ export function useWhole(): UseWholeReturn {
   const handleDismissInsight = useCallback(async () => {
     if (!insight || !user) return;
     setInsight(null);
-    const supabase = createClient();
-    if (supabase) {
-      try { await markInsightDelivered(supabase, insight.id, user.id); } catch { /* */ }
-    }
+    await withSupabase(user, (sb) => markInsightDelivered(sb, insight.id, user!.id));
   }, [insight, user]);
 
   // Save archetypes
@@ -621,41 +436,25 @@ export function useWhole(): UseWholeReturn {
     const updated = { ...rawContext, archetypes: selected };
     setRawContext(updated);
     localStorage.setItem("huma-v2-known-context", JSON.stringify(updated));
-    if (user) {
-      const supabase = createClient();
-      if (supabase) {
-        try { await updateKnownContext(supabase, user.id, updated); } catch { /* */ }
-      }
-    }
+    await withSupabase(user, (sb, uid) => updateKnownContext(sb, uid, updated));
   }, [rawContext, user]);
 
   // Save WHY statement
   const handleWhySave = useCallback(async (value: string) => {
     setWhyStatement(value);
-    if (user) {
-      const supabase = createClient();
-      if (supabase) {
-        try { await updateWhyStatement(supabase, user.id, value); } catch { /* */ }
-      }
-    }
-    // Also persist to localStorage
     const updated = { ...rawContext, why_statement: value };
     setRawContext(updated);
     localStorage.setItem("huma-v2-known-context", JSON.stringify(updated));
+    await withSupabase(user, (sb, uid) => updateWhyStatement(sb, uid, value));
   }, [rawContext, user]);
 
   // Save full context (from ContextPortrait)
-  const handleContextSave = useCallback(async (updated: KnownContext) => {
-    const merged = { ...rawContext, ...updated };
+  const handleContextSave = useCallback(async (updatedCtx: KnownContext) => {
+    const merged = { ...rawContext, ...updatedCtx };
     setRawContext(merged);
     setContext(merged as KnownContext);
     localStorage.setItem("huma-v2-known-context", JSON.stringify(merged));
-    if (user) {
-      const supabase = createClient();
-      if (supabase) {
-        try { await updateKnownContext(supabase, user.id, merged); } catch { /* */ }
-      }
-    }
+    await withSupabase(user, (sb, uid) => updateKnownContext(sb, uid, merged));
   }, [rawContext, user]);
 
   // Save foundation value to context
@@ -673,93 +472,47 @@ export function useWhole(): UseWholeReturn {
     setRawContext(updated);
     setContext(updated as KnownContext);
     localStorage.setItem("huma-v2-known-context", JSON.stringify(updated));
-    if (user) {
-      const supabase = createClient();
-      if (supabase) {
-        try { await updateKnownContext(supabase, user.id, updated); } catch { /* */ }
-      }
-    }
+    await withSupabase(user, (sb, uid) => updateKnownContext(sb, uid, updated));
   }, [rawContext, context, user]);
 
   // ── Aspiration detail panel handlers ──
 
-  const clearCachedSheet = useCallback(() => {
-    try {
-      const today = new Date().toISOString().slice(0, 10);
-      localStorage.removeItem(`huma-v2-sheet-${today}`);
-    } catch { /* */ }
-  }, []);
-
   const updateLocalAspiration = useCallback((id: string, patch: Partial<Aspiration>) => {
     setAspirations((prev) => prev.map((a) => (a.id === id ? { ...a, ...patch } : a)));
-    // Also update localStorage
-    try {
-      const stored = localStorage.getItem("huma-v2-aspirations");
-      if (stored) {
-        const all = JSON.parse(stored) as Aspiration[];
-        const updated = all.map((a) => (a.id === id ? { ...a, ...patch } : a));
-        localStorage.setItem("huma-v2-aspirations", JSON.stringify(updated));
-      }
-    } catch { /* */ }
+    updateLocalAspirationStorage(id, patch);
   }, []);
 
   const handleAspirationNameSave = useCallback(async (aspirationId: string, name: string) => {
     updateLocalAspiration(aspirationId, { clarifiedText: name });
     clearCachedSheet();
-    if (user) {
-      const supabase = createClient();
-      if (supabase) {
-        try { await updateAspirationName(supabase, user.id, aspirationId, name); } catch { /* */ }
-      }
-    }
-  }, [user, updateLocalAspiration, clearCachedSheet]);
+    await withSupabase(user, (sb, uid) => updateAspirationName(sb, uid, aspirationId, name));
+  }, [user, updateLocalAspiration]);
 
   const handleAspirationStatusChange = useCallback(async (aspirationId: string, status: Aspiration["status"]) => {
     updateLocalAspiration(aspirationId, { status });
     clearCachedSheet();
-    if (user) {
-      const supabase = createClient();
-      if (supabase) {
-        try { await updateAspirationStatus(supabase, user.id, aspirationId, status); } catch { /* */ }
-      }
-    }
-  }, [user, updateLocalAspiration, clearCachedSheet]);
+    await withSupabase(user, (sb, uid) => updateAspirationStatus(sb, uid, aspirationId, status));
+  }, [user, updateLocalAspiration]);
 
   const handleAspirationBehaviorsSave = useCallback(async (aspirationId: string, behaviors: Behavior[]) => {
     updateLocalAspiration(aspirationId, { behaviors });
     clearCachedSheet();
-    if (user) {
-      const supabase = createClient();
-      if (supabase) {
-        try { await updateAspirationBehaviors(supabase, user.id, aspirationId, behaviors); } catch { /* */ }
-      }
-    }
-  }, [user, updateLocalAspiration, clearCachedSheet]);
+    await withSupabase(user, (sb, uid) => updateAspirationBehaviors(sb, uid, aspirationId, behaviors));
+  }, [user, updateLocalAspiration]);
 
   const handleAspirationFutureSave = useCallback(async (aspirationId: string, comingUp: FutureAction[], longerArc: FuturePhase[]) => {
     updateLocalAspiration(aspirationId, { comingUp, longerArc });
-    if (user) {
-      const supabase = createClient();
-      if (supabase) {
-        try { await updateAspirationFuture(supabase, user.id, aspirationId, comingUp, longerArc); } catch { /* */ }
-      }
-    }
+    await withSupabase(user, (sb, uid) => updateAspirationFuture(sb, uid, aspirationId, comingUp, longerArc));
   }, [user, updateLocalAspiration]);
 
   // WHY evolution: accept evolved WHY
   const handleWhyEvolutionAccept = useCallback(async (newWhy: string) => {
     setWhyStatement(newWhy);
     setWhyEvolution(null);
-    if (user) {
-      const supabase = createClient();
-      if (supabase) {
-        try { await updateWhyStatement(supabase, user.id, newWhy); } catch { /* */ }
-      }
-    }
-    // Also persist to localStorage
     const updated = { ...rawContext, why_statement: newWhy };
     setRawContext(updated);
     localStorage.setItem("huma-v2-known-context", JSON.stringify(updated));
+    await withSupabase(user, (sb, uid) => updateWhyStatement(sb, uid, newWhy));
   }, [rawContext, user]);
 
   // WHY evolution: dismiss (keep original)
@@ -834,11 +587,7 @@ export function useWhole(): UseWholeReturn {
       setPrinciples((prev) => prev.filter((p) => `principle-${p.id}` !== id && p.id !== id));
     }
 
-    // Clear cached sheet so it recompiles
-    try {
-      const today = new Date().toISOString().slice(0, 10);
-      localStorage.removeItem(`huma-v2-sheet-${today}`);
-    } catch { /* */ }
+    clearCachedSheet();
 
     setSelectedNode(null);
     setConfirmAction(null);
@@ -849,59 +598,41 @@ export function useWhole(): UseWholeReturn {
     const restored = archivedAspirationRef.current;
     archivedAspirationRef.current = null;
 
-    // Add back to local state
     setAspirations(prev => [...prev, restored]);
-
-    // Restore in Supabase
-    if (user) {
-      try {
-        const sb = createClient();
-        if (sb) await updateAspirationStatus(sb, user.id, restored.id, "active");
-      } catch { /* non-critical */ }
-    }
-
-    // Restore in localStorage
+    await withSupabase(user, (sb, uid) => updateAspirationStatus(sb, uid, restored.id, "active"));
     restoreLocalAspiration(restored.id);
 
     setArchiveToast(null);
   }, [user, archiveToast]);
 
   const handleSettingsAction = useCallback(async (action: "clear-chat" | "clear-context" | "start-fresh") => {
-    const supabase = user ? createClient() : null;
-
     if (action === "clear-chat") {
-      if (supabase && user) {
-        try { await clearChatMessages(supabase, user.id); } catch { /* */ }
-      }
+      await withSupabase(user, (sb, uid) => clearChatMessages(sb, uid));
       clearLocalChatMessages();
     } else if (action === "clear-context") {
-      if (supabase && user) {
-        try {
-          const ctx = await import("@/lib/supabase-v2").then(m => m.getOrCreateContext(supabase, user.id));
-          await supabase.from("contexts").update({
-            known_context: {},
-            why_statement: null,
-            why_date: null,
-            updated_at: new Date().toISOString(),
-          }).eq("id", ctx.id);
-        } catch { /* */ }
-      }
+      await withSupabase(user, async (sb, uid) => {
+        const ctx = await import("@/lib/supabase-v2").then(m => m.getOrCreateContext(sb, uid));
+        await sb.from("contexts").update({
+          known_context: {},
+          why_statement: null,
+          why_date: null,
+          updated_at: new Date().toISOString(),
+        }).eq("id", ctx.id);
+      });
       clearLocalStorageContext();
       setContext({});
       setRawContext({});
       setWhyStatement(null);
       setArchetypes([]);
     } else if (action === "start-fresh") {
-      if (supabase && user) {
-        try { await clearAllUserData(supabase, user.id); } catch { /* */ }
-      }
+      await withSupabase(user, (sb, uid) => clearAllUserData(sb, uid));
       clearAllLocalStorage();
       setSettingsOpen(false);
       router.push("/start?fresh=1");
       return;
     }
 
-    // Clear cached sheet so it recompiles
+    clearCachedSheet();
     try {
       const today = new Date().toISOString().slice(0, 10);
       localStorage.removeItem(`huma-v2-sheet-${today}`);
@@ -940,11 +671,7 @@ export function useWhole(): UseWholeReturn {
     setContext(updated as KnownContext);
     localStorage.setItem("huma-v2-known-context", JSON.stringify(updated));
 
-    // Clear cached sheet so it recompiles
-    try {
-      const today = new Date().toISOString().slice(0, 10);
-      localStorage.removeItem(`huma-v2-sheet-${today}`);
-    } catch { /* */ }
+    clearCachedSheet();
   }, [user, rawContext]);
 
   const selectedFullNode = selectedNode ? nodes.find((n) => n.id === selectedNode.id) : null;
@@ -1011,9 +738,5 @@ export function useWhole(): UseWholeReturn {
     setRegeneratedCanvas,
     setSettingsOpen,
     setConfirmAction,
-    mapAspirationStatus,
-    contextFieldForNodeId,
-    isShareworthyInsight,
-    displayName,
   };
 }

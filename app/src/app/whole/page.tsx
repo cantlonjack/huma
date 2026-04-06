@@ -15,6 +15,9 @@ import ConfirmationSheet from "@/components/whole/ConfirmationSheet";
 import SettingsSheet from "@/components/whole/SettingsSheet";
 import WholeSkeleton from "@/components/whole/WholeSkeleton";
 import { useWhole } from "@/hooks/useWhole";
+import { mapAspirationStatus, contextFieldForNodeId } from "@/lib/whole-utils";
+import { isShareworthyInsight } from "@/components/whole/ShareworthyInsightCard";
+import { displayName } from "@/lib/display-name";
 
 export default function WholePage() {
   const w = useWhole();
@@ -32,7 +35,7 @@ export default function WholePage() {
         aspirations: w.aspirations.map(a => ({
           id: a.id,
           name: a.clarifiedText || a.rawText,
-          status: w.mapAspirationStatus(a),
+          status: mapAspirationStatus(a),
         })),
         principles: w.principles.filter(p => p.active).map(p => p.text),
         dayCount: w.dayNum,
@@ -202,7 +205,7 @@ export default function WholePage() {
                 onClearContext={
                   w.manageMode && w.selectedFullNode.type === "context"
                     ? () => {
-                        const field = w.contextFieldForNodeId(w.selectedFullNode!.id);
+                        const field = contextFieldForNodeId(w.selectedFullNode!.id);
                         if (field) w.setConfirmAction({ type: "clear-context", id: field, label: w.selectedFullNode!.label });
                       }
                     : undefined
@@ -234,7 +237,7 @@ export default function WholePage() {
                 <InsightCard
                   insight={w.insight}
                   onDismiss={w.handleDismissInsight}
-                  shareworthy={w.isShareworthyInsight(w.insight)}
+                  shareworthy={isShareworthyInsight(w.insight)}
                   onShare={() => w.setShareworthyOpen(true)}
                 />
               </div>
@@ -301,7 +304,7 @@ export default function WholePage() {
           }}
         >
           <span className="font-sans text-sm">
-            {w.displayName(w.archiveToast.label)} archived
+            {displayName(w.archiveToast.label)} archived
           </span>
           <button
             onClick={w.handleArchiveUndo}
