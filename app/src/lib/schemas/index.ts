@@ -148,6 +148,36 @@ export const paletteSchema = z.object({
 
 export type PaletteRequest = z.infer<typeof paletteSchema>;
 
+// ─── /api/nudge ────────────────────────────────────────────────────────────
+
+export const nudgeSchema = z.object({
+  name: z.string().optional().default("there"),
+  date: z.string(),                                    // YYYY-MM-DD
+  knownContext: z.record(z.string(), z.unknown()).optional().default({}),
+  humaContext: z.record(z.string(), z.unknown()).optional(),
+  aspirations: z.array(z.object({
+    id: z.string(),
+    rawText: z.string(),
+    clarifiedText: z.string(),
+    behaviors: z.array(z.object({
+      key: z.string(),
+      text: z.string(),
+      frequency: z.string(),
+    })),
+  })).default([]),
+  recentHistory: z.array(z.object({
+    date: z.string(),
+    behaviorKey: z.string(),
+    checked: z.boolean(),
+  })).default([]),
+  dayCount: z.number().int().positive().optional().default(1),
+  season: z.string().optional(),
+  checkedToday: z.array(z.string()).default([]),        // behavior keys checked today
+  dismissedNudgeIds: z.array(z.string()).default([]),   // previously dismissed nudge IDs
+});
+
+export type NudgeRequest = z.infer<typeof nudgeSchema>;
+
 // ─── /api/whole-compute ─────────────────────────────────────────────────────
 
 export const wholeComputeSchema = z.discriminatedUnion("compute", [

@@ -248,6 +248,29 @@ export interface SparklineData {
   trend: "rising" | "stable" | "dropping";
 }
 
+// ─── Proactive Nudges ───────────────────────────────────────────────────────
+// 0-2 nudges per day. Shown when the operator opens Today. Dismissable.
+// Types: temporal (time-sensitive), pattern (behavioral trends), opportunity (connections).
+
+export type NudgeType = "temporal" | "pattern" | "opportunity";
+
+export interface Nudge {
+  id: string;
+  type: NudgeType;
+  text: string;                    // The nudge itself (1-2 sentences)
+  source?: string;                 // What triggered this nudge (for debugging/learning)
+  dismissedAt?: string;            // ISO date if operator dismissed
+}
+
+// ─── Capital Pulse ──────────────────────────────────────────────────────────
+// One-line summary of which dimensions were moved today.
+
+export interface CapitalPulse {
+  moved: DimensionKey[];           // Dimensions with at least one check-off today
+  dormant: DimensionKey[];         // Dimensions with no activity in 5+ days
+  text: string;                    // e.g. "Today moved Body and Money. Growth hasn't been touched in 5 days."
+}
+
 // ─── Monthly Review ─────────────────────────────────────────────────────────
 
 /** Consistency level for a behavior in a given week. */

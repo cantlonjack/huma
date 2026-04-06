@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Aspiration, Insight, SheetEntry } from "@/types/v2";
+import type { Aspiration, Insight, SheetEntry, Nudge, DimensionKey } from "@/types/v2";
 import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { getLocalDate } from "@/lib/date-utils";
@@ -17,6 +17,8 @@ import {
 } from "@/lib/supabase-v2";
 import { detectTransition } from "@/lib/transition-detection";
 import type { TransitionSignal } from "@/types/v2";
+import { fetchNudges, dismissNudge as persistDismissNudge } from "@/lib/nudge-fetcher";
+import { computeCapitalPulse, type PulseData } from "@/lib/capital-pulse";
 import {
   queryKeys,
   fetchAspirations,
@@ -59,6 +61,8 @@ export interface UseTodayReturn {
   notifSettingsOpen: boolean;
   transitionSignal: TransitionSignal | null;
   pushState: string;
+  nudges: Nudge[];
+  capitalPulse: PulseData | null;
 
   // Derived
   activeCount: number;
@@ -81,6 +85,8 @@ export interface UseTodayReturn {
   openTransitionChat: () => void;
   closeChatSheet: () => void;
   navigateToStart: () => void;
+  dismissNudge: (id: string) => void;
+  engageNudge: (nudge: Nudge) => void;
 }
 
 // ─── Hook ───────────────────────────────────────────────────────────────────
@@ -289,6 +295,86 @@ export function useToday(): UseTodayReturn {
       .catch(() => { /* non-critical */ });
   }, [user, aspirations, dayCount]);
 
+  // ─── Nudge Fetching ──────────────────────────────────────────────────────
+  const [nudges, setNudges] = useState<Nudge[]>([]);
+  const nudgeFetchedRef = useRef(false);
+
+  useEffect(() => {
+    if (aspirations.length === 0 || nudgeFetchedRef.current) return;
+    // Wait for sheet to finish compiling before fetching nudges
+    if (sheetCompiling) return;
+
+    // Check cache first
+    const cacheKey = `huma-v2-nudges-${date}`;
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached) as Nudge[];
+        if (parsed.length >= 0) {
+          setNudges(parsed);
+          nudgeFetchedRef.current = true;
+          return;
+        }
+      }
+    } catch { /* no cache */ }
+
+    nudgeFetchedRef.current = true;
+
+    let operatorName = "there";
+    try {
+      const localCtx = localStorage.getItem("huma-v2-known-context");
+      if (localCtx) {
+        const parsed = JSON.parse(localCtx);
+        operatorName = parsed.operator_name || parsed.name || "there";
+      }
+    } catch { /* default */ }
+
+    const supabase = user ? createClient() : null;
+    const checkedToday = Array.from(checkedEntries)
+      .map(k => k.split(":")[1])
+      .filter(Boolean);
+
+    fetchNudges({
+      aspirations,
+      supabase,
+      userId: user?.id || null,
+      name: operatorName,
+      checkedToday,
+    })
+      .then((result) => {
+        setNudges(result);
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify(result));
+        } catch { /* storage full */ }
+      })
+      .catch(() => { /* nudges are non-critical */ });
+  }, [aspirations, date, user, sheetCompiling, checkedEntries]);
+
+  const dismissNudge = useCallback((id: string) => {
+    setNudges(prev => prev.filter(n => n.id !== id));
+    persistDismissNudge(date, id);
+    // Update cache
+    try {
+      const cacheKey = `huma-v2-nudges-${date}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached) as Nudge[];
+        localStorage.setItem(cacheKey, JSON.stringify(parsed.filter(n => n.id !== id)));
+      }
+    } catch { /* non-critical */ }
+  }, [date]);
+
+  const engageNudge = useCallback((nudge: Nudge) => {
+    setChatContext(nudge.text);
+    setChatOpen(true);
+  }, []);
+
+  // ─── Capital Pulse ──────────────────────────────────────────────────────
+  const capitalPulse = useMemo<PulseData | null>(() => {
+    if (compiledEntries.length === 0 || checkedEntries.size === 0) return null;
+    return computeCapitalPulse(compiledEntries, checkedEntries, aspirations);
+  }, [compiledEntries, checkedEntries, aspirations]);
+
   const dismissTransition = useCallback(() => {
     setTransitionSignal(null);
     localStorage.setItem("huma-v2-transition-dismissed", new Date().toISOString());
@@ -470,6 +556,8 @@ export function useToday(): UseTodayReturn {
     notifSettingsOpen,
     transitionSignal,
     pushState,
+    nudges,
+    capitalPulse,
     activeCount,
     adjustingCount,
     rerouteAspiration,
@@ -488,5 +576,7 @@ export function useToday(): UseTodayReturn {
     openTransitionChat,
     closeChatSheet,
     navigateToStart,
+    dismissNudge,
+    engageNudge,
   };
 }

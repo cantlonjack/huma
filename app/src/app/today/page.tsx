@@ -15,6 +15,8 @@ import {
   StandaloneBehaviorRow,
   TransitionCard,
 } from "@/components/today/TodayCards";
+import { NudgeCard } from "@/components/today/NudgeCard";
+import { CapitalPulse } from "@/components/today/CapitalPulse";
 
 export default function TodayPage() {
   const t = useToday();
@@ -140,6 +142,20 @@ export default function TodayPage() {
               />
             )}
 
+            {/* Proactive Nudges (0-2, below insight) */}
+            {t.nudges.length > 0 && (
+              <div className="mb-2">
+                {t.nudges.map(nudge => (
+                  <NudgeCard
+                    key={nudge.id}
+                    nudge={nudge}
+                    onDismiss={t.dismissNudge}
+                    onEngage={t.engageNudge}
+                  />
+                ))}
+              </div>
+            )}
+
             {/* Through-line header */}
             {t.throughLine && t.compiledEntries.length > 0 && (
               <div className="animate-entrance-2 px-5 pb-5">
@@ -185,6 +201,14 @@ export default function TodayPage() {
                 </p>
               </div>
             ) : null}
+
+            {/* Capital Pulse — shows after check-offs */}
+            {t.capitalPulse && t.capitalPulse.movedDimensions.length > 0 && (
+              <CapitalPulse
+                movedDimensions={t.capitalPulse.movedDimensions}
+                dormantDimension={t.capitalPulse.dormantDimension}
+              />
+            )}
 
             {/* Pattern Route Cards (fallback when no compiled sheet) */}
             {t.compiledEntries.length === 0 && !t.sheetCompiling && t.aspirations
