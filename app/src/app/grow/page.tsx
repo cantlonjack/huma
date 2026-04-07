@@ -9,6 +9,16 @@ import MonthlyReview from "@/components/grow/MonthlyReview";
 import ConfirmationSheet from "@/components/whole/ConfirmationSheet";
 import PatternSection from "@/components/grow/PatternSection";
 import EmptyState from "@/components/grow/EmptyState";
+import CompletionStats from "@/components/grow/CompletionStats";
+import BehaviorFrequency from "@/components/grow/BehaviorFrequency";
+import CorrelationCards from "@/components/grow/CorrelationCards";
+
+const STAGE_HEADLINES: Record<string, string> = {
+  early: "Getting started",
+  frequency: "What\u2019s showing up",
+  correlation: "Connections forming",
+  patterns: "Your patterns",
+};
 
 export default function GrowPage() {
   const g = useGrow();
@@ -30,22 +40,48 @@ export default function GrowPage() {
             GROW
           </p>
           <h1 className="font-serif text-sage-700 text-[26px] leading-[1.2] font-normal">
-            Your patterns
+            {STAGE_HEADLINES[g.stage]}
           </h1>
-          {!g.loading && g.patterns.length > 0 && (
+          {!g.loading && g.stage === "patterns" && g.patterns.length > 0 && (
             <p className="font-sans text-sage-400 text-[13px] mt-1">
               {g.patterns.length} pattern{g.patterns.length !== 1 ? "s" : ""} &middot;{" "}
               {g.validated.length} validated, {g.working.length} working, {g.finding.length} finding
             </p>
           )}
+          {!g.loading && g.stage !== "patterns" && (
+            <p className="font-sans text-sage-400 text-[13px] mt-1">
+              Day {g.dayCount}
+            </p>
+          )}
         </div>
 
-        {/* Content */}
+        {/* Content — progressive disclosure by stage */}
         {g.loading ? (
           <GrowSkeleton />
+        ) : g.stage === "early" ? (
+          /* Day 1-3: Completion stats + pattern preview */
+          <CompletionStats
+            checked={g.completionStats.checked}
+            total={g.completionStats.total}
+            dayCount={g.dayCount}
+          />
+        ) : g.stage === "frequency" ? (
+          /* Day 4-7: Behavior frequency */
+          <BehaviorFrequency
+            frequencies={g.behaviorFrequencies}
+            dayCount={g.dayCount}
+          />
+        ) : g.stage === "correlation" ? (
+          /* Day 7-14: Correlations + frequency */
+          <CorrelationCards
+            correlations={g.behaviorCorrelations}
+            frequencies={g.behaviorFrequencies}
+            dayCount={g.dayCount}
+          />
         ) : g.patterns.length === 0 && g.emergingBehaviors.length === 0 ? (
           <EmptyState onAddAspiration={() => g.setNewAspirationOpen(true)} />
         ) : (
+          /* Day 14+: Full pattern system */
           <div className="px-4">
             {/* Emerging behaviors — "Something forming..." */}
             {g.emergingBehaviors.length > 0 && (

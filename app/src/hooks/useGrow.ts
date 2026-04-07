@@ -16,6 +16,9 @@ import {
   fetchSparklines,
   fetchEmergingBehaviors,
   fetchMonthlyReview,
+  fetchCompletionStats,
+  fetchBehaviorFrequencies,
+  fetchBehaviorCorrelations,
 } from "@/lib/queries";
 
 // Re-export helpers from their canonical location for backwards compatibility
@@ -25,6 +28,10 @@ export {
   getAspirationName, getAspirationPhases, getTriggerDimensions,
   getSharedCaption, findDropOffDate, formatDropDate,
 } from "@/lib/grow-utils";
+
+// ─── Stage Type ────────────────────────────────────────────────────────────
+
+export type GrowStage = "early" | "frequency" | "correlation" | "patterns";
 
 // ─── Hook Return Type ──────────────────────────────────────────────────────
 
@@ -43,6 +50,12 @@ export interface UseGrowReturn {
   monthlyReview: MonthlyReviewData | null;
   archiveToast: { id: string; name: string } | null;
   confirmRemoveId: string | null;
+
+  // Progressive disclosure
+  stage: GrowStage;
+  completionStats: { checked: number; total: number };
+  behaviorFrequencies: Array<{ behaviorKey: string; behaviorName: string; completed: number; totalDays: number }>;
+  behaviorCorrelations: Array<{ behaviorA: string; behaviorB: string; coRate: number; withoutRate: number }>;
 
   // Derived
   dayCount: number;
@@ -383,6 +396,31 @@ export function useGrow(): UseGrowReturn {
     return 1;
   })();
 
+  const stage: GrowStage =
+    dayCount >= 14 ? "patterns" :
+    dayCount >= 7  ? "correlation" :
+    dayCount >= 4  ? "frequency" :
+    "early";
+
+  const { data: completionStats = { checked: 0, total: 0 } } = useQuery({
+    queryKey: queryKeys.completionStats(userId ?? "__anon"),
+    queryFn: () => fetchCompletionStats(userId!),
+    enabled: enabled && !!userId && stage === "early",
+  });
+
+  const freqDays = Math.min(dayCount, 7);
+  const { data: behaviorFrequencies = [] } = useQuery({
+    queryKey: queryKeys.behaviorFrequencies(userId ?? "__anon", freqDays),
+    queryFn: () => fetchBehaviorFrequencies(userId!, freqDays),
+    enabled: enabled && !!userId && (stage === "frequency" || stage === "correlation"),
+  });
+
+  const { data: behaviorCorrelations = [] } = useQuery({
+    queryKey: queryKeys.behaviorCorrelations(userId ?? "__anon"),
+    queryFn: () => fetchBehaviorCorrelations(userId!, Math.min(dayCount, 14)),
+    enabled: enabled && !!userId && stage === "correlation",
+  });
+
   // ─── Chat context for Grow tab ──────────────────────────────────────────
   const tabContext: Record<string, unknown> = {};
   if (patterns.length > 0) {
@@ -462,6 +500,10 @@ export function useGrow(): UseGrowReturn {
     monthlyReview,
     archiveToast,
     confirmRemoveId,
+    stage,
+    completionStats,
+    behaviorFrequencies,
+    behaviorCorrelations,
     dayCount,
     tabContext,
     investigatePattern,

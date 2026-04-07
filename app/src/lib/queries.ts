@@ -26,6 +26,9 @@ import {
   getBehaviorWeekCounts,
   getBehaviorDayOfWeekCounts,
   getRecentCompletionDays,
+  getTodayCompletionStats,
+  getBehaviorFrequencies,
+  getBehaviorCorrelations,
 } from "@/lib/supabase-v2";
 import { getLocalDate, getLocalDateOffset } from "@/lib/date-utils";
 import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
@@ -50,6 +53,9 @@ export const queryKeys = {
   sparklines: (userId: string) => ["sparklines", userId] as const,
   emergingBehaviors: (userId: string) => ["emergingBehaviors", userId] as const,
   monthlyReview: (userId: string) => ["monthlyReview", userId] as const,
+  completionStats: (userId: string) => ["completionStats", userId] as const,
+  behaviorFrequencies: (userId: string, days: number) => ["behaviorFrequencies", userId, days] as const,
+  behaviorCorrelations: (userId: string) => ["behaviorCorrelations", userId] as const,
 
   // Whole-specific
   whyStatement: (userId: string) => ["whyStatement", userId] as const,
@@ -447,6 +453,47 @@ export async function fetchRecentInsights(userId: string, count: number = 3) {
   if (!sb) return [];
   try {
     return await getRecentInsights(sb, userId, count);
+  } catch {
+    return [];
+  }
+}
+
+/** Today's completion stats (checked/total behaviors). */
+export async function fetchCompletionStats(
+  userId: string,
+): Promise<{ checked: number; total: number }> {
+  const sb = getSupabase(userId);
+  if (!sb) return { checked: 0, total: 0 };
+  try {
+    return await getTodayCompletionStats(sb, userId);
+  } catch {
+    return { checked: 0, total: 0 };
+  }
+}
+
+/** Per-behavior frequency over a given window. */
+export async function fetchBehaviorFrequencies(
+  userId: string,
+  daysBack: number,
+): Promise<Array<{ behaviorKey: string; behaviorName: string; completed: number; totalDays: number }>> {
+  const sb = getSupabase(userId);
+  if (!sb) return [];
+  try {
+    return await getBehaviorFrequencies(sb, userId, daysBack);
+  } catch {
+    return [];
+  }
+}
+
+/** Behavior-level correlations. */
+export async function fetchBehaviorCorrelations(
+  userId: string,
+  daysBack: number,
+): Promise<Array<{ behaviorA: string; behaviorB: string; coRate: number; withoutRate: number }>> {
+  const sb = getSupabase(userId);
+  if (!sb) return [];
+  try {
+    return await getBehaviorCorrelations(sb, userId, daysBack);
   } catch {
     return [];
   }

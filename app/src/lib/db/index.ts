@@ -48,6 +48,9 @@ export { detectEmergingBehaviors } from "./behaviors";
 export { getBehaviorDayOfWeekCounts } from "./behaviors";
 export { getRecentCompletionDays } from "./behaviors";
 export { getBehavioralSummary } from "./behaviors";
+export { getTodayCompletionStats } from "./behaviors";
+export { getBehaviorFrequencies } from "./behaviors";
+export { getBehaviorCorrelations } from "./behaviors";
 export type { BehavioralSummary } from "./behaviors";
 
 // ─── Patterns ───────────────────────────────────────────────────────────────

@@ -480,6 +480,15 @@ const PatternCard = memo(function PatternCard({
         </div>
       </div>
 
+      {/* Celebrated validation — acknowledgment when a pattern is proven */}
+      {pattern.status === "validated" && (
+        <div className="px-4 py-3 border-t border-sage-100 bg-sage-50/50">
+          <p className="font-serif text-[13px] text-sage-700 leading-[1.4]">
+            You&rsquo;ve proven this works. It&rsquo;s part of your operating system now.
+          </p>
+        </div>
+      )}
+
       {/* Aspiration provenance */}
       {aspirationName && (
         <div className="px-4 pt-2 pb-3 border-t border-sand-200/80">

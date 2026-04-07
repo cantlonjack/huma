@@ -267,6 +267,159 @@ export async function detectEmergingBehaviors(
   return emerging;
 }
 
+// ─── Early-Stage Stats (Grow progressive disclosure) ───────────────────────
+
+/** Completion stats for the current day: how many behaviors checked vs total. */
+export async function getTodayCompletionStats(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<{ checked: number; total: number }> {
+  const todayStr = getLocalDate();
+
+  const { data } = await supabase
+    .from("sheet_entries")
+    .select("checked")
+    .eq("user_id", userId)
+    .eq("date", todayStr);
+
+  if (!data || data.length === 0) return { checked: 0, total: 0 };
+  return {
+    checked: data.filter(r => r.checked).length,
+    total: data.length,
+  };
+}
+
+/** Per-behavior frequency: how many days completed out of days tracked, over a given window. */
+export async function getBehaviorFrequencies(
+  supabase: SupabaseClient,
+  userId: string,
+  daysBack: number,
+): Promise<Array<{ behaviorKey: string; behaviorName: string; completed: number; totalDays: number }>> {
+  const startStr = getLocalDateOffset(daysBack - 1);
+  const todayStr = getLocalDate();
+
+  const { data } = await supabase
+    .from("behavior_log")
+    .select("behavior_key, behavior_name, date, completed")
+    .eq("user_id", userId)
+    .gte("date", startStr)
+    .lte("date", todayStr);
+
+  if (!data || data.length === 0) return [];
+
+  // Group by behavior_key, count distinct completed dates
+  const keyMap = new Map<string, { name: string; completedDates: Set<string> }>();
+  for (const row of data) {
+    const key = (row.behavior_key || row.behavior_name) as string;
+    const name = (row.behavior_name || row.behavior_key) as string;
+    if (!keyMap.has(key)) keyMap.set(key, { name, completedDates: new Set() });
+    if (row.completed) keyMap.get(key)!.completedDates.add(row.date as string);
+  }
+
+  return Array.from(keyMap.entries())
+    .map(([key, val]) => ({
+      behaviorKey: key,
+      behaviorName: val.name,
+      completed: val.completedDates.size,
+      totalDays: daysBack,
+    }))
+    .sort((a, b) => b.completed - a.completed);
+}
+
+/**
+ * Early behavior-level correlations: for each pair of behaviors,
+ * compute co-completion rate vs solo rate over the last N days.
+ * Returns pairs where the co-completion rate is notably higher.
+ */
+export async function getBehaviorCorrelations(
+  supabase: SupabaseClient,
+  userId: string,
+  daysBack: number,
+): Promise<Array<{
+  behaviorA: string;
+  behaviorB: string;
+  coRate: number;       // % of days A was done when B was also done
+  withoutRate: number;  // % of days A was done when B was NOT done
+}>> {
+  const startStr = getLocalDateOffset(daysBack - 1);
+  const todayStr = getLocalDate();
+
+  const { data } = await supabase
+    .from("behavior_log")
+    .select("behavior_key, behavior_name, date, completed")
+    .eq("user_id", userId)
+    .eq("completed", true)
+    .gte("date", startStr)
+    .lte("date", todayStr);
+
+  if (!data || data.length < 4) return [];
+
+  // Build behavior -> Set<date> map
+  const behaviorDays = new Map<string, { name: string; dates: Set<string> }>();
+  for (const row of data) {
+    const key = (row.behavior_key || row.behavior_name) as string;
+    const name = (row.behavior_name || row.behavior_key) as string;
+    if (!behaviorDays.has(key)) behaviorDays.set(key, { name, dates: new Set() });
+    behaviorDays.get(key)!.dates.add(row.date as string);
+  }
+
+  const keys = Array.from(behaviorDays.keys());
+  if (keys.length < 2) return [];
+
+  // Collect all active dates to compute "without" rate
+  const allDates = new Set<string>();
+  for (const { dates } of behaviorDays.values()) {
+    for (const d of dates) allDates.add(d);
+  }
+  const totalActiveDays = allDates.size;
+  if (totalActiveDays < 4) return [];
+
+  const results: Array<{
+    behaviorA: string;
+    behaviorB: string;
+    coRate: number;
+    withoutRate: number;
+  }> = [];
+
+  for (let i = 0; i < keys.length; i++) {
+    for (let j = i + 1; j < keys.length; j++) {
+      const aDays = behaviorDays.get(keys[i])!.dates;
+      const bDays = behaviorDays.get(keys[j])!.dates;
+
+      // Need enough data points
+      if (aDays.size < 3 || bDays.size < 3) continue;
+
+      // Co-completion days
+      let coCount = 0;
+      for (const d of aDays) {
+        if (bDays.has(d)) coCount++;
+      }
+      if (coCount < 2) continue;
+
+      // A done when B done (coRate) vs A done when B not done
+      const bDoneCount = bDays.size;
+      const bNotDoneCount = totalActiveDays - bDoneCount;
+      const aWithB = coCount;
+      const aWithoutB = aDays.size - coCount;
+
+      const coRate = bDoneCount > 0 ? aWithB / bDoneCount : 0;
+      const withoutRate = bNotDoneCount > 0 ? aWithoutB / bNotDoneCount : 0;
+
+      // Only include if there's a meaningful difference (20%+ gap)
+      if (coRate > withoutRate + 0.2 && coRate >= 0.5) {
+        results.push({
+          behaviorA: behaviorDays.get(keys[i])!.name,
+          behaviorB: behaviorDays.get(keys[j])!.name,
+          coRate: Math.round(coRate * 100),
+          withoutRate: Math.round(withoutRate * 100),
+        });
+      }
+    }
+  }
+
+  return results.sort((a, b) => (b.coRate - b.withoutRate) - (a.coRate - a.withoutRate));
+}
+
 // ─── Day-of-Week Rhythm Counts ──────────────────────────────────────────────
 
 /** Trailing 28-day completion counts grouped by day of week (0=Sun..6=Sat). */
