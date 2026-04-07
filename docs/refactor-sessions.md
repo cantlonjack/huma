@@ -355,33 +355,318 @@ see what this looks like after a week."
 
 ## Phase 3: Polish & Feedback (Sessions 7-9)
 
-### Session 7: Feedback Loops
+### Session 7: Feedback Loops & QoL Validation
 
-**Goal:** Users can correct HUMA's understanding and see it learn.
+**Goal:** Users can correct HUMA's understanding, and every aspiration has a validation
+question that keeps the system honest.
 
-1. Dimension corrections on behaviors (add/remove dimension mappings)
-2. Context corrections ("That's not right" on any context field)
-3. Decision review: "How did that decision work out?" — HUMA asks periodically about
-   past decisions, updating the context model with outcomes
-4. Store corrections as training signal — original AI mapping + user correction
+**The problem (feedback):** HUMA assigns dimensions to behaviors (running → Body, Joy)
+and the user cannot dispute this. ContextPortrait lets users edit/remove context fields,
+but there's no way to correct dimension mappings, no "that's not right" for behaviors,
+and no undo after deletion. The system asserts things about your life with no mechanism
+for you to say "actually, no."
+
+**The problem (validation):** The Aspiration type (`types/v2.ts:88-103`) has no
+`validationQuestion` field, no `failureResponse`, no threshold for auto-pausing.
+The tech spec's best idea — QoL validation ("How many evenings were genuinely free
+this week?" → always systemic, never personal) — was never built. Without it, HUMA
+can't tell the difference between "this aspiration is working" and "this person stopped
+opening the app."
+
+**What to build:**
+
+1. **Add QoL validation fields to the Aspiration type** (`types/v2.ts`):
+   ```typescript
+   validationQuestion?: string;     // "How many evenings were genuinely free?"
+   validationTarget?: string;       // "5 or more out of 7"
+   validationFrequency?: "weekly" | "biweekly" | "monthly";
+   failureResponse?: string;        // systemic, never personal
+   ```
+   During decomposition (FOCUS_MODE in `v2-chat/route.ts`), instruct Claude to generate
+   these fields alongside behaviors. The prompt should say: "For every aspiration, generate
+   a validation question the operator can answer in 5 seconds, a concrete target, and a
+   systemic failure explanation that looks at the system, never at the person."
+
+2. **Add a weekly validation check.** When the user opens Today on their validation day
+   (default: Sunday), show a card per active aspiration:
+   - The validation question
+   - Quick-tap answer (number input or yes/no)
+   - If below target: show the systemic failure response, not "try harder"
+   - Example: "Evenings free: 3 of 7. Below your target of 5. System note: packing
+     ran past 3pm three days this week. Consider batching to 2 days instead of 3."
+   Store answers in a new `validation_log` table or in the aspiration's behavior_log.
+
+3. **Add dimension correction to behaviors.** In AspirationDetailPanel.tsx (currently
+   shows dimensions as read-only colored badges around line 155-165):
+   - Make dimension badges tappable
+   - Tap a badge → toggle menu: keep / remove / change direction (builds/costs/protects)
+   - Add a "+" button to add a missing dimension
+   - Store both the original AI mapping AND the user correction:
+     ```typescript
+     // Add to Behavior interface in types/v2.ts
+     dimensionOverrides?: DimensionEffect[];  // user corrections
+     ```
+   - When rendering or computing, prefer `dimensionOverrides` over `dimensions` if present
+
+4. **Add undo to context deletions.** In ContextPortrait.tsx, when RemoveButton is
+   clicked (lines 256, 319, 393, 457):
+   - Don't immediately delete. Show a toast: "Removed [field]. Undo?" with a 5-second timer
+   - Only commit the deletion after the timer expires
+   - This matches the pattern already used for aspiration archival elsewhere in the app
+
+5. **Feed corrections back.** When the sheet compiler (`sheet/route.ts`) builds the daily
+   sheet, check for `dimensionOverrides` on behaviors and use those instead of the
+   AI-assigned dimensions. When the capital computation runs (`whole-compute`), same thing.
+   User corrections should propagate everywhere the original mappings were used.
+
+**What NOT to build:**
+- Don't build a full "edit everything" mode. Dimension correction is discoverable via
+  tap, not a settings page.
+- Don't auto-pause aspirations based on validation scores yet. Surface the data, let
+  the user decide. Auto-pause is a v2 feature once you've validated that users actually
+  do the weekly check-in.
+- Don't build a validation reminder notification. Just show the card when they open Today
+  on the right day.
+
+**Success test (feedback):** Change "running → Body, Joy" to "running → Body, Purpose."
+Open Today the next day. The sheet's capital pulse should reflect Purpose, not Joy.
+
+**Success test (validation):** Open Today on Sunday. See a validation card for each
+aspiration. Answer one below target. The failure response should name a systemic cause,
+not say "you didn't try hard enough."
+
+---
 
 ### Session 8: Resilience & Error Handling
 
-**Goal:** Nothing silently fails.
+**Goal:** Nothing silently fails. When Claude misbehaves, the user still gets value.
+When the database write fails, the user knows.
 
-1. Marker extraction retry + fallback parser
-2. Manual decomposition path if AI fails
-3. Visible error states everywhere
-4. Context extraction failure logging
+**The problem (markers):** The marker system (`[[DECOMPOSITION:{...}]]`) is binary — it
+works perfectly or produces nothing. In ChatSheet.tsx, `parseMarkers()` returns null
+fields when extraction fails, and the code checks `if (parsedContext)` before using each
+one. But there's no USER-FACING indication that markers failed. If Claude returns a
+message that clearly describes behaviors but doesn't wrap them in `[[DECOMPOSITION:...]]`,
+the user sees a nice chat message and nothing happens. They don't know they were supposed
+to get a structured aspiration.
+
+**The problem (silent DB failures):** ChatSheet.tsx has `.catch(() => {})` on Supabase
+writes (around lines 40 and 59). Context extraction, aspiration saves, and chat message
+persistence all fail silently. The user thinks their data is saved. It might not be.
+
+**The problem (no manual path):** If the AI fails twice to produce a decomposition,
+there's no way for the user to manually create an aspiration with behaviors. They're
+stuck in conversation mode hoping Claude gets it right next time.
+
+**What to build:**
+
+1. **Marker extraction retry with user prompt.** In ChatSheet.tsx, after `parseMarkers()`
+   runs on a completed response:
+   - If the response contains behavioral language (keywords: "this week", "every day",
+     "try", "start with", "morning", "evening", numbered lists of actions) BUT
+     `parsedBehaviors` and `parsedDecomposition` are both null:
+   - Show a subtle prompt below the message: "HUMA had ideas but couldn't structure them.
+     Tap to retry."
+   - On tap: resend the last exchange with an appended system instruction:
+     "Please reformat your previous response using the required [[DECOMPOSITION:{...}]]
+     marker format."
+   - Track retry attempts. Max 1 automatic retry per message.
+
+2. **Fallback manual aspiration builder.** If retry also fails (or if the user dismisses
+   the retry prompt), show a minimal form:
+   - "What's the aspiration?" — single text input
+   - "What are 2-3 things you'd do this week?" — multi-line input, one per line
+   - "How often?" — tap: daily / weekly / specific days
+   - Submit → creates an Aspiration with Behaviors directly, no AI needed
+   - Dimensions are left empty (or auto-assigned based on keyword matching against
+     the existing dimension mapping in `template-matcher.ts`)
+   - This form should be accessible from the chat UI AND from a "+" button on Today
+
+3. **Surface DB write failures.** Replace `.catch(() => {})` with actual error handling:
+   - For context saves: show a small warning icon next to the dimension indicator.
+     "Context may not have saved. Tap to retry."
+   - For aspiration saves: show a toast. "Aspiration saved locally but couldn't sync.
+     Will retry when connection improves."
+   - For chat message saves: less critical — log to console, don't bother the user.
+   - Store failed writes in a `pendingSync` queue in localStorage. On next app open,
+     attempt to flush the queue.
+
+4. **Context extraction failure tracking.** In ChatSheet.tsx, when a HUMA response
+   has substantial content (>100 chars) but `parsedContext` is null:
+   - Increment a counter in localStorage: `huma-v2-context-extraction-misses`
+   - If the miss rate exceeds 30% over the last 20 messages, log a warning that the
+     extraction prompts may need rework
+   - This is a developer diagnostic, not user-facing. But it tells you when the prompts
+     are degrading.
+
+5. **Network error recovery.** The current error message ("Something went wrong") is
+   generic. Differentiate:
+   - Network offline: "You're offline. Your message is saved — it'll send when you
+     reconnect." (Use the existing `useNetworkStatus` hook)
+   - API 429 (rate limit): "HUMA needs a moment. Try again in 30 seconds."
+   - API 500: "Something broke on our end. Your message is saved."
+   - API timeout: "That took too long. Tap to retry with a shorter response."
+   The retry button already exists (ChatSheet.tsx line 702-708). Just give it better
+   context about WHAT failed.
+
+**What NOT to build:**
+- Don't add offline queue for full conversations. Just save the last failed message
+  and let the user retry. Offline-first is a v3 concern.
+- Don't add automatic retry loops. One retry prompt per message, user-initiated.
+  Automatic retries burn API credits and can loop.
+- Don't rewrite the marker system. It works ~85% of the time. The goal is graceful
+  degradation for the other 15%.
+
+**Success test (markers):** Send Claude a message that should trigger decomposition.
+If markers come back null, the retry prompt appears within 2 seconds. If retry also
+fails, the manual form appears. The user can create an aspiration either way.
+
+**Success test (DB failures):** Simulate a Supabase outage (disconnect network after
+page load). Make a context change. See a warning. Reconnect. See the pending write
+flush successfully.
+
+**Success test (errors):** Turn off network mid-conversation. The error message says
+"offline" not "something went wrong." Turn network back on. Tap retry. Message sends.
+
+---
 
 ### Session 9: Service Extraction & Tests
 
-**Goal:** Engineering quality that makes future iteration fast.
+**Goal:** The codebase is fast to iterate on. API routes are thin. Components are focused.
+The core loop has test coverage. Dead code is gone.
 
-1. Extract services from fat API routes
-2. Split fat components
-3. Integration tests for: conversation → context building, sheet compilation, decision mode
-4. Delete dead code (v1 chat, unused Supabase clients)
+**The problem:** `v2-chat/route.ts` is 839 lines with `buildSystemPrompt()` alone at
+233 lines (lines 533-765). `sheet/route.ts` is 559 lines. `ChatSheet.tsx` is 771 lines.
+These files mix HTTP handling, prompt construction, business logic, and state management.
+Every change to conversation behavior requires reading 800+ lines of context. Every
+change to the sheet compiler risks breaking scoring logic buried in a route handler.
+
+The test suite covers markers and API validation but has ZERO tests for:
+- `mergeContext()` — the deep merge that every context update depends on
+- `contextForPrompt()` — the prose serialization Claude reads
+- `detectMode()` — the signal detection that routes to open/focus/decision
+- `scoreBehaviors()` — the algorithm that decides what goes on today's sheet
+- Decision mode integration
+- Nudge generation
+
+**What to build:**
+
+**Part 1: Extract services (do first, commit after each extraction)**
+
+1. Extract from `v2-chat/route.ts`:
+   - `lib/services/prompt-builder.ts`:
+     - `buildSystemPrompt()` (lines 533-765) — the 233-line function, unchanged
+     - `buildBehavioralContext()` (lines 246-312)
+     - `buildTabContextBlock()` (lines 313-426)
+     - `detectMode()` (lines 490-531)
+     - All prompt constants: BASE_IDENTITY, OPEN_MODE_PROMPT, FOCUS_MODE_PROMPT,
+       DECOMPOSITION_PHASE_PROMPT, REORGANIZATION_PROMPT, DECISION_MODE_PROMPT
+   - The route handler becomes ~80 lines: validate request → call `buildSystemPrompt()`
+     → stream Claude response → return. Commit.
+
+2. Extract from `sheet/route.ts`:
+   - `lib/services/sheet-service.ts`:
+     - `scoreBehaviors()` (lines 203-328) — behavior leverage scoring
+     - `analyzeHistory()` (lines 329-371) — recent behavior analysis
+     - `getSeason()` (lines 9-51) — season derivation
+     - `formatKnownContext()` (lines 53-100) — context formatting for sheet prompt
+   - The route handler becomes ~90 lines: validate → score → call Claude → return. Commit.
+
+3. Extract from `nudge/route.ts`:
+   - `lib/services/nudge-service.ts`:
+     - Nudge prompt template (lines 10-72)
+     - `summarizeHistory()` (lines 172-207)
+   - Route handler becomes ~60 lines. Commit.
+
+**Part 2: Split ChatSheet.tsx (commit after each split)**
+
+4. Extract `hooks/useMessageStream.ts`:
+   - The core stream handling from ChatSheet.tsx lines 98-469
+   - Handles: fetch → ReadableStream → parse chunks → accumulate response → extract markers
+   - Returns: `{ sendMessage, isStreaming, error, lastResponse }`
+
+5. Extract `hooks/useContextSync.ts`:
+   - Context merging logic from ChatSheet.tsx lines 370-392
+   - Context loading/migration from lines 221-240
+   - Persistence to localStorage + Supabase
+   - Returns: `{ humaContext, updateContext, contextLoaded }`
+
+6. Extract `hooks/useAspirationManager.ts`:
+   - Aspiration save/update logic from ChatSheet.tsx
+   - Reorganization handler from lines 30-96
+   - Returns: `{ saveAspiration, applyReorganization }`
+
+7. ChatSheet.tsx becomes a composition layer (~200 lines): renders MessageList,
+   InputBar, and error states. Uses the three hooks above. Commit.
+
+**Part 3: Tests (do after extractions — extracted services are testable)**
+
+8. Test `mergeContext()` in `__tests__/context-model.test.ts`:
+   - Shallow fields merge correctly (body.sleep overwrites)
+   - Nested objects deep-merge (people.household + people.community both preserved)
+   - Arrays merge by name (two Person objects with same name → update, different name → append)
+   - String arrays deduplicate
+   - Source tracking records every field change
+   - Empty context + extracted → extracted wins
+   - Existing context + empty extracted → existing preserved
+
+9. Test `contextForPrompt()`:
+   - Empty context → "No context yet"
+   - Full context → readable prose with all sections
+   - Partial context → only filled sections appear
+   - Decisions render with reasoning and outcomes
+   - Temporal items render upcoming and overdue
+
+10. Test `detectMode()` in `__tests__/prompt-builder.test.ts`:
+    - "I want to eat better" → focus mode
+    - "Should I buy a shelter?" → decision mode
+    - "How's it going" → open mode
+    - Explicit chatMode override → respects override
+    - Edge cases: "I want to decide" (has both signals) → decision wins
+
+11. Test `scoreBehaviors()` in `__tests__/sheet-service.test.ts`:
+    - Behavior with 7/7 recent completions → high score
+    - Behavior scheduled for today (specific-days) → included
+    - Behavior not scheduled for today → excluded
+    - Trigger behaviors score higher than non-triggers
+    - Maximum 5 behaviors returned
+
+12. Integration test for conversation → context flow:
+    - Mock Claude to return response with `[[CONTEXT:{"body":{"sleep":"6 hours"}}]]`
+    - Assert: `mergeContext()` produces correct HumaContext
+    - Assert: next call to `contextForPrompt()` includes "Sleep: 6 hours"
+
+**Part 4: Delete dead code**
+
+13. Delete `/api/chat/route.ts` (v1). It's only referenced by `api-routes.test.ts`.
+    Update or remove that test to reference v2-chat instead.
+
+14. Consolidate Supabase clients. Check if `supabase.ts` is imported anywhere. If not,
+    delete it. Rename `supabase-v2.ts` to `supabase-client.ts` if it's the primary
+    client, and update imports.
+
+15. Search for unused exports across `/lib/` and `/components/`. Delete any function
+    or component with zero import references.
+
+**What NOT to do:**
+- Don't refactor and test simultaneously. Extract first, verify the build passes,
+  THEN write tests against the extracted services.
+- Don't add abstractions. The extracted files should contain the SAME code, just in
+  a different file. No new interfaces, no dependency injection, no service registries.
+- Don't chase 100% coverage. Test the core loop (context merge, prompt build, mode
+  detect, behavior score) and the three most likely failure cases for each.
+- Don't rename functions during extraction. Same names, same signatures, different files.
+  This makes the git diff reviewable.
+
+**Success test (extraction):** `v2-chat/route.ts` is under 100 lines. `sheet/route.ts`
+is under 100 lines. `ChatSheet.tsx` is under 250 lines. All existing tests pass.
+
+**Success test (new tests):** `npm run test` runs 20+ tests covering context merging,
+prompt serialization, mode detection, and behavior scoring. All pass.
+
+**Success test (dead code):** `grep -r "api/chat" src/` returns zero results (only
+v2-chat references remain). `grep -r "supabase-v2" src/` returns zero results if
+renamed.
 
 ---
 

@@ -17,6 +17,7 @@ import {
 } from "@/components/today/TodayCards";
 import { NudgeCard } from "@/components/today/NudgeCard";
 import { CapitalPulse } from "@/components/today/CapitalPulse";
+import { ValidationCard } from "@/components/today/ValidationCard";
 
 export default function TodayPage() {
   const t = useToday();
@@ -151,6 +152,24 @@ export default function TodayPage() {
                     nudge={nudge}
                     onDismiss={t.dismissNudge}
                     onEngage={t.engageNudge}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Weekly Validation Cards (shown on validation day) */}
+            {t.validationAspirations.length > 0 && (
+              <div className="mb-2">
+                <div className="px-4 pb-2">
+                  <span className="font-sans text-[11px] font-semibold tracking-[0.22em] text-ink-300">
+                    WEEKLY CHECK-IN
+                  </span>
+                </div>
+                {t.validationAspirations.map(asp => (
+                  <ValidationCard
+                    key={asp.id}
+                    aspiration={asp}
+                    onAnswer={t.handleValidationAnswer}
                   />
                 ))}
               </div>

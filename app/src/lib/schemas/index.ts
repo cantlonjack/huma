@@ -109,6 +109,7 @@ export const sheetCompileSchema = z.object({
       days: z.array(z.string()).optional(),
       detail: z.string().optional(),
       enabled: z.boolean().optional(),
+      dimensions: z.array(z.string()).optional(),
     })),
   })).default([]),
   knownContext: z.record(z.string(), z.unknown()).optional().default({}),

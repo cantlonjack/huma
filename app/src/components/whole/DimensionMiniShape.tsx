@@ -49,9 +49,10 @@ function computeDimensionScores(
         scores[dim as DimensionKey] = Math.min(scores[dim as DimensionKey] + 0.15, 1);
       }
     }
-    // Behaviors add more weight
+    // Behaviors add more weight — prefer user dimension overrides
     for (const b of asp.behaviors || []) {
-      for (const de of b.dimensions || []) {
+      const dims = b.dimensionOverrides || b.dimensions || [];
+      for (const de of dims) {
         if (de.dimension in scores) {
           scores[de.dimension] = Math.min(scores[de.dimension] + 0.1, 1);
         }

@@ -5,6 +5,7 @@
  */
 
 import type { Aspiration, KnownContext, SheetCompileRequest, SheetEntry } from "@/types/v2";
+import { getEffectiveDimensions } from "@/types/v2";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getLocalDate } from "@/lib/date-utils";
 import {
@@ -151,6 +152,8 @@ export async function compileSheet(
         days: b.days,
         detail: b.detail,
         enabled: b.enabled,
+        // Use dimension overrides when the user has corrected them
+        dimensions: getEffectiveDimensions(b).map(d => d.dimension),
       })),
     }));
 

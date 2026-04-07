@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Aspiration, Insight, SheetEntry, Nudge, DimensionKey } from "@/types/v2";
+import type { Aspiration, Insight, SheetEntry, Nudge, DimensionKey, ValidationAnswer } from "@/types/v2";
 import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { getLocalDate } from "@/lib/date-utils";
@@ -87,6 +87,10 @@ export interface UseTodayReturn {
   navigateToStart: () => void;
   dismissNudge: (id: string) => void;
   engageNudge: (nudge: Nudge) => void;
+  // Validation
+  isValidationDay: boolean;
+  validationAspirations: Aspiration[];
+  handleValidationAnswer: (answer: ValidationAnswer) => void;
 }
 
 // ─── Hook ───────────────────────────────────────────────────────────────────
@@ -532,6 +536,65 @@ export function useToday(): UseTodayReturn {
   const activeCount = aspirations.length;
   const comingUpItems = getReadyComingUp(aspirations, weekCounts, dayCount);
 
+  // ─── Weekly Validation ─────────────────────────────────────────────────
+  const isValidationDay = useMemo(() => {
+    const today = new Date(date + "T12:00:00");
+    return today.getDay() === 0; // Sunday
+  }, [date]);
+
+  const [answeredValidationIds, setAnsweredValidationIds] = useState<Set<string>>(() => {
+    try {
+      const key = `huma-v2-validation-${date}`;
+      const cached = localStorage.getItem(key);
+      return cached ? new Set(JSON.parse(cached)) : new Set<string>();
+    } catch { return new Set<string>(); }
+  });
+
+  const validationAspirations = useMemo(() => {
+    if (!isValidationDay) return [];
+    return aspirations.filter(a =>
+      a.status === "active" &&
+      a.validationQuestion &&
+      a.validationTarget &&
+      !answeredValidationIds.has(a.id)
+    );
+  }, [isValidationDay, aspirations, answeredValidationIds]);
+
+  const handleValidationAnswer = useCallback((answer: ValidationAnswer) => {
+    setAnsweredValidationIds(prev => {
+      const next = new Set(prev);
+      next.add(answer.aspirationId);
+      try {
+        localStorage.setItem(`huma-v2-validation-${date}`, JSON.stringify([...next]));
+      } catch { /* storage full */ }
+      return next;
+    });
+
+    // Store the answer in validation log
+    try {
+      const logKey = `huma-v2-validation-log`;
+      const existing = JSON.parse(localStorage.getItem(logKey) || "[]");
+      existing.push(answer);
+      // Keep last 100 entries
+      if (existing.length > 100) existing.splice(0, existing.length - 100);
+      localStorage.setItem(logKey, JSON.stringify(existing));
+    } catch { /* non-critical */ }
+
+    // Persist to Supabase if authed
+    if (user) {
+      const supabase = createClient();
+      if (supabase) {
+        supabase.from("behavior_log").insert({
+          user_id: user.id,
+          behavior_key: `validation:${answer.aspirationId}`,
+          date,
+          completed: !answer.belowTarget,
+          metadata: answer,
+        }).then(() => {});
+      }
+    }
+  }, [date, user]);
+
   return {
     loading,
     date,
@@ -578,5 +641,8 @@ export function useToday(): UseTodayReturn {
     navigateToStart,
     dismissNudge,
     engageNudge,
+    isValidationDay,
+    validationAspirations,
+    handleValidationAnswer,
   };
 }

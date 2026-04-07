@@ -43,13 +43,14 @@ export function getBehaviorChain(aspiration: Aspiration): BehaviorStep[] {
     const isTrigger = behaviorAny.is_trigger === true
       || (triggerBehavior ? b.text.toLowerCase().trim() === triggerBehavior : i === 0);
 
-    const dim = b.dimensions?.[0];
+    const effective = b.dimensionOverrides || b.dimensions;
+    const dim = effective?.[0];
     const dimension = dim
       ? (typeof dim === "string" ? dim : dim.dimension)
       : "";
 
-    const allDims: string[] = b.dimensions
-      ? b.dimensions.map(d => typeof d === "string" ? d : d.dimension).filter(Boolean)
+    const allDims: string[] = effective
+      ? effective.map(d => typeof d === "string" ? d : d.dimension).filter(Boolean)
       : [];
 
     return { text: b.text, is_trigger: isTrigger, dimension, dimensions: allDims };

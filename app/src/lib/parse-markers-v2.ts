@@ -15,6 +15,12 @@ export interface DecompositionData {
   }>;
   coming_up: FutureAction[];
   longer_arc: FuturePhase[];
+  validation?: {
+    question: string;
+    target: string;
+    frequency: "weekly" | "biweekly" | "monthly";
+    failure_response: string;
+  };
 }
 
 export interface ParsedDecision {

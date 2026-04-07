@@ -49,9 +49,15 @@ export interface Behavior {
   frequency: "daily" | "weekly" | "specific-days";
   days?: string[];
   dimensions: DimensionEffect[];
+  dimensionOverrides?: DimensionEffect[];  // User corrections — preferred over dimensions when present
   detail?: string;
   enabled?: boolean;
   source?: "template" | "conversation";
+}
+
+/** Get the effective dimensions for a behavior, preferring user overrides. */
+export function getEffectiveDimensions(behavior: Behavior): DimensionEffect[] {
+  return behavior.dimensionOverrides ?? behavior.dimensions;
 }
 
 export interface AspirationFunnel {
@@ -85,6 +91,8 @@ export interface FuturePhase {
   timeframe: string;
 }
 
+export type ValidationFrequency = "weekly" | "biweekly" | "monthly";
+
 export interface Aspiration {
   id: string;
   rawText: string;
@@ -100,6 +108,21 @@ export interface Aspiration {
   source?: "conversation" | "template";  // How this aspiration was created
   funnel?: AspirationFunnel;
   triggerData?: AspirationTrigger;
+  // QoL validation — generated during decomposition
+  validationQuestion?: string;       // "How many evenings were genuinely free?"
+  validationTarget?: string;         // "5 or more out of 7"
+  validationFrequency?: ValidationFrequency;
+  failureResponse?: string;          // Systemic, never personal
+}
+
+export interface ValidationAnswer {
+  aspirationId: string;
+  question: string;
+  answer: string;            // The user's response (number or yes/no)
+  target: string;
+  belowTarget: boolean;
+  failureResponse?: string;  // Shown when below target
+  answeredAt: string;        // ISO date
 }
 
 // ─── Patterns ───────────────────────────────────────────────────────────────

@@ -174,7 +174,13 @@ Then output the FULL DECOMPOSITION as a JSON marker:
       "detail": "What this looks like",
       "timeframe": "Rough timing"
     }
-  ]
+  ],
+  "validation": {
+    "question": "A question the operator can answer in 5 seconds — always systemic, never personal. E.g. 'How many evenings were genuinely free this week?'",
+    "target": "Concrete target. E.g. '5 or more out of 7'",
+    "frequency": "weekly" or "biweekly" or "monthly",
+    "failure_response": "Systemic explanation when below target. Looks at the SYSTEM, never at the person. E.g. 'Packing ran past 3pm three days — consider batching to 2 days instead of 3.'"
+  }
 }]]
 
 Then output:
@@ -192,6 +198,13 @@ RULES:
   resources, location, constraints, and timeline. Never generic.
 - dimensions: Map each behavior to the life dimensions it touches (lowercase:
   body, people, money, home, growth, joy, purpose, identity).
+- validation: REQUIRED. For every aspiration, generate a validation question the
+  operator can answer in 5 seconds, a concrete target, and a systemic failure
+  explanation that looks at the system, never at the person.
+  The question should be measurable (a count, a yes/no, a frequency).
+  The failure_response should name a structural cause and suggest a system change.
+  NEVER say "try harder" or blame the operator. Example failure: "Morning prep
+  took over 45 minutes 4 days — the routine has too many steps. Cut to 3 essentials."
 
 IMPORTANT: Use everything you know from the context model. If you know they live
 in Zone 5b, reference planting dates. If you know they have a $400/month food

@@ -520,10 +520,12 @@ export async function getBehavioralSummary(
     .slice(0, 10);
 
   // Build dimension → completion count from aspiration behavior metadata
+  // Prefer dimensionOverrides (user corrections) over AI-assigned dimensions
   const dimLookup = new Map<string, string[]>();
   for (const asp of aspirations) {
     for (const b of asp.behaviors) {
-      dimLookup.set(b.key, b.dimensions?.map((d) => d.dimension) || []);
+      const dims = (b as { dimensionOverrides?: { dimension: string }[] }).dimensionOverrides || b.dimensions;
+      dimLookup.set(b.key, dims?.map((d) => d.dimension) || []);
     }
   }
 

@@ -363,6 +363,12 @@ export function useStart(): UseStartReturn {
       dimensionsTouched: [],
       status: "active" as const,
       stage: "active" as const,
+      ...(decompositionData?.validation && {
+        validationQuestion: decompositionData.validation.question,
+        validationTarget: decompositionData.validation.target,
+        validationFrequency: decompositionData.validation.frequency,
+        failureResponse: decompositionData.validation.failure_response,
+      }),
     }];
     localStorage.setItem("huma-v2-aspirations", JSON.stringify(aspirations));
 

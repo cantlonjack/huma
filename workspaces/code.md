@@ -1,6 +1,6 @@
 # Code Workspace
 
-_Last updated: 2026-04-05_
+_Last updated: 2026-04-06_
 
 ## What This Workspace Is For
 Building and maintaining HUMA's Next.js application. Components, API routes, data layer, auth.
@@ -20,6 +20,7 @@ V2.1 in development. Three-tab app: Today (production sheet), Whole (holonic lif
 ### What Doesn't Work Yet
 - Behavioral insights (`/api/insight`) require 7+ days of data
 - No push notifications or morning briefing delivery
+- Validation auto-pause (surface data only — v2 feature once weekly check-ins are validated)
 
 ### Architectural Notes
 - Pre-auth data lives in localStorage; migrated to Supabase on sign-in

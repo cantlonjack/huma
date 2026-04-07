@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, memo } from "react";
-import type { Aspiration, Behavior, Pattern, FutureAction, FuturePhase, DimensionKey } from "@/types/v2";
-import { DIMENSION_COLORS, DIMENSION_LABELS } from "@/types/v2";
+import type { Aspiration, Behavior, Pattern, FutureAction, FuturePhase, DimensionKey, DimensionEffect } from "@/types/v2";
+import { DIMENSION_COLORS, DIMENSION_LABELS, getEffectiveDimensions } from "@/types/v2";
 import type { HolonStatus } from "./WholeShape";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -101,6 +101,144 @@ function EditableText({
   );
 }
 
+// ─── Dimension Editor ──────────────────────────────────────────────────────
+
+const ALL_DIMENSIONS: DimensionKey[] = ["body", "people", "money", "home", "growth", "joy", "purpose", "identity"];
+const DIRECTIONS: DimensionEffect["direction"][] = ["builds", "costs", "protects"];
+const DIRECTION_LABELS: Record<string, string> = { builds: "Builds", costs: "Costs", protects: "Protects" };
+
+function DimensionBadge({
+  effect,
+  isOverride,
+  onTap,
+}: {
+  effect: DimensionEffect;
+  isOverride: boolean;
+  onTap: () => void;
+}) {
+  return (
+    <button
+      onClick={onTap}
+      className={`inline-flex items-center gap-1 cursor-pointer bg-transparent border-none p-0 group ${isOverride ? "ring-1 ring-amber-300 rounded-full px-0.5" : ""}`}
+      title={`${DIMENSION_LABELS[effect.dimension]} (${effect.direction})${isOverride ? " — corrected" : ""}`}
+    >
+      <span
+        className="w-1.5 h-1.5 rounded-full group-hover:w-2 group-hover:h-2 transition-all"
+        style={{ background: DIMENSION_COLORS[effect.dimension] || "#A8C4AA" }}
+      />
+    </button>
+  );
+}
+
+function DimensionEditor({
+  behavior,
+  onSave,
+}: {
+  behavior: Behavior;
+  onSave: (overrides: DimensionEffect[]) => void;
+}) {
+  const [editing, setEditing] = useState<DimensionEffect | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const effective = getEffectiveDimensions(behavior);
+  const isOverridden = !!behavior.dimensionOverrides;
+  const existingDims = new Set(effective.map(e => e.dimension));
+
+  const handleRemove = (dim: DimensionKey) => {
+    const updated = effective.filter(e => e.dimension !== dim);
+    onSave(updated);
+    setEditing(null);
+  };
+
+  const handleChangeDirection = (dim: DimensionKey, direction: DimensionEffect["direction"]) => {
+    const updated = effective.map(e =>
+      e.dimension === dim ? { ...e, direction, reasoning: "User corrected" } : e
+    );
+    onSave(updated);
+    setEditing(null);
+  };
+
+  const handleAdd = (dim: DimensionKey) => {
+    const updated = [...effective, { dimension: dim, direction: "builds" as const, reasoning: "User added" }];
+    onSave(updated);
+    setShowAdd(false);
+  };
+
+  return (
+    <div className="flex items-center gap-1 mt-1 flex-wrap">
+      {effective.map((e) => (
+        <div key={e.dimension} className="relative">
+          <DimensionBadge
+            effect={e}
+            isOverride={isOverridden}
+            onTap={() => setEditing(editing?.dimension === e.dimension ? null : e)}
+          />
+
+          {/* Inline popup for this dimension */}
+          {editing?.dimension === e.dimension && (
+            <>
+              <div className="fixed inset-0 z-[8]" onClick={() => setEditing(null)} />
+              <div className="absolute left-0 bottom-4 z-10 bg-sand-50 border border-sand-300 rounded-lg shadow-sm py-1 min-w-[120px]">
+                <div className="px-3 py-1 font-sans text-[11px] font-medium text-sage-500 border-b border-sand-200">
+                  {DIMENSION_LABELS[e.dimension]}
+                </div>
+                {DIRECTIONS.map(dir => (
+                  <button
+                    key={dir}
+                    onClick={() => handleChangeDirection(e.dimension, dir)}
+                    className={`font-sans block w-full text-left px-3 py-1.5 text-[12px] bg-transparent border-none cursor-pointer ${e.direction === dir ? "text-amber-600 font-medium" : "text-earth-500"}`}
+                  >
+                    {DIRECTION_LABELS[dir]}
+                  </button>
+                ))}
+                <button
+                  onClick={() => handleRemove(e.dimension)}
+                  className="font-sans block w-full text-left px-3 py-1.5 text-[12px] text-rose bg-transparent border-none cursor-pointer border-t border-sand-200"
+                >
+                  Remove
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      ))}
+
+      {/* Add dimension */}
+      <div className="relative">
+        <button
+          onClick={() => setShowAdd(!showAdd)}
+          className="w-4 h-4 flex items-center justify-center rounded-full border border-dashed border-sage-200 bg-transparent cursor-pointer p-0 text-sage-300 hover:border-sage-400 hover:text-sage-400"
+          title="Add dimension"
+        >
+          <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+            <path d="M4 1v6M1 4h6" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+          </svg>
+        </button>
+
+        {showAdd && (
+          <>
+            <div className="fixed inset-0 z-[8]" onClick={() => setShowAdd(false)} />
+            <div className="absolute left-0 bottom-6 z-10 bg-sand-50 border border-sand-300 rounded-lg shadow-sm py-1 min-w-[110px]">
+              {ALL_DIMENSIONS.filter(d => !existingDims.has(d)).map(dim => (
+                <button
+                  key={dim}
+                  onClick={() => handleAdd(dim)}
+                  className="font-sans flex items-center gap-2 w-full text-left px-3 py-1.5 text-[12px] text-earth-500 bg-transparent border-none cursor-pointer hover:bg-sand-100"
+                >
+                  <span className="w-2 h-2 rounded-full" style={{ background: DIMENSION_COLORS[dim] }} />
+                  {DIMENSION_LABELS[dim]}
+                </button>
+              ))}
+              {existingDims.size >= ALL_DIMENSIONS.length && (
+                <span className="font-sans block px-3 py-1.5 text-[11px] text-earth-300">All added</span>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Behavior row ───────────────────────────────────────────────────────────
 
 const BehaviorRow = memo(function BehaviorRow({
@@ -110,6 +248,7 @@ const BehaviorRow = memo(function BehaviorRow({
   onTextSave,
   onRemove,
   onSetTrigger,
+  onDimensionOverride,
   onPatternTap,
 }: {
   behavior: Behavior;
@@ -118,8 +257,11 @@ const BehaviorRow = memo(function BehaviorRow({
   onTextSave: (text: string) => void;
   onRemove: () => void;
   onSetTrigger: () => void;
+  onDimensionOverride: (overrides: DimensionEffect[]) => void;
   onPatternTap?: (patternId: string) => void;
 }) {
+  const effective = getEffectiveDimensions(behavior);
+
   return (
     <div className="relative pl-5 py-1.5">
       {/* Tree connector */}
@@ -151,20 +293,11 @@ const BehaviorRow = memo(function BehaviorRow({
             onSave={onTextSave}
           />
 
-          {/* Dimension dots */}
-          {behavior.dimensions && behavior.dimensions.length > 0 && (
-            <div className="flex items-center gap-1 mt-1">
-              {behavior.dimensions.map((d) => (
-                <span
-                  key={d.dimension}
-                  className="w-1.5 h-1.5 rounded-full"
-                  title={DIMENSION_LABELS[d.dimension as DimensionKey] || d.dimension}
-                  style={{
-                    background: DIMENSION_COLORS[d.dimension as DimensionKey] || "#A8C4AA",
-                  }}
-                />
-              ))}
-            </div>
+          {/* Dimension dots — tappable for correction */}
+          {effective.length > 0 ? (
+            <DimensionEditor behavior={behavior} onSave={onDimensionOverride} />
+          ) : (
+            <DimensionEditor behavior={behavior} onSave={onDimensionOverride} />
           )}
 
           {/* Linked pattern */}
@@ -434,6 +567,12 @@ export default function AspirationDetailPanel({
     saveBehaviors([...behaviors, newBehavior]);
   }, [behaviors, saveBehaviors]);
 
+  const handleDimensionOverride = useCallback((index: number, overrides: DimensionEffect[]) => {
+    const updated = [...behaviors];
+    updated[index] = { ...updated[index], dimensionOverrides: overrides };
+    saveBehaviors(updated);
+  }, [behaviors, saveBehaviors]);
+
   // ── Future handlers ──
 
   const handleComingUpSave = useCallback((index: number, text: string) => {
@@ -567,6 +706,7 @@ export default function AspirationDetailPanel({
               onTextSave={(text) => handleBehaviorTextSave(i, text)}
               onRemove={() => handleBehaviorRemove(i)}
               onSetTrigger={() => handleSetTrigger(i)}
+              onDimensionOverride={(overrides) => handleDimensionOverride(i, overrides)}
             />
           ))}
           <AddBehaviorRow onAdd={handleAddBehavior} />

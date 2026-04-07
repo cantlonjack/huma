@@ -4,6 +4,7 @@
  */
 
 import type { DimensionKey, SheetEntry, Aspiration } from "@/types/v2";
+import { getEffectiveDimensions } from "@/types/v2";
 
 export interface PulseData {
   movedDimensions: DimensionKey[];
@@ -40,15 +41,15 @@ export function computeCapitalPulse(
   }
 
   // Also check aspiration-level dimension data for matched behaviors
+  // Uses dimensionOverrides when the user has corrected the AI mapping
   for (const asp of aspirations) {
     for (const behavior of asp.behaviors) {
       const key = `${asp.id}:${behavior.key}`;
       if (!checkedKeys.has(key)) continue;
 
-      if (behavior.dimensions) {
-        for (const effect of behavior.dimensions) {
-          movedSet.add(effect.dimension);
-        }
+      const effective = getEffectiveDimensions(behavior);
+      for (const effect of effective) {
+        movedSet.add(effect.dimension);
       }
     }
   }

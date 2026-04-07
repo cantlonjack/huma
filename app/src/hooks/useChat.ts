@@ -241,7 +241,7 @@ export function useChat(): UseChatReturn {
         });
       }
 
-      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext } = parseMarkers(fullResponse);
+      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedDecomposition } = parseMarkers(fullResponse);
 
       const finalHumaMsg: ChatMessage = { ...humaMsg, content: cleanText, contextExtracted: parsedContext || undefined };
       if (user) {
@@ -264,11 +264,21 @@ export function useChat(): UseChatReturn {
         const newAspiration: Aspiration = {
           id: crypto.randomUUID(),
           rawText: text,
-          clarifiedText: "",
+          clarifiedText: parsedDecomposition?.aspiration_title || "",
+          title: parsedDecomposition?.aspiration_title,
+          summary: parsedDecomposition?.summary,
           behaviors: parsedBehaviors,
+          comingUp: parsedDecomposition?.coming_up,
+          longerArc: parsedDecomposition?.longer_arc,
           dimensionsTouched: [],
           status: "active",
           stage: "active",
+          ...(parsedDecomposition?.validation && {
+            validationQuestion: parsedDecomposition.validation.question,
+            validationTarget: parsedDecomposition.validation.target,
+            validationFrequency: parsedDecomposition.validation.frequency,
+            failureResponse: parsedDecomposition.validation.failure_response,
+          }),
         };
         const updatedAsps = [...aspirations, newAspiration];
         setAspirations(updatedAsps);

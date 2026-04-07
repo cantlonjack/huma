@@ -48,7 +48,7 @@ export function getArchetypeMatch(
 
   const aspDims = (asp.dimensionsTouched || []) as string[];
   const behaviorDims = (asp.behaviors || []).flatMap(b =>
-    (b.dimensions || []).map(d => typeof d === "string" ? d : d.dimension)
+    (b.dimensionOverrides || b.dimensions || []).map(d => typeof d === "string" ? d : d.dimension)
   );
   const allDims = new Set([...aspDims, ...behaviorDims]);
 
@@ -65,8 +65,9 @@ export function getAllStepDimensions(pattern: Pattern, aspirations: Aspiration[]
   for (const step of pattern.steps) {
     const stepText = step.text.toLowerCase().trim();
     const behavior = asp.behaviors?.find(b => b.text.toLowerCase().trim() === stepText);
-    if (behavior?.dimensions) {
-      for (const d of behavior.dimensions) {
+    const dims = behavior?.dimensionOverrides || behavior?.dimensions;
+    if (dims) {
+      for (const d of dims) {
         const dim = typeof d === "string" ? d : d.dimension;
         if (dim) seen.add(dim as DimensionKey);
       }
@@ -101,9 +102,10 @@ export function getTriggerDimensions(pattern: Pattern, aspirations: Aspiration[]
 
   const triggerText = pattern.trigger.toLowerCase().trim();
   const behavior = asp.behaviors?.find(b => b.text.toLowerCase().trim() === triggerText);
-  if (!behavior?.dimensions) return [];
+  const dims = behavior?.dimensionOverrides || behavior?.dimensions;
+  if (!dims) return [];
 
-  return behavior.dimensions
+  return dims
     .map(d => typeof d === "string" ? d : d.dimension)
     .filter(Boolean) as DimensionKey[];
 }

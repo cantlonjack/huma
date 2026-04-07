@@ -446,7 +446,9 @@ export async function POST(request: Request) {
       // Mark pre-selected behaviors
       const selected = topKeys && topKeys.has(b.key);
       const selectTag = selected ? " ★ PRIORITY" : (topKeys ? " (lower priority today)" : "");
-      return `  - ${b.text} (${freq})${b.detail ? `: ${b.detail}` : ""}${selectTag}${hintStr}`;
+      // Include dimension data if available (may include user corrections)
+      const dimStr = b.dimensions && b.dimensions.length > 0 ? ` [dimensions: ${b.dimensions.join(", ")}]` : "";
+      return `  - ${b.text} (${freq})${b.detail ? `: ${b.detail}` : ""}${dimStr}${selectTag}${hintStr}`;
     }).join("\n");
     return `"${a.clarifiedText || a.rawText}":\n${behaviorList}`;
   }).join("\n\n");

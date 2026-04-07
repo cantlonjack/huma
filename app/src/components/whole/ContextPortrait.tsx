@@ -3,6 +3,44 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import type { KnownContext, KnownContextPerson } from "@/types/v2";
 
+// ─── Undo Toast ────────────────────────────────────────────────────────────
+
+function UndoToast({ label, onUndo, onExpire }: { label: string; onUndo: () => void; onExpire: () => void }) {
+  const [remaining, setRemaining] = useState(5);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const expireRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    expireRef.current = setTimeout(onExpire, 5000);
+    timerRef.current = setInterval(() => setRemaining(r => r - 1), 1000);
+    return () => {
+      if (expireRef.current) clearTimeout(expireRef.current);
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [onExpire]);
+
+  return (
+    <div
+      className="fixed left-4 right-4 z-50 bg-ink-700 text-sand-50 rounded-xl px-4 py-3 flex items-center justify-between shadow-lg animate-entrance-1"
+      style={{ bottom: "calc(72px + env(safe-area-inset-bottom, 0px))" }}
+    >
+      <span className="font-sans text-[13px]">
+        Removed {label}. <span className="text-sand-300">({remaining}s)</span>
+      </span>
+      <button
+        onClick={() => {
+          if (expireRef.current) clearTimeout(expireRef.current);
+          if (timerRef.current) clearInterval(timerRef.current);
+          onUndo();
+        }}
+        className="font-sans font-semibold cursor-pointer text-[13px] text-amber-400 bg-transparent border-none px-2 py-1"
+      >
+        Undo
+      </button>
+    </div>
+  );
+}
+
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 interface ContextPortraitProps {
@@ -206,6 +244,12 @@ export default function ContextPortrait({ context, onSave, manageMode, onRemoveF
   const [addingField, setAddingField] = useState<string | null>(null);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
 
+  // Undo state: pending deletion that hasn't been committed yet
+  const [pendingRemoval, setPendingRemoval] = useState<{
+    fieldPath: string;
+    label: string;
+  } | null>(null);
+
   // Check if there's any content to show
   const hasPlace = !!context.place?.name;
   const hasWork = !!context.work?.title;
@@ -250,22 +294,34 @@ export default function ContextPortrait({ context, onSave, manageMode, onRemoveF
     saveField("resources", resources);
   };
 
-  // ── Removal helpers ──
+  // ── Removal helpers (staged with undo) ──
 
-  const handleRemoveField = (fieldPath: string) => {
-    if (onRemoveField) {
-      onRemoveField(fieldPath);
+  const stageRemoval = (fieldPath: string, label: string) => {
+    setPendingRemoval({ fieldPath, label });
+  };
+
+  const commitRemoval = useCallback(() => {
+    if (pendingRemoval && onRemoveField) {
+      onRemoveField(pendingRemoval.fieldPath);
     }
+    setPendingRemoval(null);
+  }, [pendingRemoval, onRemoveField]);
+
+  const undoRemoval = useCallback(() => {
+    setPendingRemoval(null);
+  }, []);
+
+  const handleRemoveField = (fieldPath: string, label?: string) => {
+    stageRemoval(fieldPath, label || fieldPath);
   };
 
   const handleRemovePerson = (index: number) => {
-    // Find the actual index in the full array (accounting for filtered empty names)
     const allPeople = context.people || [];
     const namedPeople = allPeople.filter((p) => p.name);
     const person = namedPeople[index];
     const realIndex = allPeople.indexOf(person);
     if (realIndex >= 0) {
-      handleRemoveField(`people[${realIndex}]`);
+      stageRemoval(`people[${realIndex}]`, person.name);
     }
   };
 
@@ -275,7 +331,7 @@ export default function ContextPortrait({ context, onSave, manageMode, onRemoveF
     const resource = nonEmpty[index];
     const realIndex = allResources.indexOf(resource);
     if (realIndex >= 0) {
-      handleRemoveField(`resources[${realIndex}]`);
+      stageRemoval(`resources[${realIndex}]`, resource);
     }
   };
 
@@ -317,7 +373,7 @@ export default function ContextPortrait({ context, onSave, manageMode, onRemoveF
     <div className="flex items-center justify-between">
       <SectionLabel>{label}</SectionLabel>
       {manageMode && onRemoveField && (
-        <RemoveButton onClick={() => handleRemoveField(fieldKey)} />
+        <RemoveButton onClick={() => handleRemoveField(fieldKey, label)} />
       )}
     </div>
   );
@@ -522,6 +578,15 @@ export default function ContextPortrait({ context, onSave, manageMode, onRemoveF
         <p className="font-sans text-[13px] text-earth-400 italic text-center my-2">
           No context yet
         </p>
+      )}
+
+      {/* Undo toast for pending deletions */}
+      {pendingRemoval && (
+        <UndoToast
+          label={pendingRemoval.label}
+          onUndo={undoRemoval}
+          onExpire={commitRemoval}
+        />
       )}
     </div>
   );
