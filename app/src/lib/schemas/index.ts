@@ -31,24 +31,6 @@ export const v2ChatSchema = z.object({
 
 export type V2ChatRequest = z.infer<typeof v2ChatSchema>;
 
-// ─── /api/chat (legacy) ─────────────────────────────────────────────────────
-
-const VALID_PHASES = [
-  "ikigai", "holistic-context", "landscape",
-  "enterprise-map", "nodal-interventions", "operational-design", "complete",
-] as const;
-
-export const legacyChatSchema = z.object({
-  messages: z.array(messageSchema).min(1).max(100),
-  phase: z.enum(VALID_PHASES).optional(),
-  context: z.record(z.string(), z.unknown()).optional(),
-  generateDocument: z.boolean().optional(),
-  generateCanvas: z.boolean().optional(),
-  syntheses: z.record(z.string(), z.unknown()).optional(),
-});
-
-export type LegacyChatRequest = z.infer<typeof legacyChatSchema>;
-
 // ─── /api/maps ──────────────────────────────────────────────────────────────
 
 export const mapSaveSchema = z.object({
