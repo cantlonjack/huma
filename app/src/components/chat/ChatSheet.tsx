@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import type { ChatMessage, Behavior, Aspiration, ReorganizationPlan } from "@/types/v2";
-import type { HumaContext } from "@/types/context";
-import { createEmptyContext } from "@/types/context";
-import { mergeContext, dimensionsTouched, migrateFromKnownContext } from "@/lib/context-model";
-import { parseMarkersV2 as parseMarkers } from "@/lib/parse-markers-v2";
-import { MAX_MESSAGE_LENGTH } from "@/lib/constants";
-import { useAuth } from "@/components/shared/AuthProvider";
+import type { ChatMessage, Behavior, Aspiration } from "@/types/v2";
 import { createClient } from "@/lib/supabase";
 import {
   getChatMessages,
@@ -16,88 +10,16 @@ import {
   saveAspiration,
   getKnownContext,
   updateKnownContext,
-  updateAspirationStatus,
-  updateAspirationBehaviors,
 } from "@/lib/supabase-v2";
 import { getLocalDate } from "@/lib/date-utils";
 import { getDomainTemplate, type StarterAspiration } from "@/data/archetype-templates";
-import { containsBehavioralLanguage } from "@/lib/behavioral-language";
 import { enqueuePendingSync, flushPendingSync, pendingSyncCount } from "@/lib/pending-sync";
 import { useNetworkStatus } from "@/lib/use-network-status";
+import { useAuth } from "@/components/shared/AuthProvider";
+import { useContextSync } from "@/hooks/useContextSync";
+import { useAspirationManager } from "@/hooks/useAspirationManager";
+import { useMessageStream } from "@/hooks/useMessageStream";
 import ManualAspirationBuilder from "./ManualAspirationBuilder";
-
-import type { SupabaseClient } from "@supabase/supabase-js";
-
-/**
- * Apply a reorganization plan: pause released aspirations, update revised behaviors.
- * Runs async, non-blocking. Updates both Supabase and local state.
- */
-async function applyReorganization(
-  supabase: SupabaseClient,
-  userId: string,
-  plan: ReorganizationPlan,
-  aspirations: Aspiration[],
-  setAspirations: React.Dispatch<React.SetStateAction<Aspiration[]>>,
-) {
-  // Release — pause these aspirations
-  for (const item of plan.release) {
-    updateAspirationStatus(supabase, userId, item.aspirationId, "paused").catch(() => {});
-  }
-
-  // Revise — update behaviors for these aspirations
-  for (const item of plan.revise) {
-    const behaviors: Behavior[] = item.revisedBehaviors.map(b => ({
-      key: b.key,
-      text: b.text || b.name,
-      frequency: b.frequency || "weekly",
-      dimensions: (b.dimensions || []).map(d => ({
-        dimension: d as Behavior["dimensions"][0]["dimension"],
-        direction: "builds" as const,
-        reasoning: "",
-      })),
-      detail: b.detail,
-      enabled: true,
-      is_trigger: b.is_trigger,
-    })) as (Behavior & { is_trigger?: boolean })[];
-
-    updateAspirationBehaviors(supabase, userId, item.aspirationId, behaviors).catch(() => {});
-  }
-
-  // Update local state
-  const releaseIds = new Set(plan.release.map(r => r.aspirationId));
-  const reviseMap = new Map(plan.revise.map(r => [r.aspirationId, r]));
-
-  const updated = aspirations.map(asp => {
-    if (releaseIds.has(asp.id)) {
-      return { ...asp, status: "paused" as const };
-    }
-    const revision = reviseMap.get(asp.id);
-    if (revision) {
-      const newBehaviors: Behavior[] = revision.revisedBehaviors.map(b => ({
-        key: b.key,
-        text: b.text || b.name,
-        frequency: b.frequency || "weekly",
-        dimensions: (b.dimensions || []).map(d => ({
-          dimension: d as Behavior["dimensions"][0]["dimension"],
-          direction: "builds" as const,
-          reasoning: "",
-        })),
-        detail: b.detail,
-        enabled: true,
-      }));
-      return { ...asp, behaviors: newBehaviors };
-    }
-    return asp;
-  });
-
-  setAspirations(updated);
-  localStorage.setItem("huma-v2-aspirations", JSON.stringify(updated));
-
-  // Clear today's cached sheet so it recompiles with new behaviors
-  const today = getLocalDate();
-  localStorage.removeItem(`huma-v2-sheet-${today}`);
-  localStorage.removeItem(`huma-v2-compiled-sheet-${today}`);
-}
 
 type RichMessage = ChatMessage & {
   options?: string[] | null;
@@ -109,34 +31,18 @@ interface ChatSheetProps {
   open: boolean;
   onClose: () => void;
   contextPrompt?: string;
-  /** Which tab the chat was opened from */
   sourceTab?: "today" | "whole" | "grow";
-  /** Structured context from the current tab */
   tabContext?: Record<string, unknown>;
-  /** Pre-loaded HUMA opener message (e.g. pattern investigation). Shown once on first open. */
   initialMessage?: string;
-  /** Chat mode — "new-aspiration" starts a focused aspiration-creation conversation */
   mode?: "default" | "new-aspiration";
 }
 
 export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tabContext, initialMessage, mode = "default" }: ChatSheetProps) {
   const { user } = useAuth();
-  const [messages, setMessages] = useState<RichMessage[]>([]);
-  const [input, setInput] = useState("");
-  const [streaming, setStreaming] = useState(false);
-  const [knownContext, setKnownContext] = useState<Record<string, unknown>>({});
-  const [humaContext, setHumaContext] = useState<HumaContext>(createEmptyContext());
-  const [aspirations, setAspirations] = useState<Aspiration[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
-  // Dimensions that were just updated — shown briefly as a growth indicator
-  const [recentDimensions, setRecentDimensions] = useState<string[]>([]);
-  // Marker retry & manual fallback state
-  const [markerRetryMessageId, setMarkerRetryMessageId] = useState<string | null>(null);
-  const [markerRetryAttempted, setMarkerRetryAttempted] = useState(false);
   const [showManualBuilder, setShowManualBuilder] = useState(false);
-  // DB write failure surface state
-  const [dbWarning, setDbWarning] = useState<{ type: "context" | "aspiration"; retryFn: () => void } | null>(null);
+  const [input, setInput] = useState("");
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
   const online = useNetworkStatus();
   const scrollRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -144,40 +50,85 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
   const dragStartY = useRef<number | null>(null);
   const dragCurrentY = useRef(0);
   const dragStartTime = useRef(0);
-  const [keyboardOffset, setKeyboardOffset] = useState(0);
 
-  // Track whether user is near bottom of scroll
+  const {
+    knownContext, setKnownContext, humaContext, setHumaContext,
+    recentDimensions, updateContext,
+    loadContext, loadContextFromLocalStorage, hydrateHumaContext,
+    dbWarning, setDbWarning,
+  } = useContextSync({ user, loaded });
+
+  const {
+    aspirations, setAspirations, saveNewAspiration, applyReorganization,
+    loadAspirations, loadAspirationsFromLocalStorage,
+  } = useAspirationManager({ user, setDbWarning });
+
+  const {
+    messages, setMessages, streaming,
+    lastFailedMessage, setLastFailedMessage,
+    markerRetryMessageId, setMarkerRetryMessageId,
+    markerRetryAttempted, setMarkerRetryAttempted,
+    sendMessage,
+  } = useMessageStream({
+    user,
+    knownContext,
+    humaContext,
+    aspirations,
+    sourceTab,
+    tabContext,
+    mode,
+    onContextExtracted: updateContext,
+    onAspirationCreated: saveNewAspiration,
+    onReorganization: applyReorganization,
+    onDecision: (parsedDecision) => {
+      const today = new Date();
+      const followUpDate = new Date(today);
+      followUpDate.setDate(followUpDate.getDate() + 42);
+      const decision = {
+        id: crypto.randomUUID(),
+        date: today.toISOString().split("T")[0],
+        description: parsedDecision.description,
+        reasoning: parsedDecision.reasoning,
+        frameworksSurfaced: parsedDecision.frameworks_surfaced,
+        followUpDue: followUpDate.toISOString().split("T")[0],
+      };
+      const updatedHuma = {
+        ...humaContext,
+        decisions: [...(humaContext.decisions || []), decision],
+        _lastUpdated: today.toISOString(),
+      };
+      setHumaContext(updatedHuma);
+      localStorage.setItem("huma-v2-huma-context", JSON.stringify(updatedHuma));
+    },
+  });
+
+  // ─── Scroll behavior ─────────────────────────────────────────────────────
   const isNearBottom = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return true;
     return el.scrollHeight - el.scrollTop - el.clientHeight < 80;
   }, []);
 
-  // Auto-scroll on new messages — only if already near bottom
   useEffect(() => {
     if (scrollRef.current && isNearBottom()) {
       scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
     }
   }, [messages, streaming, isNearBottom]);
 
-  // Handle virtual keyboard on mobile via visualViewport API
+  // ─── Virtual keyboard handling ────────────────────────────────────────────
   useEffect(() => {
     if (!open) return;
     const vv = window.visualViewport;
     if (!vv) return;
-
     const handleResize = () => {
-      // Calculate keyboard height from viewport difference
       const offset = window.innerHeight - vv.height - vv.offsetTop;
       setKeyboardOffset(Math.max(0, offset));
-      // Keep scroll at bottom when keyboard opens
       if (offset > 0 && scrollRef.current) {
         requestAnimationFrame(() => {
           scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
         });
       }
     };
-
     vv.addEventListener("resize", handleResize);
     vv.addEventListener("scroll", handleResize);
     return () => {
@@ -187,13 +138,11 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
     };
   }, [open]);
 
-  // Load state when sheet opens
+  // ─── Load state when sheet opens ──────────────────────────────────────────
   useEffect(() => {
     if (!open || loaded) return;
-
     async function loadState() {
       let foundMessages = false;
-
       if (user) {
         const supabase = createClient();
         if (supabase) {
@@ -203,13 +152,12 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
               getAspirations(supabase, user.id),
               getKnownContext(supabase, user.id),
             ]);
-            if (dbMessages.length > 0) { setMessages(dbMessages); foundMessages = true; }
-            if (dbAspirations.length > 0) setAspirations(dbAspirations);
-            if (Object.keys(dbContext).length > 0) setKnownContext(dbContext);
+            if (dbMessages.length > 0) { setMessages(dbMessages as RichMessage[]); foundMessages = true; }
+            loadAspirations(dbAspirations);
+            loadContext(dbContext);
           } catch { /* fallback */ }
         }
       }
-
       if (!foundMessages) {
         try {
           const savedMessages = localStorage.getItem("huma-v2-chat-messages");
@@ -218,39 +166,13 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
           else if (startMessages) setMessages(JSON.parse(startMessages));
         } catch { /* fresh */ }
       }
-
       if (!user) {
-        try {
-          const ctx = localStorage.getItem("huma-v2-known-context");
-          if (ctx) setKnownContext(JSON.parse(ctx));
-          const asp = localStorage.getItem("huma-v2-aspirations");
-          if (asp) setAspirations(JSON.parse(asp));
-        } catch { /* fresh */ }
+        loadContextFromLocalStorage();
+        loadAspirationsFromLocalStorage();
       }
+      hydrateHumaContext();
 
-      // Hydrate HumaContext: check for stored structured context, or migrate from old format
-      try {
-        const storedHuma = localStorage.getItem("huma-v2-huma-context");
-        if (storedHuma) {
-          setHumaContext(JSON.parse(storedHuma));
-        } else {
-          // Migrate from old KnownContext format
-          const oldCtx = localStorage.getItem("huma-v2-known-context");
-          if (oldCtx) {
-            const parsed = JSON.parse(oldCtx);
-            // Detect if it's already HumaContext-shaped (has _version) or old flat format
-            if (parsed._version) {
-              setHumaContext(parsed as HumaContext);
-            } else {
-              const migrated = migrateFromKnownContext(parsed);
-              setHumaContext(migrated);
-              localStorage.setItem("huma-v2-huma-context", JSON.stringify(migrated));
-            }
-          }
-        }
-      } catch { /* fresh context */ }
-
-      // Flush any pending sync items from previous failed writes
+      // Flush any pending sync items
       if (user && pendingSyncCount() > 0) {
         const supabase = createClient();
         if (supabase) {
@@ -261,37 +183,16 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
           }).catch(() => {});
         }
       }
-
       setLoaded(true);
     }
     loadState();
-  }, [open, loaded, user]);
+  }, [open, loaded, user, setMessages, loadAspirations, loadContext, loadContextFromLocalStorage, loadAspirationsFromLocalStorage, hydrateHumaContext]);
 
-  // Inject initial HUMA opener (e.g. "What changed?" for dropping patterns)
-  const initialMessageInjected = useRef<string | null>(null);
+  // Persist messages to localStorage
   useEffect(() => {
-    if (!loaded || !open || !initialMessage) return;
-    // Only inject once per unique initialMessage value
-    if (initialMessageInjected.current === initialMessage) return;
-    initialMessageInjected.current = initialMessage;
-    const opener: RichMessage = {
-      id: crypto.randomUUID(),
-      role: "huma",
-      content: initialMessage,
-      createdAt: new Date().toISOString(),
-    };
-    setMessages(prev => [...prev, opener]);
-  }, [loaded, open, initialMessage]);
-
-  // Persist to localStorage
-  useEffect(() => {
-    if (!loaded) return;
-    if (messages.length > 0) {
-      localStorage.setItem("huma-v2-chat-messages", JSON.stringify(messages));
-      localStorage.setItem("huma-v2-known-context", JSON.stringify(knownContext));
-      localStorage.setItem("huma-v2-huma-context", JSON.stringify(humaContext));
-    }
-  }, [messages, knownContext, humaContext, loaded]);
+    if (!loaded || messages.length === 0) return;
+    localStorage.setItem("huma-v2-chat-messages", JSON.stringify(messages));
+  }, [messages, loaded]);
 
   // Flush pending sync when coming back online
   useEffect(() => {
@@ -304,294 +205,43 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
         updateKnownContext: updateKnownContext as (sb: unknown, uid: string, ctx: Record<string, unknown>) => Promise<unknown>,
         saveAspiration: saveAspiration as (sb: unknown, uid: string, asp: unknown) => Promise<unknown>,
       }).then(({ flushed }) => {
-        if (flushed > 0) setDbWarning(null); // Clear any stale warning
+        if (flushed > 0) setDbWarning(null);
       }).catch(() => {});
     }
-  }, [online, user, loaded]);
+  }, [online, user, loaded, setDbWarning]);
+
+  // Inject initial HUMA opener
+  const initialMessageInjected = useRef<string | null>(null);
+  useEffect(() => {
+    if (!loaded || !open || !initialMessage) return;
+    if (initialMessageInjected.current === initialMessage) return;
+    initialMessageInjected.current = initialMessage;
+    const opener: RichMessage = {
+      id: crypto.randomUUID(),
+      role: "huma",
+      content: initialMessage,
+      createdAt: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, opener]);
+  }, [loaded, open, initialMessage, setMessages]);
 
   // Close on Escape
   useEffect(() => {
     if (!open) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [open, onClose]);
-
-  // Send message
-  const sendMessage = useCallback(async (text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed || streaming) return;
-    if (trimmed.length > MAX_MESSAGE_LENGTH) return;
-
-    const userMsg: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: "user",
-      content: trimmed,
-      createdAt: new Date().toISOString(),
-    };
-
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages as RichMessage[]);
-    setInput("");
-    setStreaming(true);
-    setLastFailedMessage(null);
-
-    if (user) {
-      const supabase = createClient();
-      if (supabase) saveChatMessage(supabase, user.id, userMsg).catch(() => {
-        // Chat message saves are low-priority — queue silently, don't bother user
-        enqueuePendingSync({ type: "chat-message", userId: user.id, message: userMsg });
-      });
-    }
-
-    try {
-      // Compute dayCount from start date
-      let dayCount: number | undefined;
-      try {
-        const start = localStorage.getItem("huma-v2-start-date");
-        if (start) {
-          const diff = Math.ceil((Date.now() - new Date(start).getTime()) / 86400000);
-          dayCount = diff > 0 ? diff : 1;
-        }
-      } catch { /* fresh operator */ }
-
-      const res = await fetch("/api/v2-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: newMessages.map(m => ({ role: m.role === "huma" ? "assistant" : m.role, content: m.content })),
-          knownContext,
-          humaContext,
-          aspirations: aspirations.map(a => ({ rawText: a.rawText, clarifiedText: a.clarifiedText, status: a.status })),
-          sourceTab,
-          tabContext,
-          dayCount,
-          ...(mode === "new-aspiration" && { chatMode: "new-aspiration" }),
-        }),
-      });
-
-      if (!res.ok) throw new Error(`API_${res.status}`);
-
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error("No body");
-
-      const decoder = new TextDecoder();
-      let fullResponse = "";
-
-      const humaMsg: RichMessage = {
-        id: crypto.randomUUID(),
-        role: "huma",
-        content: "",
-        createdAt: new Date().toISOString(),
-      };
-      setMessages([...newMessages, humaMsg] as RichMessage[]);
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        fullResponse += decoder.decode(value, { stream: true });
-        const { cleanText } = parseMarkers(fullResponse);
-        setMessages(prev => {
-          const updated = [...prev];
-          const last = updated[updated.length - 1];
-          if (last.role === "huma") updated[updated.length - 1] = { ...last, content: cleanText };
-          return updated;
-        });
-      }
-
-      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedDecomposition, parsedReorganization, parsedDecision } = parseMarkers(fullResponse);
-
-      const finalHumaMsg: ChatMessage = { ...humaMsg, content: cleanText, contextExtracted: parsedContext || undefined };
-      if (user) {
-        const supabase = createClient();
-        if (supabase) saveChatMessage(supabase, user.id, finalHumaMsg).catch(() => {
-          enqueuePendingSync({ type: "chat-message", userId: user.id, message: finalHumaMsg });
-        });
-      }
-
-      if (parsedContext) {
-        // Legacy flat merge for backward compat
-        const newContext = { ...knownContext, ...parsedContext };
-        setKnownContext(newContext);
-
-        // Deep merge into structured HumaContext
-        const touched = dimensionsTouched(parsedContext as Partial<HumaContext>);
-        const updatedHuma = mergeContext(humaContext, parsedContext as Partial<HumaContext>, "conversation");
-        setHumaContext(updatedHuma);
-
-        // Show which dimensions grew — visible for 4 seconds
-        if (touched.length > 0) {
-          setRecentDimensions(touched);
-          setTimeout(() => setRecentDimensions([]), 4000);
-        }
-
-        if (user) {
-          const supabase = createClient();
-          if (supabase) {
-            const retryContextSave = () => {
-              const sb = createClient();
-              if (sb) updateKnownContext(sb, user.id, newContext).then(() => setDbWarning(null)).catch(() => {});
-            };
-            updateKnownContext(supabase, user.id, newContext).catch(() => {
-              enqueuePendingSync({ type: "context", userId: user.id, context: newContext });
-              setDbWarning({ type: "context", retryFn: retryContextSave });
-            });
-          }
-        }
-        const today = getLocalDate();
-        localStorage.removeItem(`huma-v2-sheet-${today}`);
-
-        // Context extraction failure tracking (developer diagnostic)
-        // Track in localStorage when substantial responses yield no context
-      }
-
-      if (parsedBehaviors) {
-        const newAspiration: Aspiration = {
-          id: crypto.randomUUID(),
-          rawText: text,
-          clarifiedText: "",
-          behaviors: parsedBehaviors,
-          dimensionsTouched: [],
-          status: "active",
-          stage: "active",
-        };
-        const updatedAsps = [...aspirations, newAspiration];
-        setAspirations(updatedAsps);
-        localStorage.setItem("huma-v2-aspirations", JSON.stringify(updatedAsps));
-        if (user) {
-          const supabase = createClient();
-          if (supabase) {
-            const retryAspSave = () => {
-              const sb = createClient();
-              if (sb) saveAspiration(sb, user.id, newAspiration).then(() => setDbWarning(null)).catch(() => {});
-            };
-            saveAspiration(supabase, user.id, newAspiration).catch(() => {
-              enqueuePendingSync({ type: "aspiration", userId: user.id, aspiration: newAspiration });
-              setDbWarning({ type: "aspiration", retryFn: retryAspSave });
-            });
-          }
-        }
-      }
-
-      // Handle reorganization output — release, protect, revise aspirations
-      if (parsedReorganization && user) {
-        const supabase = createClient();
-        if (supabase) {
-          applyReorganization(supabase, user.id, parsedReorganization, aspirations, setAspirations);
-        }
-      }
-
-      // Handle decision output — save to context model
-      if (parsedDecision) {
-        const today = new Date();
-        const followUpDate = new Date(today);
-        followUpDate.setDate(followUpDate.getDate() + 42); // ~6 weeks
-
-        const decision = {
-          id: crypto.randomUUID(),
-          date: today.toISOString().split("T")[0],
-          description: parsedDecision.description,
-          reasoning: parsedDecision.reasoning,
-          frameworksSurfaced: parsedDecision.frameworks_surfaced,
-          followUpDue: followUpDate.toISOString().split("T")[0],
-        };
-
-        const updatedHuma = {
-          ...humaContext,
-          decisions: [...(humaContext.decisions || []), decision],
-          _lastUpdated: today.toISOString(),
-        };
-        setHumaContext(updatedHuma);
-        localStorage.setItem("huma-v2-huma-context", JSON.stringify(updatedHuma));
-      }
-
-      setMessages(prev => {
-        const updated = [...prev];
-        const last = updated[updated.length - 1];
-        if (last.role === "huma") {
-          updated[updated.length - 1] = { ...last, content: cleanText, options: parsedOptions, behaviors: parsedBehaviors, actions: parsedActions };
-        }
-        return updated;
-      });
-
-      // ── Context extraction failure tracking (developer diagnostic) ──
-      if (cleanText.length > 100 && !parsedContext) {
-        try {
-          const missKey = "huma-v2-context-extraction-misses";
-          const data = JSON.parse(localStorage.getItem(missKey) || '{"misses":0,"total":0}');
-          data.misses++;
-          data.total++;
-          localStorage.setItem(missKey, JSON.stringify(data));
-          if (data.total >= 20 && data.misses / data.total > 0.3) {
-            console.warn(`[HUMA] Context extraction miss rate: ${Math.round(100 * data.misses / data.total)}% over ${data.total} messages — extraction prompts may need rework`);
-          }
-        } catch { /* diagnostic only */ }
-      } else if (parsedContext) {
-        // Track successful extraction
-        try {
-          const missKey = "huma-v2-context-extraction-misses";
-          const data = JSON.parse(localStorage.getItem(missKey) || '{"misses":0,"total":0}');
-          data.total++;
-          localStorage.setItem(missKey, JSON.stringify(data));
-        } catch { /* diagnostic only */ }
-      }
-
-      // ── Marker retry detection ──
-      // If the response has behavioral language but produced no structured output,
-      // show a retry prompt so the user can ask Claude to re-format
-      if (
-        cleanText.length > 80 &&
-        !parsedBehaviors &&
-        !parsedDecomposition &&
-        containsBehavioralLanguage(cleanText) &&
-        (mode === "new-aspiration" || newMessages.some(m => m.content.toLowerCase().match(/i want|i('m| am) trying|i need|make work/)))
-      ) {
-        setMarkerRetryMessageId(humaMsg.id);
-        setMarkerRetryAttempted(false);
-      }
-
-    } catch (err) {
-      setLastFailedMessage(text);
-
-      // ── Differentiated error messages ──
-      let errorContent: string;
-      const errMsg = err instanceof Error ? err.message : "";
-      if (!navigator.onLine) {
-        errorContent = "You\u2019re offline. Your message is saved \u2014 it\u2019ll send when you reconnect.";
-      } else if (errMsg === "API_429") {
-        errorContent = "HUMA needs a moment. Try again in 30 seconds.";
-      } else if (errMsg.startsWith("API_5")) {
-        errorContent = "Something broke on our end. Your message is saved.";
-      } else if (errMsg === "No body") {
-        errorContent = "That took too long. Tap to retry.";
-      } else {
-        errorContent = "Something went wrong. Tap to retry.";
-      }
-
-      setMessages(prev => [
-        ...prev.filter(m => m.content !== ""),
-        {
-          id: crypto.randomUUID(),
-          role: "huma" as const,
-          content: errorContent,
-          createdAt: new Date().toISOString(),
-        },
-      ]);
-    } finally {
-      setStreaming(false);
-    }
-  }, [messages, streaming, knownContext, humaContext, aspirations, user, mode]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage(input);
+      setInput("");
     }
   };
 
-  // Drag-to-dismiss handlers (velocity-aware)
+  // ─── Drag-to-dismiss ──────────────────────────────────────────────────────
   const handleDragStart = (e: React.TouchEvent | React.MouseEvent) => {
     const y = "touches" in e ? e.touches[0].clientY : e.clientY;
     dragStartY.current = y;
@@ -599,26 +249,17 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
     dragStartTime.current = Date.now();
     if (sheetRef.current) sheetRef.current.style.transition = "none";
   };
-
   const handleDragMove = (e: React.TouchEvent | React.MouseEvent) => {
     if (dragStartY.current === null) return;
     const y = "touches" in e ? e.touches[0].clientY : e.clientY;
     const delta = Math.max(0, y - dragStartY.current);
     dragCurrentY.current = delta;
-    if (sheetRef.current) {
-      sheetRef.current.style.transform = `translateY(${delta}px)`;
-    }
+    if (sheetRef.current) sheetRef.current.style.transform = `translateY(${delta}px)`;
   };
-
   const handleDragEnd = () => {
-    if (sheetRef.current) {
-      sheetRef.current.style.transition = "transform 200ms cubic-bezier(0.22, 1, 0.36, 1)";
-    }
-
+    if (sheetRef.current) sheetRef.current.style.transition = "transform 200ms cubic-bezier(0.22, 1, 0.36, 1)";
     const elapsed = Date.now() - dragStartTime.current;
-    const velocity = dragCurrentY.current / Math.max(elapsed, 1); // px/ms
-
-    // Dismiss if dragged far enough OR fast swipe down
+    const velocity = dragCurrentY.current / Math.max(elapsed, 1);
     if (dragCurrentY.current > 100 || (velocity > 0.5 && dragCurrentY.current > 30)) {
       onClose();
     } else if (sheetRef.current) {
@@ -628,7 +269,6 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
     dragCurrentY.current = 0;
   };
 
-  // Render the latest messages (most recent conversation)
   const recentMessages = messages.slice(-50);
 
   // Template quick-add cards for new-aspiration mode
@@ -717,7 +357,6 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
                   Describe what you want to build, change, or protect. HUMA will turn it into something operational.
                 </p>
               )}
-              {/* Template quick-add cards */}
               {templateSuggestions.length > 0 && (
                 <div className="mt-5 w-full text-left">
                   <p className="font-sans text-[11px] font-semibold tracking-[0.14em] text-sage-300 mb-2.5 text-center">
@@ -727,7 +366,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
                     {templateSuggestions.slice(0, 4).map((t, i) => (
                       <button
                         key={i}
-                        onClick={() => sendMessage(t.aspiration.text)}
+                        onClick={() => { sendMessage(t.aspiration.text); setInput(""); }}
                         className="text-left cursor-pointer bg-sand-50 border border-sand-250 rounded-xl px-4 py-3 w-full"
                       >
                         <span className="font-serif text-[15px] leading-[1.4] text-earth-650 block">
@@ -771,18 +410,16 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
                     </div>
                   )}
 
-                  {/* Tappable options */}
                   {isLast && rich.options?.map((opt, i) => (
                     <button
                       key={i}
-                      onClick={() => sendMessage(opt)}
+                      onClick={() => { sendMessage(opt); setInput(""); }}
                       className="mt-2 mr-2 text-left font-sans cursor-pointer px-4 py-3 text-sm text-earth-650 rounded-xl border border-sand-300 bg-sand-50"
                     >
                       {opt}
                     </button>
                   ))}
 
-                  {/* Behaviors */}
                   {isLast && rich.behaviors?.map((b, i) => (
                     <div key={i} className="mt-2 flex items-start gap-3 px-4 py-3 rounded-xl border border-sand-250 bg-sand-50">
                       <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 border-sand-300" />
@@ -821,7 +458,6 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
               onClick={() => {
                 const msg = lastFailedMessage;
                 setLastFailedMessage(null);
-                // Remove the error message before retrying
                 setMessages(prev => prev.filter((m, i) => !(i === prev.length - 1 && m.role === "huma")));
                 sendMessage(msg);
               }}
@@ -835,7 +471,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
             </button>
           )}
 
-          {/* Marker retry prompt — behavioral language detected but no structured output */}
+          {/* Marker retry prompt */}
           {!streaming && markerRetryMessageId && !markerRetryAttempted && !showManualBuilder && (
             <div className="mt-2 animate-[fade-in_300ms_ease-out]">
               <button
@@ -863,7 +499,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
             </div>
           )}
 
-          {/* Marker retry failed — show manual builder */}
+          {/* Marker retry failed */}
           {!streaming && markerRetryAttempted && !showManualBuilder && (
             <div className="mt-2 animate-[fade-in_300ms_ease-out]">
               <button
@@ -879,16 +515,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
           {showManualBuilder && (
             <ManualAspirationBuilder
               onSave={(asp) => {
-                const updatedAsps = [...aspirations, asp];
-                setAspirations(updatedAsps);
-                localStorage.setItem("huma-v2-aspirations", JSON.stringify(updatedAsps));
-                if (user) {
-                  const supabase = createClient();
-                  if (supabase) saveAspiration(supabase, user.id, asp).catch(() => {
-                    enqueuePendingSync({ type: "aspiration", userId: user.id, aspiration: asp });
-                  });
-                }
-                // Clear today's cached sheet
+                saveNewAspiration(asp);
                 const today = getLocalDate();
                 localStorage.removeItem(`huma-v2-sheet-${today}`);
                 localStorage.removeItem(`huma-v2-compiled-sheet-${today}`);
@@ -952,7 +579,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
               className="flex-1 font-sans bg-transparent focus:outline-none disabled:opacity-50 text-base leading-[1.4] text-earth-650"
             />
             <button
-              onClick={() => sendMessage(input)}
+              onClick={() => { sendMessage(input); setInput(""); }}
               disabled={streaming || !input.trim()}
               className="p-1 cursor-pointer disabled:opacity-30 transition-opacity"
               aria-label="Send"
@@ -966,7 +593,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
         </div>
       </div>
 
-      {/* Keyframe animations injected via style tag */}
+      {/* Keyframe animations */}
       <style>{`
         @keyframes chatsheet-slide-up {
           from { transform: translateY(100%); }
