@@ -21,6 +21,10 @@ import {
 } from "@/lib/supabase-v2";
 import { getLocalDate } from "@/lib/date-utils";
 import { getDomainTemplate, type StarterAspiration } from "@/data/archetype-templates";
+import { containsBehavioralLanguage } from "@/lib/behavioral-language";
+import { enqueuePendingSync, flushPendingSync, pendingSyncCount } from "@/lib/pending-sync";
+import { useNetworkStatus } from "@/lib/use-network-status";
+import ManualAspirationBuilder from "./ManualAspirationBuilder";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -127,6 +131,13 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
   const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
   // Dimensions that were just updated — shown briefly as a growth indicator
   const [recentDimensions, setRecentDimensions] = useState<string[]>([]);
+  // Marker retry & manual fallback state
+  const [markerRetryMessageId, setMarkerRetryMessageId] = useState<string | null>(null);
+  const [markerRetryAttempted, setMarkerRetryAttempted] = useState(false);
+  const [showManualBuilder, setShowManualBuilder] = useState(false);
+  // DB write failure surface state
+  const [dbWarning, setDbWarning] = useState<{ type: "context" | "aspiration"; retryFn: () => void } | null>(null);
+  const online = useNetworkStatus();
   const scrollRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -239,6 +250,18 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
         }
       } catch { /* fresh context */ }
 
+      // Flush any pending sync items from previous failed writes
+      if (user && pendingSyncCount() > 0) {
+        const supabase = createClient();
+        if (supabase) {
+          flushPendingSync(supabase, {
+            saveChatMessage: saveChatMessage as (sb: unknown, uid: string, msg: unknown) => Promise<unknown>,
+            updateKnownContext: updateKnownContext as (sb: unknown, uid: string, ctx: Record<string, unknown>) => Promise<unknown>,
+            saveAspiration: saveAspiration as (sb: unknown, uid: string, asp: unknown) => Promise<unknown>,
+          }).catch(() => {});
+        }
+      }
+
       setLoaded(true);
     }
     loadState();
@@ -269,6 +292,22 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
       localStorage.setItem("huma-v2-huma-context", JSON.stringify(humaContext));
     }
   }, [messages, knownContext, humaContext, loaded]);
+
+  // Flush pending sync when coming back online
+  useEffect(() => {
+    if (!online || !user || !loaded) return;
+    if (pendingSyncCount() === 0) return;
+    const supabase = createClient();
+    if (supabase) {
+      flushPendingSync(supabase, {
+        saveChatMessage: saveChatMessage as (sb: unknown, uid: string, msg: unknown) => Promise<unknown>,
+        updateKnownContext: updateKnownContext as (sb: unknown, uid: string, ctx: Record<string, unknown>) => Promise<unknown>,
+        saveAspiration: saveAspiration as (sb: unknown, uid: string, asp: unknown) => Promise<unknown>,
+      }).then(({ flushed }) => {
+        if (flushed > 0) setDbWarning(null); // Clear any stale warning
+      }).catch(() => {});
+    }
+  }, [online, user, loaded]);
 
   // Close on Escape
   useEffect(() => {
@@ -301,7 +340,10 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
 
     if (user) {
       const supabase = createClient();
-      if (supabase) saveChatMessage(supabase, user.id, userMsg).catch(() => {});
+      if (supabase) saveChatMessage(supabase, user.id, userMsg).catch(() => {
+        // Chat message saves are low-priority — queue silently, don't bother user
+        enqueuePendingSync({ type: "chat-message", userId: user.id, message: userMsg });
+      });
     }
 
     try {
@@ -330,7 +372,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
         }),
       });
 
-      if (!res.ok) throw new Error("Chat API error");
+      if (!res.ok) throw new Error(`API_${res.status}`);
 
       const reader = res.body?.getReader();
       if (!reader) throw new Error("No body");
@@ -359,12 +401,14 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
         });
       }
 
-      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedReorganization, parsedDecision } = parseMarkers(fullResponse);
+      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedDecomposition, parsedReorganization, parsedDecision } = parseMarkers(fullResponse);
 
       const finalHumaMsg: ChatMessage = { ...humaMsg, content: cleanText, contextExtracted: parsedContext || undefined };
       if (user) {
         const supabase = createClient();
-        if (supabase) saveChatMessage(supabase, user.id, finalHumaMsg).catch(() => {});
+        if (supabase) saveChatMessage(supabase, user.id, finalHumaMsg).catch(() => {
+          enqueuePendingSync({ type: "chat-message", userId: user.id, message: finalHumaMsg });
+        });
       }
 
       if (parsedContext) {
@@ -385,10 +429,22 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
 
         if (user) {
           const supabase = createClient();
-          if (supabase) updateKnownContext(supabase, user.id, newContext).catch(() => {});
+          if (supabase) {
+            const retryContextSave = () => {
+              const sb = createClient();
+              if (sb) updateKnownContext(sb, user.id, newContext).then(() => setDbWarning(null)).catch(() => {});
+            };
+            updateKnownContext(supabase, user.id, newContext).catch(() => {
+              enqueuePendingSync({ type: "context", userId: user.id, context: newContext });
+              setDbWarning({ type: "context", retryFn: retryContextSave });
+            });
+          }
         }
         const today = getLocalDate();
         localStorage.removeItem(`huma-v2-sheet-${today}`);
+
+        // Context extraction failure tracking (developer diagnostic)
+        // Track in localStorage when substantial responses yield no context
       }
 
       if (parsedBehaviors) {
@@ -406,7 +462,16 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
         localStorage.setItem("huma-v2-aspirations", JSON.stringify(updatedAsps));
         if (user) {
           const supabase = createClient();
-          if (supabase) saveAspiration(supabase, user.id, newAspiration).catch(() => {});
+          if (supabase) {
+            const retryAspSave = () => {
+              const sb = createClient();
+              if (sb) saveAspiration(sb, user.id, newAspiration).then(() => setDbWarning(null)).catch(() => {});
+            };
+            saveAspiration(supabase, user.id, newAspiration).catch(() => {
+              enqueuePendingSync({ type: "aspiration", userId: user.id, aspiration: newAspiration });
+              setDbWarning({ type: "aspiration", retryFn: retryAspSave });
+            });
+          }
         }
       }
 
@@ -450,23 +515,74 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
         }
         return updated;
       });
-    } catch {
+
+      // ── Context extraction failure tracking (developer diagnostic) ──
+      if (cleanText.length > 100 && !parsedContext) {
+        try {
+          const missKey = "huma-v2-context-extraction-misses";
+          const data = JSON.parse(localStorage.getItem(missKey) || '{"misses":0,"total":0}');
+          data.misses++;
+          data.total++;
+          localStorage.setItem(missKey, JSON.stringify(data));
+          if (data.total >= 20 && data.misses / data.total > 0.3) {
+            console.warn(`[HUMA] Context extraction miss rate: ${Math.round(100 * data.misses / data.total)}% over ${data.total} messages — extraction prompts may need rework`);
+          }
+        } catch { /* diagnostic only */ }
+      } else if (parsedContext) {
+        // Track successful extraction
+        try {
+          const missKey = "huma-v2-context-extraction-misses";
+          const data = JSON.parse(localStorage.getItem(missKey) || '{"misses":0,"total":0}');
+          data.total++;
+          localStorage.setItem(missKey, JSON.stringify(data));
+        } catch { /* diagnostic only */ }
+      }
+
+      // ── Marker retry detection ──
+      // If the response has behavioral language but produced no structured output,
+      // show a retry prompt so the user can ask Claude to re-format
+      if (
+        cleanText.length > 80 &&
+        !parsedBehaviors &&
+        !parsedDecomposition &&
+        containsBehavioralLanguage(cleanText) &&
+        (mode === "new-aspiration" || newMessages.some(m => m.content.toLowerCase().match(/i want|i('m| am) trying|i need|make work/)))
+      ) {
+        setMarkerRetryMessageId(humaMsg.id);
+        setMarkerRetryAttempted(false);
+      }
+
+    } catch (err) {
       setLastFailedMessage(text);
+
+      // ── Differentiated error messages ──
+      let errorContent: string;
+      const errMsg = err instanceof Error ? err.message : "";
+      if (!navigator.onLine) {
+        errorContent = "You\u2019re offline. Your message is saved \u2014 it\u2019ll send when you reconnect.";
+      } else if (errMsg === "API_429") {
+        errorContent = "HUMA needs a moment. Try again in 30 seconds.";
+      } else if (errMsg.startsWith("API_5")) {
+        errorContent = "Something broke on our end. Your message is saved.";
+      } else if (errMsg === "No body") {
+        errorContent = "That took too long. Tap to retry.";
+      } else {
+        errorContent = "Something went wrong. Tap to retry.";
+      }
+
       setMessages(prev => [
         ...prev.filter(m => m.content !== ""),
         {
           id: crypto.randomUUID(),
           role: "huma" as const,
-          content: navigator.onLine
-            ? "Something went wrong. Try again in a moment."
-            : "You seem to be offline. Check your connection and try again.",
+          content: errorContent,
           createdAt: new Date().toISOString(),
         },
       ]);
     } finally {
       setStreaming(false);
     }
-  }, [messages, streaming, knownContext, humaContext, aspirations, user]);
+  }, [messages, streaming, knownContext, humaContext, aspirations, user, mode]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -706,7 +822,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
                 const msg = lastFailedMessage;
                 setLastFailedMessage(null);
                 // Remove the error message before retrying
-                setMessages(prev => prev.filter((m, i) => !(i === prev.length - 1 && m.role === "huma" && m.content.includes("went wrong" ))));
+                setMessages(prev => prev.filter((m, i) => !(i === prev.length - 1 && m.role === "huma")));
                 sendMessage(msg);
               }}
               className="font-sans cursor-pointer inline-flex items-center gap-1.5 mt-2 px-4 py-2 text-[13px] text-amber-600 bg-amber-100 border border-amber-200 rounded-full"
@@ -717,6 +833,105 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
               </svg>
               Try again
             </button>
+          )}
+
+          {/* Marker retry prompt — behavioral language detected but no structured output */}
+          {!streaming && markerRetryMessageId && !markerRetryAttempted && !showManualBuilder && (
+            <div className="mt-2 animate-[fade-in_300ms_ease-out]">
+              <button
+                onClick={() => {
+                  setMarkerRetryAttempted(true);
+                  setMarkerRetryMessageId(null);
+                  sendMessage("Can you structure that into specific behaviors I can act on this week?");
+                }}
+                className="font-sans cursor-pointer inline-flex items-center gap-1.5 px-4 py-2 text-[13px] text-sage-600 bg-sage-50 border border-sage-200 rounded-full"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                HUMA had ideas but couldn&apos;t structure them. Tap to retry.
+              </button>
+              <button
+                onClick={() => {
+                  setMarkerRetryMessageId(null);
+                  setShowManualBuilder(true);
+                }}
+                className="font-sans cursor-pointer text-[12px] text-sage-300 mt-1.5 ml-1 bg-transparent border-none underline"
+              >
+                Or build it yourself
+              </button>
+            </div>
+          )}
+
+          {/* Marker retry failed — show manual builder */}
+          {!streaming && markerRetryAttempted && !showManualBuilder && (
+            <div className="mt-2 animate-[fade-in_300ms_ease-out]">
+              <button
+                onClick={() => setShowManualBuilder(true)}
+                className="font-sans cursor-pointer inline-flex items-center gap-1.5 px-4 py-2 text-[13px] text-sage-600 bg-sage-50 border border-sage-200 rounded-full"
+              >
+                Still didn&apos;t work. Build it yourself instead?
+              </button>
+            </div>
+          )}
+
+          {/* Manual aspiration builder */}
+          {showManualBuilder && (
+            <ManualAspirationBuilder
+              onSave={(asp) => {
+                const updatedAsps = [...aspirations, asp];
+                setAspirations(updatedAsps);
+                localStorage.setItem("huma-v2-aspirations", JSON.stringify(updatedAsps));
+                if (user) {
+                  const supabase = createClient();
+                  if (supabase) saveAspiration(supabase, user.id, asp).catch(() => {
+                    enqueuePendingSync({ type: "aspiration", userId: user.id, aspiration: asp });
+                  });
+                }
+                // Clear today's cached sheet
+                const today = getLocalDate();
+                localStorage.removeItem(`huma-v2-sheet-${today}`);
+                localStorage.removeItem(`huma-v2-compiled-sheet-${today}`);
+                setShowManualBuilder(false);
+                setMarkerRetryAttempted(false);
+                setMarkerRetryMessageId(null);
+              }}
+              onDismiss={() => {
+                setShowManualBuilder(false);
+                setMarkerRetryAttempted(false);
+                setMarkerRetryMessageId(null);
+              }}
+            />
+          )}
+
+          {/* DB write warning */}
+          {dbWarning && (
+            <div className="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 animate-[fade-in_300ms_ease-out]">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B5621E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              <span className="font-sans text-[12px] text-amber-700 flex-1">
+                {dbWarning.type === "context"
+                  ? "Context may not have saved."
+                  : "Aspiration saved locally but couldn\u2019t sync."}
+                {" "}
+              </span>
+              <button
+                onClick={() => dbWarning.retryFn()}
+                className="font-sans text-[12px] text-amber-600 font-medium cursor-pointer bg-transparent border-none underline"
+              >
+                Retry
+              </button>
+              <button
+                onClick={() => setDbWarning(null)}
+                className="text-amber-400 cursor-pointer bg-transparent border-none text-sm"
+                aria-label="Dismiss warning"
+              >
+                &times;
+              </button>
+            </div>
           )}
         </div>
 
