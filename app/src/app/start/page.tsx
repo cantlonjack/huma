@@ -11,7 +11,8 @@ export default function StartPage() {
     onboardingStep, transitioning, stepReady, messages, input, setInput,
     streaming, paletteConcepts, paletteLoading, showPaletteMobile,
     setShowPaletteMobile, showTransition, showAuthModal, setShowAuthModal,
-    hasMessages, scrollRef, inputRef, sendMessage, handleOptionTap,
+    hasMessages, recentDimensions, knownDimensionLabels, contextPercentage,
+    scrollRef, inputRef, sendMessage, handleOptionTap,
     handleConfirmBehaviors, handlePaletteTap, handleKeyDown,
     handleAuthenticated, handleArchetypeContinueWithTemplate,
     handleArchetypeContinueBlank, handleArchetypeSkip,
@@ -62,9 +63,33 @@ export default function StartPage() {
 
       {/* Conversation Panel */}
       <div className="flex-1 flex flex-col min-h-0 lg:w-[60%]">
-        {/* Header */}
+        {/* Header with context progress */}
         <div className="px-6 pt-6 pb-2">
-          <h1 className="font-serif text-sage-700 text-lg tracking-wide">HUMA</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="font-serif text-sage-700 text-lg tracking-wide">HUMA</h1>
+            {hasMessages && contextPercentage > 0 && (
+              <div className="flex items-center gap-2 animate-[fade-in_500ms_ease-out]">
+                <div className="w-20 h-1 bg-sand-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-sage-400 rounded-full transition-all duration-700 ease-out"
+                    style={{ width: `${Math.min(contextPercentage, 100)}%` }}
+                  />
+                </div>
+                <span className="font-sans text-[10px] text-earth-400 tracking-wide">
+                  {contextPercentage < 30 ? "getting started" : contextPercentage < 60 ? "building picture" : "almost there"}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Dimension capture flash */}
+          {recentDimensions.length > 0 && (
+            <div className="mt-1.5 animate-[fade-in_300ms_ease-out]">
+              <span className="font-sans text-[11px] font-medium tracking-wide text-sage-400">
+                HUMA now knows: {recentDimensions.map(d => d.toLowerCase()).join(", ")}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Messages or Prompt */}

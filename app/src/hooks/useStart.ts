@@ -10,6 +10,9 @@ import { migrateLocalStorageToSupabase } from "@/lib/supabase-v2";
 import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
 import { prePopulateFromArchetypes } from "@/data/archetype-templates";
 import { getArchetypeOpener, getTemplateAspirationNames } from "@/lib/archetype-openers";
+import { mergeContext, dimensionsTouched, contextCompleteness } from "@/lib/context-model";
+import type { HumaContext } from "@/types/context";
+import { createEmptyContext } from "@/types/context";
 
 // ---- Palette Acknowledgments ------------------------------------------------
 
@@ -61,6 +64,11 @@ export interface UseStartReturn {
   setShowAuthModal: (value: boolean) => void;
   hasMessages: boolean;
 
+  // Context feedback
+  recentDimensions: string[];          // dimensions just captured (fades after 4s)
+  knownDimensionLabels: string[];      // all dimensions with data so far
+  contextPercentage: number;           // 0-100, overall completeness
+
   // Refs
   scrollRef: React.RefObject<HTMLDivElement | null>;
   inputRef: React.RefObject<HTMLInputElement | null>;
@@ -95,6 +103,8 @@ export function useStart(): UseStartReturn {
   const [selectedConcepts, setSelectedConcepts] = useState<string[]>([]);
   const [paletteLoading, setPaletteLoading] = useState(false);
   const [knownContext, setKnownContext] = useState<Record<string, unknown>>({});
+  const [humaContext, setHumaContext] = useState<HumaContext>(createEmptyContext());
+  const [recentDimensions, setRecentDimensions] = useState<string[]>([]);
   const [decomposedBehaviors, setDecomposedBehaviors] = useState<Behavior[]>([]);
   const [decompositionData, setDecompositionData] = useState<DecompositionData | null>(null);
   const [aspirationName, setAspirationName] = useState<string | null>(null);
@@ -269,6 +279,17 @@ export function useStart(): UseStartReturn {
 
       if (parsedContext) {
         setKnownContext(prev => ({ ...prev, ...parsedContext }));
+        // Update structured context model + show dimension indicator
+        setHumaContext(prev => {
+          const updated = mergeContext(prev, parsedContext as Partial<HumaContext>, "conversation");
+          localStorage.setItem("huma-v2-huma-context", JSON.stringify(updated));
+          return updated;
+        });
+        const touched = dimensionsTouched(parsedContext as Partial<HumaContext>);
+        if (touched.length > 0) {
+          setRecentDimensions(touched);
+          setTimeout(() => setRecentDimensions([]), 4000);
+        }
       }
 
       // Handle template aspiration replacement
@@ -580,6 +601,9 @@ export function useStart(): UseStartReturn {
     showAuthModal,
     setShowAuthModal,
     hasMessages,
+    recentDimensions,
+    knownDimensionLabels: contextCompleteness(humaContext).strongDimensions,
+    contextPercentage: contextCompleteness(humaContext).overall,
     scrollRef,
     inputRef,
     sendMessage,
