@@ -14,6 +14,7 @@ import { getArchetypeOpener, getTemplateAspirationNames } from "@/lib/archetype-
 import { mergeContext, dimensionsTouched, contextCompleteness } from "@/lib/context-model";
 import type { HumaContext } from "@/types/context";
 import { createEmptyContext } from "@/types/context";
+import { trackEvent } from "@/lib/analytics";
 
 // ---- Palette Acknowledgments ------------------------------------------------
 
@@ -226,6 +227,16 @@ export function useStart(): UseStartReturn {
       createdAt: new Date().toISOString(),
     };
 
+    // Track onboarding start on first user message
+    if (messages.filter(m => m.role === "user").length === 0) {
+      const ctx = knownContext as Record<string, unknown>;
+      const archetypes = ctx.archetypes as string[] | undefined;
+      trackEvent("onboarding_start", {
+        archetype_selected: !!(archetypes && archetypes.length > 0),
+        ...(archetypes && archetypes.length > 0 ? { archetype_name: archetypes.join(", ") } : {}),
+      });
+    }
+
     const newMessages = [...messages, userMsg];
     setMessages(newMessages as StartMessage[]);
     setInput("");
@@ -398,6 +409,11 @@ export function useStart(): UseStartReturn {
       }),
     }];
     localStorage.setItem("huma-v2-aspirations", JSON.stringify(aspirations));
+
+    trackEvent("aspiration_created", {
+      aspiration_count: aspirations.length,
+      behavior_count: behaviorsToSave.length,
+    });
 
     // Extract patterns from aspirations that have a trigger behavior
     const patterns = extractPatternsFromAspirations(aspirations);

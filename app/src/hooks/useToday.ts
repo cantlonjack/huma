@@ -7,7 +7,7 @@ import type { Aspiration, Insight, SheetEntry, Nudge, DimensionKey, ValidationAn
 import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { getLocalDate } from "@/lib/date-utils";
-import { compileSheet, type CompiledSheet } from "@/lib/sheet-compiler";
+import { compileSheet, invalidateSheetCache, type CompiledSheet } from "@/lib/sheet-compiler";
 import { usePush } from "@/lib/use-push";
 import {
   computeStructuralInsight,
@@ -35,6 +35,7 @@ export type { BehaviorStep, ComingUpItem } from "@/lib/today-utils";
 export { formatHeaderDate, getDayCount, getBehaviorChain, triggerCaption } from "@/lib/today-utils";
 import { getDayCount, getReadyComingUp } from "@/lib/today-utils";
 import type { ComingUpItem } from "@/lib/today-utils";
+import { trackEvent } from "@/lib/analytics";
 
 export interface UseTodayReturn {
   // State
@@ -215,6 +216,34 @@ export function useToday(): UseTodayReturn {
   // Loading = any primary query still loading
   const loading = aspLoading || ctxLoading;
 
+  // ─── Return Visit Tracking ──────────────────────────────────────────────
+  const returnVisitTrackedRef = useRef(false);
+  useEffect(() => {
+    if (returnVisitTrackedRef.current || aspirations.length === 0) return;
+    returnVisitTrackedRef.current = true;
+
+    // Compute days since last sheet
+    let daysSinceLast = 0;
+    try {
+      const today = new Date(date + "T12:00:00");
+      // Check recent sheet cache keys to find last compiled date
+      for (let i = 1; i <= 30; i++) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const key = `huma-v2-compiled-sheet-${d.toISOString().split("T")[0]}`;
+        if (localStorage.getItem(key)) {
+          daysSinceLast = i;
+          break;
+        }
+      }
+    } catch { /* default 0 */ }
+
+    trackEvent("return_visit", {
+      day_count: dayCount,
+      days_since_last: daysSinceLast,
+    });
+  }, [aspirations, date, dayCount]);
+
   // ─── Sheet Compilation ─────────────────────────────────────────────────
   useEffect(() => {
     if (aspirations.length === 0 || sheetCompiledRef.current) return;
@@ -270,6 +299,11 @@ export function useToday(): UseTodayReturn {
         if (result.entries.length > 0) {
           setCompiledEntries(result.entries.slice(0, 5));
           setThroughLine(result.throughLine || null);
+
+          trackEvent("sheet_compiled", {
+            entry_count: result.entries.length,
+            day_count: dayCount,
+          });
 
           try {
             localStorage.setItem(cacheKey, JSON.stringify({
@@ -393,6 +427,16 @@ export function useToday(): UseTodayReturn {
   const handleToggleStep = useCallback(
     (aspirationId: string, stepText: string, checked: boolean) => {
       const key = `${aspirationId}:${stepText}`;
+
+      // Invalidate sheet cache so next compilation reflects the check-off
+      invalidateSheetCache();
+
+      // Track behavior check event
+      trackEvent("behavior_checked", {
+        day_count: dayCount,
+        checked,
+        is_trigger: false,
+      });
 
       // Optimistic update
       setLocalChecked(prev => {

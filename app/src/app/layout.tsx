@@ -5,6 +5,7 @@ import AuthProvider from "@/components/shared/AuthProvider";
 import QueryProvider from "@/components/shared/QueryProvider";
 import BottomNav from "@/components/shared/BottomNav";
 import SyncStatus from "@/components/shared/SyncStatus";
+import SessionTracker from "@/components/shared/SessionTracker";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -68,6 +69,7 @@ export default function RootLayout({
         </AuthProvider>
         </QueryProvider>
         <Analytics />
+        <SessionTracker />
       </body>
     </html>
   );

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import type { CanvasData } from "@/engine/canvas-types";
+import { trackEvent } from "@/lib/analytics";
 
 interface ShareButtonProps {
   className?: string;
@@ -115,6 +116,7 @@ export default function ShareButton({ className = "", canvasData }: ShareButtonP
     }
     setOpen(false);
     showToast();
+    trackEvent("sheet_shared", { method: "clipboard" });
   };
 
   const nativeShare = async () => {
@@ -125,6 +127,7 @@ export default function ShareButton({ className = "", canvasData }: ShareButtonP
           url: window.location.href,
         });
         setOpen(false);
+        trackEvent("sheet_shared", { method: "native" });
       } catch {
         // User cancelled
       }
@@ -136,6 +139,7 @@ export default function ShareButton({ className = "", canvasData }: ShareButtonP
   const openShareCard = () => {
     setOpen(false);
     setShowCard(true);
+    trackEvent("sheet_shared", { method: "shape" });
   };
 
   const hasNativeShare = typeof navigator !== "undefined" && !!navigator.share;
