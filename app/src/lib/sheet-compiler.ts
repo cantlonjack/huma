@@ -66,6 +66,53 @@ function getDayCount(): number {
   return 1;
 }
 
+// ─── Simple hash (djb2) ──────────────────────────────────────────────────
+
+function simpleHash(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+  }
+  return hash.toString(36);
+}
+
+// ─── Sheet cache key ─────────────────────────────────────────────────────
+
+function computeSheetCacheKey(
+  date: string,
+  aspirations: Array<{ id: string; behaviors: Array<{ key: string }> }>,
+  recentHistory: Array<{ date: string; behaviorKey: string; checked: boolean }>,
+  knownContext: Record<string, unknown>,
+): string {
+  const inputs = {
+    date,
+    aspirationIds: aspirations.map(a => a.id).sort(),
+    behaviorCount: aspirations.reduce((n, a) => n + a.behaviors.length, 0),
+    recentHistoryHash: simpleHash(JSON.stringify(recentHistory)),
+    contextHash: simpleHash(JSON.stringify(knownContext)),
+  };
+  return `huma-v2-sheet-${simpleHash(JSON.stringify(inputs))}`;
+}
+
+// ─── Sheet cache invalidation ────────────────────────────────────────────
+// Clears all cached sheets for today. Call after check-offs, aspiration
+// changes, or context updates.
+
+export function invalidateSheetCache(): void {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (key?.startsWith("huma-v2-sheet-")) {
+        try {
+          const cached = JSON.parse(localStorage.getItem(key) || "{}");
+          if (cached.date === today) localStorage.removeItem(key);
+        } catch { /* skip malformed entries */ }
+      }
+    }
+  } catch { /* localStorage unavailable */ }
+}
+
 // ─── Main compiler ────────────────────────────────────────────────────────
 
 export interface CompileSheetOptions {
@@ -158,6 +205,18 @@ export async function compileSheet(
       })),
     }));
 
+  // ─── Check sheet cache ──────────────────────────────────────────────────
+  const cacheKey = computeSheetCacheKey(date, activeAspirations, recentHistory, knownContext);
+  try {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed.date === date && parsed.sheet) {
+        return parsed.sheet as CompiledSheet;
+      }
+    }
+  } catch { /* cache miss or localStorage unavailable */ }
+
   // ─── Build request ─────────────────────────────────────────────────────
   const body: SheetCompileRequest = {
     name: name || "there",
@@ -196,11 +255,18 @@ export async function compileSheet(
       dimensions: (e.dimensions as string[]) || [],
       checked: false,
     }));
-    return {
+    const sheet: CompiledSheet = {
       entries,
       throughLine: data.through_line || null,
       date: data.date || date,
     };
+
+    // Cache the result
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify({ date, sheet }));
+    } catch { /* storage full or unavailable */ }
+
+    return sheet;
   } catch {
     // ─── Offline fallback: compile from recent history ──────────────────
     return compileSheetOffline(aspirations, recentHistory, date);
