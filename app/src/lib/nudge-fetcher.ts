@@ -102,26 +102,32 @@ export async function fetchNudges(options: FetchNudgesOptions): Promise<Nudge[]>
       })),
     }));
 
-  const res = await fetch("/api/nudge", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      name: name || "there",
-      date,
-      knownContext,
-      aspirations: activeAspirations,
-      recentHistory,
-      dayCount,
-      season,
-      checkedToday,
-      dismissedNudgeIds,
-    }),
-  });
+  try {
+    const res = await fetch("/api/nudge", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name || "there",
+        date,
+        knownContext,
+        aspirations: activeAspirations,
+        recentHistory,
+        dayCount,
+        season,
+        checkedToday,
+        dismissedNudgeIds,
+      }),
+    });
 
-  if (!res.ok) return [];
+    if (!res.ok) return [];
 
-  const data = await res.json();
-  return (data.nudges || []) as Nudge[];
+    const data = await res.json();
+    return (data.nudges || []) as Nudge[];
+  } catch {
+    // Nudges are supplemental — silently degrade on network/API failure
+    console.log("[HUMA] Nudge fetch failed, skipping");
+    return [];
+  }
 }
 
 // ─── Dismissal persistence ────────────────────────────────────────────────

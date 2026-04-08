@@ -81,6 +81,7 @@ export interface CompiledSheet {
   entries: SheetEntry[];
   throughLine: string | null;
   date: string;
+  compiledOffline?: boolean;
 }
 
 export async function compileSheet(
@@ -172,33 +173,125 @@ export async function compileSheet(
     whyStatement,
   };
 
-  const res = await fetch("/api/sheet", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  try {
+    const res = await fetch("/api/sheet", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
 
-  if (!res.ok) {
-    throw new Error(`Sheet compilation failed: ${res.status}`);
+    if (!res.ok) throw new Error(`Sheet compilation failed: ${res.status}`);
+
+    const data = await res.json();
+    // Hard cap: maximum 5 entries (server enforces too, but belt-and-suspenders)
+    const rawEntries = ((data.entries || []) as Array<Record<string, unknown>>).slice(0, 5);
+    const entries: SheetEntry[] = rawEntries.map((e) => ({
+      id: (e.behavior_key as string) || `entry-${date}`,
+      aspirationId: (e.aspiration_id as string) || "",
+      behaviorKey: (e.behavior_key as string) || "",
+      behaviorText: (e.headline as string) || "",
+      headline: (e.headline as string) || undefined,
+      detail: (e.detail as string) || "",
+      timeOfDay: ((e.time_of_day as string) || "morning") as "morning" | "midday" | "evening",
+      dimensions: (e.dimensions as string[]) || [],
+      checked: false,
+    }));
+    return {
+      entries,
+      throughLine: data.through_line || null,
+      date: data.date || date,
+    };
+  } catch {
+    // ─── Offline fallback: compile from recent history ──────────────────
+    return compileSheetOffline(aspirations, recentHistory, date);
+  }
+}
+
+// ─── Offline sheet compilation ───────────────────────────────────────────────
+// When the API is unavailable, build a sheet from yesterday's entries + aspiration
+// behaviors. Sort by dimensional breadth, then unchecked streak. Cap at 5.
+
+export function compileSheetOffline(
+  aspirations: Aspiration[],
+  recentHistory: Array<{ date: string; behaviorKey: string; checked: boolean }>,
+  date: string,
+): CompiledSheet {
+  // Collect yesterday's sheet entries from localStorage
+  const yesterday = new Date(date + "T12:00:00");
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yDateStr = yesterday.toISOString().slice(0, 10);
+  let prevEntries: SheetEntry[] = [];
+  try {
+    const raw = localStorage.getItem(`huma-v2-sheet-${yDateStr}`);
+    if (raw) prevEntries = JSON.parse(raw);
+  } catch { /* no cache */ }
+
+  // Build a behavior lookup from active aspirations
+  const behaviorMap = new Map<string, { text: string; aspirationId: string; dimensions: string[] }>();
+  for (const a of aspirations.filter(a => a.status === "active" && a.stage === "active")) {
+    for (const b of a.behaviors.filter(b => b.enabled !== false)) {
+      behaviorMap.set(b.key, {
+        text: b.text,
+        aspirationId: a.id,
+        dimensions: getEffectiveDimensions(b).map(d => d.dimension),
+      });
+    }
   }
 
-  const data = await res.json();
-  // Hard cap: maximum 5 entries (server enforces too, but belt-and-suspenders)
-  const rawEntries = ((data.entries || []) as Array<Record<string, unknown>>).slice(0, 5);
-  const entries: SheetEntry[] = rawEntries.map((e) => ({
-    id: (e.behavior_key as string) || `entry-${date}`,
-    aspirationId: (e.aspiration_id as string) || "",
-    behaviorKey: (e.behavior_key as string) || "",
-    behaviorText: (e.headline as string) || "",
-    headline: (e.headline as string) || undefined,
-    detail: (e.detail as string) || "",
-    timeOfDay: ((e.time_of_day as string) || "morning") as "morning" | "midday" | "evening",
-    dimensions: (e.dimensions as string[]) || [],
+  // Build unchecked-streak map from recent history
+  const streakMap = new Map<string, number>();
+  const sortedDates = [...new Set(recentHistory.map(h => h.date))].sort().reverse();
+  for (const bKey of behaviorMap.keys()) {
+    let streak = 0;
+    for (const d of sortedDates) {
+      const entry = recentHistory.find(h => h.date === d && h.behaviorKey === bKey);
+      if (entry && !entry.checked) streak++;
+      else break;
+    }
+    streakMap.set(bKey, streak);
+  }
+
+  // Candidate pool: unchecked entries from yesterday + behaviors not shown yesterday
+  const yesterdayKeys = new Set(prevEntries.map(e => e.behaviorKey));
+  const candidates: Array<{ key: string; text: string; aspirationId: string; dimensions: string[]; streak: number }> = [];
+
+  // Unchecked items from yesterday
+  for (const e of prevEntries.filter(e => !e.checked)) {
+    candidates.push({
+      key: e.behaviorKey,
+      text: e.behaviorText,
+      aspirationId: e.aspirationId,
+      dimensions: e.dimensions || [],
+      streak: streakMap.get(e.behaviorKey) ?? 0,
+    });
+  }
+
+  // Behaviors not shown yesterday
+  for (const [key, info] of behaviorMap) {
+    if (!yesterdayKeys.has(key)) {
+      candidates.push({
+        key,
+        text: info.text,
+        aspirationId: info.aspirationId,
+        dimensions: info.dimensions,
+        streak: streakMap.get(key) ?? 0,
+      });
+    }
+  }
+
+  // Sort: most dimensions first, then highest unchecked streak
+  candidates.sort((a, b) => b.dimensions.length - a.dimensions.length || b.streak - a.streak);
+
+  const entries: SheetEntry[] = candidates.slice(0, 5).map(c => ({
+    id: c.key,
+    aspirationId: c.aspirationId,
+    behaviorKey: c.key,
+    behaviorText: c.text,
+    detail: "",
+    timeOfDay: "morning" as const,
+    dimensions: c.dimensions,
     checked: false,
   }));
-  return {
-    entries,
-    throughLine: data.through_line || null,
-    date: data.date || date,
-  };
+
+  return { entries, throughLine: null, date, compiledOffline: true };
 }

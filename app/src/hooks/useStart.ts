@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase";
 import { migrateLocalStorageToSupabase } from "@/lib/supabase-v2";
 import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
 import { prePopulateFromArchetypes } from "@/data/archetype-templates";
+import { paletteConcepts as staticPaletteConcepts } from "@/data/palette-concepts";
 import { getArchetypeOpener, getTemplateAspirationNames } from "@/lib/archetype-openers";
 import { mergeContext, dimensionsTouched, contextCompleteness } from "@/lib/context-model";
 import type { HumaContext } from "@/types/context";
@@ -200,10 +201,15 @@ export function useStart(): UseStartReturn {
           selectedConcepts,
         }),
       });
+      if (!res.ok) throw new Error("palette-api");
       const data = await res.json();
       setPaletteConcepts(data.concepts || []);
     } catch {
-      // Palette is non-critical
+      // Fallback: sample 4-6 static concepts, excluding already-selected
+      const available = staticPaletteConcepts.filter(c => !selectedConcepts.includes(c.id));
+      const count = 4 + Math.floor(Math.random() * 3); // 4-6
+      const shuffled = available.sort(() => Math.random() - 0.5);
+      setPaletteConcepts(shuffled.slice(0, count));
     } finally {
       setPaletteLoading(false);
     }

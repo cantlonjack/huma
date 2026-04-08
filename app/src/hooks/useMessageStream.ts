@@ -99,11 +99,23 @@ export function useMessageStream({
         }
       } catch { /* fresh operator */ }
 
+      // Drain any queued messages from previous offline failures
+      let queuedContext: Array<{ role: string; content: string }> = [];
+      try {
+        const raw = localStorage.getItem("huma-v2-pending-messages");
+        if (raw) {
+          queuedContext = JSON.parse(raw);
+          localStorage.removeItem("huma-v2-pending-messages");
+        }
+      } catch { /* ignore */ }
+
+      const allMessages = [...queuedContext.map(q => ({ role: q.role, content: q.content })), ...newMessages.map(m => ({ role: m.role === "huma" ? "assistant" : m.role, content: m.content }))];
+
       const res = await fetch("/api/v2-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: newMessages.map(m => ({ role: m.role === "huma" ? "assistant" : m.role, content: m.content })),
+          messages: allMessages,
           knownContext,
           humaContext,
           aspirations: aspirations.map(a => ({ rawText: a.rawText, clarifiedText: a.clarifiedText, status: a.status })),
@@ -223,10 +235,17 @@ export function useMessageStream({
     } catch (err) {
       setLastFailedMessage(text);
 
+      // Queue the user's message for retry on next successful call
+      try {
+        const pending = JSON.parse(localStorage.getItem("huma-v2-pending-messages") || "[]");
+        pending.push({ role: "user", content: trimmed, pending: true, queuedAt: new Date().toISOString() });
+        localStorage.setItem("huma-v2-pending-messages", JSON.stringify(pending));
+      } catch { /* storage full */ }
+
       let errorContent: string;
       const errMsg = err instanceof Error ? err.message : "";
       if (!navigator.onLine) {
-        errorContent = "You\u2019re offline. Your message is saved \u2014 it\u2019ll send when you reconnect.";
+        errorContent = "Saved your message. HUMA will process it when connection returns.";
       } else if (errMsg === "API_429") {
         errorContent = "HUMA needs a moment. Try again in 30 seconds.";
       } else if (errMsg.startsWith("API_5")) {

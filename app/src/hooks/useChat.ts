@@ -169,11 +169,23 @@ export function useChat(): UseChatReturn {
     storeSaveChatMessage(user?.id ?? null, userMsg, "chat").catch(() => {});
 
     try {
+      // Drain any queued messages from previous offline failures
+      let queuedContext: Array<{ role: string; content: string }> = [];
+      try {
+        const raw = localStorage.getItem("huma-v2-pending-messages");
+        if (raw) {
+          queuedContext = JSON.parse(raw);
+          localStorage.removeItem("huma-v2-pending-messages");
+        }
+      } catch { /* ignore */ }
+
+      const allMessages = [...queuedContext.map(q => ({ role: q.role, content: q.content })), ...newMessages.map(m => ({ role: m.role === "huma" ? "assistant" : m.role, content: m.content }))];
+
       const res = await fetch("/api/v2-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: newMessages.map(m => ({ role: m.role === "huma" ? "assistant" : m.role, content: m.content })),
+          messages: allMessages,
           knownContext,
           aspirations: aspirations.map(a => ({ rawText: a.rawText, clarifiedText: a.clarifiedText, status: a.status })),
         }),
@@ -254,9 +266,16 @@ export function useChat(): UseChatReturn {
         return updated;
       });
     } catch {
+      // Queue the user's message for retry on next successful call
+      try {
+        const pending = JSON.parse(localStorage.getItem("huma-v2-pending-messages") || "[]");
+        pending.push({ role: "user", content: text.trim(), pending: true, queuedAt: new Date().toISOString() });
+        localStorage.setItem("huma-v2-pending-messages", JSON.stringify(pending));
+      } catch { /* storage full */ }
+
       setMessages(prev => [
         ...prev.filter(m => m.content !== ""),
-        { id: crypto.randomUUID(), role: "huma" as const, content: "Something went wrong. Try again in a moment.", createdAt: new Date().toISOString() },
+        { id: crypto.randomUUID(), role: "huma" as const, content: "Saved your message. HUMA will process it when connection returns.", createdAt: new Date().toISOString() },
       ]);
     } finally {
       setStreaming(false);
