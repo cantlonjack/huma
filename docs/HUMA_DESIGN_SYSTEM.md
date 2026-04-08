@@ -6,6 +6,8 @@
 
 March 2026 · Foundational Architecture
 
+_Related: HUMA_VOICE_BIBLE.md (voice), HUMA_ETHICAL_FRAMEWORK.md (sovereignty/dependency tests), HUMA_V2_FOUNDATION.md (product spec). Quick ref: `workspaces/design.md`._
+
 ---
 
 ## 01 — The Feel

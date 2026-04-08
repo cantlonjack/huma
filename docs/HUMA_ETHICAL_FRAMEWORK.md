@@ -6,6 +6,8 @@
 
 March 2026 · Foundational Architecture
 
+_Related: HUMA_VOICE_BIBLE.md (voice for edge cases), HUMA_CONVERSATION_ARCHITECTURE.md (conversation flow), HUMA_V2_FOUNDATION.md (product spec), HUMA_VISION_AND_STRATEGY.md (sovereignty principles)._
+
 ---
 
 ## 01 — The Core Commitment

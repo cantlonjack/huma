@@ -4,6 +4,8 @@
 
 *March 2026 -- Foundational*
 
+_Related: HUMA_V2_FOUNDATION.md (current product spec), HUMA_CONVERSATION_ARCHITECTURE.md (AI behavior), HUMA_DESIGN_SYSTEM.md (visual), HUMA_VOICE_BIBLE.md (voice), HUMA_ETHICAL_FRAMEWORK.md (principles). Note: this document defines three **strategic layers** (Notation / Mediums / Commons); V2 Foundation defines three **product layers** (Conversation / Computation / Output)._
+
 ---
 
 ## 01 -- What HUMA Is

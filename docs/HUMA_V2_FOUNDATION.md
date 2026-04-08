@@ -1,6 +1,8 @@
 # HUMA V2 Foundation
 
-_The source of truth for what HUMA is, how it works, and what operators see. Updated March 27, 2026. Incorporates the V2.1 artifact-first redesign. The foundational documents remain valid for intellectual lineage, ethics, voice, design language, and RPPL theory._
+_The source of truth for what HUMA is, how it works, and what operators see. Updated April 2026. Incorporates the V2.1 artifact-first redesign. The foundational documents remain valid for intellectual lineage, ethics, voice, design language, and RPPL theory._
+
+_Related documents: HUMA_VISION_AND_STRATEGY.md (strategic vision, intellectual lineage), HUMA_CONVERSATION_ARCHITECTURE.md (AI conversation spec), HUMA_DESIGN_SYSTEM.md (visual spec), HUMA_VOICE_BIBLE.md (voice spec), HUMA_ETHICAL_FRAMEWORK.md (edge cases, sovereignty)._
 
 ---
 
@@ -30,7 +32,9 @@ The person who follows HUMA's production sheet for 3 months and then notices "wa
 
 ---
 
-## The Three Layers
+## The Three Product Layers
+
+_Note: HUMA_VISION_AND_STRATEGY.md defines three **strategic** layers (Notation / Mediums / Commons) describing how HUMA's knowledge system scales. The three layers below are **product** layers describing how the app works for an individual operator. Different scopes, complementary concepts._
 
 ### Layer 1: Conversation (how HUMA learns you)
 
@@ -86,7 +90,7 @@ Each item is tappable for more detail. Check it off when done. The checking off 
 
 **The system view.** The visible artifact — the structured, connected representation of aspirations, behaviors, dimensions, and connections. Materializes from conversation and grows with use. The operator can see, browse, edit, and extend their system at any time.
 
-**The canvas (future).** The full Palmer Holistic Context spatial map, built from the bottom up through daily living. Opens when the operator wants to see the whole picture. Emerges from the system view when enough context accumulates.
+**The Living Canvas** (`/map/[id]` — implemented). Spatial SVG visualization of the operator's life system, rendered by the `canvas/` component family (SpatialCanvas, SpatialEssence, SpatialRing, CapitalRadar, WeeklyRhythm). Shareable via unique URL with dynamic OG image generation (`/api/og`). Cached in Redis with Supabase fallback. Sample maps available at `/map/sample`.
 
 ---
 
@@ -119,8 +123,8 @@ The holonic life map. Force-directed visualization of your life as a connected s
 - Expandable detail panels for each node
 - Insight card when behavioral data supports it
 
-**Screen 3: GROW** (coming — `/grow`)
-The growth and pattern commons space. Not yet implemented.
+**Screen 3: GROW** (`/grow` — implemented)
+The growth and pattern space. Grouped patterns with validation progress, correlation cards, completion stats, and sparkline trends. Pattern extraction runs against behavior logs to surface emerging behavioral patterns.
 
 **Chat** (conversation tool — `/chat`, accessible via overlay)
 For longer conversations that don't fit a quick bottom-sheet exchange.

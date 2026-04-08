@@ -4,6 +4,8 @@ _How HUMA thinks. The system prompt spec for the conversation and decomposition 
 This document defines the AI behavior. The Voice Bible defines how it speaks. The Design
 System defines how it looks. This defines what it does._
 
+_Related: HUMA_V2_FOUNDATION.md (product spec), HUMA_VOICE_BIBLE.md (voice), HUMA_ETHICAL_FRAMEWORK.md (edge cases). Implementation: `lib/services/prompt-builder.ts` (prompt assembly), `lib/parse-markers-v2.ts` (marker parsing), `app/api/v2-chat/route.ts` (endpoint)._
+
 ---
 
 ## The Problem This Solves
