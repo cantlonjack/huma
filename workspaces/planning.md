@@ -1,6 +1,6 @@
 # Planning Workspace
 
-For product decisions: `docs/HUMA_V2_FOUNDATION.md` | Full roadmap: `docs/BUILD_ROADMAP.md`
+For product decisions: `docs/HUMA_V2_FOUNDATION.md`
 
 ## Product Identity
 HUMA is infrastructure for running your life as one connected system. Not a wellness app. The core gap: Claude is a brilliant generalist that requires a skilled operator. HUMA is the skilled operator — generalized, persistent, proactive, available to everyone.
