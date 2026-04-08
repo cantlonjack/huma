@@ -4,10 +4,11 @@ import { useState, useEffect, useCallback } from "react";
 import type { HumaContext } from "@/types/context";
 import { createEmptyContext } from "@/types/context";
 import { mergeContext, dimensionsTouched, migrateFromKnownContext } from "@/lib/context-model";
-import { createClient } from "@/lib/supabase";
-import { getKnownContext, updateKnownContext } from "@/lib/supabase-v2";
-import { enqueuePendingSync } from "@/lib/pending-sync";
-import { getLocalDate } from "@/lib/date-utils";
+import {
+  storeSaveContext,
+  storeReadLocalContext,
+  clearTodaySheetCache,
+} from "@/lib/db/store";
 import type { User } from "@supabase/supabase-js";
 
 interface UseContextSyncOptions {
@@ -47,10 +48,8 @@ export function useContextSync({ user, loaded }: UseContextSyncOptions): Context
   }, []);
 
   const loadContextFromLocalStorage = useCallback(() => {
-    try {
-      const ctx = localStorage.getItem("huma-v2-known-context");
-      if (ctx) setKnownContext(JSON.parse(ctx));
-    } catch { /* fresh */ }
+    const ctx = storeReadLocalContext();
+    if (Object.keys(ctx).length > 0) setKnownContext(ctx);
   }, []);
 
   const hydrateHumaContext = useCallback(() => {
@@ -90,21 +89,15 @@ export function useContextSync({ user, loaded }: UseContextSyncOptions): Context
       setTimeout(() => setRecentDimensions([]), 4000);
     }
 
-    if (user) {
-      const supabase = createClient();
-      if (supabase) {
-        const retryContextSave = () => {
-          const sb = createClient();
-          if (sb) updateKnownContext(sb, user.id, newContext).then(() => setDbWarning(null)).catch(() => {});
-        };
-        updateKnownContext(supabase, user.id, newContext).catch(() => {
-          enqueuePendingSync({ type: "context", userId: user.id, context: newContext });
-          setDbWarning({ type: "context", retryFn: retryContextSave });
-        });
-      }
-    }
-    const today = getLocalDate();
-    localStorage.removeItem(`huma-v2-sheet-${today}`);
+    // Unified store: WAL to localStorage, then Supabase
+    storeSaveContext(user?.id ?? null, newContext).catch(() => {
+      setDbWarning({
+        type: "context",
+        retryFn: () => storeSaveContext(user?.id ?? null, newContext).then(() => setDbWarning(null)).catch(() => {}),
+      });
+    });
+
+    clearTodaySheetCache();
   }, [knownContext, humaContext, user]);
 
   return {

@@ -1,8 +1,8 @@
 /**
  * React Query key factory + fetcher functions.
  *
- * Encapsulates the Supabase-first, localStorage-fallback pattern
- * so hooks just call useQuery(queryKeys.aspirations(userId), ...).
+ * Uses the unified store (lib/db/store.ts) for entities that support
+ * the WAL pattern, and direct Supabase calls for server-only data.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -11,15 +11,18 @@ import type { SparklineData, EmergingBehavior, MonthlyReviewData } from "@/types
 import type { AspirationCorrelation } from "@/lib/supabase-v2";
 import { createClient } from "@/lib/supabase";
 import {
+  storeLoadAspirations,
+  storeLoadContext,
+  storeLoadChatMessages,
+  storeLoadInsight,
+  storeLoadPatterns,
+} from "@/lib/db/store";
+import {
   getAspirations,
-  getAllAspirations,
-  getKnownContext,
-  getUndeliveredInsight,
   getWhyStatement,
   getPrinciples,
   getAspirationCorrelations,
   getRecentInsights,
-  getPatterns,
   getPatternSparklines,
   detectEmergingBehaviors,
   getMonthlyReviewData,
@@ -71,25 +74,11 @@ function getSupabase(userId: string | null): SupabaseClient | null {
   return createClient();
 }
 
-// ─── Fetchers ──────────────────────────────────────────────────────────────
+// ─── Fetchers (delegating to unified store) ───────────────────────────────
 
 /** Active aspirations (working/active/adjusting), sorted by trigger time. */
 export async function fetchAspirations(userId: string | null): Promise<Aspiration[]> {
-  let asps: Aspiration[] = [];
-  const sb = getSupabase(userId);
-
-  if (sb && userId) {
-    try {
-      asps = await getAspirations(sb, userId);
-    } catch { /* fallback */ }
-  }
-
-  if (asps.length === 0) {
-    try {
-      const saved = localStorage.getItem("huma-v2-aspirations");
-      if (saved) asps = JSON.parse(saved);
-    } catch { /* fresh */ }
-  }
+  let asps = await storeLoadAspirations(userId);
 
   // Filter to working/active/adjusting
   asps = asps.filter(a => {
@@ -114,59 +103,17 @@ export async function fetchAspirations(userId: string | null): Promise<Aspiratio
 
 /** All aspirations (including archived), for Whole tab. */
 export async function fetchAllAspirations(userId: string | null): Promise<Aspiration[]> {
-  const sb = getSupabase(userId);
-
-  if (sb && userId) {
-    try {
-      const result = await getAllAspirations(sb, userId);
-      if (result.length > 0) return result;
-    } catch { /* fallback */ }
-  }
-
-  try {
-    const saved = localStorage.getItem("huma-v2-aspirations");
-    if (saved) return JSON.parse(saved);
-  } catch { /* fresh */ }
-
-  return [];
+  return storeLoadAspirations(userId, true);
 }
 
 /** Known context (operator profile, archetypes, etc.). */
 export async function fetchKnownContext(userId: string | null): Promise<Record<string, unknown>> {
-  const sb = getSupabase(userId);
-
-  if (sb && userId) {
-    try {
-      const ctx = await getKnownContext(sb, userId);
-      if (Object.keys(ctx).length > 0) return ctx;
-    } catch { /* fallback */ }
-  }
-
-  try {
-    const saved = localStorage.getItem("huma-v2-known-context");
-    if (saved) return JSON.parse(saved);
-  } catch { /* fresh */ }
-
-  return {};
+  return storeLoadContext(userId);
 }
 
 /** Undelivered insight. */
 export async function fetchUndeliveredInsight(userId: string | null): Promise<Insight | null> {
-  const sb = getSupabase(userId);
-
-  if (sb && userId) {
-    try {
-      const existing = await getUndeliveredInsight(sb, userId);
-      if (existing) return existing;
-    } catch { /* fallback */ }
-  }
-
-  try {
-    const saved = localStorage.getItem("huma-v2-pending-insight");
-    if (saved) return JSON.parse(saved);
-  } catch { /* fresh */ }
-
-  return null;
+  return storeLoadInsight(userId);
 }
 
 /** Today's checked entries from sheet_entries + localStorage. */
@@ -321,42 +268,17 @@ export async function fetchRhythmData(
 export async function fetchPatterns(
   userId: string | null,
 ): Promise<{ patterns: Pattern[]; aspirations: Aspiration[] }> {
-  let loadedPatterns: Pattern[] = [];
-  let loadedAspirations: Aspiration[] = [];
-  const sb = getSupabase(userId);
-
-  // Load patterns
-  if (sb && userId) {
-    try {
-      loadedPatterns = await getPatterns(sb, userId);
-    } catch { /* fallback */ }
-  }
-  if (loadedPatterns.length === 0) {
-    try {
-      const saved = localStorage.getItem("huma-v2-patterns");
-      if (saved) loadedPatterns = JSON.parse(saved);
-    } catch { /* fresh */ }
-  }
-
-  // Load aspirations (needed for context + pattern extraction)
-  if (sb && userId) {
-    try {
-      loadedAspirations = await getAspirations(sb, userId);
-    } catch { /* fallback */ }
-  }
-  if (loadedAspirations.length === 0) {
-    try {
-      const saved = localStorage.getItem("huma-v2-aspirations");
-      if (saved) loadedAspirations = JSON.parse(saved);
-    } catch { /* fresh */ }
-  }
+  const [loadedPatterns, loadedAspirations] = await Promise.all([
+    storeLoadPatterns(userId),
+    storeLoadAspirations(userId),
+  ]);
 
   // Extract patterns from aspirations if none exist
-  if (loadedPatterns.length === 0 && loadedAspirations.length > 0) {
-    loadedPatterns = extractPatternsFromAspirations(loadedAspirations);
-  }
+  const patterns = loadedPatterns.length === 0 && loadedAspirations.length > 0
+    ? extractPatternsFromAspirations(loadedAspirations)
+    : loadedPatterns;
 
-  return { patterns: loadedPatterns, aspirations: loadedAspirations };
+  return { patterns, aspirations: loadedAspirations };
 }
 
 /** Pattern sparklines. */

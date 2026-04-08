@@ -4,16 +4,16 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import type { ChatMessage, Behavior, Aspiration } from "@/types/v2";
 import { parseMarkersV2 as parseMarkers } from "@/lib/parse-markers-v2";
 import { useAuth } from "@/components/shared/AuthProvider";
-import { createClient } from "@/lib/supabase";
 import {
-  getChatMessages,
-  saveChatMessage,
-  getAspirations,
-  saveAspiration,
-  getKnownContext,
-  updateKnownContext,
-} from "@/lib/supabase-v2";
-import { getLocalDate } from "@/lib/date-utils";
+  storeLoadChatMessages,
+  storeLoadAspirations,
+  storeLoadContext,
+  storeSaveChatMessage,
+  storeWriteLocalMessages,
+  storeSaveAspiration,
+  storeSaveContext,
+  clearTodaySheetCache,
+} from "@/lib/db/store";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -127,58 +127,28 @@ export function useChat(): UseChatReturn {
     }
   }, [messages, streaming]);
 
-  // Load state
+  // Load state via unified store
   useEffect(() => {
+    const userId = user?.id ?? null;
     async function loadState() {
-      let foundMessages = false;
-
-      if (user) {
-        const supabase = createClient();
-        if (supabase) {
-          try {
-            const [dbMessages, dbAspirations, dbContext] = await Promise.all([
-              getChatMessages(supabase, user.id),
-              getAspirations(supabase, user.id),
-              getKnownContext(supabase, user.id),
-            ]);
-            if (dbMessages.length > 0) { setMessages(dbMessages); foundMessages = true; }
-            if (dbAspirations.length > 0) setAspirations(dbAspirations);
-            if (Object.keys(dbContext).length > 0) setKnownContext(dbContext);
-          } catch { /* fallback */ }
-        }
-      }
-
-      if (!foundMessages) {
-        try {
-          const savedMessages = localStorage.getItem("huma-v2-chat-messages");
-          const startMessages = localStorage.getItem("huma-v2-start-messages");
-          if (savedMessages) setMessages(JSON.parse(savedMessages));
-          else if (startMessages) setMessages(JSON.parse(startMessages));
-        } catch { /* fresh */ }
-      }
-
-      if (!user) {
-        try {
-          const ctx = localStorage.getItem("huma-v2-known-context");
-          if (ctx) setKnownContext(JSON.parse(ctx));
-          const asp = localStorage.getItem("huma-v2-aspirations");
-          if (asp) setAspirations(JSON.parse(asp));
-        } catch { /* fresh */ }
-      }
-
+      const [msgs, asps, ctx] = await Promise.all([
+        storeLoadChatMessages(userId),
+        storeLoadAspirations(userId),
+        storeLoadContext(userId),
+      ]);
+      if (msgs.length > 0) setMessages(msgs);
+      if (asps.length > 0) setAspirations(asps);
+      if (Object.keys(ctx).length > 0) setKnownContext(ctx);
       setLoaded(true);
     }
     loadState();
   }, [user]);
 
-  // Persist to localStorage
+  // Persist to localStorage via store
   useEffect(() => {
-    if (!loaded) return;
-    if (messages.length > 0) {
-      localStorage.setItem("huma-v2-chat-messages", JSON.stringify(messages));
-      localStorage.setItem("huma-v2-known-context", JSON.stringify(knownContext));
-    }
-  }, [messages, knownContext, loaded]);
+    if (!loaded || messages.length === 0) return;
+    storeWriteLocalMessages(messages, "chat");
+  }, [messages, loaded]);
 
   // Send message
   const sendMessage = useCallback(async (text: string) => {
@@ -196,10 +166,7 @@ export function useChat(): UseChatReturn {
     setInput("");
     setStreaming(true);
 
-    if (user) {
-      const supabase = createClient();
-      if (supabase) saveChatMessage(supabase, user.id, userMsg).catch(() => {});
-    }
+    storeSaveChatMessage(user?.id ?? null, userMsg, "chat").catch(() => {});
 
     try {
       const res = await fetch("/api/v2-chat", {
@@ -244,20 +211,13 @@ export function useChat(): UseChatReturn {
       const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedDecomposition } = parseMarkers(fullResponse);
 
       const finalHumaMsg: ChatMessage = { ...humaMsg, content: cleanText, contextExtracted: parsedContext || undefined };
-      if (user) {
-        const supabase = createClient();
-        if (supabase) saveChatMessage(supabase, user.id, finalHumaMsg).catch(() => {});
-      }
+      storeSaveChatMessage(user?.id ?? null, finalHumaMsg, "chat").catch(() => {});
 
       if (parsedContext) {
         const newContext = { ...knownContext, ...parsedContext };
         setKnownContext(newContext);
-        if (user) {
-          const supabase = createClient();
-          if (supabase) updateKnownContext(supabase, user.id, newContext).catch(() => {});
-        }
-        const today = getLocalDate();
-        localStorage.removeItem(`huma-v2-sheet-${today}`);
+        storeSaveContext(user?.id ?? null, newContext).catch(() => {});
+        clearTodaySheetCache();
       }
 
       if (parsedBehaviors) {
@@ -282,11 +242,7 @@ export function useChat(): UseChatReturn {
         };
         const updatedAsps = [...aspirations, newAspiration];
         setAspirations(updatedAsps);
-        localStorage.setItem("huma-v2-aspirations", JSON.stringify(updatedAsps));
-        if (user) {
-          const supabase = createClient();
-          if (supabase) saveAspiration(supabase, user.id, newAspiration).catch(() => {});
-        }
+        storeSaveAspiration(user?.id ?? null, newAspiration).catch(() => {});
       }
 
       setMessages(prev => {

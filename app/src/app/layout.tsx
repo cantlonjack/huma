@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/react";
 import AuthProvider from "@/components/shared/AuthProvider";
 import QueryProvider from "@/components/shared/QueryProvider";
 import BottomNav from "@/components/shared/BottomNav";
+import SyncStatus from "@/components/shared/SyncStatus";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -63,6 +64,7 @@ export default function RootLayout({
           {children}
           </main>
           <BottomNav />
+          <SyncStatus />
         </AuthProvider>
         </QueryProvider>
         <Analytics />

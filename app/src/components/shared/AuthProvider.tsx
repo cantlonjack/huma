@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase";
+import { flushWal, getPendingCount } from "@/lib/db/store";
 import type { User, Session } from "@supabase/supabase-js";
 
 interface AuthContextType {
@@ -49,9 +50,26 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      // Flush pending WAL entries when user signs in
+      if (session?.user && getPendingCount() > 0) {
+        flushWal(session.user.id).catch(() => {});
+      }
     });
 
     return () => subscription.unsubscribe();
+  }, []);
+
+  // Flush WAL on app focus (network recovery)
+  const userRef = useRef(user);
+  userRef.current = user;
+  useEffect(() => {
+    const handleFocus = () => {
+      if (userRef.current && getPendingCount() > 0) {
+        flushWal(userRef.current.id).catch(() => {});
+      }
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, []);
 
   const signInWithMagicLink = async (email: string) => {

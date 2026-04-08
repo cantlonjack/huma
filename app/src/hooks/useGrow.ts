@@ -8,7 +8,13 @@ import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { displayName } from "@/lib/display-name";
 import { findDropOffDate, formatDropDate, getAspirationName } from "@/lib/grow-utils";
-import { savePattern, detectMergeCandidates, mergePatterns, updatePattern, deletePattern } from "@/lib/supabase-v2";
+import { detectMergeCandidates, mergePatterns } from "@/lib/supabase-v2";
+import {
+  storeSavePattern,
+  storeUpdatePattern,
+  storeDeletePattern,
+  clearTodaySheetCache,
+} from "@/lib/db/store";
 import {
   queryKeys,
   fetchPatterns,
@@ -187,20 +193,7 @@ export function useGrow(): UseGrowReturn {
       updatedAt: new Date().toISOString(),
     };
 
-    if (user) {
-      try {
-        const sb = createClient();
-        if (sb) await savePattern(sb, user.id, newPattern);
-      } catch { /* fall through to localStorage */ }
-    }
-
-    try {
-      const saved = localStorage.getItem("huma-v2-patterns");
-      const all = saved ? JSON.parse(saved) : [];
-      all.push(newPattern);
-      localStorage.setItem("huma-v2-patterns", JSON.stringify(all));
-    } catch { /* non-critical */ }
-
+    storeSavePattern(user?.id ?? null, newPattern).catch(() => {});
     setLocalPatterns(prev => [...(prev ?? patterns), newPattern]);
     setLocalEmerging(prev => (prev ?? emergingBehaviors).filter(b => b.behaviorKey !== behavior.behaviorKey));
   }, [user, patterns, emergingBehaviors]);
@@ -257,21 +250,7 @@ export function useGrow(): UseGrowReturn {
       return { ...p, ...updates, updatedAt: new Date().toISOString() };
     }));
 
-    if (user) {
-      try {
-        const sb = createClient();
-        if (sb) await updatePattern(sb, patternId, user.id, updates);
-      } catch { /* non-critical */ }
-    }
-
-    try {
-      const saved = localStorage.getItem("huma-v2-patterns");
-      if (saved) {
-        const all: Pattern[] = JSON.parse(saved);
-        const updated = all.map(p => p.id === patternId ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p);
-        localStorage.setItem("huma-v2-patterns", JSON.stringify(updated));
-      }
-    } catch { /* non-critical */ }
+    storeUpdatePattern(user?.id ?? null, patternId, updates).catch(() => {});
   }, [user, patterns]);
 
   const handlePatternArchive = useCallback(async (patternId: string) => {
@@ -282,25 +261,8 @@ export function useGrow(): UseGrowReturn {
     setLocalPatterns(prev => (prev ?? patterns).filter(p => p.id !== patternId));
     setArchiveToast({ id: patternId, name: pat.name });
 
-    if (user) {
-      try {
-        const sb = createClient();
-        if (sb) await deletePattern(sb, patternId, user.id);
-      } catch { /* non-critical */ }
-    }
-
-    try {
-      const saved = localStorage.getItem("huma-v2-patterns");
-      if (saved) {
-        const all: Pattern[] = JSON.parse(saved);
-        localStorage.setItem("huma-v2-patterns", JSON.stringify(all.filter(p => p.id !== patternId)));
-      }
-    } catch { /* non-critical */ }
-
-    try {
-      const today = new Date().toISOString().slice(0, 10);
-      localStorage.removeItem(`huma-v2-sheet-${today}`);
-    } catch { /* non-critical */ }
+    storeDeletePattern(user?.id ?? null, patternId).catch(() => {});
+    clearTodaySheetCache();
 
     setTimeout(() => {
       setArchiveToast(prev => prev?.id === patternId ? null : prev);
@@ -313,21 +275,7 @@ export function useGrow(): UseGrowReturn {
     archivedPatternRef.current = null;
 
     setLocalPatterns(prev => [...(prev ?? patterns), restored]);
-
-    if (user) {
-      try {
-        const sb = createClient();
-        if (sb) await savePattern(sb, user.id, restored);
-      } catch { /* non-critical */ }
-    }
-
-    try {
-      const saved = localStorage.getItem("huma-v2-patterns");
-      const all: Pattern[] = saved ? JSON.parse(saved) : [];
-      all.push(restored);
-      localStorage.setItem("huma-v2-patterns", JSON.stringify(all));
-    } catch { /* non-critical */ }
-
+    storeSavePattern(user?.id ?? null, restored).catch(() => {});
     setArchiveToast(null);
   }, [user, archiveToast, patterns]);
 
@@ -341,26 +289,8 @@ export function useGrow(): UseGrowReturn {
     setConfirmRemoveId(null);
 
     setLocalPatterns(prev => (prev ?? patterns).filter(p => p.id !== patternId));
-
-    if (user) {
-      try {
-        const sb = createClient();
-        if (sb) await deletePattern(sb, patternId, user.id);
-      } catch { /* non-critical */ }
-    }
-
-    try {
-      const saved = localStorage.getItem("huma-v2-patterns");
-      if (saved) {
-        const all: Pattern[] = JSON.parse(saved);
-        localStorage.setItem("huma-v2-patterns", JSON.stringify(all.filter(p => p.id !== patternId)));
-      }
-    } catch { /* non-critical */ }
-
-    try {
-      const today = new Date().toISOString().slice(0, 10);
-      localStorage.removeItem(`huma-v2-sheet-${today}`);
-    } catch { /* non-critical */ }
+    storeDeletePattern(user?.id ?? null, patternId).catch(() => {});
+    clearTodaySheetCache();
   }, [user, confirmRemoveId, patterns]);
 
   const confirmRemovePatternObj = confirmRemoveId ? patterns.find(p => p.id === confirmRemoveId) : null;

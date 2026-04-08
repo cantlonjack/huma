@@ -41,13 +41,9 @@ export async function withSupabase(
 /**
  * Clear the cached sheet for today. Used after any data mutation
  * that would change the production sheet.
+ * @deprecated Use clearTodaySheetCache from lib/db/store instead.
  */
-export function clearCachedSheet(): void {
-  try {
-    const today = new Date().toISOString().slice(0, 10);
-    localStorage.removeItem(`huma-v2-sheet-${today}`);
-  } catch { /* */ }
-}
+export { clearTodaySheetCache as clearCachedSheet } from "@/lib/db/store";
 
 /**
  * Update a single aspiration in localStorage by ID.

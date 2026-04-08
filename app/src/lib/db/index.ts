@@ -81,3 +81,28 @@ export { clearLocalChatMessages } from "./local-storage";
 export { clearAllLocalStorage } from "./local-storage";
 export { removeLocalPattern } from "./local-storage";
 export { migrateLocalStorageToSupabase } from "./local-storage";
+
+// ─── Unified Store ─────────────────────────────────────────────────────────
+export {
+  storeSaveAspiration,
+  storeLoadAspirations,
+  storeUpdateLocalAspirations,
+  storeSaveContext,
+  storeLoadContext,
+  storeReadLocalContext,
+  storeSaveChatMessage,
+  storeWriteLocalMessages,
+  storeLoadChatMessages,
+  storeSaveInsight,
+  storeLoadInsight,
+  storeSavePattern,
+  storeUpdatePattern,
+  storeDeletePattern,
+  storeLoadPatterns,
+  clearTodaySheetCache,
+  flushWal,
+  getPendingCount,
+  subscribeSyncStatus,
+  getSyncState,
+  type SyncState,
+} from "./store";
