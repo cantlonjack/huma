@@ -77,8 +77,8 @@ export async function POST(request: Request) {
     // Call Claude
     const anthropic = new Anthropic();
     const msg = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 400,
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 250,
       system: "You are HUMA's evening reflection processor. Return ONLY valid JSON, no markdown fences.",
       messages: [{ role: "user", content: prompt }],
     });

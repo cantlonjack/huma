@@ -56,7 +56,7 @@ Operator context:
 ${contextData}`;
 
       const res = await client.messages.create({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-haiku-4-5-20251001",
         max_tokens: 200,
         system: WHY_EVOLVE_SYSTEM,
         messages: [{ role: "user", content: prompt }],
@@ -75,7 +75,7 @@ ${contextData}`;
 
     if (compute === "both" || compute === "archetypes") {
       const archetypePromise = client.messages.create({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-haiku-4-5-20251001",
         max_tokens: 200,
         system: ARCHETYPE_SYSTEM,
         messages: [{ role: "user", content: contextData }],
@@ -112,7 +112,7 @@ ${contextData}`;
       }
     } else if (compute === "why") {
       const whyRes = await client.messages.create({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-4-20250514",  // Keep Sonnet for creative WHY synthesis
         max_tokens: 100,
         system: WHY_SYSTEM,
         messages: [{ role: "user", content: contextData }],
