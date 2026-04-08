@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { displayName } from "@/lib/display-name";
 import TabShell from "@/components/shared/TabShell";
 import TodaySkeleton from "@/components/today/TodaySkeleton";
@@ -15,9 +16,104 @@ import {
   StandaloneBehaviorRow,
   TransitionCard,
 } from "@/components/today/TodayCards";
-import { NudgeCard } from "@/components/today/NudgeCard";
-import { CapitalPulse } from "@/components/today/CapitalPulse";
 import { ValidationCard } from "@/components/today/ValidationCard";
+import type { Nudge, DimensionKey } from "@/types/v2";
+import { DIMENSION_LABELS } from "@/types/v2";
+
+// ── Inlined: NudgeCard ──
+const TYPE_LABELS: Record<string, string> = {
+  temporal: "TIMING",
+  pattern: "PATTERN",
+  opportunity: "CONNECTION",
+};
+
+const TYPE_BORDER_COLORS: Record<string, string> = {
+  temporal: "border-l-sage-500",
+  pattern: "border-l-sky-600",
+  opportunity: "border-l-amber-500",
+};
+
+const NudgeCard = memo(function NudgeCard({
+  nudge,
+  onDismiss,
+  onEngage,
+}: {
+  nudge: Nudge;
+  onDismiss: (id: string) => void;
+  onEngage: (nudge: Nudge) => void;
+}) {
+  const borderClass = TYPE_BORDER_COLORS[nudge.type] || "border-l-sage-400";
+  const label = TYPE_LABELS[nudge.type] || "NUDGE";
+
+  return (
+    <div
+      className={`animate-entrance-2 bg-sand-100 border-l-[3px] ${borderClass} rounded-r-xl px-4 py-3.5 mx-4 mb-2.5`}
+    >
+      <span className="block font-sans text-[10px] font-semibold tracking-[0.2em] text-sage-400 mb-1">
+        {label}
+      </span>
+      <p className="font-serif text-ink-700 text-[15px] leading-relaxed">
+        {nudge.text}
+      </p>
+      <div className="flex justify-between items-center mt-2">
+        <button
+          onClick={() => onEngage(nudge)}
+          className="font-sans font-medium text-sage-500 cursor-pointer hover:text-sage-700 transition-colors text-[13px] bg-transparent border-none py-2 min-h-[44px]"
+        >
+          Tell me more &rarr;
+        </button>
+        <button
+          onClick={() => onDismiss(nudge.id)}
+          className="font-sans text-sage-300 cursor-pointer hover:text-sage-500 transition-colors text-base bg-transparent border-none p-2 min-h-[44px] min-w-[44px] flex items-center justify-center leading-none"
+          aria-label="Dismiss nudge"
+        >
+          &times;
+        </button>
+      </div>
+    </div>
+  );
+});
+
+// ── Inlined: CapitalPulse ──
+const CapitalPulse = memo(function CapitalPulse({
+  movedDimensions,
+  dormantDimension,
+}: {
+  movedDimensions: DimensionKey[];
+  dormantDimension?: { key: DimensionKey; days: number } | null;
+  dormantDays?: number;
+}) {
+  if (movedDimensions.length === 0) return null;
+
+  const movedLabels = movedDimensions.map(d => DIMENSION_LABELS[d]);
+
+  let movedStr: string;
+  if (movedLabels.length === 1) {
+    movedStr = `Today moved ${movedLabels[0]}.`;
+  } else if (movedLabels.length === 2) {
+    movedStr = `Today moved ${movedLabels[0]} and ${movedLabels[1]}.`;
+  } else {
+    const last = movedLabels.pop();
+    movedStr = `Today moved ${movedLabels.join(", ")}, and ${last}.`;
+  }
+
+  let dormantStr = "";
+  if (dormantDimension) {
+    const label = DIMENSION_LABELS[dormantDimension.key];
+    dormantStr = ` ${label} hasn\u2019t been touched in ${dormantDimension.days} days.`;
+  }
+
+  return (
+    <div className="px-5 py-3 mx-4 mt-2 mb-1 bg-sand-100 rounded-lg">
+      <p className="font-sans text-[13px] text-sage-500 leading-normal">
+        <span>{movedStr}</span>
+        {dormantStr && (
+          <span className="text-ink-400">{dormantStr}</span>
+        )}
+      </p>
+    </div>
+  );
+});
 
 export default function TodayPage() {
   const t = useToday();

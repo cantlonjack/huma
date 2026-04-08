@@ -3,15 +3,95 @@
 import { useGrow } from "@/hooks/useGrow";
 import { displayName } from "@/lib/display-name";
 import TabShell from "@/components/shared/TabShell";
-import GrowSkeleton from "@/components/grow/GrowSkeleton";
 import EmergenceCard from "@/components/grow/EmergenceCard";
 import MonthlyReview from "@/components/grow/MonthlyReview";
 import ConfirmationSheet from "@/components/whole/ConfirmationSheet";
 import PatternSection from "@/components/grow/PatternSection";
-import EmptyState from "@/components/grow/EmptyState";
 import CompletionStats from "@/components/grow/CompletionStats";
 import BehaviorFrequency from "@/components/grow/BehaviorFrequency";
 import CorrelationCards from "@/components/grow/CorrelationCards";
+
+// ── Inlined: EmptyState ──
+function EmptyState({ onAddAspiration }: { onAddAspiration: () => void }) {
+  return (
+    <div className="py-12 px-6 text-center">
+      <div className="w-14 h-14 rounded-full bg-sage-100 mx-auto mb-4 flex items-center justify-center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path
+            d="M12 22V12M12 12C12 9 14 6 18 4C14 6 12 9 12 12ZM12 12C12 9 10 6 6 4C10 6 12 9 12 12Z"
+            stroke="var(--color-sage-500)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+      <p className="font-serif text-sage-700 text-xl leading-[1.3] mb-2">
+        Patterns emerge from your aspirations.
+      </p>
+      <p className="font-sans text-sage-400 text-sm leading-normal max-w-[280px] mx-auto mb-4">
+        As you check off behaviors on your production sheet, HUMA will surface the patterns that hold your days together.
+      </p>
+      <button
+        onClick={onAddAspiration}
+        className="font-sans cursor-pointer text-sm text-amber-600 bg-transparent border-none underline underline-offset-2 p-0"
+      >
+        Add an aspiration
+      </button>
+    </div>
+  );
+}
+
+// ── Inlined: GrowSkeleton ──
+function GrowSkeleton() {
+  return (
+    <div aria-hidden="true" role="presentation" style={{ padding: "0 16px" }}>
+      <div style={{ padding: "0 0 16px" }}>
+        <div className="skeleton" style={{ width: "120px", height: "14px", marginBottom: "8px" }} />
+        <div className="skeleton" style={{ width: "200px", height: "22px" }} />
+      </div>
+      {[0, 1].map((i) => (
+        <div
+          key={i}
+          style={{
+            background: "white",
+            border: "1px solid #DDD4C0",
+            borderRadius: "16px",
+            marginBottom: "16px",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              padding: "14px 16px 12px",
+              borderBottom: "1px solid #F0EBE3",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <div className="skeleton" style={{ width: "55%", height: "18px" }} />
+            <div className="skeleton" style={{ width: "60px", height: "20px", borderRadius: "10px" }} />
+          </div>
+          <div style={{ padding: "12px 16px" }}>
+            <div className="skeleton" style={{ width: "80px", height: "10px", marginBottom: "8px" }} />
+            <div className="skeleton" style={{ width: "70%", height: "14px", marginBottom: "12px" }} />
+            {[0, 1].map((j) => (
+              <div key={j} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                <div className="skeleton-circle" style={{ width: "6px", height: "6px", flexShrink: 0 }} />
+                <div className="skeleton" style={{ width: j === 0 ? "65%" : "50%", height: "13px" }} />
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: "12px 16px", borderTop: "1px solid #F0EBE3" }}>
+            <div className="skeleton" style={{ width: "100%", height: "6px", borderRadius: "3px" }} />
+            <div className="skeleton" style={{ width: "80px", height: "11px", marginTop: "6px" }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 const STAGE_HEADLINES: Record<string, string> = {
   early: "Getting started",

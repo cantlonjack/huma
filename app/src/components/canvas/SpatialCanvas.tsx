@@ -2,10 +2,44 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { CanvasData } from "@/engine/canvas-types";
+import type { PillLayout } from "@/lib/canvas-layout";
 import { computeLayout } from "@/lib/canvas-layout";
 import SpatialEssence from "./SpatialEssence";
-import SpatialRing from "./SpatialRing";
+import SpatialPill, { type PillVariant } from "./SpatialPill";
 import CapitalRadar from "./CapitalRadar";
+
+// ── Inlined: SpatialRing ──
+function SpatialRing({
+  pills,
+  variant,
+  baseDelay = 0,
+  stagger = 50,
+  animate = true,
+}: {
+  pills: PillLayout[];
+  variant: PillVariant;
+  baseDelay?: number;
+  stagger?: number;
+  animate?: boolean;
+}) {
+  if (pills.length === 0) return null;
+
+  return (
+    <g>
+      {pills.map((pill) => (
+        <SpatialPill
+          key={`${variant}-${pill.index}`}
+          x={pill.position.x}
+          y={pill.position.y}
+          text={pill.text}
+          variant={variant}
+          delay={baseDelay + pill.index * stagger}
+          animate={animate}
+        />
+      ))}
+    </g>
+  );
+}
 
 interface SpatialCanvasProps {
   data: CanvasData;
