@@ -1,10 +1,108 @@
 "use client";
 
+import { useState } from "react";
 import { useStart } from "@/hooks/useStart";
 import AuthModal from "@/components/shared/AuthModal";
 import ArchetypeSelectionScreen from "@/components/onboarding/ArchetypeSelectionScreen";
 import MessageBubble from "@/components/onboarding/MessageBubble";
 import PalettePanel from "@/components/onboarding/PalettePanel";
+import type { StartMessage } from "@/hooks/useStart";
+import type { Behavior } from "@/types/v2";
+
+// ─── Collapsible Conversation Thread ────────────────────────────────────────
+// Shows only the last 4 messages (2 exchanges) by default.
+// Older messages collapse into a tappable "N earlier messages" pill.
+// Keeps the conversation from feeling like an endless thread.
+
+const VISIBLE_TAIL = 4; // last 2 exchanges (user + huma each)
+
+function ConversationThread({
+  scrollRef,
+  messages,
+  streaming,
+  onOptionTap,
+  onConfirmBehaviors,
+  hasMessages,
+}: {
+  scrollRef: React.RefObject<HTMLDivElement | null>;
+  messages: StartMessage[];
+  streaming: boolean;
+  onOptionTap: (option: string) => void;
+  onConfirmBehaviors: (behaviors: Behavior[]) => void;
+  hasMessages: boolean;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  // Filter out context notes for counting real messages
+  const realMessages = messages.filter((m) => !m.contextNote);
+  const hiddenCount = expanded ? 0 : Math.max(0, realMessages.length - VISIBLE_TAIL);
+  const visibleMessages = expanded
+    ? messages
+    : hiddenCount > 0
+      ? messages.filter((m) => {
+          if (m.contextNote) return true; // always show context notes
+          const idx = realMessages.indexOf(m);
+          return idx >= realMessages.length - VISIBLE_TAIL;
+        })
+      : messages;
+
+  return (
+    <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 pb-4">
+      {!hasMessages && (
+        <div className="flex flex-col items-center justify-center h-full pb-16">
+          <h2 className="font-serif text-2xl text-earth-700">
+            What&apos;s going on?
+          </h2>
+        </div>
+      )}
+
+      {/* Collapsed earlier messages pill */}
+      {hiddenCount > 0 && (
+        <button
+          onClick={() => setExpanded(true)}
+          className="mx-auto mb-4 flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-sand-100 hover:bg-sand-200 transition-colors duration-200 cursor-pointer"
+        >
+          <span className="font-sans text-xs text-earth-400">
+            {hiddenCount} earlier {hiddenCount === 1 ? "message" : "messages"}
+          </span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-earth-300">
+            <polyline points="18 15 12 9 6 15" />
+          </svg>
+        </button>
+      )}
+
+      {visibleMessages.map((msg) =>
+        msg.contextNote ? (
+          <div
+            key={msg.id}
+            className="mb-3 ml-2 font-sans text-[0.82rem] text-sage-600 italic animate-fade-in"
+          >
+            {msg.content}
+          </div>
+        ) : (
+          <MessageBubble
+            key={msg.id}
+            message={msg}
+            onOptionTap={onOptionTap}
+            onConfirmBehaviors={onConfirmBehaviors}
+          />
+        )
+      )}
+
+      {streaming && messages[messages.length - 1]?.content === "" && (
+        <div className="flex justify-start mb-4">
+          <div className="bg-white rounded-2xl px-5 py-3.5">
+            <div className="flex gap-1.5">
+              <span className="w-2 h-2 bg-earth-300 rounded-full animate-pulse" />
+              <span className="w-2 h-2 bg-earth-300 rounded-full animate-pulse [animation-delay:150ms]" />
+              <span className="w-2 h-2 bg-earth-300 rounded-full animate-pulse [animation-delay:300ms]" />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function StartPage() {
   const {
@@ -93,45 +191,14 @@ export default function StartPage() {
         </div>
 
         {/* Messages or Prompt */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 pb-4">
-          {!hasMessages && (
-            <div className="flex flex-col items-center justify-center h-full pb-16">
-              <h2 className="font-serif text-2xl text-earth-700">
-                What&apos;s going on?
-              </h2>
-            </div>
-          )}
-
-          {messages.map((msg) =>
-            msg.contextNote ? (
-              <div
-                key={msg.id}
-                className="mb-3 ml-2 font-sans text-[0.82rem] text-sage-600 italic animate-fade-in"
-              >
-                {msg.content}
-              </div>
-            ) : (
-              <MessageBubble
-                key={msg.id}
-                message={msg}
-                onOptionTap={handleOptionTap}
-                onConfirmBehaviors={handleConfirmBehaviors}
-              />
-            )
-          )}
-
-          {streaming && messages[messages.length - 1]?.content === "" && (
-            <div className="flex justify-start mb-4">
-              <div className="bg-white rounded-2xl px-5 py-3.5">
-                <div className="flex gap-1.5">
-                  <span className="w-2 h-2 bg-earth-300 rounded-full animate-pulse" />
-                  <span className="w-2 h-2 bg-earth-300 rounded-full animate-pulse [animation-delay:150ms]" />
-                  <span className="w-2 h-2 bg-earth-300 rounded-full animate-pulse [animation-delay:300ms]" />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        <ConversationThread
+          scrollRef={scrollRef}
+          messages={messages}
+          streaming={streaming}
+          onOptionTap={handleOptionTap}
+          onConfirmBehaviors={handleConfirmBehaviors}
+          hasMessages={hasMessages}
+        />
 
         {/* Input */}
         <div className="px-6 pb-6 pt-2 border-t border-sand-200">
