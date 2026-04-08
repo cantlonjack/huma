@@ -9,6 +9,7 @@ import { getEffectiveDimensions } from "@/types/v2";
 export interface PulseData {
   movedDimensions: DimensionKey[];
   dormantDimension: { key: DimensionKey; days: number } | null;
+  dormantDimensions: DimensionKey[];
 }
 
 /**
@@ -56,8 +57,9 @@ export function computeCapitalPulse(
 
   const movedDimensions = Array.from(movedSet);
 
-  // Find most dormant dimension (5+ days without activity)
+  // Find dormant dimensions (5+ days without activity)
   let dormantDimension: PulseData["dormantDimension"] = null;
+  const dormantDimensions: DimensionKey[] = [];
   if (recentDimensionDays) {
     const allDimensions: DimensionKey[] = [
       "body", "people", "money", "home", "growth", "joy", "purpose", "identity",
@@ -67,12 +69,15 @@ export function computeCapitalPulse(
     for (const dim of allDimensions) {
       if (movedSet.has(dim)) continue; // Skip if moved today
       const days = recentDimensionDays[dim] ?? 999;
-      if (days >= 5 && days > maxDays) {
-        maxDays = days;
-        dormantDimension = { key: dim, days };
+      if (days >= 5) {
+        dormantDimensions.push(dim);
+        if (days > maxDays) {
+          maxDays = days;
+          dormantDimension = { key: dim, days };
+        }
       }
     }
   }
 
-  return { movedDimensions, dormantDimension };
+  return { movedDimensions, dormantDimension, dormantDimensions };
 }

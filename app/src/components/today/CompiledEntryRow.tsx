@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import type { SheetEntry } from "@/types/v2";
-import { DIMENSION_COLORS } from "@/types/v2";
 
 export function CompiledEntryRow({
   entry,
@@ -62,20 +61,11 @@ export function CompiledEntryRow({
           </span>
         )}
 
-        {/* Dimension dots */}
-        {entry.dimensions && entry.dimensions.length > 0 && (
-          <div className="flex gap-[5px] mt-2">
-            {entry.dimensions.map(dim => (
-              <div
-                key={dim}
-                className="size-1.5 rounded-full transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
-                style={{
-                  background: DIMENSION_COLORS[dim as keyof typeof DIMENSION_COLORS] || "var(--color-sage-400)",
-                  opacity: isChecked ? 0.35 : 1,
-                }}
-              />
-            ))}
-          </div>
+        {/* Dimension tags */}
+        {entry.dimensions && entry.dimensions.length > 0 && !isChecked && (
+          <p className="font-sans text-[11px] text-sand-400 mt-1.5 leading-none tracking-[0.01em]">
+            {entry.dimensions.join(" · ")}
+          </p>
         )}
       </div>
     </div>

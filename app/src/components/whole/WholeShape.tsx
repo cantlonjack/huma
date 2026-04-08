@@ -10,6 +10,7 @@ import {
   type SimulationNodeDatum,
   type SimulationLinkDatum,
 } from "d3-force";
+import { DIMENSION_COLORS } from "@/types/v2";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -365,7 +366,8 @@ export default function WholeShape({
         return (
           <g
             key={node.id}
-            onClick={() =>
+            onClick={() => {
+              const nodeData = nodes.find(n => n.id === node.id);
               onNodeTap({
                 id: node.id,
                 label: node.label,
@@ -373,8 +375,9 @@ export default function WholeShape({
                 status: node.status,
                 r: node.r,
                 type: node.type,
-              })
-            }
+                dimensions: nodeData?.dimensions,
+              });
+            }}
             className="cursor-pointer"
           >
             <circle
@@ -398,6 +401,36 @@ export default function WholeShape({
             >
               {truncateLabel(node.label, displayR)}
             </text>
+
+            {/* Dimension dots — shown on aspiration nodes */}
+            {node.type === "aspiration" && (() => {
+              const nodeData = nodes.find(n => n.id === node.id);
+              const dims = nodeData?.dimensions || [];
+              if (dims.length === 0) return null;
+              // Arrange dots in a small arc below the node
+              const dotR = 2;
+              const arcR = displayR + 5;
+              const spreadAngle = Math.min(dims.length * 18, 90); // degrees
+              const startAngle = 90 - spreadAngle / 2; // centered below
+              return dims.map((dim, di) => {
+                const angle = dims.length === 1
+                  ? 90 // center below
+                  : startAngle + (spreadAngle / (dims.length - 1)) * di;
+                const rad = (angle * Math.PI) / 180;
+                const dx = Math.cos(rad) * arcR;
+                const dy = Math.sin(rad) * arcR;
+                return (
+                  <circle
+                    key={dim}
+                    cx={(node.x ?? 0) + dx}
+                    cy={(node.y ?? 0) + dy}
+                    r={dotR}
+                    fill={DIMENSION_COLORS[dim as keyof typeof DIMENSION_COLORS] || "#8BAF8E"}
+                    className="pointer-events-none"
+                  />
+                );
+              });
+            })()}
 
             {/* Manage mode × badge — shown on aspiration, context, principle nodes */}
             {manageMode && !isIdentity && (

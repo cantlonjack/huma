@@ -74,42 +74,65 @@ const NudgeCard = memo(function NudgeCard({
   );
 });
 
-// ── Inlined: CapitalPulse ──
+// ── Inlined: CapitalPulse (8-cell dimension grid) ──
+const ALL_DIMENSIONS: DimensionKey[] = [
+  "body", "people", "money", "home", "growth", "joy", "purpose", "identity",
+];
+
 const CapitalPulse = memo(function CapitalPulse({
   movedDimensions,
   dormantDimension,
+  dormantDimensions = [],
 }: {
   movedDimensions: DimensionKey[];
   dormantDimension?: { key: DimensionKey; days: number } | null;
-  dormantDays?: number;
+  dormantDimensions?: DimensionKey[];
 }) {
-  if (movedDimensions.length === 0) return null;
+  const movedSet = new Set(movedDimensions);
+  const dormantSet = new Set(dormantDimensions);
+  const movedCount = movedDimensions.length;
 
-  const movedLabels = movedDimensions.map(d => DIMENSION_LABELS[d]);
-
-  let movedStr: string;
-  if (movedLabels.length === 1) {
-    movedStr = `Today moved ${movedLabels[0]}.`;
-  } else if (movedLabels.length === 2) {
-    movedStr = `Today moved ${movedLabels[0]} and ${movedLabels[1]}.`;
-  } else {
-    const last = movedLabels.pop();
-    movedStr = `Today moved ${movedLabels.join(", ")}, and ${last}.`;
-  }
-
-  let dormantStr = "";
+  let summaryStr = `${movedCount} of ${ALL_DIMENSIONS.length} dimensions moved today.`;
   if (dormantDimension) {
-    const label = DIMENSION_LABELS[dormantDimension.key];
-    dormantStr = ` ${label} hasn\u2019t been touched in ${dormantDimension.days} days.`;
+    summaryStr += ` ${DIMENSION_LABELS[dormantDimension.key]} hasn\u2019t been touched in ${dormantDimension.days} days.`;
   }
 
   return (
-    <div className="px-5 py-3 mx-4 mt-2 mb-1 bg-sand-100 rounded-lg">
-      <p className="font-sans text-[13px] text-sage-500 leading-normal">
-        <span>{movedStr}</span>
-        {dormantStr && (
-          <span className="text-ink-400">{dormantStr}</span>
-        )}
+    <div className="mx-4 mt-3 mb-1">
+      {/* 4×2 grid */}
+      <div className="grid grid-cols-4 gap-1.5">
+        {ALL_DIMENSIONS.map(dim => {
+          const moved = movedSet.has(dim);
+          const dormant = dormantSet.has(dim);
+          return (
+            <div
+              key={dim}
+              className={`rounded-lg py-2.5 px-1 text-center transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                moved
+                  ? "bg-amber-600"
+                  : dormant
+                    ? "bg-rose-100 border border-rose-600/20"
+                    : "bg-sand-200"
+              }`}
+            >
+              <span
+                className={`font-sans text-[10px] font-medium tracking-[0.05em] ${
+                  moved
+                    ? "text-white"
+                    : dormant
+                      ? "text-rose-600"
+                      : "text-ink-300"
+                }`}
+              >
+                {DIMENSION_LABELS[dim]}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      {/* Summary sentence */}
+      <p className="font-sans text-[12px] text-ink-400 mt-2 leading-normal">
+        {summaryStr}
       </p>
     </div>
   );
@@ -318,10 +341,11 @@ export default function TodayPage() {
             ) : null}
 
             {/* Capital Pulse — shows after check-offs */}
-            {t.capitalPulse && t.capitalPulse.movedDimensions.length > 0 && (
+            {t.capitalPulse && (
               <CapitalPulse
                 movedDimensions={t.capitalPulse.movedDimensions}
                 dormantDimension={t.capitalPulse.dormantDimension}
+                dormantDimensions={t.capitalPulse.dormantDimensions}
               />
             )}
 
