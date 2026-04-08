@@ -30,21 +30,21 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://huma.earth"),
-  title: "HUMA — Your life, one connected system",
+  title: "HUMA — Life Infrastructure",
   description:
-    "Tell HUMA what's going on. Get a daily production sheet. See the connections you couldn't.",
+    "See the whole. Find the leverage. Practice what works.",
   manifest: "/manifest.json",
   openGraph: {
-    title: "HUMA — Your life, one connected system",
+    title: "HUMA — Life Infrastructure",
     description:
-      "Tell HUMA what's going on. Get a daily production sheet. See the connections you couldn't.",
+      "See the whole. Find the leverage. Practice what works.",
     images: ["/api/og"],
   },
   twitter: {
     card: "summary_large_image",
-    title: "HUMA — Your life, one connected system",
+    title: "HUMA — Life Infrastructure",
     description:
-      "Tell HUMA what's going on. Get a daily production sheet. See the connections you couldn't.",
+      "See the whole. Find the leverage. Practice what works.",
     images: ["/api/og"],
   },
 };

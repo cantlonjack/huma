@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/shared/AuthProvider";
-import LandingView from "@/components/views/LandingView";
+import LandingPage from "@/components/landing/LandingPage";
 
 export default function Home() {
   const router = useRouter();
@@ -68,5 +68,5 @@ export default function Home() {
   // Show landing page for unauthenticated users without aspirations
   if (!checked) return null;
 
-  return <LandingView onStart={() => router.push("/start")} />;
+  return <LandingPage />;
 }
