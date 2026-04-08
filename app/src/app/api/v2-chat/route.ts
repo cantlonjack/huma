@@ -4,7 +4,7 @@ import { rateLimited, serviceUnavailable, internalError } from "@/lib/api-error"
 import { v2ChatSchema } from "@/lib/schemas";
 import { parseBody } from "@/lib/schemas/parse";
 import type { HumaContext } from "@/types/context";
-import { buildSystemPrompt } from "@/lib/services/prompt-builder";
+import { buildStaticPrompt, buildDynamicPrompt, detectMode } from "@/lib/services/prompt-builder";
 
 export async function POST(request: Request) {
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -33,15 +33,42 @@ export async function POST(request: Request) {
       parsedHumaContext = humaContext as unknown as HumaContext;
     }
 
-    const systemPrompt = buildSystemPrompt(
-      knownContext, aspirations, userTexts, userMessageCount,
-      sourceTab, tabContext, dayCount, chatMode, parsedHumaContext,
-    );
+    const mode = detectMode(userTexts, chatMode, aspirations);
+
+    const staticPrompt = buildStaticPrompt(mode);
+    const dynamicPrompt = buildDynamicPrompt({
+      mode,
+      knownContext,
+      aspirations,
+      conversationTexts: userTexts,
+      userMessageCount,
+      sourceTab,
+      tabContext,
+      dayCount,
+      chatMode,
+      humaContext: parsedHumaContext,
+    });
+
+    // Progressive model selection: Haiku for first 2 exchanges (simple Q&A),
+    // Sonnet for decomposition and complex reasoning
+    const model = userMessageCount <= 2
+      ? "claude-haiku-4-5-20251001"
+      : (process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514");
 
     const stream = anthropic.messages.stream({
-      model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514",
+      model,
       max_tokens: 2048,
-      system: systemPrompt,
+      system: [
+        {
+          type: "text" as const,
+          text: staticPrompt,
+          cache_control: { type: "ephemeral" as const },
+        },
+        {
+          type: "text" as const,
+          text: dynamicPrompt,
+        },
+      ],
       messages: messages.map((m) => ({
         role: (m.role === "user" ? "user" : "assistant") as "user" | "assistant",
         content: m.content,

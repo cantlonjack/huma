@@ -256,10 +256,18 @@ Meal plans should respect budget. Purchases should reference actual amounts.
   try {
     const anthropic = new Anthropic();
 
+    const SHEET_SYSTEM_STATIC = "You compile daily production sheets — specific actions, not generic behaviors. Return ONLY valid JSON. No markdown, no explanation. Voice: fence-post neighbor — direct, specific, warm without soft. Every headline names what to do today, not what the behavior is.";
+
     const response = await anthropic.messages.create({
       model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514",
       max_tokens: 2048,
-      system: "You compile daily production sheets — specific actions, not generic behaviors. Return ONLY valid JSON. No markdown, no explanation. Voice: fence-post neighbor — direct, specific, warm without soft. Every headline names what to do today, not what the behavior is.",
+      system: [
+        {
+          type: "text" as const,
+          text: SHEET_SYSTEM_STATIC,
+          cache_control: { type: "ephemeral" as const },
+        },
+      ],
       messages: [{ role: "user", content: prompt }],
     });
 

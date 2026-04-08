@@ -543,19 +543,65 @@ export function detectMode(
   return "open";
 }
 
-// ─── Build System Prompt ──────────────────────────────────────────────────
+// ─── Chat Mode Type ──────────────────────────────────────────────────────
+export type ChatMode = "open" | "focus" | "decision";
 
-export function buildSystemPrompt(
-  knownContext: Record<string, unknown>,
-  aspirations: Array<{ rawText: string; clarifiedText: string; status: string }>,
-  conversationTexts: string[],
-  userMessageCount: number,
-  sourceTab?: string,
-  tabContext?: Record<string, unknown>,
-  dayCount?: number,
-  chatMode?: string,
-  humaContext?: HumaContext,
-): string {
+// ─── Build Prompt Options ────────────────────────────────────────────────
+export interface BuildPromptOptions {
+  mode: ChatMode;
+  knownContext: Record<string, unknown>;
+  aspirations: Array<{ rawText: string; clarifiedText: string; status: string }>;
+  conversationTexts: string[];
+  userMessageCount: number;
+  sourceTab?: string;
+  tabContext?: Record<string, unknown>;
+  dayCount?: number;
+  chatMode?: string;
+  humaContext?: HumaContext;
+}
+
+// ─── Static Prompt ───────────────────────────────────────────────────────
+// Contains BASE_IDENTITY + mode-specific instructions + voice rules + marker
+// protocol. Identical across ALL users and ALL requests for the same mode.
+// Perfect for Anthropic prompt caching (90% cost reduction on cache hits).
+
+export function buildStaticPrompt(mode: ChatMode): string {
+  let phasePrompt: string;
+  switch (mode) {
+    case "open":
+      phasePrompt = OPEN_MODE_PROMPT;
+      break;
+    case "decision":
+      phasePrompt = DECISION_MODE_PROMPT;
+      break;
+    case "focus":
+      phasePrompt = FOCUS_MODE_PROMPT;
+      break;
+  }
+
+  return `${BASE_IDENTITY}
+
+${phasePrompt}`;
+}
+
+// ─── Dynamic Prompt ──────────────────────────────────────────────────────
+// Contains operator context, aspirations, behavioral history, day count,
+// and message-count rules. Changes per user and per session.
+
+export function buildDynamicPrompt(options: Omit<BuildPromptOptions, 'mode'> & { mode?: ChatMode }): string {
+  const {
+    knownContext,
+    aspirations,
+    conversationTexts,
+    userMessageCount,
+    sourceTab,
+    tabContext,
+    dayCount,
+    chatMode,
+    humaContext,
+    mode: explicitMode,
+  } = options;
+
   // Use HumaContext if available, fall back to old format
   const ctx = humaContext || createEmptyContext();
   const hasStructuredContext = !!(humaContext && humaContext._version);
@@ -584,11 +630,11 @@ export function buildSystemPrompt(
   const isAdjustment = lastUserMessage.startsWith("close") || lastUserMessage === "close, but..." || lastUserMessage === "close, but";
 
   // Detect conversation mode
-  const mode = detectMode(conversationTexts, chatMode, aspirations);
+  const mode = explicitMode ?? detectMode(conversationTexts, chatMode, aspirations);
 
-  // Build the phase-appropriate prompt
-  let phasePrompt: string;
   let messageCountRule: string;
+  // Track whether we need to override the static phase prompt
+  let phaseOverride = "";
 
   // ─── Reorganization mode ──────────────────────────────────────────────
   const isReorganization = !!(tabContext?.transition as Record<string, unknown> | undefined)?.decliningAspirations;
@@ -615,7 +661,7 @@ When they share the outcome, extract it: [[CONTEXT:{"decisions":[{"id":"${pendin
   }
 
   if (isReorganization) {
-    phasePrompt = REORGANIZATION_PROMPT;
+    phaseOverride = `\n\n${REORGANIZATION_PROMPT}`;
 
     if (userMessageCount >= 4 && isConfirmation) {
       messageCountRule = `\n\nThe operator confirmed the reorganization. Output [[REORGANIZATION:{...}]] now with release/protect/revise decisions. Also use [[CONTEXT:...]] to capture any new context.`;
@@ -627,9 +673,6 @@ When they share the outcome, extract it: [[CONTEXT:{"decisions":[{"id":"${pendin
       messageCountRule = `\n\nThis is message #${userMessageCount}. Continue the reorganization conversation. Ask ONE follow-up question about the shift, building on what they've said. When you have enough context to suggest release/protect/revise, do so.`;
     }
   } else if (mode === "decision") {
-    // ─── Decision mode: holistic decision support ───────────────────────
-    phasePrompt = DECISION_MODE_PROMPT;
-
     if (userMessageCount === 1) {
       messageCountRule = `\n\nThis is message #1. They're bringing a decision to you.
 Acknowledge what they're considering in one sentence. Then surface the SINGLE most
@@ -652,9 +695,6 @@ consideration. Ask ONE question that helps them see a connection they might be m
 Extract any new context: [[CONTEXT:{...}]]`;
     }
   } else if (mode === "open") {
-    // ─── Open mode: context building conversation ────────────────────────
-    phasePrompt = OPEN_MODE_PROMPT;
-
     if (userMessageCount === 1) {
       messageCountRule = `\n\nThis is message #1. Receive what they said warmly in one sentence.
 Then ask ONE conversational question about their situation. Pick the most
@@ -691,23 +731,21 @@ specific to this person.`;
     }
 
     if (isConfirmation && userMessageCount >= (((dayCount && dayCount >= 30) ? 4 : 3))) {
-      phasePrompt = DECOMPOSITION_PHASE_PROMPT;
+      phaseOverride = `\n\n${DECOMPOSITION_PHASE_PROMPT}`;
       messageCountRule = `\n\nCRITICAL: The operator just confirmed with "${lastUserMessage}". DECOMPOSE NOW.
 Output [[ASPIRATION_NAME:...]], [[DECOMPOSITION:{...}]], and [[ACTIONS:[...]]].
 Do NOT ask another question. Do NOT output [[OPTIONS:[...]]].`;
     } else if (isAdjustment) {
-      phasePrompt = FOCUS_MODE_PROMPT;
       messageCountRule = `\n\nThe operator said their picture is close but not quite right. Ask ONE specific
 question to refine, with tappable options. Then reflect back the updated picture.`;
     } else if (userMessageCount >= 7) {
-      phasePrompt = DECOMPOSITION_PHASE_PROMPT;
+      phaseOverride = `\n\n${DECOMPOSITION_PHASE_PROMPT}`;
       messageCountRule = `\n\nCRITICAL: This is user message #${userMessageCount}. You have gathered enough context.
 You MUST reflect back what you heard in 2-3 sentences (including method intelligence
 if a better approach exists) and then decompose.
 Output [[ASPIRATION_NAME:...]], [[DECOMPOSITION:{...}]], and [[ACTIONS:[...]]].
 Do NOT ask another question.`;
     } else if (userMessageCount >= 4) {
-      phasePrompt = FOCUS_MODE_PROMPT;
       messageCountRule = `\n\nThis is user message #${userMessageCount}. You likely have enough context now.
 If you have sufficient information about scale, resources, timeline, and constraints,
 REFLECT BACK what you heard in 2-3 specific sentences and ask "That the right picture?"
@@ -715,13 +753,11 @@ with [[OPTIONS:["That's it","Close, but...","Let me rethink"]]].
 ALSO: evaluate method intelligence during this reflect-back.
 If a critical piece is still missing, ask ONE more question.${readinessNote}`;
     } else if (userMessageCount >= 2) {
-      phasePrompt = FOCUS_MODE_PROMPT;
       messageCountRule = `\n\nThis is user message #${userMessageCount}. Continue gathering context for this aspiration.
 Ask ONE specific question with tappable [[OPTIONS:[...]]]. Build on what they've told you
 AND what you already know from the context model.
 You need: scale, resources, timeline, and constraints before decomposing.${readinessNote}`;
     } else {
-      phasePrompt = FOCUS_MODE_PROMPT;
       messageCountRule = `\n\nThis is user message #1. Acknowledge what they said in one sentence.
 Check the context model — you may already know a lot about their situation.
 If you have what you need for a specific decomposition, say so and offer to
@@ -763,9 +799,7 @@ relevant — look for connections and dimension overlap.`
     ? `\n\nCONTEXT COMPLETENESS:\n${contextHint}`
     : "";
 
-  return `${BASE_IDENTITY}
-
-${phasePrompt}
+  return `${phaseOverride}
 
 WHAT YOU KNOW ABOUT THIS PERSON:
 ${contextProse}${contextHintBlock}
@@ -775,4 +809,33 @@ ${aspirationStr}${templateBlock}
 
 TODAY'S DATE: ${today}
 ${messageCountRule}${tabContextBlock}${behavioralContextBlock}${depthNote}${newAspirationBlock}${decisionFollowUpBlock}`;
+}
+
+// ─── Build System Prompt (backward compatible) ───────────────────────────
+
+export function buildSystemPrompt(
+  knownContext: Record<string, unknown>,
+  aspirations: Array<{ rawText: string; clarifiedText: string; status: string }>,
+  conversationTexts: string[],
+  userMessageCount: number,
+  sourceTab?: string,
+  tabContext?: Record<string, unknown>,
+  dayCount?: number,
+  chatMode?: string,
+  humaContext?: HumaContext,
+): string {
+  const mode = detectMode(conversationTexts, chatMode, aspirations);
+
+  return buildStaticPrompt(mode) + "\n\n" + buildDynamicPrompt({
+    mode,
+    knownContext,
+    aspirations,
+    conversationTexts,
+    userMessageCount,
+    sourceTab,
+    tabContext,
+    dayCount,
+    chatMode,
+    humaContext,
+  });
 }
