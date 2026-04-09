@@ -224,7 +224,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function buildSummary(ctx: KnownContext): string {
   const parts: string[] = [];
-  const peopleCount = ctx.people?.filter((p) => p.name).length || 0;
+  const peopleCount = Array.isArray(ctx.people) ? ctx.people.filter((p) => p.name).length : 0;
   if (peopleCount > 0) parts.push(`${peopleCount} ${peopleCount === 1 ? "person" : "people"}`);
   const resourceCount = ctx.resources?.filter(Boolean).length || 0;
   if (resourceCount > 0) parts.push(`${resourceCount} ${resourceCount === 1 ? "resource" : "resources"}`);
@@ -253,7 +253,7 @@ export default function ContextPortrait({ context, onSave, manageMode, onRemoveF
   // Check if there's any content to show
   const hasPlace = !!context.place?.name;
   const hasWork = !!context.work?.title;
-  const hasPeople = (context.people?.filter((p) => p.name).length || 0) > 0;
+  const hasPeople = (Array.isArray(context.people) ? context.people.filter((p) => p.name).length : 0) > 0;
   const hasStage = !!context.stage?.label;
   const hasHealth = !!context.health?.detail;
   const hasTime = !!context.time?.detail;

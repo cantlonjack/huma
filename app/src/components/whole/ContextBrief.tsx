@@ -25,8 +25,9 @@ interface DimensionSection {
   isSparse: boolean;
 }
 
-function buildPeopleProse(people?: KnownContextPerson[]): string | null {
-  const named = people?.filter((p) => p.name) || [];
+function buildPeopleProse(people?: KnownContextPerson[] | unknown): string | null {
+  if (!Array.isArray(people)) return typeof people === "string" ? people : null;
+  const named = people.filter((p) => p.name) || [];
   if (named.length === 0) return null;
 
   if (named.length === 1) {
@@ -162,7 +163,7 @@ export default function ContextBrief({
         label: DIMENSION_LABELS.people,
         prose: buildPeopleProse(context.people),
         aspirationNames: aspirationsForDim("people"),
-        isSparse: !context.people?.some((p) => p.name),
+        isSparse: !Array.isArray(context.people) || !context.people.some((p) => p.name),
       },
       {
         key: "money",

@@ -29,8 +29,8 @@ function computeDimensionScores(
 
   // Context fields contribute score
   if (context.health?.detail) scores.body += 0.4;
-  if (context.people?.some((p) => p.name)) {
-    const count = context.people!.filter((p) => p.name).length;
+  if (Array.isArray(context.people) && context.people.some((p) => p.name)) {
+    const count = context.people.filter((p) => p.name).length;
     scores.people += Math.min(count * 0.2, 0.6);
   }
   if (context.financial?.situation || context.financial?.income) scores.money += 0.4;

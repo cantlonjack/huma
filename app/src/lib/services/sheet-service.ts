@@ -60,7 +60,7 @@ export function formatKnownContext(ctx: KnownContext): string {
   if (ctx.work?.title) {
     lines.push(`Work: ${ctx.work.title}${ctx.work.detail ? ` — ${ctx.work.detail}` : ""}`);
   }
-  if (ctx.people && ctx.people.length > 0) {
+  if (Array.isArray(ctx.people) && ctx.people.length > 0) {
     const peopleStr = ctx.people.map(p => `${p.name} (${p.role})`).join(", ");
     lines.push(`People: ${peopleStr}`);
   }
