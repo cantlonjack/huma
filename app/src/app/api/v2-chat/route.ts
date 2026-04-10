@@ -20,7 +20,7 @@ export async function POST(request: Request) {
 
   const parsed = await parseBody(request, v2ChatSchema);
   if (parsed.error) return parsed.error;
-  const { messages, knownContext, aspirations, sourceTab, tabContext, dayCount, chatMode, humaContext } = parsed.data;
+  const { messages, knownContext, aspirations, sourceTab, tabContext, dayCount, chatMode, humaContext, isFirstConversation, exchangeCount } = parsed.data;
 
   try {
     const anthropic = new Anthropic();
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
 
     const mode = detectMode(userTexts, chatMode, aspirations);
 
-    const staticPrompt = buildStaticPrompt(mode);
+    const staticPrompt = buildStaticPrompt(mode, isFirstConversation);
     const dynamicPrompt = buildDynamicPrompt({
       mode,
       knownContext,
@@ -47,6 +47,8 @@ export async function POST(request: Request) {
       dayCount,
       chatMode,
       humaContext: parsedHumaContext,
+      isFirstConversation,
+      exchangeCount,
     });
 
     // Progressive model selection: Haiku for first 2 exchanges (simple Q&A),

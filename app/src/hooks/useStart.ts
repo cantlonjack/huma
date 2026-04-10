@@ -72,6 +72,8 @@ export interface UseStartReturn {
   knownDimensionLabels: string[];      // all dimensions with data so far
   contextPercentage: number;           // 0-100, overall completeness
   humaContext: HumaContext;            // full structured context for profile display
+  exchangeCount: number;               // number of user messages sent
+  isFirstConversation: boolean;        // true if no prior context exists
 
   // Refs
   scrollRef: React.RefObject<HTMLDivElement | null>;
@@ -256,6 +258,8 @@ export function useStart(): UseStartReturn {
           messages: newMessages.filter(m => !(m as StartMessage).contextNote).map(m => ({ role: m.role === "huma" ? "assistant" : m.role, content: m.content })),
           knownContext,
           aspirations: [],
+          isFirstConversation,
+          exchangeCount: newMessages.filter(m => m.role === "user").length,
         }),
       });
 
@@ -605,6 +609,21 @@ export function useStart(): UseStartReturn {
 
   const hasMessages = messages.length > 0;
 
+  // Exchange count = number of user messages sent so far
+  const exchangeCount = messages.filter(m => m.role === "user").length;
+
+  // First conversation = no existing aspirations and no prior structured context
+  const isFirstConversation = (() => {
+    try {
+      const existingAspirations = localStorage.getItem("huma-v2-aspirations");
+      if (existingAspirations) {
+        const parsed = JSON.parse(existingAspirations);
+        if (Array.isArray(parsed) && parsed.length > 0) return false;
+      }
+    } catch { /* treat as first conversation */ }
+    return !humaContext._version;
+  })();
+
   // Suppress unused variable warning — pendingAspiration is kept in state
   // for future use when AuthModal needs pre-fill data
   void pendingAspiration;
@@ -629,6 +648,8 @@ export function useStart(): UseStartReturn {
     knownDimensionLabels: contextCompleteness(humaContext).strongDimensions,
     contextPercentage: contextCompleteness(humaContext).overall,
     humaContext,
+    exchangeCount,
+    isFirstConversation,
     scrollRef,
     inputRef,
     sendMessage,

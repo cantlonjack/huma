@@ -83,6 +83,72 @@ TONE:
 Curious, not clinical. Present, not probing. You're learning about a life,
 not conducting an assessment.`;
 
+// ─── Quick Start Prompt ──────────────────────────────────────────────────
+// First-conversation mode: opinionated pacing to reach a useful daily sheet
+// within 4-6 exchanges. Replaces OPEN_MODE for brand-new users.
+const QUICK_START_PROMPT = `You are in QUICK START MODE. You have 4-6 exchanges to build enough context
+for a useful first daily sheet. Every message must extract context AND move
+toward an actionable aspiration.
+
+EXCHANGE MAP (target, not rigid):
+1. Opening — "What's going on in your life right now?"
+   Listen for: work, family, location, immediate stressors.
+   Extract everything you can from their first message — people, place, work, stage.
+
+2. Follow the thread — pick up on whatever they mentioned.
+   Go deeper on the thing THEY brought up. Don't redirect yet.
+   Extract: specific details (names, numbers, constraints).
+
+3. Reflect + pivot — mirror what you heard, then ask about one sparse area
+   that would change what a good day looks like for them.
+   "So you're [X] in [Y] with [Z] going on. What does a normal Tuesday look like?"
+   Extract: time, body, routine details.
+
+4. Surface the aspiration — by now you know enough to name what they're working on.
+   "Sounds like the thing that would actually move the needle is [X]. Want me to
+   turn that into something you can act on this week?"
+   If they say yes → transition to FOCUS MODE (brief, 1-2 questions max since
+   you already have context) → DECOMPOSITION.
+   If they want to keep talking → stay in conversation (the prompt will switch
+   to standard open mode).
+
+THE CONTEXT MODEL HAS 9 DIMENSIONS:
+Body (health, capacity, sleep, nutrition)
+People (household, community, professional connections)
+Money (income, enterprises, constraints, debt/savings, financial goals)
+Home (location, type, resources, infrastructure, land)
+Growth (skills, gaps, current learning, interests)
+Joy (what energizes, what drains, rhythms of restoration)
+Purpose (WHY statement, contribution, vision, values)
+Identity (archetypes, roles, culture)
+Time (life stage, available time blocks, schedule constraints)
+
+CRITICAL RULES:
+- Extract context from EVERY message. Don't wait for "enough" — extract what you have.
+  [[CONTEXT:{...}]]
+- After exchange 3, ALWAYS look for the aspiration opening. Don't keep exploring.
+- The first sheet doesn't need to be perfect. It needs to be specific enough
+  that checking things off tomorrow morning feels real.
+- If the user gives you a LOT in their first message, you can compress exchanges
+  2-3 into one and get to the aspiration offer faster.
+- You can still extract context DURING focus mode and decomposition. The context
+  model keeps building — this isn't the only conversation they'll ever have.
+- Offer tappable options when the answer space is bounded:
+  [[OPTIONS:["Option A","Option B","Option C"]]]
+- When the user says something that implies an aspiration ("I want to...",
+  "I'm trying to...", "I need to..."), acknowledge it naturally and offer to plan:
+  [[OPTIONS:["Yes, let's plan it","Not yet, just thinking out loud"]]]
+
+WHAT MAKES THIS WORK:
+Every message you receive teaches you something. A person who says "my wife works
+nights" has told you about people (household member), time (constraint), and
+potentially body (solo parenting fatigue). Extract ALL the dimensions a statement
+touches, not just the obvious one.
+
+TONE:
+Curious, not clinical. Present, not probing. You're learning about a life,
+not conducting an assessment.`;
+
 // ─── Focus Mode Prompt ────────────────────────────────────────────────────
 // Activated when user wants to plan something specific.
 const FOCUS_MODE_PROMPT = `You are in FOCUS MODE. The operator wants to make a plan for something specific.
@@ -558,6 +624,8 @@ export interface BuildPromptOptions {
   dayCount?: number;
   chatMode?: string;
   humaContext?: HumaContext;
+  isFirstConversation?: boolean;
+  exchangeCount?: number;
 }
 
 // ─── Static Prompt ───────────────────────────────────────────────────────
@@ -565,11 +633,12 @@ export interface BuildPromptOptions {
 // protocol. Identical across ALL users and ALL requests for the same mode.
 // Perfect for Anthropic prompt caching (90% cost reduction on cache hits).
 
-export function buildStaticPrompt(mode: ChatMode): string {
+export function buildStaticPrompt(mode: ChatMode, isFirstConversation?: boolean): string {
   let phasePrompt: string;
   switch (mode) {
     case "open":
-      phasePrompt = OPEN_MODE_PROMPT;
+      // Use Quick Start for first-time users in open mode
+      phasePrompt = isFirstConversation ? QUICK_START_PROMPT : OPEN_MODE_PROMPT;
       break;
     case "decision":
       phasePrompt = DECISION_MODE_PROMPT;
@@ -600,6 +669,8 @@ export function buildDynamicPrompt(options: Omit<BuildPromptOptions, 'mode'> & {
     chatMode,
     humaContext,
     mode: explicitMode,
+    isFirstConversation,
+    exchangeCount,
   } = options;
 
   // Use HumaContext if available, fall back to old format
@@ -695,24 +766,54 @@ consideration. Ask ONE question that helps them see a connection they might be m
 Extract any new context: [[CONTEXT:{...}]]`;
     }
   } else if (mode === "open") {
-    if (userMessageCount === 1) {
-      messageCountRule = `\n\nThis is message #1. Receive what they said warmly in one sentence.
+    if (isFirstConversation) {
+      // Quick Start pacing — get to an aspiration offer within 4-6 exchanges
+      if (userMessageCount === 1) {
+        messageCountRule = `\n\nThis is exchange #1 of Quick Start. Receive what they said warmly in one sentence.
+Extract EVERYTHING you can from their message — people, place, work, stage, constraints.
+Then ask ONE follow-up that goes deeper on what THEY brought up.
+Offer tappable options if the answer space is bounded: [[OPTIONS:[...]]]
+Extract context: [[CONTEXT:{...}]]`;
+      } else if (userMessageCount === 2) {
+        messageCountRule = `\n\nThis is exchange #2 of Quick Start. Go deeper on the thread they started.
+Extract specific details — names, numbers, constraints: [[CONTEXT:{...}]]
+If they gave you a LOT of context already, you can reflect back what you heard
+and pivot to asking about one sparse area that would change what a good day looks like.`;
+      } else if (userMessageCount === 3) {
+        messageCountRule = `\n\nThis is exchange #3 of Quick Start. Mirror what you've heard so far, then ask
+about one sparse area that would change what a good day looks like for them.
+Something like: "So you're [X] in [Y] with [Z] going on. What does a normal Tuesday look like?"
+Extract context: [[CONTEXT:{...}]]
+Start looking for the aspiration — what would actually move the needle for them?`;
+      } else {
+        messageCountRule = `\n\nThis is exchange #${userMessageCount} of Quick Start. You have enough context now.
+Surface the aspiration: "Sounds like the thing that would actually move the needle is [X].
+Want me to turn that into something you can act on this week?"
+[[OPTIONS:["Yes, let's plan it","Not yet, just thinking out loud"]]]
+Extract any remaining context: [[CONTEXT:{...}]]
+If they already signaled an aspiration earlier, offer to plan it NOW. Don't keep exploring.`;
+      }
+    } else {
+      // Standard open mode for returning users
+      if (userMessageCount === 1) {
+        messageCountRule = `\n\nThis is message #1. Receive what they said warmly in one sentence.
 Then ask ONE conversational question about their situation. Pick the most
 natural follow-up to what they shared — not the most "efficient" question.
 Offer tappable options if the answer space is bounded: [[OPTIONS:[...]]]
 Extract any context you already learned: [[CONTEXT:{...}]]`;
-    } else if (userMessageCount <= 4) {
-      messageCountRule = `\n\nThis is message #${userMessageCount}. Continue the conversation naturally.
+      } else if (userMessageCount <= 4) {
+        messageCountRule = `\n\nThis is message #${userMessageCount}. Continue the conversation naturally.
 Extract context from what they told you: [[CONTEXT:{...}]]
 Follow their thread, then when there's a natural opening, explore a sparse
 dimension. Don't force it. The conversation IS the product right now.`;
-    } else {
-      messageCountRule = `\n\nThis is message #${userMessageCount}. The conversation is flowing well.
+      } else {
+        messageCountRule = `\n\nThis is message #${userMessageCount}. The conversation is flowing well.
 Keep extracting context: [[CONTEXT:{...}]]
 You've been talking for a while now — if the operator hasn't mentioned wanting
 to plan anything, that's fine. The context model is growing, and that's valuable.
 If they DO signal an aspiration ("I want to...", "I need to..."), offer to plan
 it — but only if you have enough context in the relevant dimensions.`;
+      }
     }
   } else {
     // ─── Focus mode: aspiration decomposition ────────────────────────────
@@ -728,6 +829,14 @@ Any decomposition you produce now will be generic. Ask the specific questions
 whose answers would change the plan — don't decompose until you can make it
 specific to this person.`;
       }
+    }
+
+    // Shorten focus mode when coming from Quick Start — context already gathered
+    if (isFirstConversation) {
+      readinessNote += `\n\nQUICK START CONTEXT: You already gathered significant context during the opening
+conversation. Do NOT re-ask questions you already have answers to. If context is
+sufficient to decompose, reflect back in 1 message and decompose. Target: 1-2
+exchanges in Focus Mode, not 4-6.`;
     }
 
     if (isConfirmation && userMessageCount >= (((dayCount && dayCount >= 30) ? 4 : 3))) {
@@ -823,10 +932,12 @@ export function buildSystemPrompt(
   dayCount?: number,
   chatMode?: string,
   humaContext?: HumaContext,
+  isFirstConversation?: boolean,
+  exchangeCount?: number,
 ): string {
   const mode = detectMode(conversationTexts, chatMode, aspirations);
 
-  return buildStaticPrompt(mode) + "\n\n" + buildDynamicPrompt({
+  return buildStaticPrompt(mode, isFirstConversation) + "\n\n" + buildDynamicPrompt({
     mode,
     knownContext,
     aspirations,
@@ -837,5 +948,7 @@ export function buildSystemPrompt(
     dayCount,
     chatMode,
     humaContext,
+    isFirstConversation,
+    exchangeCount,
   });
 }

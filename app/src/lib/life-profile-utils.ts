@@ -42,6 +42,13 @@ const SECTION_DEFS = [
 
 // ─── Prose Builders ────────────────────────────────────────────────────────
 
+/** Coerce a value that might be a string or array into a string array. */
+function asArray(val: unknown): string[] {
+  if (Array.isArray(val)) return val;
+  if (typeof val === "string" && val) return [val];
+  return [];
+}
+
 function buildIdentityProse(ctx: HumaContext): ProseLine[] {
   const lines: ProseLine[] = [];
 
@@ -49,12 +56,14 @@ function buildIdentityProse(ctx: HumaContext): ProseLine[] {
     lines.push({ text: `"${ctx.purpose.whyStatement}"`, field: "purpose.whyStatement", editable: true });
   }
 
-  if (ctx.identity?.archetypes?.length) {
-    lines.push({ text: ctx.identity.archetypes.join(" · "), field: "identity.archetypes", editable: true });
+  const archetypes = asArray(ctx.identity?.archetypes);
+  if (archetypes.length) {
+    lines.push({ text: archetypes.join(" · "), field: "identity.archetypes", editable: true });
   }
 
-  if (ctx.identity?.roles?.length) {
-    lines.push({ text: ctx.identity.roles.join(", "), field: "identity.roles", editable: true });
+  const roles = asArray(ctx.identity?.roles);
+  if (roles.length) {
+    lines.push({ text: roles.join(", "), field: "identity.roles", editable: true });
   }
 
   if (ctx.time?.stage) {
@@ -66,8 +75,9 @@ function buildIdentityProse(ctx: HumaContext): ProseLine[] {
     lines.push({ text: ctx.identity.culture, field: "identity.culture", editable: true });
   }
 
-  if (ctx.purpose?.values?.length) {
-    lines.push({ text: `Values: ${ctx.purpose.values.join(", ")}`, field: "purpose.values", editable: true });
+  const values = asArray(ctx.purpose?.values);
+  if (values.length) {
+    lines.push({ text: `Values: ${values.join(", ")}`, field: "purpose.values", editable: true });
   }
 
   return lines;
@@ -89,12 +99,14 @@ function buildPlaceProse(ctx: HumaContext): ProseLine[] {
   if (h.land) lines.push({ text: h.land, field: "home.land", editable: true });
 
   if (h.resources?.length) {
-    const names = h.resources.map((r) => (typeof r === "string" ? r : r.name)).filter(Boolean);
+    const arr = Array.isArray(h.resources) ? h.resources : [h.resources];
+    const names = arr.map((r) => (typeof r === "string" ? r : r.name)).filter(Boolean);
     if (names.length > 0) lines.push({ text: names.join(", "), field: "home.resources", editable: true });
   }
 
-  if (h.infrastructure?.length) {
-    lines.push({ text: h.infrastructure.join(", "), field: "home.infrastructure", editable: true });
+  const infra = asArray(h.infrastructure);
+  if (infra.length) {
+    lines.push({ text: infra.join(", "), field: "home.infrastructure", editable: true });
   }
 
   return lines;
@@ -137,8 +149,9 @@ function buildPeopleProse(ctx: HumaContext): ProseLine[] {
 function buildBodyProse(ctx: HumaContext): ProseLine[] {
   const lines: ProseLine[] = [];
 
-  if (ctx.body?.conditions?.length) {
-    lines.push({ text: ctx.body.conditions.join(", "), field: "body.conditions", editable: true });
+  const conditions = asArray(ctx.body?.conditions);
+  if (conditions.length) {
+    lines.push({ text: conditions.join(", "), field: "body.conditions", editable: true });
   }
 
   if (ctx.body?.capacity) lines.push({ text: `Capacity: ${ctx.body.capacity}`, field: "body.capacity", editable: true });
@@ -156,8 +169,9 @@ function buildBodyProse(ctx: HumaContext): ProseLine[] {
     });
   }
 
-  if (ctx.time?.constraints?.length) {
-    lines.push({ text: `Constraints: ${ctx.time.constraints.join(", ")}`, field: "time.constraints", editable: true });
+  const timeConstraints = asArray(ctx.time?.constraints);
+  if (timeConstraints.length) {
+    lines.push({ text: `Constraints: ${timeConstraints.join(", ")}`, field: "time.constraints", editable: true });
   }
 
   return lines;
@@ -185,8 +199,9 @@ function buildMoneyProse(ctx: HumaContext): ProseLine[] {
   if (m.savings) lines.push({ text: `Savings: ${m.savings}`, field: "money.savings", editable: true });
   if (m.financialGoal) lines.push({ text: `Goal: ${m.financialGoal}`, field: "money.financialGoal", editable: true });
 
-  if (m.constraints?.length) {
-    lines.push({ text: `Constraints: ${m.constraints.join(", ")}`, field: "money.constraints", editable: true });
+  const moneyConstraints = asArray(m.constraints);
+  if (moneyConstraints.length) {
+    lines.push({ text: `Constraints: ${moneyConstraints.join(", ")}`, field: "money.constraints", editable: true });
   }
 
   return lines;
@@ -195,35 +210,43 @@ function buildMoneyProse(ctx: HumaContext): ProseLine[] {
 function buildGrowthProse(ctx: HumaContext): ProseLine[] {
   const lines: ProseLine[] = [];
 
-  if (ctx.growth?.skills?.length) {
-    const skillStrings = ctx.growth.skills.map((s) =>
+  const skills = ctx.growth?.skills;
+  if (skills && (Array.isArray(skills) ? skills.length > 0 : true)) {
+    const arr = Array.isArray(skills) ? skills : [skills];
+    const skillStrings = arr.map((s) =>
       typeof s === "string" ? s : `${s.name} (${s.level})`
     );
     lines.push({ text: `Skills: ${skillStrings.join(", ")}`, field: "growth.skills", editable: true });
   }
 
-  if (ctx.growth?.currentLearning?.length) {
-    lines.push({ text: `Learning: ${ctx.growth.currentLearning.join(", ")}`, field: "growth.currentLearning", editable: true });
+  const learning = asArray(ctx.growth?.currentLearning);
+  if (learning.length) {
+    lines.push({ text: `Learning: ${learning.join(", ")}`, field: "growth.currentLearning", editable: true });
   }
 
-  if (ctx.growth?.interests?.length) {
-    lines.push({ text: `Interests: ${ctx.growth.interests.join(", ")}`, field: "growth.interests", editable: true });
+  const interests = asArray(ctx.growth?.interests);
+  if (interests.length) {
+    lines.push({ text: `Interests: ${interests.join(", ")}`, field: "growth.interests", editable: true });
   }
 
-  if (ctx.growth?.gaps?.length) {
-    lines.push({ text: `Gaps: ${ctx.growth.gaps.join(", ")}`, field: "growth.gaps", editable: true });
+  const gaps = asArray(ctx.growth?.gaps);
+  if (gaps.length) {
+    lines.push({ text: `Gaps: ${gaps.join(", ")}`, field: "growth.gaps", editable: true });
   }
 
-  if (ctx.joy?.sources?.length) {
-    lines.push({ text: `Joy: ${ctx.joy.sources.join(", ")}`, field: "joy.sources", editable: true });
+  const sources = asArray(ctx.joy?.sources);
+  if (sources.length) {
+    lines.push({ text: `Joy: ${sources.join(", ")}`, field: "joy.sources", editable: true });
   }
 
-  if (ctx.joy?.drains?.length) {
-    lines.push({ text: `Drains: ${ctx.joy.drains.join(", ")}`, field: "joy.drains", editable: true });
+  const drains = asArray(ctx.joy?.drains);
+  if (drains.length) {
+    lines.push({ text: `Drains: ${drains.join(", ")}`, field: "joy.drains", editable: true });
   }
 
-  if (ctx.joy?.rhythms?.length) {
-    lines.push({ text: `Rhythms: ${ctx.joy.rhythms.join(", ")}`, field: "joy.rhythms", editable: true });
+  const rhythms = asArray(ctx.joy?.rhythms);
+  if (rhythms.length) {
+    lines.push({ text: `Rhythms: ${rhythms.join(", ")}`, field: "joy.rhythms", editable: true });
   }
 
   return lines;

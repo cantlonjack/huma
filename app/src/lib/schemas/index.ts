@@ -27,6 +27,8 @@ export const v2ChatSchema = z.object({
   dayCount: z.number().int().positive().optional(),
   chatMode: z.string().optional(),
   humaContext: z.record(z.string(), z.unknown()).optional(),
+  isFirstConversation: z.boolean().optional(),
+  exchangeCount: z.number().int().nonnegative().optional(),
 });
 
 export type V2ChatRequest = z.infer<typeof v2ChatSchema>;

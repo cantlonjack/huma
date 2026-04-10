@@ -147,7 +147,7 @@ export default function StartPage() {
     handleConfirmBehaviors, handlePaletteTap, handleKeyDown,
     handleAuthenticated, handleArchetypeContinueWithTemplate,
     handleArchetypeContinueBlank, handleArchetypeSkip,
-    humaContext,
+    humaContext, exchangeCount, isFirstConversation,
   } = useStart();
 
   const [rightPanelTab, setRightPanelTab] = useState<"suggestions" | "profile">("suggestions");
@@ -230,6 +230,9 @@ export default function StartPage() {
                 </div>
                 <span className="font-sans text-[10px] text-earth-400 tracking-wide">
                   {completeness.filled} of {completeness.total} sections
+                  {isFirstConversation && completeness.filled >= 2 && (
+                    <span className="ml-2 text-sage-500">Almost ready for your first sheet</span>
+                  )}
                 </span>
               </div>
             )}
@@ -281,6 +284,16 @@ export default function StartPage() {
               </button>
             )}
           </div>
+
+          {/* Quick Start affordance — escape hatch to move to planning */}
+          {isFirstConversation && exchangeCount >= 3 && completeness.filled >= 2 && (
+            <button
+              onClick={() => sendMessage("Let's make a plan for this week")}
+              className="mt-2 font-sans text-xs text-sage-500 hover:text-sage-600 transition-colors duration-200 cursor-pointer"
+            >
+              Ready to build your first day? &rarr;
+            </button>
+          )}
 
           {/* Mobile palette toggle */}
           {paletteConcepts.length > 0 && (
