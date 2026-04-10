@@ -176,6 +176,7 @@ export default function WholePage() {
                       mode={w.manageMode ? "edit" : "view"}
                       onTellMore={(sectionId) => w.handleTellMore(sectionId)}
                       onContextSave={w.handleHumaContextSave}
+                      onFieldEdit={w.handleFieldEdit}
                     />
                   </div>
                 ) : (

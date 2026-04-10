@@ -12,6 +12,7 @@ interface LifeProfileProps {
   mode: "view" | "edit" | "filling";
   onTellMore?: (sectionId: string) => void;
   onContextSave?: (updates: Partial<HumaContext>) => void;
+  onFieldEdit?: (field: string, value: string) => void;
 }
 
 export default function LifeProfile({
@@ -19,6 +20,7 @@ export default function LifeProfile({
   aspirations,
   mode,
   onTellMore,
+  onFieldEdit,
 }: LifeProfileProps) {
   const sections = useMemo(
     () => profileSections(humaContext, aspirations),
@@ -57,6 +59,7 @@ export default function LifeProfile({
               section={section}
               mode={mode}
               onTellMore={onTellMore}
+              onFieldEdit={onFieldEdit}
             />
           ))}
         </div>
@@ -71,6 +74,7 @@ export default function LifeProfile({
               section={section}
               mode={mode}
               onTellMore={onTellMore}
+              onFieldEdit={onFieldEdit}
             />
           ))}
         </div>

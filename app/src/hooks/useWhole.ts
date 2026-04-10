@@ -116,6 +116,7 @@ export interface UseWholeReturn {
   handleWhySave: (value: string) => Promise<void>;
   handleContextSave: (updated: KnownContext) => Promise<void>;
   handleHumaContextSave: (updates: Partial<HumaContext>) => Promise<void>;
+  handleFieldEdit: (field: string, value: string) => void;
   handleFoundationSave: (nodeId: string, value: string) => Promise<void>;
   handleAspirationNameSave: (aspirationId: string, name: string) => Promise<void>;
   handleAspirationStatusChange: (aspirationId: string, status: Aspiration["status"]) => Promise<void>;
@@ -527,6 +528,50 @@ export function useWhole(): UseWholeReturn {
     }
   }, [humaContext, userId, rawContext, user]);
 
+  // Field-level edit from Life Profile prose lines
+  const handleFieldEdit = useCallback((field: string, value: string) => {
+    // Strip label prefixes like "Values: ", "Skills: ", "Capacity: " etc.
+    const LABEL_PREFIXES = [
+      "Values: ", "Skills: ", "Learning: ", "Interests: ", "Gaps: ",
+      "Joy: ", "Drains: ", "Rhythms: ", "Constraints: ", "Capacity: ",
+      "Sleep: ", "Nutrition: ", "Debt: ", "Savings: ", "Goal: ",
+    ];
+    let cleanValue = value;
+    for (const prefix of LABEL_PREFIXES) {
+      if (cleanValue.startsWith(prefix)) {
+        cleanValue = cleanValue.slice(prefix.length);
+        break;
+      }
+    }
+
+    // Strip surrounding quotes for WHY statement
+    if (field === "purpose.whyStatement") {
+      cleanValue = cleanValue.replace(/^[""]|[""]$/g, "");
+    }
+
+    const parts = field.split(".");
+    const dim = parts[0] as keyof HumaContext;
+    const subField = parts[1];
+
+    // Array fields: split comma-separated values
+    const ARRAY_FIELDS = [
+      "identity.roles", "identity.archetypes", "purpose.values",
+      "body.conditions", "growth.skills", "growth.currentLearning",
+      "growth.interests", "growth.gaps", "joy.sources", "joy.drains",
+      "joy.rhythms", "time.constraints", "money.constraints",
+      "home.infrastructure", "home.resources",
+    ];
+
+    // Delimiter for archetypes is " · ", for everything else ", "
+    const finalValue = ARRAY_FIELDS.includes(field)
+      ? (field === "identity.archetypes"
+          ? cleanValue.split(/\s*·\s*/).filter(Boolean)
+          : cleanValue.split(/,\s*/).filter(Boolean))
+      : cleanValue;
+
+    handleHumaContextSave({ [dim]: { [subField]: finalValue } });
+  }, [handleHumaContextSave]);
+
   const handleFoundationSave = useCallback(async (nodeId: string, value: string) => {
     const updated = { ...rawContext };
     if (nodeId === "ctx-place") {
@@ -787,6 +832,7 @@ export function useWhole(): UseWholeReturn {
     handleWhySave,
     handleContextSave,
     handleHumaContextSave,
+    handleFieldEdit,
     handleFoundationSave,
     handleAspirationNameSave,
     handleAspirationStatusChange,

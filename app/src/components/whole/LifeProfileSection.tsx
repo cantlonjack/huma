@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import type { ProfileSection } from "@/lib/life-profile-utils";
+import type { ProfileSection, ProseLine } from "@/lib/life-profile-utils";
 
 interface LifeProfileSectionProps {
   section: ProfileSection;
   mode: "view" | "edit" | "filling";
   onTellMore?: (sectionId: string) => void;
+  onFieldEdit?: (field: string, value: string) => void;
 }
 
 function EditableText({
@@ -58,6 +59,7 @@ export default function LifeProfileSection({
   section,
   mode,
   onTellMore,
+  onFieldEdit,
 }: LifeProfileSectionProps) {
   if (section.isSparse) {
     return (
@@ -83,15 +85,15 @@ export default function LifeProfileSection({
           <p
             key={i}
             className={`font-serif text-[14px] leading-relaxed text-earth-700 m-0 ${
-              i === 0 && section.id === "identity" && section.prose[0]?.startsWith('"')
+              i === 0 && section.id === "identity" && section.prose[0]?.text.startsWith('"')
                 ? "italic text-[15px]"
                 : ""
             }`}
           >
-            {mode === "edit" ? (
-              <EditableText value={line} onSave={() => { /* TODO: wire to handleHumaContextSave */ }} />
+            {mode === "edit" && line.editable ? (
+              <EditableText value={line.text} onSave={(v) => onFieldEdit?.(line.field, v)} />
             ) : (
-              line
+              line.text
             )}
           </p>
         ))}
