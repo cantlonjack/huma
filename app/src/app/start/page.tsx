@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useStart } from "@/hooks/useStart";
 import AuthModal from "@/components/shared/AuthModal";
 import ArchetypeSelectionScreen from "@/components/onboarding/ArchetypeSelectionScreen";
@@ -137,6 +137,70 @@ function ConversationThread({
   );
 }
 
+// ── Mobile Profile Mini-Bar + Drawer ──
+function ProfileMiniBar({
+  completeness,
+  humaContext,
+  open,
+  onToggle,
+  pulse,
+}: {
+  completeness: { filled: number; total: number; labels: string[] };
+  humaContext: import("@/types/context").HumaContext;
+  open: boolean;
+  onToggle: () => void;
+  pulse: boolean;
+}) {
+  return (
+    <div className="lg:hidden">
+      {/* Mini-bar */}
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-6 py-2.5 bg-sand-50 border-t border-sand-200 cursor-pointer hover:bg-sand-100 transition-colors duration-150"
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <span
+            className={`w-2 h-2 rounded-full flex-shrink-0 transition-colors duration-300 ${
+              completeness.filled > 0 ? "bg-sage-400" : "bg-sand-300"
+            } ${pulse ? "animate-pulse" : ""}`}
+          />
+          <span className="font-sans text-xs text-earth-500 truncate">
+            {completeness.filled === 0
+              ? "Your profile — building as we talk"
+              : `${completeness.filled} of ${completeness.total} · ${completeness.labels.join(", ")}`}
+          </span>
+        </div>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className={`text-earth-300 flex-shrink-0 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      {/* Expandable drawer */}
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-out ${
+          open ? "max-h-[50vh]" : "max-h-0"
+        }`}
+      >
+        <div className="overflow-y-auto max-h-[50vh] border-t border-sand-200 bg-sand-50 px-5 py-4">
+          <LifeProfile
+            humaContext={humaContext}
+            aspirations={[]}
+            mode="filling"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function StartPage() {
   const {
     onboardingStep, transitioning, stepReady, messages, input, setInput,
@@ -151,11 +215,25 @@ export default function StartPage() {
   } = useStart();
 
   const [rightPanelTab, setRightPanelTab] = useState<"suggestions" | "profile">("suggestions");
+  const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
+  const [profilePulse, setProfilePulse] = useState(false);
 
   const completeness = useMemo(
     () => profileCompleteness(humaContext),
     [humaContext],
   );
+
+  // Pulse the mini-bar dot when a new section fills for the first time
+  const prevFilledRef = useRef(completeness.filled);
+  useEffect(() => {
+    if (completeness.filled > prevFilledRef.current) {
+      setProfilePulse(true);
+      const timer = setTimeout(() => setProfilePulse(false), 1500);
+      prevFilledRef.current = completeness.filled;
+      return () => clearTimeout(timer);
+    }
+    prevFilledRef.current = completeness.filled;
+  }, [completeness.filled]);
 
   // Auto-switch to profile tab once 2+ sections have content
   const autoSwitched = useMemo(() => completeness.filled >= 2, [completeness.filled]);
@@ -305,6 +383,15 @@ export default function StartPage() {
             </button>
           )}
         </div>
+
+        {/* Mobile profile mini-bar + drawer */}
+        <ProfileMiniBar
+          completeness={completeness}
+          humaContext={humaContext}
+          open={profileDrawerOpen}
+          onToggle={() => setProfileDrawerOpen((o) => !o)}
+          pulse={profilePulse}
+        />
 
         {/* Mobile palette tray */}
         {showPaletteMobile && (
