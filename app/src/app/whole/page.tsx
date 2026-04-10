@@ -11,6 +11,7 @@ import WhyEvolution from "@/components/whole/WhyEvolution";
 import ArchetypeSelector from "@/components/whole/ArchetypeSelector";
 import ContextPortrait from "@/components/whole/ContextPortrait";
 import ContextBrief from "@/components/whole/ContextBrief";
+import LifeProfile from "@/components/whole/LifeProfile";
 import AspirationsList from "@/components/whole/AspirationsList";
 import PatternsList from "@/components/whole/PatternsList";
 import DimensionMiniShape from "@/components/whole/DimensionMiniShape";
@@ -166,15 +167,27 @@ export default function WholePage() {
             {/* ─── Brief View (default) ─── */}
             {w.viewMode === "brief" && (
               <div className="mt-5 flex flex-col gap-6">
-                {/* Context brief — the living document */}
-                <ContextBrief
-                  context={w.context}
-                  aspirations={w.aspirations}
-                  whyStatement={w.whyStatement}
-                  archetypes={w.archetypes}
-                  operatorName={w.operatorName}
-                  onTellMore={w.handleTellMore}
-                />
+                {/* Life Profile — the living document */}
+                {w.humaContext._version ? (
+                  <div className="px-5">
+                    <LifeProfile
+                      humaContext={w.humaContext}
+                      aspirations={w.aspirations}
+                      mode={w.manageMode ? "edit" : "view"}
+                      onTellMore={(sectionId) => w.handleTellMore(sectionId)}
+                      onContextSave={w.handleHumaContextSave}
+                    />
+                  </div>
+                ) : (
+                  <ContextBrief
+                    context={w.context}
+                    aspirations={w.aspirations}
+                    whyStatement={w.whyStatement}
+                    archetypes={w.archetypes}
+                    operatorName={w.operatorName}
+                    onTellMore={w.handleTellMore}
+                  />
+                )}
 
                 {/* Aspirations */}
                 <AspirationsList aspirations={w.aspirations} />

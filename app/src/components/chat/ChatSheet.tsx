@@ -12,6 +12,7 @@ import {
   updateKnownContext,
 } from "@/lib/supabase-v2";
 import { getLocalDate } from "@/lib/date-utils";
+import { storeSaveHumaContext } from "@/lib/db/store";
 import { getDomainTemplate, type StarterAspiration } from "@/data/archetype-templates";
 import { enqueuePendingSync, flushPendingSync, pendingSyncCount } from "@/lib/pending-sync";
 import { useNetworkStatus } from "@/lib/use-network-status";
@@ -98,7 +99,7 @@ export default function ChatSheet({ open, onClose, contextPrompt, sourceTab, tab
         _lastUpdated: today.toISOString(),
       };
       setHumaContext(updatedHuma);
-      localStorage.setItem("huma-v2-huma-context", JSON.stringify(updatedHuma));
+      storeSaveHumaContext(user?.id ?? null, updatedHuma);
     },
   });
 

@@ -12,6 +12,9 @@ Outer tier: Earth Tender, Creator, Entrepreneur, Official, Economic Shaper, Spir
 Inner tier (orientation): Initiator, Manifestor, Destabilizer
 
 An operator typically holds 1-2 outer archetypes and 1 inner orientation.
+
+If behavioral data is provided, weigh actual patterns heavily. Someone who declares themselves an Entrepreneur but whose daily behaviors center on tending land is an Earth Tender. What they do matters more than what they say.
+
 Respond with JSON only: { "suggested": ["Earth Tender", "Manifestor"], "reasoning": "one sentence" }`;
 
 const WHY_SYSTEM = `You are HUMA. Based on the operator's context below, draft a one-sentence WHY statement that captures what drives them — not what they do, but why it matters to them.
@@ -19,6 +22,8 @@ const WHY_SYSTEM = `You are HUMA. Based on the operator's context below, draft a
 Write in first person. Maximum 15 words. Direct, specific, no therapy-speak.
 Good example: "I build systems that let land feed people for generations."
 Bad example: "I am passionate about creating a better world through sustainable practices."
+
+If behavioral data is provided, let it inform the WHY. The statement should reflect what they actually do and prioritize, not just what they declared during onboarding.
 
 Respond with JSON only: { "why": "your draft here" }`;
 
@@ -73,12 +78,17 @@ ${contextData}`;
 
     const results: { archetypes?: { suggested: string[]; reasoning: string }; why?: string } = {};
 
+    // Build enriched prompt: context + behavioral data when available
+    const userPrompt = behavioralSummary
+      ? `${contextData}\n\nBehavioral data:\n${behavioralSummary}`
+      : contextData;
+
     if (compute === "both" || compute === "archetypes") {
       const archetypePromise = client.messages.create({
         model: "claude-haiku-4-5-20251001",
         max_tokens: 200,
         system: ARCHETYPE_SYSTEM,
-        messages: [{ role: "user", content: contextData }],
+        messages: [{ role: "user", content: userPrompt }],
       });
 
       if (compute === "both") {
@@ -86,7 +96,7 @@ ${contextData}`;
           model: "claude-sonnet-4-20250514",
           max_tokens: 100,
           system: WHY_SYSTEM,
-          messages: [{ role: "user", content: contextData }],
+          messages: [{ role: "user", content: userPrompt }],
         });
 
         const [archetypeRes, whyRes] = await Promise.all([archetypePromise, whyPromise]);
@@ -115,7 +125,7 @@ ${contextData}`;
         model: "claude-sonnet-4-20250514",  // Keep Sonnet for creative WHY synthesis
         max_tokens: 100,
         system: WHY_SYSTEM,
-        messages: [{ role: "user", content: contextData }],
+        messages: [{ role: "user", content: userPrompt }],
       });
       const whyText = whyRes.content[0].type === "text" ? whyRes.content[0].text : "";
       try {

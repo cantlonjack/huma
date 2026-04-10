@@ -1,5 +1,7 @@
 import type { HolonNode, HolonLink, HolonLayer, HolonStatus } from "@/components/whole/WholeShape";
 import type { Aspiration, KnownContext, Principle } from "@/types/v2";
+import type { HumaContext } from "@/types/context";
+import { contextForPrompt } from "@/lib/context-model";
 import { displayName } from "@/lib/display-name";
 
 export function mapAspirationStatus(asp: Aspiration): HolonStatus {
@@ -152,7 +154,7 @@ export function computeDimensionLinks(aspirations: Aspiration[]): HolonLink[] {
   return links;
 }
 
-// Serialize context for AI prompt
+// Serialize context for AI prompt (legacy flat version)
 export function serializeContext(
   ctx: Record<string, unknown>,
   aspirations: Aspiration[],
@@ -166,6 +168,19 @@ export function serializeContext(
     parts.push("Aspirations: " + aspirations.map((a) => a.clarifiedText || a.rawText).join("; "));
   }
   return parts.join("\n") || "";
+}
+
+// Serialize HumaContext for AI prompt (rich version using contextForPrompt)
+export function serializeHumaContext(
+  humaContext: HumaContext,
+  aspirations: Aspiration[],
+): string {
+  const prose = contextForPrompt(humaContext);
+  if (aspirations.length > 0) {
+    const aspList = aspirations.map((a) => a.clarifiedText || a.rawText).join("; ");
+    return `${prose}\n\nAspirations: ${aspList}`;
+  }
+  return prose;
 }
 
 // Map context node IDs to field paths

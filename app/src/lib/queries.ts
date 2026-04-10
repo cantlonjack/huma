@@ -8,11 +8,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Aspiration, Insight, Pattern, Principle, KnownContext } from "@/types/v2";
 import type { SparklineData, EmergingBehavior, MonthlyReviewData } from "@/types/v2";
+import type { HumaContext } from "@/types/context";
 import type { AspirationCorrelation } from "@/lib/supabase-v2";
 import { createClient } from "@/lib/supabase";
 import {
   storeLoadAspirations,
   storeLoadContext,
+  storeLoadHumaContext,
   storeLoadChatMessages,
   storeLoadInsight,
   storeLoadPatterns,
@@ -43,6 +45,7 @@ export const queryKeys = {
   aspirations: (userId: string | null) => ["aspirations", userId] as const,
   allAspirations: (userId: string | null) => ["allAspirations", userId] as const,
   knownContext: (userId: string | null) => ["knownContext", userId] as const,
+  humaContext: (userId: string | null) => ["humaContext", userId] as const,
   undeliveredInsight: (userId: string | null) => ["undeliveredInsight", userId] as const,
 
   // Today-specific
@@ -109,6 +112,11 @@ export async function fetchAllAspirations(userId: string | null): Promise<Aspira
 /** Known context (operator profile, archetypes, etc.). */
 export async function fetchKnownContext(userId: string | null): Promise<Record<string, unknown>> {
   return storeLoadContext(userId);
+}
+
+/** HumaContext (rich 9-dimension model). */
+export async function fetchHumaContext(userId: string | null): Promise<HumaContext> {
+  return storeLoadHumaContext(userId);
 }
 
 /** Undelivered insight. */

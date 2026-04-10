@@ -1,4 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { HumaContext } from "@/types/context";
+import { createEmptyContext } from "@/types/context";
+import { migrateFromKnownContext } from "@/lib/context-model";
+import type { KnownContext } from "@/types/v2";
 
 // ─── Context ─────────────────────────────────────────────────────────────────
 
@@ -15,7 +19,7 @@ export async function getOrCreateContext(supabase: SupabaseClient, userId: strin
 
   const { data: newCtx, error } = await supabase
     .from("contexts")
-    .insert({ user_id: userId, known_context: {}, raw_statements: [], aspirations: [] })
+    .insert({ user_id: userId, known_context: {}, huma_context: {}, raw_statements: [], aspirations: [] })
     .select()
     .single();
 
@@ -41,6 +45,50 @@ export async function getKnownContext(
 ): Promise<Record<string, unknown>> {
   const ctx = await getOrCreateContext(supabase, userId);
   return (ctx.known_context as Record<string, unknown>) || {};
+}
+
+// ─── HumaContext (rich 9-dimension model) ──────────────────────────────────
+
+export async function updateHumaContext(
+  supabase: SupabaseClient,
+  userId: string,
+  humaContext: HumaContext,
+) {
+  const ctx = await getOrCreateContext(supabase, userId);
+  // Strip _sources to keep payload small (they're localStorage-only)
+  const { _sources: _, ...payload } = humaContext;
+  await supabase
+    .from("contexts")
+    .update({ huma_context: payload, updated_at: new Date().toISOString() })
+    .eq("id", ctx.id);
+}
+
+export async function getHumaContext(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<HumaContext> {
+  const ctx = await getOrCreateContext(supabase, userId);
+  const raw = ctx.huma_context as Record<string, unknown> | null;
+
+  // If huma_context has data, hydrate it
+  if (raw && Object.keys(raw).length > 0 && raw._version) {
+    return { ...createEmptyContext(), ...raw, _sources: [] } as HumaContext;
+  }
+
+  // Fall back: migrate from known_context if populated
+  const known = (ctx.known_context as KnownContext) || {};
+  if (Object.keys(known).length > 0) {
+    const migrated = migrateFromKnownContext(
+      known,
+      ctx.why_statement ?? undefined,
+      (known.archetypes as string[]) ?? undefined,
+    );
+    // Persist the migration so it only happens once
+    await updateHumaContext(supabase, userId, migrated);
+    return migrated;
+  }
+
+  return createEmptyContext();
 }
 
 /**
@@ -93,6 +141,7 @@ export async function clearAllUserData(
     .from("contexts")
     .update({
       known_context: {},
+      huma_context: {},
       why_statement: null,
       why_date: null,
       raw_statements: [],

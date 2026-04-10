@@ -14,6 +14,7 @@ import { getArchetypeOpener, getTemplateAspirationNames } from "@/lib/archetype-
 import { mergeContext, dimensionsTouched, contextCompleteness } from "@/lib/context-model";
 import type { HumaContext } from "@/types/context";
 import { createEmptyContext } from "@/types/context";
+import { storeSaveHumaContext } from "@/lib/db/store";
 import { trackEvent } from "@/lib/analytics";
 
 // ---- Palette Acknowledgments ------------------------------------------------
@@ -70,6 +71,7 @@ export interface UseStartReturn {
   recentDimensions: string[];          // dimensions just captured (fades after 4s)
   knownDimensionLabels: string[];      // all dimensions with data so far
   contextPercentage: number;           // 0-100, overall completeness
+  humaContext: HumaContext;            // full structured context for profile display
 
   // Refs
   scrollRef: React.RefObject<HTMLDivElement | null>;
@@ -299,7 +301,7 @@ export function useStart(): UseStartReturn {
         // Update structured context model + show dimension indicator
         setHumaContext(prev => {
           const updated = mergeContext(prev, parsedContext as Partial<HumaContext>, "conversation");
-          localStorage.setItem("huma-v2-huma-context", JSON.stringify(updated));
+          storeSaveHumaContext(user?.id ?? null, updated);
           return updated;
         });
         const touched = dimensionsTouched(parsedContext as Partial<HumaContext>);
@@ -626,6 +628,7 @@ export function useStart(): UseStartReturn {
     recentDimensions,
     knownDimensionLabels: contextCompleteness(humaContext).strongDimensions,
     contextPercentage: contextCompleteness(humaContext).overall,
+    humaContext,
     scrollRef,
     inputRef,
     sendMessage,

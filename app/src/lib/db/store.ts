@@ -17,9 +17,11 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Aspiration, ChatMessage, Insight, Pattern } from "@/types/v2";
+import type { HumaContext } from "@/types/context";
+import { createEmptyContext } from "@/types/context";
 import { createClient } from "@/lib/supabase";
 import { getAspirations, getAllAspirations, saveAspiration } from "./aspirations";
-import { getKnownContext, updateKnownContext } from "./context";
+import { getKnownContext, updateKnownContext, getHumaContext, updateHumaContext } from "./context";
 import { getChatMessages, saveChatMessage, saveChatMessages } from "./chat";
 import { saveInsight, getUndeliveredInsight } from "./insights";
 import { getPatterns, savePattern, updatePattern, deletePattern } from "./patterns";
@@ -62,7 +64,7 @@ const WAL_KEY = "huma-v2-wal";
 
 interface WalEntry {
   id: string;
-  type: "aspiration" | "context" | "chat-message" | "chat-messages" | "insight" | "pattern";
+  type: "aspiration" | "context" | "huma-context" | "chat-message" | "chat-messages" | "insight" | "pattern";
   payload: unknown;
   createdAt: string;
   retries: number;
@@ -234,6 +236,71 @@ function writeLocalContext(context: Record<string, unknown>) {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem("huma-v2-known-context", JSON.stringify(context));
+  } catch { /* storage full */ }
+}
+
+// ─── HumaContext (rich 9-dimension model) ──────────────────────────────────
+
+const HUMA_CONTEXT_KEY = "huma-v2-huma-context";
+
+/** Save HumaContext: localStorage first, then Supabase. */
+export async function storeSaveHumaContext(
+  userId: string | null,
+  humaContext: HumaContext,
+): Promise<void> {
+  writeLocalHumaContext(humaContext);
+
+  const sb = getSupabase(userId);
+  if (!sb || !userId) return;
+
+  const walId = addToWal("huma-context", { userId, humaContext });
+  try {
+    await updateHumaContext(sb, userId, humaContext);
+    removeFromWal(walId);
+  } catch {
+    // WAL entry preserved
+  }
+}
+
+/** Load HumaContext: Supabase if authed, fallback to localStorage. */
+export async function storeLoadHumaContext(
+  userId: string | null,
+): Promise<HumaContext> {
+  const sb = getSupabase(userId);
+
+  if (sb && userId) {
+    try {
+      const ctx = await getHumaContext(sb, userId);
+      if (ctx._version) return ctx;
+    } catch { /* fallback */ }
+  }
+
+  return readLocalHumaContext();
+}
+
+/** Synchronous localStorage read for HumaContext. */
+export function storeReadLocalHumaContext(): HumaContext {
+  return readLocalHumaContext();
+}
+
+function readLocalHumaContext(): HumaContext {
+  if (typeof window === "undefined") return createEmptyContext();
+  try {
+    const raw = localStorage.getItem(HUMA_CONTEXT_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed._version) return { ...createEmptyContext(), ...parsed } as HumaContext;
+    }
+    return createEmptyContext();
+  } catch {
+    return createEmptyContext();
+  }
+}
+
+function writeLocalHumaContext(humaContext: HumaContext) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(HUMA_CONTEXT_KEY, JSON.stringify(humaContext));
   } catch { /* storage full */ }
 }
 
@@ -502,6 +569,9 @@ export async function flushWal(userId: string): Promise<{ flushed: number; faile
           break;
         case "context":
           await updateKnownContext(sb, entryUserId, p.context as Record<string, unknown>);
+          break;
+        case "huma-context":
+          await updateHumaContext(sb, entryUserId, p.humaContext as HumaContext);
           break;
         case "chat-message":
           await saveChatMessage(sb, entryUserId, p.message as ChatMessage);

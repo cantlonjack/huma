@@ -8,8 +8,10 @@ import type { WhyEvolutionData } from "@/components/whole/WhyEvolution";
 import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import type { Aspiration, Insight, Principle, KnownContext, Pattern, Behavior, FutureAction, FuturePhase } from "@/types/v2";
+import type { HumaContext } from "@/types/context";
+import { createEmptyContext } from "@/types/context";
 import type { CanvasData } from "@/engine/canvas-types";
-import { buildNodes, computeDimensionLinks, serializeContext } from "@/lib/whole-utils";
+import { buildNodes, computeDimensionLinks, serializeContext, serializeHumaContext } from "@/lib/whole-utils";
 import { withSupabase, clearCachedSheet, updateLocalAspiration as updateLocalAspirationStorage } from "@/lib/persist";
 import {
   markInsightDelivered,
@@ -40,6 +42,7 @@ import {
   queryKeys,
   fetchAllAspirations,
   fetchKnownContext,
+  fetchHumaContext,
   fetchUndeliveredInsight,
   fetchWhyStatement,
   fetchPrinciples,
@@ -47,6 +50,8 @@ import {
   fetchRecentInsights,
   fetchPatterns,
 } from "@/lib/queries";
+import { storeSaveHumaContext } from "@/lib/db/store";
+import { mergeContext } from "@/lib/context-model";
 
 // ─── Return type ────────────────────────────────────────────────────────────
 
@@ -59,6 +64,7 @@ export interface UseWholeReturn {
   aspirations: Aspiration[];
   context: KnownContext;
   rawContext: Record<string, unknown>;
+  humaContext: HumaContext;
   principles: Principle[];
   insight: Insight | null;
   whyStatement: string | null;
@@ -109,6 +115,7 @@ export interface UseWholeReturn {
   handleArchetypeSave: (selected: string[]) => Promise<void>;
   handleWhySave: (value: string) => Promise<void>;
   handleContextSave: (updated: KnownContext) => Promise<void>;
+  handleHumaContextSave: (updates: Partial<HumaContext>) => Promise<void>;
   handleFoundationSave: (nodeId: string, value: string) => Promise<void>;
   handleAspirationNameSave: (aspirationId: string, name: string) => Promise<void>;
   handleAspirationStatusChange: (aspirationId: string, status: Aspiration["status"]) => Promise<void>;
@@ -151,6 +158,7 @@ export function useWhole(): UseWholeReturn {
   // Local overrides for optimistic updates
   const [localAspirations, setLocalAspirations] = useState<Aspiration[] | null>(null);
   const [localContext, setLocalContext] = useState<Record<string, unknown> | null>(null);
+  const [localHumaContext, setLocalHumaContext] = useState<HumaContext | null>(null);
   const [localPrinciples, setLocalPrinciples] = useState<Principle[] | null>(null);
   const [localWhyStatement, setLocalWhyStatement] = useState<string | null | undefined>(undefined);
   const [localArchetypes, setLocalArchetypes] = useState<string[] | null>(null);
@@ -191,6 +199,12 @@ export function useWhole(): UseWholeReturn {
   const { data: serverContext = {}, isLoading: ctxLoading } = useQuery({
     queryKey: queryKeys.knownContext(userId),
     queryFn: () => fetchKnownContext(userId),
+    enabled: true,
+  });
+
+  const { data: serverHumaContext } = useQuery({
+    queryKey: queryKeys.humaContext(userId),
+    queryFn: () => fetchHumaContext(userId),
     enabled: true,
   });
 
@@ -236,6 +250,7 @@ export function useWhole(): UseWholeReturn {
   const aspirations = localAspirations ?? serverAspirations;
   const rawContext = localContext ?? serverContext;
   const context = rawContext as KnownContext;
+  const humaContext = localHumaContext ?? serverHumaContext ?? createEmptyContext();
   const principles = localPrinciples ?? serverPrinciples;
   const correlations = serverCorrelations;
 
@@ -299,7 +314,10 @@ export function useWhole(): UseWholeReturn {
   useEffect(() => {
     if (!loaded || computeCalledRef.current) return;
 
-    const contextStr = serializeContext(rawContext, aspirations);
+    // Prefer rich HumaContext serialization, fall back to legacy
+    const contextStr = humaContext._version
+      ? serializeHumaContext(humaContext, aspirations)
+      : serializeContext(rawContext, aspirations);
     const needsArchetype = archetypes.length === 0;
     const needsWhy = !whyStatement;
     if (!contextStr || contextStr.length < 20 || (!needsArchetype && !needsWhy)) return;
@@ -311,10 +329,30 @@ export function useWhole(): UseWholeReturn {
     if (!needsArchetype) compute = "why";
     else if (!needsWhy) compute = "archetypes";
 
-    fetch("/api/whole-compute", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contextData: contextStr, compute }),
+    // Fetch behavioral summary if authenticated with enough data
+    const supabase = user ? createClient() : null;
+    const behavioralPromise = supabase && user
+      ? getBehavioralSummary(supabase, user.id, aspirations)
+          .then((summary) => {
+            if (summary.totalDays < 7) return undefined;
+            return [
+              `Active days: ${summary.totalDays}`,
+              `Top behaviors: ${summary.topBehaviors.map((b) => `${b.name} (${b.completedDays} days)`).join(", ")}`,
+              `Dimension focus: ${Object.entries(summary.dimensionCounts).sort((a, b) => b[1] - a[1]).map(([d, c]) => `${d}: ${c}`).join(", ")}`,
+            ].join("\n");
+          })
+          .catch(() => undefined)
+      : Promise.resolve(undefined);
+
+    behavioralPromise.then((behavioralSummary) => {
+      const body: Record<string, unknown> = { contextData: contextStr, compute };
+      if (behavioralSummary) body.behavioralSummary = behavioralSummary;
+
+      return fetch("/api/whole-compute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
     })
       .then((res) => res.json())
       .then((data) => {
@@ -327,7 +365,7 @@ export function useWhole(): UseWholeReturn {
       })
       .catch(() => { /* silent fallback */ })
       .finally(() => setComputing(false));
-  }, [loaded, rawContext, aspirations, archetypes.length, whyStatement]);
+  }, [loaded, rawContext, humaContext, aspirations, archetypes.length, whyStatement, user]);
 
   // ─── WHY Evolution: check if 28+ days since WHY was set ────────────────
   const whyEvolveCalledRef = useRef(false);
@@ -359,7 +397,9 @@ export function useWhole(): UseWholeReturn {
           `Dimension focus: ${Object.entries(summary.dimensionCounts).sort((a, b) => b[1] - a[1]).map(([d, c]) => `${d}: ${c}`).join(", ")}`,
         ].join("\n");
 
-        const contextStr = serializeContext(rawContext, aspirations);
+        const contextStr = humaContext._version
+          ? serializeHumaContext(humaContext, aspirations)
+          : serializeContext(rawContext, aspirations);
 
         const res = await fetch("/api/whole-compute", {
           method: "POST",
@@ -467,6 +507,25 @@ export function useWhole(): UseWholeReturn {
     localStorage.setItem("huma-v2-known-context", JSON.stringify(merged));
     await withSupabase(user, (sb, uid) => updateKnownContext(sb, uid, merged));
   }, [rawContext, user]);
+
+  const handleHumaContextSave = useCallback(async (updates: Partial<HumaContext>) => {
+    const updated = mergeContext(humaContext, updates, "explicit");
+    setLocalHumaContext(updated);
+    await storeSaveHumaContext(userId, updated);
+
+    // Sync back to KnownContext for backward compat
+    const knownUpdates: Record<string, unknown> = {};
+    if (updates.home?.location) knownUpdates.place = { name: updates.home.location, detail: updates.home.type || "" };
+    if (updates.identity?.roles?.length) knownUpdates.work = { title: updates.identity.roles[0], detail: "" };
+    if (updates.time?.stage) knownUpdates.stage = { label: updates.time.stage, detail: updates.time.stageDetail || "" };
+    if (updates.body?.conditions?.length) knownUpdates.health = { detail: updates.body.conditions[0] };
+    if (Object.keys(knownUpdates).length > 0) {
+      const merged = { ...rawContext, ...knownUpdates };
+      setLocalContext(merged);
+      localStorage.setItem("huma-v2-known-context", JSON.stringify(merged));
+      await withSupabase(user, (sb, uid) => updateKnownContext(sb, uid, merged));
+    }
+  }, [humaContext, userId, rawContext, user]);
 
   const handleFoundationSave = useCallback(async (nodeId: string, value: string) => {
     const updated = { ...rawContext };
@@ -688,6 +747,7 @@ export function useWhole(): UseWholeReturn {
     aspirations,
     context,
     rawContext,
+    humaContext,
     principles,
     insight,
     whyStatement,
@@ -726,6 +786,7 @@ export function useWhole(): UseWholeReturn {
     handleArchetypeSave,
     handleWhySave,
     handleContextSave,
+    handleHumaContextSave,
     handleFoundationSave,
     handleAspirationNameSave,
     handleAspirationStatusChange,

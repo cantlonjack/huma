@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useStart } from "@/hooks/useStart";
 import AuthModal from "@/components/shared/AuthModal";
 import ArchetypeSelectionScreen from "@/components/onboarding/ArchetypeSelectionScreen";
 import MessageBubble from "@/components/onboarding/MessageBubble";
+import LifeProfile from "@/components/whole/LifeProfile";
+import { profileCompleteness, sectionForDimension } from "@/lib/life-profile-utils";
 import type { StartMessage } from "@/hooks/useStart";
 import type { Behavior, PaletteConcept } from "@/types/v2";
 
@@ -145,7 +147,29 @@ export default function StartPage() {
     handleConfirmBehaviors, handlePaletteTap, handleKeyDown,
     handleAuthenticated, handleArchetypeContinueWithTemplate,
     handleArchetypeContinueBlank, handleArchetypeSkip,
+    humaContext,
   } = useStart();
+
+  const [rightPanelTab, setRightPanelTab] = useState<"suggestions" | "profile">("suggestions");
+
+  const completeness = useMemo(
+    () => profileCompleteness(humaContext),
+    [humaContext],
+  );
+
+  // Auto-switch to profile tab once 2+ sections have content
+  const autoSwitched = useMemo(() => completeness.filled >= 2, [completeness.filled]);
+  const activeTab = autoSwitched && rightPanelTab === "suggestions" ? "profile" : rightPanelTab;
+
+  // Map dimension flash to natural section names
+  const sectionDimensions = useMemo(
+    () => recentDimensions.map((d) => sectionForDimension(d)),
+    [recentDimensions],
+  );
+  const uniqueSectionDimensions = useMemo(
+    () => [...new Set(sectionDimensions)],
+    [sectionDimensions],
+  );
 
   // Wait for initialization before rendering
   if (!stepReady) {
@@ -196,26 +220,26 @@ export default function StartPage() {
         <div className="px-6 pt-6 pb-2">
           <div className="flex items-center justify-between">
             <h1 className="font-serif text-sage-700 text-lg tracking-wide">HUMA</h1>
-            {hasMessages && contextPercentage > 0 && (
+            {hasMessages && completeness.filled > 0 && (
               <div className="flex items-center gap-2 animate-[fade-in_500ms_ease-out]">
                 <div className="w-20 h-1 bg-sand-200 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-sage-400 rounded-full transition-all duration-700 ease-out"
-                    style={{ width: `${Math.min(contextPercentage, 100)}%` }}
+                    style={{ width: `${(completeness.filled / completeness.total) * 100}%` }}
                   />
                 </div>
                 <span className="font-sans text-[10px] text-earth-400 tracking-wide">
-                  {contextPercentage < 30 ? "getting started" : contextPercentage < 60 ? "building picture" : "almost there"}
+                  {completeness.filled} of {completeness.total} sections
                 </span>
               </div>
             )}
           </div>
 
-          {/* Dimension capture flash */}
-          {recentDimensions.length > 0 && (
+          {/* Dimension capture flash — uses natural section names */}
+          {uniqueSectionDimensions.length > 0 && (
             <div className="mt-1.5 animate-[fade-in_300ms_ease-out]">
               <span className="font-sans text-[11px] font-medium tracking-wide text-sage-400">
-                HUMA now knows: {recentDimensions.map(d => d.toLowerCase()).join(", ")}
+                HUMA now knows: {uniqueSectionDimensions.join(", ")}
               </span>
             </div>
           )}
@@ -277,9 +301,51 @@ export default function StartPage() {
         )}
       </div>
 
-      {/* Desktop Palette Panel */}
-      <div className="hidden lg:block lg:w-[40%] border-l border-sand-200 overflow-y-auto">
-        <PalettePanel concepts={paletteConcepts} onTap={handlePaletteTap} loading={paletteLoading} />
+      {/* Desktop Right Panel — Tabbed: Suggestions / Your Profile */}
+      <div className="hidden lg:flex lg:flex-col lg:w-[40%] border-l border-sand-200">
+        {/* Tab bar */}
+        <div className="flex border-b border-sand-200">
+          <button
+            onClick={() => setRightPanelTab("suggestions")}
+            className={`flex-1 py-3 font-sans text-xs tracking-[0.06em] uppercase border-none cursor-pointer transition-colors duration-150 ${
+              activeTab === "suggestions"
+                ? "text-sage-600 bg-sand-50 border-b-2 border-b-sage-500"
+                : "text-earth-400 bg-transparent hover:text-earth-600"
+            }`}
+          >
+            Suggestions
+          </button>
+          <button
+            onClick={() => setRightPanelTab("profile")}
+            className={`flex-1 py-3 font-sans text-xs tracking-[0.06em] uppercase border-none cursor-pointer transition-colors duration-150 ${
+              activeTab === "profile"
+                ? "text-sage-600 bg-sand-50 border-b-2 border-b-sage-500"
+                : "text-earth-400 bg-transparent hover:text-earth-600"
+            }`}
+          >
+            Your Profile
+            {completeness.filled > 0 && (
+              <span className="ml-1.5 text-[10px] text-sage-400">
+                {completeness.filled}/{completeness.total}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Tab content */}
+        <div className="flex-1 overflow-y-auto">
+          {activeTab === "suggestions" ? (
+            <PalettePanel concepts={paletteConcepts} onTap={handlePaletteTap} loading={paletteLoading} />
+          ) : (
+            <div className="p-5">
+              <LifeProfile
+                humaContext={humaContext}
+                aspirations={[]}
+                mode="filling"
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
