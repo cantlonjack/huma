@@ -5,15 +5,29 @@ import { useRouter } from "next/navigation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 /* ─── Dimension config ─── */
-const DIMS: { name: string; color: string; label: string }[] = [
-  { name: "Body", color: "#3A5A40", label: "Back has been better on afternoon-movement days" },
-  { name: "People", color: "#2E6B8A", label: "Kids need pickup by 3:30 on Tuesdays" },
-  { name: "Money", color: "#B5621E", label: "Budget tight until the 15th" },
-  { name: "Home", color: "#8C8274", label: "Garden beds need layout before soil order" },
-  { name: "Growth", color: "#2A4A30", label: "Reading 20min/day streak — 11 days" },
-  { name: "Joy", color: "#C87A3A", label: "Haven't played guitar since last Thursday" },
-  { name: "Purpose", color: "#6B5A7A", label: "Side project blocked on API decision" },
-  { name: "Identity", color: "#554D42", label: "Morning person shifting to early riser" },
+const DIMS: { name: string; color: string; label: string; icon: string }[] = [
+  { name: "Body", color: "#3A5A40", label: "Back has been better on afternoon-movement days", icon: "M12 3c-1.5 2-4 4-4 7s2 5 4 7c2-2 4-4 4-7s-2.5-5-4-7z" },
+  { name: "People", color: "#2E6B8A", label: "Kids need pickup by 3:30 on Tuesdays", icon: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" },
+  { name: "Money", color: "#B5621E", label: "Budget tight until the 15th", icon: "M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" },
+  { name: "Home", color: "#8C8274", label: "Garden beds need layout before soil order", icon: "M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" },
+  { name: "Growth", color: "#2A4A30", label: "Reading 20min/day streak — 11 days", icon: "M12 20V10M18 20V4M6 20v-4" },
+  { name: "Joy", color: "#C87A3A", label: "Haven't played guitar since last Thursday", icon: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" },
+  { name: "Purpose", color: "#6B5A7A", label: "Side project blocked on API decision", icon: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" },
+  { name: "Identity", color: "#554D42", label: "Morning person shifting to early riser", icon: "M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z" },
+];
+
+/* ─── Dimension connections (which dimensions link to each other) ─── */
+const DIM_CONNECTIONS = [
+  [0, 5], // Body ↔ Joy
+  [0, 4], // Body ↔ Growth
+  [1, 3], // People ↔ Home
+  [1, 5], // People ↔ Joy
+  [2, 3], // Money ↔ Home
+  [2, 6], // Money ↔ Purpose
+  [3, 7], // Home ↔ Identity
+  [4, 6], // Growth ↔ Purpose
+  [5, 7], // Joy ↔ Identity
+  [6, 7], // Purpose ↔ Identity
 ];
 
 /* ─── Hero conversation sequence ─── */
@@ -56,12 +70,12 @@ const BRIEFING = [
 
 /* ─── Schools of thought / frameworks ─── */
 const FRAMEWORKS = [
-  { name: "Systems Thinking", origin: "Meadows, Senge" },
-  { name: "Holonic Philosophy", origin: "Koestler" },
-  { name: "Capital Theory", origin: "Bourdieu" },
-  { name: "Behavioral Design", origin: "Fogg, Kahneman" },
-  { name: "Ikigai", origin: "Okinawan tradition" },
-  { name: "Integral Theory", origin: "Wilber" },
+  { name: "Systems Thinking", origin: "Meadows, Senge", icon: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" },
+  { name: "Holonic Philosophy", origin: "Koestler", icon: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 16a4 4 0 100-8 4 4 0 000 8z" },
+  { name: "Capital Theory", origin: "Bourdieu", icon: "M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" },
+  { name: "Behavioral Design", origin: "Fogg, Kahneman", icon: "M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0" },
+  { name: "Ikigai", origin: "Okinawan tradition", icon: "M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z" },
+  { name: "Integral Theory", origin: "Wilber", icon: "M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" },
 ];
 
 /* ─── Scroll reveal ─── */
@@ -122,6 +136,161 @@ function useTypingText(text: string, active: boolean, speed = 25) {
   }, [active, text, speed, reduced]);
 
   return { displayed, done };
+}
+
+/* ══════════════════════════════════════════════════════════════ */
+/*  DIMENSION CONSTELLATION — Interactive SVG visualization      */
+/* ══════════════════════════════════════════════════════════════ */
+
+function DimensionConstellation({ reduced, mounted }: { reduced: boolean; mounted: boolean }) {
+  const [hoveredDim, setHoveredDim] = useState<number | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current || reduced) { setIsVisible(true); return; }
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setIsVisible(true); obs.disconnect(); } },
+      { threshold: 0.2 }
+    );
+    obs.observe(containerRef.current);
+    return () => obs.disconnect();
+  }, [reduced]);
+
+  const cx = 220, cy = 220, radius = 155;
+  const points = DIMS.map((d, i) => {
+    const angle = (i * 45 - 90) * (Math.PI / 180);
+    return { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle), ...d, idx: i };
+  });
+
+  const isConnected = (dimIdx: number) =>
+    hoveredDim !== null && DIM_CONNECTIONS.some(([a, b]) => (a === hoveredDim && b === dimIdx) || (b === hoveredDim && a === dimIdx));
+
+  return (
+    <div ref={containerRef} className="flex justify-center">
+      <div className="relative w-full" style={{ maxWidth: 440 }}>
+        <svg viewBox="0 0 440 440" className="w-full h-auto">
+          {/* Background circles */}
+          <circle cx={cx} cy={cy} r={radius + 30} fill="none" stroke="var(--color-sand-200)" strokeWidth="0.5" strokeDasharray="4 4" opacity={0.5} />
+          <circle cx={cx} cy={cy} r={radius * 0.5} fill="none" stroke="var(--color-sand-200)" strokeWidth="0.5" strokeDasharray="4 4" opacity={0.3} />
+
+          {/* Connection lines */}
+          {DIM_CONNECTIONS.map(([a, b], i) => {
+            const pa = points[a], pb = points[b];
+            const active = hoveredDim !== null && (a === hoveredDim || b === hoveredDim);
+            return (
+              <line
+                key={`conn-${i}`}
+                x1={pa.x} y1={pa.y} x2={pb.x} y2={pb.y}
+                stroke={active ? points[hoveredDim!].color : "var(--color-sand-300)"}
+                strokeWidth={active ? 2 : 1}
+                opacity={isVisible ? (hoveredDim === null ? 0.35 : active ? 0.7 : 0.1) : 0}
+                style={{
+                  transition: reduced ? "none" : "all 400ms cubic-bezier(0.22, 1, 0.36, 1)",
+                  transitionDelay: !reduced && isVisible && hoveredDim === null ? `${i * 60}ms` : "0ms",
+                }}
+              />
+            );
+          })}
+
+          {/* Center label */}
+          <text x={cx} y={cy - 6} textAnchor="middle" fill="var(--color-earth-400)" fontSize="9" fontFamily="var(--font-sans)" fontWeight="500" letterSpacing="0.15em">
+            YOUR
+          </text>
+          <text x={cx} y={cy + 8} textAnchor="middle" fill="var(--color-earth-400)" fontSize="9" fontFamily="var(--font-sans)" fontWeight="500" letterSpacing="0.15em">
+            LIFE
+          </text>
+          <circle cx={cx} cy={cy} r={22} fill="none" stroke="var(--color-sand-300)" strokeWidth="1" opacity={0.5} />
+
+          {/* Dimension nodes */}
+          {points.map((p, i) => {
+            const isHovered = hoveredDim === i;
+            const connected = isConnected(i);
+            const dimmed = hoveredDim !== null && !isHovered && !connected;
+            return (
+              <g
+                key={p.name}
+                onMouseEnter={() => setHoveredDim(i)}
+                onMouseLeave={() => setHoveredDim(null)}
+                style={{
+                  cursor: "pointer",
+                  opacity: isVisible ? (dimmed ? 0.3 : 1) : 0,
+                  transition: reduced ? "none" : `opacity 400ms ease ${i * 80}ms, transform 400ms ease`,
+                }}
+              >
+                {/* Outer glow ring */}
+                <circle
+                  cx={p.x} cy={p.y}
+                  r={isHovered ? 36 : 30}
+                  fill={p.color}
+                  opacity={isHovered ? 0.08 : 0.04}
+                  style={{ transition: reduced ? "none" : "all 300ms ease" }}
+                />
+                {/* Main circle */}
+                <circle
+                  cx={p.x} cy={p.y}
+                  r={isHovered ? 22 : 18}
+                  fill="white"
+                  stroke={p.color}
+                  strokeWidth={isHovered ? 2.5 : 1.5}
+                  opacity={isHovered ? 1 : 0.9}
+                  style={{ transition: reduced ? "none" : "all 300ms cubic-bezier(0.22, 1, 0.36, 1)" }}
+                />
+                {/* Icon inside circle */}
+                <g transform={`translate(${p.x - 8}, ${p.y - 8}) scale(0.667)`}>
+                  <path
+                    d={p.icon}
+                    fill="none"
+                    stroke={p.color}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    opacity={isHovered ? 1 : 0.7}
+                    style={{ transition: reduced ? "none" : "opacity 300ms ease" }}
+                  />
+                </g>
+                {/* Label */}
+                <text
+                  x={p.x}
+                  y={p.y + (isHovered ? 36 : 32)}
+                  textAnchor="middle"
+                  fill={isHovered ? p.color : "var(--color-earth-500)"}
+                  fontSize={isHovered ? "11" : "10"}
+                  fontFamily="var(--font-sans)"
+                  fontWeight={isHovered ? "600" : "500"}
+                  style={{ transition: reduced ? "none" : "all 300ms ease" }}
+                >
+                  {p.name}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+
+        {/* Hover detail card */}
+        {hoveredDim !== null && (
+          <div
+            className="absolute left-1/2 -translate-x-1/2 bottom-0 bg-white rounded-lg border border-sand-200 px-4 py-3 pointer-events-none"
+            style={{
+              boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
+              animation: !reduced ? "msg-in 250ms cubic-bezier(0.22,1,0.36,1) both" : "none",
+              maxWidth: 280,
+            }}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <span className="w-2 h-2 rounded-full" style={{ background: DIMS[hoveredDim].color }} />
+              <span className="font-sans text-ink-800" style={{ fontSize: "0.8rem", fontWeight: 600 }}>
+                {DIMS[hoveredDim].name}
+              </span>
+            </div>
+            <p className="font-sans text-earth-400" style={{ fontSize: "0.75rem", fontWeight: 300, lineHeight: 1.45 }}>
+              {DIMS[hoveredDim].label}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 /* ══════════════════════════════════════════════════════════════ */
@@ -557,11 +726,17 @@ export default function LandingPage() {
 
       {/* ═══ DIMENSION STRIP ═══ */}
       <section className="border-y border-sand-200 bg-white">
-        <div className="max-w-[1120px] mx-auto px-6 py-6">
-          <div className="flex flex-wrap justify-center gap-x-6 gap-y-3">
+        <div className="max-w-[1120px] mx-auto px-6 py-5">
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-3">
             {DIMS.map((d) => (
-              <span key={d.name} className="inline-flex items-center gap-2 font-sans text-earth-500" style={{ fontSize: "0.82rem", fontWeight: 400 }}>
-                <span className="w-2 h-2 rounded-full" style={{ background: d.color, opacity: 0.75 }} />
+              <span
+                key={d.name}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-sand-200 font-sans text-earth-600"
+                style={{ fontSize: "0.78rem", fontWeight: 500 }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={d.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.75">
+                  <path d={d.icon} />
+                </svg>
                 {d.name}
               </span>
             ))}
@@ -629,11 +804,27 @@ export default function LandingPage() {
                 </div>
               ))}
               {/* Context extraction indicator */}
-              <div className="pt-2 border-t border-sand-100 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-sage-500" style={{ opacity: 0.6 }} />
-                <span className="font-sans text-earth-300" style={{ fontSize: "0.7rem" }}>
-                  Context captured: <span className="text-earth-500">Money</span>, <span className="text-earth-500">Home</span>
-                </span>
+              <div className="pt-3 border-t border-sand-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-sage-500)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7">
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                  </svg>
+                  <span className="font-sans text-earth-400" style={{ fontSize: "0.7rem", fontWeight: 500 }}>
+                    Context extracted
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  {[
+                    { name: "Money", color: "#B5621E" },
+                    { name: "Home", color: "#8C8274" },
+                  ].map((d) => (
+                    <span key={d.name} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sand-50 border border-sand-200">
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: d.color }} />
+                      <span className="font-sans text-earth-500" style={{ fontSize: "0.68rem", fontWeight: 500 }}>{d.name}</span>
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -641,47 +832,27 @@ export default function LandingPage() {
           {/* ── #02 The Map ── */}
           <div
             ref={setRef(3)}
-            className={`grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-10 md:gap-16 mb-24 ${mounted && !reduced ? "landing-reveal" : ""}`}
+            className={`mb-24 ${mounted && !reduced ? "landing-reveal" : ""}`}
             style={!reduced ? { opacity: mounted ? undefined : 0 } : undefined}
           >
-            <div className="md:order-2">
+            <div className="text-center mb-10">
               <p className="font-sans text-sage-600 mb-2" style={{ fontSize: "0.72rem", fontWeight: 600, letterSpacing: "0.08em" }}>
                 #02 / THE MAP
               </p>
               <h3 className="font-serif text-ink-900 mb-3" style={{ fontSize: "1.5rem", fontWeight: 400, lineHeight: 1.2 }}>
                 Eight dimensions. One picture.
               </h3>
-              <p className="font-sans text-earth-500 mb-4" style={{ fontSize: "0.92rem", fontWeight: 300, lineHeight: 1.7 }}>
-                HUMA doesn&apos;t silo your life into separate apps. It maps everything onto eight dimensions &mdash; Body, People, Money, Home, Growth, Joy, Purpose, Identity &mdash; and shows you how they connect.
-              </p>
-              <p className="font-sans text-earth-400" style={{ fontSize: "0.85rem", fontWeight: 300, lineHeight: 1.65 }}>
-                The garden project touches Home and Money. Your back pain connects Body to Joy (because you skip movement when it flares). HUMA sees these chains and accounts for them.
+              <p className="font-sans text-earth-500 max-w-[540px] mx-auto" style={{ fontSize: "0.92rem", fontWeight: 300, lineHeight: 1.7 }}>
+                HUMA doesn&apos;t silo your life into separate apps. It maps everything onto eight dimensions and shows you how they connect.
               </p>
             </div>
-            {/* Visual: dimension map */}
-            <div
-              className="rounded-xl border border-sand-200 bg-white p-6 md:order-1"
-              style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}
-            >
-              <div className="space-y-2.5">
-                {DIMS.map((d) => (
-                  <div key={d.name} className="flex items-start gap-3">
-                    <span
-                      className="w-2.5 h-2.5 rounded-full mt-1.5 shrink-0"
-                      style={{ background: d.color, opacity: 0.8 }}
-                    />
-                    <div>
-                      <p className="font-sans text-ink-700" style={{ fontSize: "0.82rem", fontWeight: 500 }}>
-                        {d.name}
-                      </p>
-                      <p className="font-sans text-earth-400" style={{ fontSize: "0.75rem", fontWeight: 300, lineHeight: 1.45 }}>
-                        {d.label}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+
+            {/* Interactive constellation */}
+            <DimensionConstellation reduced={reduced} mounted={mounted} />
+
+            <p className="font-sans text-earth-400 text-center mt-8 max-w-[480px] mx-auto" style={{ fontSize: "0.85rem", fontWeight: 300, lineHeight: 1.65 }}>
+              The garden project touches Home and Money. Your back pain connects Body to Joy. HUMA sees these chains and plans around them.
+            </p>
           </div>
 
           {/* ── #03 The Briefing ── */}
@@ -767,26 +938,54 @@ export default function LandingPage() {
               {
                 title: "It remembers everything",
                 desc: "Your freezer inventory. Your kid\u2019s schedule. The budget constraint from three weeks ago. HUMA holds your full context and uses all of it, every morning.",
-                border: "#3A5A40",
+                color: "#3A5A40",
+                icon: (
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#3A5A40" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2a10 10 0 110 20 10 10 0 010-20z" opacity="0.15" fill="#3A5A40" />
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 6v6l4 2" />
+                    <circle cx="12" cy="12" r="2" fill="#3A5A40" opacity="0.3" />
+                  </svg>
+                ),
               },
               {
                 title: "It sees connections",
                 desc: "The garden affects the budget. The budget affects stress. Stress affects whether you move. HUMA traces the chain and plans around it.",
-                border: "#2E6B8A",
+                color: "#2E6B8A",
+                icon: (
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#2E6B8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="6" cy="6" r="3" />
+                    <circle cx="18" cy="6" r="3" />
+                    <circle cx="6" cy="18" r="3" />
+                    <circle cx="18" cy="18" r="3" />
+                    <line x1="8.5" y1="7.5" x2="15.5" y2="16.5" />
+                    <line x1="15.5" y1="7.5" x2="8.5" y2="16.5" />
+                    <line x1="6" y1="9" x2="6" y2="15" />
+                    <line x1="18" y1="9" x2="18" y2="15" />
+                  </svg>
+                ),
               },
               {
                 title: "It learns your rhythm",
                 desc: "After a week, it notices you\u2019re a night person. It flags when a dimension goes dormant. It adapts without you configuring anything.",
-                border: "#C87A3A",
+                color: "#C87A3A",
+                icon: (
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#C87A3A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2 17l3-3 4 4 6-8 5 5" />
+                    <circle cx="20" cy="15" r="2" fill="#C87A3A" opacity="0.3" />
+                    <path d="M2 21h20" opacity="0.3" />
+                  </svg>
+                ),
               },
             ].map((item, i) => (
               <div
                 key={i}
                 ref={setRef(i + 7)}
-                className={`${mounted && !reduced ? "landing-reveal" : ""}`}
+                className={`rounded-xl border border-sand-200 bg-sand-50 p-6 ${mounted && !reduced ? "landing-reveal" : ""}`}
                 style={!reduced ? { opacity: mounted ? undefined : 0 } : undefined}
               >
-                <div className="w-full h-[3px] rounded-full mb-5" style={{ background: item.border, opacity: 0.5 }} />
+                <div className="mb-4">{item.icon}</div>
+                <div className="w-8 h-[2px] rounded-full mb-4" style={{ background: item.color, opacity: 0.5 }} />
                 <p className="font-serif text-ink-900 mb-2" style={{ fontSize: "1.1rem", fontWeight: 500, lineHeight: 1.3 }}>
                   {item.title}
                 </p>
@@ -826,13 +1025,18 @@ export default function LandingPage() {
             style={!reduced ? { opacity: mounted ? undefined : 0 } : undefined}
           >
             {FRAMEWORKS.map((f) => (
-              <div key={f.name} className="py-4 px-5 rounded-lg border border-sand-200 bg-white">
-                <p className="font-serif text-ink-800 mb-0.5" style={{ fontSize: "0.95rem", fontWeight: 500 }}>
-                  {f.name}
-                </p>
-                <p className="font-sans text-earth-300" style={{ fontSize: "0.75rem", fontWeight: 300 }}>
-                  {f.origin}
-                </p>
+              <div key={f.name} className="py-4 px-5 rounded-lg border border-sand-200 bg-white flex items-start gap-3">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-sage-500)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" opacity="0.6">
+                  <path d={f.icon} />
+                </svg>
+                <div>
+                  <p className="font-serif text-ink-800 mb-0.5" style={{ fontSize: "0.95rem", fontWeight: 500 }}>
+                    {f.name}
+                  </p>
+                  <p className="font-sans text-earth-300" style={{ fontSize: "0.75rem", fontWeight: 300 }}>
+                    {f.origin}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
@@ -842,9 +1046,11 @@ export default function LandingPage() {
             className={`flex flex-col md:flex-row items-start md:items-center gap-3 pt-8 border-t border-sand-200 ${mounted && !reduced ? "landing-reveal" : ""}`}
             style={!reduced ? { opacity: mounted ? undefined : 0 } : undefined}
           >
-            <div className="w-1.5 h-1.5 rounded-full bg-sage-500 shrink-0 mt-1 md:mt-0" style={{ opacity: 0.6 }} />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-sage-500)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5 md:mt-0" opacity="0.5">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z" />
+            </svg>
             <p className="font-sans text-earth-400" style={{ fontSize: "0.88rem", fontWeight: 300, lineHeight: 1.6 }}>
-              Built with love in Northern Michigan.
+              Proudly created in the Great Lake State.
             </p>
           </div>
         </div>
@@ -892,7 +1098,7 @@ export default function LandingPage() {
             </span>
           </div>
           <p className="font-sans text-earth-300" style={{ fontSize: "0.7rem", fontWeight: 300 }}>
-            &copy; {new Date().getFullYear()} HUMA &middot; NoMi, Michigan
+            &copy; {new Date().getFullYear()} HUMA
           </p>
         </div>
       </footer>
