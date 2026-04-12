@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { SheetEntry } from "@/types/v2";
+import { ConnectionThreads, dimensionKeysFromLabels } from "@/components/shared/ConnectionThreads";
 
 export function CompiledEntryRow({
   entry,
@@ -61,11 +62,14 @@ export function CompiledEntryRow({
           </span>
         )}
 
-        {/* Dimension tags */}
+        {/* Dimension threads */}
         {entry.dimensions && entry.dimensions.length > 0 && !isChecked && (
-          <p className="font-sans text-[11px] text-sand-400 mt-1.5 leading-none tracking-[0.01em]">
-            {entry.dimensions.join(" · ")}
-          </p>
+          <div className="mt-1.5">
+            <ConnectionThreads
+              activeDimensions={dimensionKeysFromLabels(entry.dimensions)}
+              size="micro"
+            />
+          </div>
         )}
       </div>
     </div>

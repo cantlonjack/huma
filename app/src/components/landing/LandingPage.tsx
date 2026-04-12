@@ -16,20 +16,6 @@ const DIMS: { name: string; color: string; label: string; icon: string }[] = [
   { name: "Identity", color: "#554D42", label: "Morning person shifting to early riser", icon: "M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z" },
 ];
 
-/* ─── Dimension connections (which dimensions link to each other) ─── */
-const DIM_CONNECTIONS = [
-  [0, 5], // Body ↔ Joy
-  [0, 4], // Body ↔ Growth
-  [1, 3], // People ↔ Home
-  [1, 5], // People ↔ Joy
-  [2, 3], // Money ↔ Home
-  [2, 6], // Money ↔ Purpose
-  [3, 7], // Home ↔ Identity
-  [4, 6], // Growth ↔ Purpose
-  [5, 7], // Joy ↔ Identity
-  [6, 7], // Purpose ↔ Identity
-];
-
 /* ─── Hero conversation sequence ─── */
 const HERO_MESSAGES = [
   { role: "huma" as const, text: "What\u2019s going on in your life right now?" },
@@ -66,16 +52,6 @@ const BRIEFING = [
     dims: ["Body", "Joy"],
     focus: false,
   },
-];
-
-/* ─── Schools of thought / frameworks ─── */
-const FRAMEWORKS = [
-  { name: "Systems Thinking", origin: "Meadows, Senge", icon: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" },
-  { name: "Holonic Philosophy", origin: "Koestler", icon: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 16a4 4 0 100-8 4 4 0 000 8z" },
-  { name: "Capital Theory", origin: "Bourdieu", icon: "M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" },
-  { name: "Behavioral Design", origin: "Fogg, Kahneman", icon: "M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0" },
-  { name: "Ikigai", origin: "Okinawan tradition", icon: "M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z" },
-  { name: "Integral Theory", origin: "Wilber", icon: "M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" },
 ];
 
 /* ─── Scroll reveal ─── */
@@ -136,161 +112,6 @@ function useTypingText(text: string, active: boolean, speed = 25) {
   }, [active, text, speed, reduced]);
 
   return { displayed, done };
-}
-
-/* ══════════════════════════════════════════════════════════════ */
-/*  DIMENSION CONSTELLATION — Interactive SVG visualization      */
-/* ══════════════════════════════════════════════════════════════ */
-
-function DimensionConstellation({ reduced, mounted }: { reduced: boolean; mounted: boolean }) {
-  const [hoveredDim, setHoveredDim] = useState<number | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!containerRef.current || reduced) { setIsVisible(true); return; }
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setIsVisible(true); obs.disconnect(); } },
-      { threshold: 0.2 }
-    );
-    obs.observe(containerRef.current);
-    return () => obs.disconnect();
-  }, [reduced]);
-
-  const cx = 220, cy = 220, radius = 155;
-  const points = DIMS.map((d, i) => {
-    const angle = (i * 45 - 90) * (Math.PI / 180);
-    return { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle), ...d, idx: i };
-  });
-
-  const isConnected = (dimIdx: number) =>
-    hoveredDim !== null && DIM_CONNECTIONS.some(([a, b]) => (a === hoveredDim && b === dimIdx) || (b === hoveredDim && a === dimIdx));
-
-  return (
-    <div ref={containerRef} className="flex justify-center">
-      <div className="relative w-full" style={{ maxWidth: 440 }}>
-        <svg viewBox="0 0 440 440" className="w-full h-auto">
-          {/* Background circles */}
-          <circle cx={cx} cy={cy} r={radius + 30} fill="none" stroke="var(--color-sand-200)" strokeWidth="0.5" strokeDasharray="4 4" opacity={0.5} />
-          <circle cx={cx} cy={cy} r={radius * 0.5} fill="none" stroke="var(--color-sand-200)" strokeWidth="0.5" strokeDasharray="4 4" opacity={0.3} />
-
-          {/* Connection lines */}
-          {DIM_CONNECTIONS.map(([a, b], i) => {
-            const pa = points[a], pb = points[b];
-            const active = hoveredDim !== null && (a === hoveredDim || b === hoveredDim);
-            return (
-              <line
-                key={`conn-${i}`}
-                x1={pa.x} y1={pa.y} x2={pb.x} y2={pb.y}
-                stroke={active ? points[hoveredDim!].color : "var(--color-sand-300)"}
-                strokeWidth={active ? 2 : 1}
-                opacity={isVisible ? (hoveredDim === null ? 0.35 : active ? 0.7 : 0.1) : 0}
-                style={{
-                  transition: reduced ? "none" : "all 400ms cubic-bezier(0.22, 1, 0.36, 1)",
-                  transitionDelay: !reduced && isVisible && hoveredDim === null ? `${i * 60}ms` : "0ms",
-                }}
-              />
-            );
-          })}
-
-          {/* Center label */}
-          <text x={cx} y={cy - 6} textAnchor="middle" fill="var(--color-earth-400)" fontSize="9" fontFamily="var(--font-sans)" fontWeight="500" letterSpacing="0.15em">
-            YOUR
-          </text>
-          <text x={cx} y={cy + 8} textAnchor="middle" fill="var(--color-earth-400)" fontSize="9" fontFamily="var(--font-sans)" fontWeight="500" letterSpacing="0.15em">
-            LIFE
-          </text>
-          <circle cx={cx} cy={cy} r={22} fill="none" stroke="var(--color-sand-300)" strokeWidth="1" opacity={0.5} />
-
-          {/* Dimension nodes */}
-          {points.map((p, i) => {
-            const isHovered = hoveredDim === i;
-            const connected = isConnected(i);
-            const dimmed = hoveredDim !== null && !isHovered && !connected;
-            return (
-              <g
-                key={p.name}
-                onMouseEnter={() => setHoveredDim(i)}
-                onMouseLeave={() => setHoveredDim(null)}
-                style={{
-                  cursor: "pointer",
-                  opacity: isVisible ? (dimmed ? 0.3 : 1) : 0,
-                  transition: reduced ? "none" : `opacity 400ms ease ${i * 80}ms, transform 400ms ease`,
-                }}
-              >
-                {/* Outer glow ring */}
-                <circle
-                  cx={p.x} cy={p.y}
-                  r={isHovered ? 36 : 30}
-                  fill={p.color}
-                  opacity={isHovered ? 0.08 : 0.04}
-                  style={{ transition: reduced ? "none" : "all 300ms ease" }}
-                />
-                {/* Main circle */}
-                <circle
-                  cx={p.x} cy={p.y}
-                  r={isHovered ? 22 : 18}
-                  fill="white"
-                  stroke={p.color}
-                  strokeWidth={isHovered ? 2.5 : 1.5}
-                  opacity={isHovered ? 1 : 0.9}
-                  style={{ transition: reduced ? "none" : "all 300ms cubic-bezier(0.22, 1, 0.36, 1)" }}
-                />
-                {/* Icon inside circle */}
-                <g transform={`translate(${p.x - 8}, ${p.y - 8}) scale(0.667)`}>
-                  <path
-                    d={p.icon}
-                    fill="none"
-                    stroke={p.color}
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    opacity={isHovered ? 1 : 0.7}
-                    style={{ transition: reduced ? "none" : "opacity 300ms ease" }}
-                  />
-                </g>
-                {/* Label */}
-                <text
-                  x={p.x}
-                  y={p.y + (isHovered ? 36 : 32)}
-                  textAnchor="middle"
-                  fill={isHovered ? p.color : "var(--color-earth-500)"}
-                  fontSize={isHovered ? "11" : "10"}
-                  fontFamily="var(--font-sans)"
-                  fontWeight={isHovered ? "600" : "500"}
-                  style={{ transition: reduced ? "none" : "all 300ms ease" }}
-                >
-                  {p.name}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
-
-        {/* Hover detail card */}
-        {hoveredDim !== null && (
-          <div
-            className="absolute left-1/2 -translate-x-1/2 bottom-0 bg-white rounded-lg border border-sand-200 px-4 py-3 pointer-events-none"
-            style={{
-              boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
-              animation: !reduced ? "msg-in 250ms cubic-bezier(0.22,1,0.36,1) both" : "none",
-              maxWidth: 280,
-            }}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <span className="w-2 h-2 rounded-full" style={{ background: DIMS[hoveredDim].color }} />
-              <span className="font-sans text-ink-800" style={{ fontSize: "0.8rem", fontWeight: 600 }}>
-                {DIMS[hoveredDim].name}
-              </span>
-            </div>
-            <p className="font-sans text-earth-400" style={{ fontSize: "0.75rem", fontWeight: 300, lineHeight: 1.45 }}>
-              {DIMS[hoveredDim].label}
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
 }
 
 /* ══════════════════════════════════════════════════════════════ */
@@ -614,16 +435,6 @@ export default function LandingPage() {
 
   const go = () => router.push("/start");
 
-  const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const reveal = (idx: number) => ({
-    ref: setRef(idx),
-    className: mounted && !reduced ? "landing-reveal" : "",
-    style: !reduced ? ({ opacity: mounted ? undefined : 0 } as React.CSSProperties) : undefined,
-  });
-
   return (
     <div className="min-h-screen bg-sand-50 overflow-x-hidden">
       {/* ═══ NAV ═══ */}
@@ -636,29 +447,13 @@ export default function LandingPage() {
             HUMA
           </span>
 
-          <div className="flex items-center gap-6">
-            <button
-              onClick={() => scrollTo("how-it-works")}
-              className="hidden sm:block font-sans text-earth-400 hover:text-ink-700 cursor-pointer"
-              style={{ fontSize: "0.84rem", fontWeight: 400, transition: reduced ? "none" : "color 200ms" }}
-            >
-              How it works
-            </button>
-            <button
-              onClick={() => scrollTo("foundations")}
-              className="hidden md:block font-sans text-earth-400 hover:text-ink-700 cursor-pointer"
-              style={{ fontSize: "0.84rem", fontWeight: 400, transition: reduced ? "none" : "color 200ms" }}
-            >
-              Foundations
-            </button>
-            <button
-              onClick={go}
-              className="font-sans font-medium text-sand-50 bg-sage-700 hover:bg-sage-600 rounded-full px-5 py-2 cursor-pointer"
-              style={{ fontSize: "0.84rem", transition: reduced ? "none" : "all 200ms cubic-bezier(0.22, 1, 0.36, 1)" }}
-            >
-              Get started
-            </button>
-          </div>
+          <button
+            onClick={go}
+            className="font-sans font-medium text-sand-50 bg-sage-700 hover:bg-sage-600 rounded-full px-5 py-2 cursor-pointer"
+            style={{ fontSize: "0.84rem", transition: reduced ? "none" : "all 200ms cubic-bezier(0.22, 1, 0.36, 1)" }}
+          >
+            Get started
+          </button>
         </div>
       </nav>
 
@@ -724,364 +519,69 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══ DIMENSION STRIP ═══ */}
-      <section className="border-y border-sand-200 bg-white">
-        <div className="max-w-[1120px] mx-auto px-6 py-5">
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-3">
-            {DIMS.map((d) => (
-              <span
-                key={d.name}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-sand-200 font-sans text-earth-600"
-                style={{ fontSize: "0.78rem", fontWeight: 500 }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={d.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.75">
-                  <path d={d.icon} />
-                </svg>
-                {d.name}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ HOW IT WORKS — Numbered explainer ═══ */}
-      <section id="how-it-works" className="px-6 py-24 md:py-32 bg-sand-50">
-        <div className="max-w-[1000px] mx-auto">
-          <p
-            {...reveal(0)}
-            className={`font-sans text-sage-600 mb-3 ${reveal(0).className}`}
-            style={{ fontSize: "0.68rem", fontWeight: 600, letterSpacing: "0.22em", textTransform: "uppercase", ...reveal(0).style }}
-          >
-            How it works
-          </p>
+      {/* ═══ THE DIFFERENCE — tight, inline ═══ */}
+      <section className="px-6 py-16 md:py-20 border-t border-sand-200">
+        <div className="max-w-[720px] mx-auto">
           <h2
-            {...reveal(1)}
-            className={`font-serif text-ink-900 mb-20 max-w-[500px] ${reveal(1).className}`}
-            style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", fontWeight: 400, lineHeight: 1.2, ...reveal(1).style }}
+            ref={setRef(0)}
+            className={`font-serif text-ink-900 mb-12 text-center ${mounted && !reduced ? "landing-reveal" : ""}`}
+            style={{
+              fontSize: "clamp(1.4rem, 3vw, 1.9rem)",
+              fontWeight: 400,
+              lineHeight: 1.3,
+              opacity: !reduced && mounted ? undefined : !reduced ? 0 : undefined,
+            }}
           >
-            Five minutes to your first briefing.
-          </h2>
-
-          {/* ── #01 The Conversation ── */}
-          <div
-            ref={setRef(2)}
-            className={`grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-10 md:gap-16 mb-24 ${mounted && !reduced ? "landing-reveal" : ""}`}
-            style={!reduced ? { opacity: mounted ? undefined : 0 } : undefined}
-          >
-            <div>
-              <p className="font-sans text-sage-600 mb-2" style={{ fontSize: "0.72rem", fontWeight: 600, letterSpacing: "0.08em" }}>
-                #01 / THE CONVERSATION
-              </p>
-              <h3 className="font-serif text-ink-900 mb-3" style={{ fontSize: "1.5rem", fontWeight: 400, lineHeight: 1.2 }}>
-                Talk. Don&apos;t fill out forms.
-              </h3>
-              <p className="font-sans text-earth-500 mb-4" style={{ fontSize: "0.92rem", fontWeight: 300, lineHeight: 1.7 }}>
-                Tell HUMA what&apos;s going on like you&apos;d tell a sharp friend who remembers everything. Your budget stress, the garden project, the kid&apos;s schedule, the back pain &mdash; all of it matters, and none of it requires a dropdown menu.
-              </p>
-              <p className="font-sans text-earth-400" style={{ fontSize: "0.85rem", fontWeight: 300, lineHeight: 1.65 }}>
-                As you talk, HUMA extracts context across eight dimensions of your life. You&apos;ll see your profile building in real time &mdash; no data entry, no onboarding wizard.
-              </p>
-            </div>
-            {/* Visual: conversation snippet */}
-            <div
-              className="rounded-xl border border-sand-200 bg-white p-5 space-y-3"
-              style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}
-            >
-              {[
-                { role: "huma", text: "What\u2019s on your mind today?" },
-                { role: "user", text: "Budget is tight until the 15th and I need to order garden soil before the weekend." },
-                { role: "huma", text: "Got it. How much are you looking at for soil, and is the weekend a hard deadline?" },
-              ].map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[80%] px-3.5 py-2 rounded-2xl font-sans ${
-                      msg.role === "user" ? "bg-sage-50 text-ink-800" : "bg-sand-100 text-ink-700"
-                    }`}
-                    style={{ fontSize: "0.82rem", lineHeight: 1.5 }}
-                  >
-                    {msg.text}
-                  </div>
-                </div>
-              ))}
-              {/* Context extraction indicator */}
-              <div className="pt-3 border-t border-sand-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-sage-500)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7">
-                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-                    <polyline points="22 4 12 14.01 9 11.01" />
-                  </svg>
-                  <span className="font-sans text-earth-400" style={{ fontSize: "0.7rem", fontWeight: 500 }}>
-                    Context extracted
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  {[
-                    { name: "Money", color: "#B5621E" },
-                    { name: "Home", color: "#8C8274" },
-                  ].map((d) => (
-                    <span key={d.name} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sand-50 border border-sand-200">
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: d.color }} />
-                      <span className="font-sans text-earth-500" style={{ fontSize: "0.68rem", fontWeight: 500 }}>{d.name}</span>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ── #02 The Map ── */}
-          <div
-            ref={setRef(3)}
-            className={`mb-24 ${mounted && !reduced ? "landing-reveal" : ""}`}
-            style={!reduced ? { opacity: mounted ? undefined : 0 } : undefined}
-          >
-            <div className="text-center mb-10">
-              <p className="font-sans text-sage-600 mb-2" style={{ fontSize: "0.72rem", fontWeight: 600, letterSpacing: "0.08em" }}>
-                #02 / THE MAP
-              </p>
-              <h3 className="font-serif text-ink-900 mb-3" style={{ fontSize: "1.5rem", fontWeight: 400, lineHeight: 1.2 }}>
-                Eight dimensions. One picture.
-              </h3>
-              <p className="font-sans text-earth-500 max-w-[540px] mx-auto" style={{ fontSize: "0.92rem", fontWeight: 300, lineHeight: 1.7 }}>
-                HUMA doesn&apos;t silo your life into separate apps. It maps everything onto eight dimensions and shows you how they connect.
-              </p>
-            </div>
-
-            {/* Interactive constellation */}
-            <DimensionConstellation reduced={reduced} mounted={mounted} />
-
-            <p className="font-sans text-earth-400 text-center mt-8 max-w-[480px] mx-auto" style={{ fontSize: "0.85rem", fontWeight: 300, lineHeight: 1.65 }}>
-              The garden project touches Home and Money. Your back pain connects Body to Joy. HUMA sees these chains and plans around them.
-            </p>
-          </div>
-
-          {/* ── #03 The Briefing ── */}
-          <div
-            ref={setRef(4)}
-            className={`grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-10 md:gap-16 ${mounted && !reduced ? "landing-reveal" : ""}`}
-            style={!reduced ? { opacity: mounted ? undefined : 0 } : undefined}
-          >
-            <div>
-              <p className="font-sans text-sage-600 mb-2" style={{ fontSize: "0.72rem", fontWeight: 600, letterSpacing: "0.08em" }}>
-                #03 / THE BRIEFING
-              </p>
-              <h3 className="font-serif text-ink-900 mb-3" style={{ fontSize: "1.5rem", fontWeight: 400, lineHeight: 1.2 }}>
-                Five actions. Each with a reason.
-              </h3>
-              <p className="font-sans text-earth-500 mb-4" style={{ fontSize: "0.92rem", fontWeight: 300, lineHeight: 1.7 }}>
-                Every morning, HUMA compiles a production sheet &mdash; not a generic to-do list, but five specific actions grounded in your full context. Budget, season, patterns, constraints &mdash; all factored.
-              </p>
-              <p className="font-sans text-earth-400" style={{ fontSize: "0.85rem", fontWeight: 300, lineHeight: 1.65 }}>
-                Each action comes with a reason why it matters today. You can check things off, push back, or update your context. The system learns and adapts.
-              </p>
-            </div>
-            {/* Visual: sheet with check-offs + capital pulse */}
-            <div
-              className="rounded-xl border border-sand-200 bg-white overflow-hidden"
-              style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}
-            >
-              {/* Sheet entries with check states */}
-              <div className="px-5 pt-4 pb-2">
-                <p className="font-sans text-earth-400" style={{ fontSize: "0.68rem", fontWeight: 500, letterSpacing: "0.02em" }}>
-                  Day 23&ensp;&middot;&ensp;3 of 5 complete
-                </p>
-              </div>
-              <div className="mx-5 border-t border-sand-100" />
-              {[
-                { text: "Map out the raised bed layout", checked: true, dims: ["Home", "Body"] },
-                { text: "Price the cattle panel trellis", checked: true, dims: ["Money", "Home"] },
-                { text: "Move before dinner tonight", checked: true, dims: ["Body", "Joy"] },
-                { text: "Review the seed order list", checked: false, dims: ["Home", "Growth"] },
-                { text: "Call Mom about the rototiller", checked: false, dims: ["People", "Home"] },
-              ].map((item, i) => (
-                <div key={i} className={`px-5 py-2.5 flex items-start gap-3 ${i < 4 ? "border-b border-sand-50" : ""}`}>
-                  <div className={`w-4 h-4 rounded-full border-2 mt-0.5 shrink-0 flex items-center justify-center ${
-                    item.checked ? "border-sage-500 bg-sage-500" : "border-sand-300"
-                  }`}>
-                    {item.checked && (
-                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    )}
-                  </div>
-                  <div>
-                    <p className={`font-serif leading-snug text-[13.5px] ${item.checked ? "text-earth-300 line-through" : "text-ink-800"}`}>
-                      {item.text}
-                    </p>
-                    <div className="flex gap-1.5 mt-0.5">
-                      {item.dims.map((d) => {
-                        const dim = DIMS.find((x) => x.name === d);
-                        return (
-                          <span key={d} className="w-1.5 h-1.5 rounded-full" style={{ background: dim?.color || "#8C8274", opacity: item.checked ? 0.3 : 0.6 }} />
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {/* Capital pulse mini */}
-              <div className="px-5 py-3 border-t border-sand-100 bg-sand-50/50">
-                <p className="font-sans text-earth-400 mb-2" style={{ fontSize: "0.6rem", fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase" }}>
-                  Capital moved today
-                </p>
-                <div className="flex gap-1.5">
-                  {DIMS.map((d, i) => {
-                    const active = [0, 2, 3, 5].includes(i); // Body, Money, Home, Joy
-                    return (
-                      <div key={d.name} className="flex-1 flex flex-col items-center gap-1">
-                        <div
-                          className="w-full h-1.5 rounded-full"
-                          style={{
-                            background: active ? d.color : "var(--color-sand-200)",
-                            opacity: active ? 0.7 : 0.4,
-                          }}
-                        />
-                        <span className="font-sans text-earth-300" style={{ fontSize: "0.5rem" }}>
-                          {d.name.slice(0, 3)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ WHAT MAKES IT DIFFERENT ═══ */}
-      <section className="px-6 py-20 md:py-28 bg-white border-y border-sand-200">
-        <div className="max-w-[1000px] mx-auto">
-          <p
-            {...reveal(5)}
-            className={`font-sans text-sage-600 mb-3 ${reveal(5).className}`}
-            style={{ fontSize: "0.68rem", fontWeight: 600, letterSpacing: "0.22em", textTransform: "uppercase", ...reveal(5).style }}
-          >
-            Not another productivity app
-          </p>
-          <h2
-            {...reveal(6)}
-            className={`font-serif text-ink-900 mb-14 max-w-[480px] ${reveal(6).className}`}
-            style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", fontWeight: 400, lineHeight: 1.2, ...reveal(6).style }}
-          >
-            It reasons about your life.
-            <br />
+            It reasons about your life.{" "}
             <span className="text-earth-400">It doesn&apos;t just organize it.</span>
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="space-y-10">
             {[
               {
-                title: "It remembers everything",
-                desc: "Your freezer inventory. Your kid\u2019s schedule. The budget constraint from three weeks ago. HUMA holds your full context and uses all of it, every morning.",
+                label: "It remembers everything",
+                text: "Your freezer inventory. Your kid\u2019s schedule. The budget constraint from three weeks ago. HUMA holds your full context and uses all of it, every morning.",
                 color: "#3A5A40",
-                icon: (
-                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#3A5A40" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2a10 10 0 110 20 10 10 0 010-20z" opacity="0.15" fill="#3A5A40" />
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 6v6l4 2" />
-                    <circle cx="12" cy="12" r="2" fill="#3A5A40" opacity="0.3" />
-                  </svg>
-                ),
               },
               {
-                title: "It sees connections",
-                desc: "The garden affects the budget. The budget affects stress. Stress affects whether you move. HUMA traces the chain and plans around it.",
+                label: "It sees connections",
+                text: "The garden affects the budget. The budget affects stress. Stress affects whether you move. HUMA traces the chain and plans around it.",
                 color: "#2E6B8A",
-                icon: (
-                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#2E6B8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="6" cy="6" r="3" />
-                    <circle cx="18" cy="6" r="3" />
-                    <circle cx="6" cy="18" r="3" />
-                    <circle cx="18" cy="18" r="3" />
-                    <line x1="8.5" y1="7.5" x2="15.5" y2="16.5" />
-                    <line x1="15.5" y1="7.5" x2="8.5" y2="16.5" />
-                    <line x1="6" y1="9" x2="6" y2="15" />
-                    <line x1="18" y1="9" x2="18" y2="15" />
-                  </svg>
-                ),
               },
               {
-                title: "It learns your rhythm",
-                desc: "After a week, it notices you\u2019re a night person. It flags when a dimension goes dormant. It adapts without you configuring anything.",
+                label: "It learns your rhythm",
+                text: "After a week, it notices you\u2019re a night person. It flags when a dimension goes dormant. It adapts without you configuring anything.",
                 color: "#C87A3A",
-                icon: (
-                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#C87A3A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M2 17l3-3 4 4 6-8 5 5" />
-                    <circle cx="20" cy="15" r="2" fill="#C87A3A" opacity="0.3" />
-                    <path d="M2 21h20" opacity="0.3" />
-                  </svg>
-                ),
               },
             ].map((item, i) => (
               <div
                 key={i}
-                ref={setRef(i + 7)}
-                className={`rounded-xl border border-sand-200 bg-sand-50 p-6 ${mounted && !reduced ? "landing-reveal" : ""}`}
+                ref={setRef(i + 1)}
+                className={`flex items-start gap-5 ${mounted && !reduced ? "landing-reveal" : ""}`}
                 style={!reduced ? { opacity: mounted ? undefined : 0 } : undefined}
               >
-                <div className="mb-4">{item.icon}</div>
-                <div className="w-8 h-[2px] rounded-full mb-4" style={{ background: item.color, opacity: 0.5 }} />
-                <p className="font-serif text-ink-900 mb-2" style={{ fontSize: "1.1rem", fontWeight: 500, lineHeight: 1.3 }}>
-                  {item.title}
-                </p>
-                <p className="font-sans text-earth-500" style={{ fontSize: "0.88rem", fontWeight: 300, lineHeight: 1.7 }}>
-                  {item.desc}
-                </p>
+                <div
+                  className="w-1 shrink-0 rounded-full mt-1"
+                  style={{ background: item.color, opacity: 0.6, height: "2.8rem" }}
+                />
+                <div>
+                  <p className="font-serif text-ink-900 mb-1.5" style={{ fontSize: "1.05rem", fontWeight: 500, lineHeight: 1.3 }}>
+                    {item.label}
+                  </p>
+                  <p className="font-sans text-earth-500" style={{ fontSize: "0.9rem", fontWeight: 300, lineHeight: 1.7 }}>
+                    {item.text}
+                  </p>
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ FOUNDATIONS — compact inline ═══ */}
-      <section id="foundations" className="px-6 py-16 md:py-20 bg-sand-50 border-t border-sand-200">
-        <div className="max-w-[1000px] mx-auto">
-          <div
-            ref={setRef(10)}
-            className={`text-center mb-8 ${mounted && !reduced ? "landing-reveal" : ""}`}
-            style={!reduced ? { opacity: mounted ? undefined : 0 } : undefined}
-          >
-            <p className="font-sans text-sage-600 mb-2" style={{ fontSize: "0.68rem", fontWeight: 600, letterSpacing: "0.22em", textTransform: "uppercase" }}>
-              Standing on the shoulders of giants
-            </p>
-            <p className="font-sans text-earth-400 max-w-[440px] mx-auto" style={{ fontSize: "0.88rem", fontWeight: 300, lineHeight: 1.6 }}>
-              HUMA synthesizes established frameworks into a system that fits in your pocket.
-            </p>
-          </div>
-
-          <div
-            ref={setRef(11)}
-            className={`flex flex-wrap justify-center gap-3 ${mounted && !reduced ? "landing-reveal" : ""}`}
-            style={!reduced ? { opacity: mounted ? undefined : 0 } : undefined}
-          >
-            {FRAMEWORKS.map((f) => (
-              <span
-                key={f.name}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-sand-200 bg-white font-sans text-earth-600"
-                style={{ fontSize: "0.8rem", fontWeight: 400 }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-sage-500)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.55">
-                  <path d={f.icon} />
-                </svg>
-                {f.name}
-                <span className="text-earth-300" style={{ fontSize: "0.7rem", fontWeight: 300 }}>{f.origin}</span>
-              </span>
             ))}
           </div>
         </div>
       </section>
 
       {/* ═══ BOTTOM CTA ═══ */}
-      <section
-        className="px-6 py-24 md:py-32"
-        style={{
-          background: "linear-gradient(180deg, var(--color-sand-100) 0%, var(--color-sand-50) 100%)",
-        }}
-      >
+      <section className="px-6 py-24 md:py-32 bg-sand-100">
         <div
-          ref={setRef(12)}
+          ref={setRef(4)}
           className={`max-w-[520px] mx-auto text-center ${mounted && !reduced ? "landing-reveal" : ""}`}
           style={!reduced ? { opacity: mounted ? undefined : 0 } : undefined}
         >

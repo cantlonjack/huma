@@ -199,6 +199,38 @@ Screenshot. Text to a friend. The friend thinks: "what would it show ME?" Downlo
 
 The loop: aspiration → production sheet → behavior data → surprising insight → share → friend downloads → repeat.
 
+**Four distribution mechanics that make the loop real:**
+
+1. **Insight cards as shareable artifacts.** Every cross-dimensional insight is rendered as a visually distinctive card with the operator's first name, the connection discovered, and a CTA. The card IS the ad. Not the canvas — the canvas is comprehensive but static. The insight card is surprising, specific, and instantly legible. One tap to share. The recipient lands on a situation-specific entry page, not a generic homepage.
+
+2. **Household invites.** People is a core dimension, but there's no social feature attached to it. The operator should be able to invite a partner or household member — not as a separate full account, but as a connected context. Shared behaviors (cooking dinner, evening walk) get co-tracked. "You and Marcus both checked off cooking tonight" creates shared accountability. The invite is low-friction distribution to the person closest to the operator.
+
+3. **Pattern browsing for new users.** Before a new user commits to the full conversation, let them browse validated patterns from operators in similar contexts. "Freelancers who also have young kids found that the single highest-leverage behavior is finishing revenue work before 2pm." This is the pattern economy made tangible — and it gives new users immediate value before their own data exists.
+
+4. **Graduate testimonials as organic proof.** Graduated operators — people who developed the capacity and no longer need HUMA daily — are the most credible possible proof that the product works. Their stories should be structured, attributed, and surfaceable on the landing page and in situation-specific entry points. Not as curated marketing copy, but as real operator journeys with real data.
+
+### The Activation Cliff (And How to Solve It)
+
+HUMA's core promise — "see how the parts of your life connect" — requires behavioral data that doesn't exist on day one. Insights need 5+ days. Correlations need 5+ days. Patterns need 14+ days. The Grow page shows different content at days 1-3, 4-7, 7-14, and 14+. That's a 2-week cliff between signup and the delivery of HUMA's core value.
+
+The daily sheet bridges this gap, but the sheet alone is a fancy AI to-do list until the correlation engine has data. The magic only happens later. Three mechanisms close the gap:
+
+**1. Day-1 structural insight (no behavioral data needed).** The decomposition chain itself reveals which behaviors touch the most dimensions and which behaviors are shared across aspirations. The moment the first aspiration is decomposed, HUMA can say: "Cook at home touches Body, Money, Joy, People, and Home — 5 of your 8 dimensions from one behavior. That's your most connected move." This is pure structural analysis from the decomposition, available immediately. This is already described in the computation layer — it must be surfaced prominently on the Today screen and framed as the first insight.
+
+**2. Hypothesized correlations from context.** The onboarding conversation extracts a rich context model. Use it. "You mentioned money stress and sleep problems together — in connected systems, those dimensions are tightly coupled. We'll track that." Show the hypothesis on day 1. Let check-off data confirm or deny it over the next week. The operator is now watching for something specific — that's engagement.
+
+**3. Population-seeded patterns (warm start).** Use anonymized behavioral data from the operator population to generate relevant patterns for new users before their own data exists. "For people in your situation — freelance, young family, mid-career — the most commonly validated keystone behavior is X." This makes the pattern economy useful from day one.
+
+**Retention through the cliff.** What keeps a user coming back on days 2-13?
+
+- The daily sheet (immediate practical value — what to do today)
+- Hypothesized correlations (something to watch for — creates anticipation)
+- Structural insights (connections visible from decomposition — no data needed)
+- Context deepening ("Tell me more about your week" → the production sheet gets more specific with each addition)
+- The first real correlation (target: surface within 5-7 days, not 14)
+
+The goal is: no day where the operator opens HUMA and sees nothing new. Every day should either confirm a hypothesis, deepen the production sheet, or reveal a structural connection.
+
 ### The Template/Fork Model (Future)
 
 Pre-decomposed aspiration bundles, validated by real operators:
@@ -224,13 +256,27 @@ This knowledge doesn't exist anywhere. Not in research. Not in self-help books. 
 
 ---
 
+## Retention Mechanics
+
+A morning push notification + daily sheet is a single engagement touchpoint. That's not enough for day-7 retention. The following mechanics are compatible with the sovereignty philosophy — they reward insight, not compliance.
+
+**Evidence-based progress.** Not "Amazing progress!" (banned — see Voice Bible). Instead: "You've cooked dinner 8 of the last 10 days. Your Energy capital moved from 34 to 51 in that window." Show the operator the evidence of what their own behavior produced. This is the mirror principle applied to retention — make the invisible visible, and the operator's own data creates the engagement.
+
+**Pattern validation milestones.** When a hypothesized correlation is confirmed by behavioral data, surface it as a moment. "Confirmed: on days you do morning movement, you complete family behaviors 90% of the time vs 30% without. That's not a guess anymore — it's your data." This is HUMA's equivalent of a streak mechanic, but it rewards pattern recognition, not raw compliance.
+
+**Dimensional coupling alerts.** When a dimension starts moving, show the operator which other dimensions are likely to follow. "Your Money dimension dropped this week. In your history, when Money drops, Body follows within 5 days. Worth paying attention to." Proactive intelligence that creates engagement through value, not guilt.
+
+**Weekly insight delivery.** The weekly review is the second-highest engagement touchpoint after the daily sheet. It must deliver at least one genuinely surprising cross-dimensional connection per week after day 7. If the data isn't rich enough for a behavioral insight, deliver a structural insight from the decomposition chain.
+
+---
+
 ## Pricing
 
 **Free forever:** Conversation with HUMA. Up to 3 aspirations decomposed. Basic daily production sheet. Weekly view. One insight when data supports it. Template browsing.
 
 **$29/month Operate:** Unlimited aspirations. Full cross-dimensional computation. Deep production sheet (specific recipes, specific financial actions, seasonal planning). Pattern commons access. Canvas view. Template publishing.
 
-**$99/month Professional:** Multi-context management (clients, students, patients). Professional dashboard. Bulk template creation. API access.
+**$99/month Professional:** The graduation destination. Multi-context management (clients, students, patients). Professional dashboard. Bulk template creation. Pattern contribution tools with royalty tracking. API access. Designed for operators who have internalized pattern literacy and now help others develop it — coaches, consultants, educators, community leaders. Graduation doesn't end the relationship; it upgrades it.
 
 ---
 
@@ -260,6 +306,37 @@ The product works when someone:
 8. Screenshots that insight and texts it to a friend
 
 The paradigm breaks one production sheet at a time. But what makes them stay is watching their system grow.
+
+---
+
+## Measurement
+
+HUMA measures capability, not activity. But measuring nothing is not the same as measuring the right thing. Without instrumentation, the "two metrics that matter" (graduation rate, pattern growth rate) are aspirational — not tracked.
+
+### The Activation Funnel
+
+Every step from first contact to sustained use must be instrumented:
+
+`landing_view` → `start_conversation` → `first_aspiration_stated` → `first_decomposition_complete` → `first_sheet_viewed` → `day_3_return` → `day_7_return` → `first_insight_received` → `first_pattern_validated` → `first_share`
+
+Each transition has a conversion rate. Each drop-off has a reason. Without this data, growth strategy is hope.
+
+### The Four North-Star Metrics
+
+1. **Graduation rate** — percentage of operators who reach 75/100 across four capacities within 24 months
+2. **Pattern growth rate** — new validated patterns contributed per month
+3. **Graduate-to-Professional conversion** — percentage of graduated operators who transition to the $99/month Professional tier
+4. **Day-7 retention** — percentage of operators who return on day 7 after first use (the activation cliff metric)
+
+### Minimum Instrumentation
+
+- PostHog (or equivalent) with the funnel events above
+- UTM tracking on all inbound links and shared artifacts
+- Cohort analysis by entry point, aspiration type, and context profile
+- Share event tracking (insight cards, canvas shares, pattern forks)
+- Graduation capacity scoring tracked longitudinally per operator
+
+The PostHog placeholder in `analytics.ts` must become a real implementation. You cannot optimize what you cannot measure.
 
 ---
 

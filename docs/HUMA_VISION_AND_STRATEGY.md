@@ -290,7 +290,7 @@ Every transformative technology in history has been captured by the entities tha
 
 **Principle 5: Plural Intelligence.** HUMA's AI must not depend on a single provider. The intelligence is in the patterns and the protocol, not in any particular model.
 
-**Principle 6: The Tool Must Be Useful Before It's Transformative.** Every technology that changed civilization started by solving a mundane, immediate problem. The printing press made it cheaper to produce bibles. Bitcoin solved double-spending. The ten operators in the beachhead don't care about RPPL or pattern commons. They care about whether HUMA helps them figure out their enterprise stack.
+**Principle 6: The Tool Must Be Useful Before It's Transformative.** Every technology that changed civilization started by solving a mundane, immediate problem. The printing press made it cheaper to produce bibles. Bitcoin solved double-spending. The freelancer in the beachhead doesn't care about RPPL or pattern commons. They care about whether HUMA helps them see why their best creative weeks are the ones where they cook dinner and stop working by 4pm — and how to make that happen consistently.
 
 **Principle 7: The Shift Happens Through Practice, Not Persuasion.** No civilization-shaping technology succeeded by convincing people it was important. It succeeded by embedding itself in daily practice until the old way became unthinkable.
 
@@ -328,9 +328,48 @@ Every transformative technology in history has been captured by the entities tha
 
 **Platform Capture** -- the product grows into a platform and starts extracting. *Defense:* Open-source the protocol before it has enough value to be worth capturing. Release the RPPL specification when there are 50 validated patterns, not 5,000.
 
-**Metric Capture** -- the measurement becomes the target. *Defense:* Measure capability, not activity. "Churn from graduation is success. Churn from dissatisfaction is failure. We measure both separately."
+**Metric Capture** -- the measurement becomes the target. *Defense:* Measure capability, not activity. "Churn from graduation is success. Churn from dissatisfaction is failure. We measure both separately." But also: graduation churn must lead somewhere. If graduates vanish into silence, the philosophy is intact but the business dies. Track graduate-to-Professional conversion rate and graduate contribution rate alongside graduation rate. All three are north-star metrics.
 
 **Narrative Capture** -- the story constrains what you build. *Defense:* Hold the narrative loosely. Regularly test decisions against operator needs, not the story about operator needs.
+
+### Growth Mechanics
+
+The philosophy is sound. The growth engine is not yet built. This section names what's missing and what must be built.
+
+**The Viral Loop.** The shared canvas (`/map/[id]`) is the embryo of virality, but it's a one-time static artifact. A real viral loop requires:
+
+1. **Household/partner invites.** People is a core dimension. The operator's partner, household members, and close collaborators should be invitable — not as separate accounts, but as connected contexts. "Your partner also checked off cooking dinner" creates shared accountability without surveillance. The invite is the distribution mechanism.
+
+2. **Insight-as-share-moment.** The shareable unit is not the canvas — it's the surprising insight. "HUMA showed me that cooking dinner is the behavior holding my entire evening together — sleep, budget, family time, everything." That insight, formatted as a shareable card with a CTA, is the viral payload. Every cross-dimensional correlation is a potential share moment.
+
+3. **Pattern contribution and discovery.** The pattern economy exists in this document but has zero implementation in code. The minimum viable pattern economy: graduated users and long-tenure operators can publish validated patterns. New users can browse and fork patterns from people in similar contexts. This is the network effect — every user makes the system smarter for every other user.
+
+4. **Community layer.** Not a social network. Not a feed. A structured space where operators in similar contexts can see (anonymized) that others are working on the same patterns, and optionally connect. "12 other freelancers in your city are working on the 'finish work by 4pm' pattern." This creates belonging without surveillance.
+
+**The Cold-Start Problem.** HUMA's core promise — "see how the parts of your life connect" — requires behavioral data that doesn't exist on day one. Insights need 5+ days. Correlations need 5+ days. Patterns need 14+ days. That's a 2-week activation cliff. Three mechanisms to solve it:
+
+1. **Day-1 structural insight from the conversation.** The decomposition chain itself reveals which behaviors touch the most dimensions and which behaviors are shared across aspirations. This requires NO behavioral data — only the decomposition structure. The moment the first aspiration is decomposed, HUMA can say: "Cooking at home touches Body, Money, Joy, People, and Home — 5 of your 8 dimensions from one behavior. That's your most connected move." This is the day-1 magic.
+
+2. **Hypothesized correlations from context.** The context model extracted during onboarding is rich enough to generate probable patterns before check-off data accumulates. "You mentioned money stress and sleep problems in the same sentence — for people in similar situations, those dimensions are strongly coupled. We'll watch for that in your data." Show the hypothesis. Let the data confirm or deny.
+
+3. **Population-seeded patterns.** Use anonymized behavioral data from the operator population to warm-start new users. "For single parents with freelance income, the single highest-leverage daily behavior is X — validated by Y people over Z months." This makes the pattern economy useful from day one, not just after 14 days.
+
+**Retention Mechanics.** A single morning push notification and daily sheet is one engagement touchpoint. That's insufficient for day-7 retention. Additional retention mechanics that are compatible with the sovereignty philosophy:
+
+1. **Evidence-based progress.** Not "You've got this!" but "You've cooked dinner 8 of the last 10 days. Your Energy capital moved from 34 to 51 in that window." Substantive, data-backed acknowledgment of what the operator's own behavior produced. The voice bible bans hollow cheerleading — rightly. It should not ban showing the operator evidence of their own progress.
+
+2. **Pattern validation milestones.** When a hypothesized correlation is confirmed by behavioral data, surface it as a milestone. "Confirmed: on days you do morning movement, you complete family behaviors 90% of the time vs 30% without. That's not a guess anymore — it's your data." Validation milestones are the HUMA equivalent of streak mechanics, but they reward insight, not compliance.
+
+3. **Dimensional coupling alerts.** When a dimension starts moving, show the operator which other dimensions are likely to follow — and whether the cascade is beneficial or harmful. "Your Money dimension dropped this week. Historically, when your Money drops, your Body follows within 5 days. Worth paying attention to." This is proactive intelligence that creates engagement without dependency.
+
+**Analytics and Attribution.** You cannot optimize what you cannot measure. The PostHog placeholder must become a real implementation with these minimum funnel events:
+
+1. `landing_page_view` → `start_conversation` → `first_aspiration_stated` → `first_decomposition_complete` → `first_sheet_viewed` → `day_3_return` → `day_7_return` → `first_insight_received` → `first_pattern_validated`
+2. UTM tracking on all inbound links
+3. Cohort analysis by entry point, aspiration type, and context profile
+4. Graduation rate tracking (the two metrics that matter: graduation rate and pattern growth rate — both need dashboards)
+5. Share event tracking (canvas shares, insight card shares, pattern forks)
+6. Funnel drop-off analysis at each activation stage
 
 ### The Counter-Factual Moat
 
@@ -347,9 +386,19 @@ Four graduation capacities, each scored 0-25:
 3. **Node Recognition** -- finding leverage points in novel situations
 4. **Whole Seeing** -- thinking in systems unprompted
 
-Graduation threshold: 75/100.
+Graduation threshold: 75/100. Median time-to-graduation is expected to be 18-24 months — achieving 75/100 across all four capacities is genuinely hard. The LTV math works even with 100% eventual graduation churn at this timeline.
 
-Every graduate is proof the medium works. Every graduate is an evangelist who demonstrates capacity, not dependency.
+### Graduation Economics
+
+Graduation is a growth engine, not a revenue leak. Three mechanisms ensure that HUMA's best users create more value after graduation than during active use:
+
+**1. Graduates become practitioners.** The person who has internalized pattern literacy is now capable of helping others develop it. The $99/month Professional tier is designed for this transition — consultants, coaches, educators, and community leaders who guide others through the medium. Graduation doesn't end the revenue relationship; it upgrades it. The operator who stops needing HUMA for themselves starts using HUMA for their clients, students, and community.
+
+**2. Graduates become contributors.** Graduated operators have the deepest validated behavioral data and the most tested patterns. They shift from consuming patterns to producing them. Every pattern they contribute makes the system more intelligent for every active user. The pattern economy compensates contributors — graduation activates a new revenue stream, not silence.
+
+**3. Graduates become distribution.** A person who can demonstrably see their life as a connected system — who makes better decisions, who found the leverage points, who designed their own way out of a hard season — is the most credible possible advertisement for HUMA. Not because they're a testimonial, but because they are walking proof that the capacity is real and transferable. Every graduate is an evangelist who demonstrates capacity, not dependency.
+
+The anti-pattern to guard against: designing graduation to be artificially slow in order to preserve revenue. If the product works, graduation should happen as fast as the operator's capacity develops. Gaming the graduation timeline is a form of extraction.
 
 ### The Emotional Signature
 
@@ -427,11 +476,24 @@ HUMA the application is a for-profit product built on the open protocol. What pe
 
 Free users generate pattern data through Design Mode. Pattern data makes Operate Mode more intelligent. Operate Mode users generate validated pattern outcomes. Validated outcomes enrich the pattern library. A richer library attracts more free users. Every user makes the system better for every other user. The medium grows through use.
 
+### The Graduation Flywheel
+
+Graduation is the second flywheel, not a leak in the first one. The lifecycle:
+
+1. **Operate ($29/month):** The operator uses HUMA for 18-24 months. Revenue: ~$500-700 LTV.
+2. **Graduation:** The operator reaches 75/100 across four capacities. HUMA celebrates the graduation and offers the transition.
+3. **Professional ($99/month):** The graduated operator becomes a practitioner — helping clients, students, or community members develop the same capacity. Revenue: $99/month indefinitely. This is where the graduated operator's deep context, validated patterns, and demonstrated capacity become a professional asset.
+4. **Contribution:** Whether or not a graduate becomes a Professional, they can contribute validated patterns to the commons. Pattern royalties create a passive revenue stream for the contributor and enrich the library for every active user.
+
+The critical insight: graduation doesn't end the revenue relationship. For the ~20% of graduates who become Professional practitioners, graduation INCREASES the revenue per user from $29/month to $99/month. For the remaining 80%, graduation produces the most credible possible organic distribution — a person who demonstrably runs their life better because of the capacity HUMA developed.
+
 ### Revenue Mechanics
 
-The free tier is not a loss leader. It's a distribution engine. Every operator who shares their shape is running an ad for HUMA. The growth loop does not require sales effort.
+The free tier is not a loss leader. It's a distribution engine. Every operator who shares their insight card or canvas is running an ad for HUMA. The growth loop must not require sales effort — the product must be compelling enough to sell itself through its outputs.
 
 Bootstrap target: 1,000 paying operators at $29/month = $348K/year. That funds a team of 3-4. Enough to build the protocol layer.
+
+Scale target: 10,000 Operate + 500 Professional = $3.5M + $600K = $4.1M ARR. The Professional tier is where margin expands — graduated practitioners require less AI computation (they've internalized the patterns) but pay 3.4x more because HUMA is now professional infrastructure.
 
 ---
 
@@ -439,9 +501,11 @@ Bootstrap target: 1,000 paying operators at $29/month = $348K/year. That funds a
 
 ### Phase 1: The Beachhead
 
-Launch as a design and operations tool for regenerative agriculture operators and homesteaders. Specific enough to be useful, small enough to fly under every radar. Build the first real patterns from real practitioners. To the outside world: "a cool AI tool for small farmers." Only we know it's the first implementation of a new medium.
+Launch as life infrastructure for people managing complex, self-directed lives — freelancers, solopreneurs, creative professionals, independent consultants, small business owners. These people share the same structural pain point that regenerative operators have: they ARE the system. No employer buffers them from the consequences of bad decisions. Their money, time, health, relationships, and work are visibly coupled — they just lack the infrastructure to see and manage those couplings.
 
-The architecture is universal. The first users are specific.
+This beachhead is both culturally aligned AND economically viable. There are 60+ million freelancers in the US alone, millions more globally. They're already paying for tools that manage fragments (calendars, invoicing, habit trackers, therapy apps). None of those tools talk to each other. HUMA is the integration layer they don't know they need — and the insight that cooking dinner is the keystone holding their evening together is the moment that sells them.
+
+The architecture is universal. The first users are people whose lives demand systems thinking — whether they know that's what they're doing or not.
 
 ### Phase 2: Pattern Portability
 

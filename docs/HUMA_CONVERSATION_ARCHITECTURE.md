@@ -163,11 +163,34 @@ THE LONGER ARC
   If it works: scale to 50-100 logs next winter for market supply.
 ```
 
+### Stage 4.5: Structural Insight (1 message — the day-1 magic)
+
+Immediately after decomposition, before presenting the checkable behaviors, HUMA surfaces the structural insight that requires NO behavioral data — only the decomposition chain.
+
+This is the most important moment in the activation funnel. It's the first time the operator sees a connection they didn't know existed. It bridges the 2-week gap between signup and the first behavioral correlation.
+
+**What to surface:**
+- Which THIS WEEK behavior touches the most dimensions (the structural node)
+- Which behaviors are shared across multiple aspirations (the hidden connection)
+- Which dimension is touched by every behavior (the systemic center)
+
+**Example:**
+"One thing jumped out. Cooking dinner touches Body, Money, Joy, People, and Home — 5 of your 8 dimensions from one behavior. That's your most connected move. Everything else gets easier when that one happens."
+
+**Rules:**
+- One sentence of insight. One sentence of implication. Stop.
+- Never explain the methodology ("I analyzed your decomposition chain across dimensions...")
+- The insight should feel like noticing, not computing.
+- This is the first share-worthy moment. If the operator screenshots this, it should be legible and surprising.
+
 ### Stage 5: Present (1 message with interactive elements)
 
 Only show THIS WEEK actions as checkable behaviors with "Start tomorrow" / "Adjust these
 first" buttons. COMING UP and THE LONGER ARC appear as non-checkable context below,
 or are stored for the Vision layer on Whole.
+
+The structural insight from Stage 4.5 should appear as a highlighted card above the
+checkable behaviors — it's the "why" behind the "what."
 
 The operator reviews, adjusts if needed, and commits. Data saves. Redirect to /today.
 
@@ -345,6 +368,37 @@ HUMA keeps asking.
 
 ---
 
+## Hypothesized Correlations (Closing the Activation Cliff)
+
+During the context-gathering phase, the operator often reveals dimensional couplings
+without knowing it. "I'm exhausted AND spending too much" — that's a Body-Money coupling
+stated in natural language. "When work is stressful, I stop cooking" — that's a
+Purpose-Home coupling with a causal direction.
+
+HUMA should capture these as hypothesized correlations and surface them as watchable
+predictions:
+
+**During conversation:** When the operator mentions two dimensions in the same breath,
+note it internally as a hypothesis.
+
+**After decomposition:** Surface the hypothesis: "You mentioned money stress and sleep
+in the same breath. For people in similar situations, those dimensions are tightly
+coupled — when one moves, the other follows. We'll watch for that in your check-off
+data."
+
+**Days 3-7:** As check-off data accumulates, begin testing the hypothesis. Surface
+early signals: "Two data points so far: on the days you cooked, you also reported
+better sleep. Too early to confirm, but the pattern is forming."
+
+**Day 7-14:** Confirm or deny: "Confirmed: cooking dinner and sleep quality move
+together in your data. That's not a guess anymore — it's your pattern."
+
+This mechanism transforms the 2-week activation cliff from dead time into a
+narrative arc. The operator isn't waiting for insights — they're watching a
+hypothesis get tested. That's engagement through anticipation, not gamification.
+
+---
+
 ## What This Fixes
 
 1. **No more generic lifecycle lists.** The decomposition is phased and specific.
@@ -355,6 +409,12 @@ HUMA keeps asking.
    instead of "Cut and inoculate logs in late winter."
 5. **The Whole page has depth.** Coming Up and Longer Arc populate the Vision layer,
    showing the operator their full system — not just today's checklist.
+6. **No more 2-week dead zone.** Structural insights from the decomposition chain (Stage
+   4.5) and hypothesized correlations from the conversation give the operator something
+   to see and something to watch from day one — before any behavioral data exists.
+7. **The first insight is shareable.** The structural insight ("cooking dinner touches 5
+   dimensions") is the first viral moment. It happens in the first session, not after
+   two weeks of check-offs.
 
 ---
 

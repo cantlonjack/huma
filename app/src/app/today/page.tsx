@@ -19,6 +19,7 @@ import {
 import { ValidationCard } from "@/components/today/ValidationCard";
 import type { Nudge, DimensionKey } from "@/types/v2";
 import { DIMENSION_LABELS } from "@/types/v2";
+import { ConnectionThreads } from "@/components/shared/ConnectionThreads";
 
 // ── Inlined: NudgeCard ──
 const TYPE_LABELS: Record<string, string> = {
@@ -74,7 +75,7 @@ const NudgeCard = memo(function NudgeCard({
   );
 });
 
-// ── Inlined: CapitalPulse (8-cell dimension grid) ──
+// ── Inlined: CapitalPulse (connection threads ring) ──
 const ALL_DIMENSIONS: DimensionKey[] = [
   "body", "people", "money", "home", "growth", "joy", "purpose", "identity",
 ];
@@ -88,8 +89,6 @@ const CapitalPulse = memo(function CapitalPulse({
   dormantDimension?: { key: DimensionKey; days: number } | null;
   dormantDimensions?: DimensionKey[];
 }) {
-  const movedSet = new Set(movedDimensions);
-  const dormantSet = new Set(dormantDimensions);
   const movedCount = movedDimensions.length;
 
   let summaryStr = `${movedCount} of ${ALL_DIMENSIONS.length} dimensions moved today.`;
@@ -99,39 +98,14 @@ const CapitalPulse = memo(function CapitalPulse({
 
   return (
     <div className="mx-4 mt-3 mb-1">
-      {/* 4×2 grid */}
-      <div className="grid grid-cols-4 gap-1.5">
-        {ALL_DIMENSIONS.map(dim => {
-          const moved = movedSet.has(dim);
-          const dormant = dormantSet.has(dim);
-          return (
-            <div
-              key={dim}
-              className={`rounded-lg py-2.5 px-1 text-center transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                moved
-                  ? "bg-amber-600"
-                  : dormant
-                    ? "bg-rose-100 border border-rose-600/20"
-                    : "bg-sand-200"
-              }`}
-            >
-              <span
-                className={`font-sans text-[10px] font-medium tracking-[0.05em] ${
-                  moved
-                    ? "text-white"
-                    : dormant
-                      ? "text-rose-600"
-                      : "text-ink-300"
-                }`}
-              >
-                {DIMENSION_LABELS[dim]}
-              </span>
-            </div>
-          );
-        })}
+      <div className="flex justify-center">
+        <ConnectionThreads
+          activeDimensions={movedDimensions}
+          dormantDimensions={dormantDimensions}
+          size="compact"
+        />
       </div>
-      {/* Summary sentence */}
-      <p className="font-sans text-[12px] text-ink-400 mt-2 leading-normal">
+      <p className="font-sans text-[12px] text-ink-400 mt-2 leading-normal text-center">
         {summaryStr}
       </p>
     </div>
@@ -168,20 +142,14 @@ export default function TodayPage() {
     >
       <div className="min-h-dvh bg-sand-50 flex flex-col pb-[140px]">
         <h1 className="sr-only">Today</h1>
-        {/* Header bar — 44px */}
+
+        {/* ═══ Header — quiet, date-forward ═══ */}
         <div className="h-[44px] border-b border-sand-300 flex justify-between items-center px-4">
           <span className="font-sans font-medium text-sage-500 text-[11px] tracking-[0.4em] leading-none">
             H U M A
           </span>
           <span className="font-sans text-sage-400 text-[11px]">
             {formatHeaderDate(t.date)} &middot; Day {t.dayCount}
-          </span>
-        </div>
-
-        {/* Section label: TODAY */}
-        <div className="px-4 pt-4 pb-2">
-          <span className="font-sans text-[11px] font-semibold tracking-[0.22em] text-ink-300">
-            TODAY
           </span>
         </div>
 
@@ -213,24 +181,68 @@ export default function TodayPage() {
           </div>
         ) : (
           <>
-            {/* Status Line */}
-            {t.activeCount > 0 && (
-              <div className="animate-entrance-1 px-4 pb-2">
-                {t.adjustingCount > 0 ? (
-                  <span className="font-sans text-[13px] text-amber-600">
-                    &#9679; {t.adjustingCount} need{t.adjustingCount === 1 ? "s" : ""} attention
-                  </span>
-                ) : (
-                  <span className="font-sans text-sage-500 text-[13px]">
-                    <span className="text-sage-400">&#9679;</span> On route &middot; {t.activeCount} pattern{t.activeCount !== 1 ? "s" : ""} active
-                  </span>
-                )}
+            {/* ═══ THE BRIEFING ═══ */}
+
+            {/* Through-line — the opening line of the letter */}
+            {t.throughLine && t.compiledEntries.length > 0 ? (
+              <div className="animate-entrance-1 px-5 pt-8 pb-6">
+                <p className="font-serif italic text-[22px] leading-snug text-ink-700 max-w-[480px] tracking-[0.01em]">
+                  {t.throughLine}
+                </p>
+                <div className="w-10 h-[2px] rounded-full bg-amber-500 mt-4 opacity-60" />
+              </div>
+            ) : t.sheetCompiling ? (
+              <div className="px-5 pt-8 pb-6">
+                <p className="font-serif italic text-sage-400 animate-entrance-1 text-lg">
+                  Building your day...
+                </p>
+              </div>
+            ) : (
+              /* No compiled sheet — show a quiet date greeting */
+              <div className="px-5 pt-6 pb-4" />
+            )}
+
+            {/* Compiled Sheet Entries — the body of the briefing */}
+            {t.compiledEntries.length > 0 && (
+              <div className="mx-4 mb-2">
+                <div className="flex flex-col gap-1.5">
+                  {t.compiledEntries.map((entry, i) => {
+                    const isChecked = t.checkedEntries.has(`${entry.aspirationId}:${entry.behaviorKey}`);
+                    return (
+                      <CompiledEntryRow
+                        key={entry.behaviorKey}
+                        entry={entry}
+                        isChecked={isChecked}
+                        isTrigger={i === 0}
+                        onToggle={() =>
+                          t.handleToggleStep(entry.aspirationId, entry.behaviorKey, !isChecked)
+                        }
+                      />
+                    );
+                  })}
+                </div>
               </div>
             )}
 
-            {/* Aspiration Ribbon */}
+            {/* Capital Pulse — the closing: how your system stands */}
+            {t.capitalPulse && (
+              <CapitalPulse
+                movedDimensions={t.capitalPulse.movedDimensions}
+                dormantDimension={t.capitalPulse.dormantDimension}
+                dormantDimensions={t.capitalPulse.dormantDimensions}
+              />
+            )}
+
+            {/* ═══ BELOW THE BRIEFING — supporting material ═══ */}
+
+            {/* Divider between briefing and navigation */}
+            {(t.compiledEntries.length > 0 || t.capitalPulse) && (
+              <div className="mx-4 my-4 border-t border-sand-200" />
+            )}
+
+            {/* Aspiration Ribbon — navigation, not story */}
             <div className="hide-scrollbar overflow-x-auto mb-3" style={{ WebkitOverflowScrolling: "touch" }}>
-              <div className="flex gap-2 animate-entrance-1 px-4">
+              <div className="flex gap-2 animate-entrance-2 px-4">
                 {t.aspirations.map(asp => (
                   <button
                     key={asp.id}
@@ -253,6 +265,30 @@ export default function TodayPage() {
               </div>
             </div>
 
+            {/* Status — subtle, after ribbon */}
+            {t.activeCount > 0 && (
+              <div className="px-4 pb-2">
+                {t.adjustingCount > 0 ? (
+                  <span className="font-sans text-[12px] text-amber-600">
+                    &#9679; {t.adjustingCount} need{t.adjustingCount === 1 ? "s" : ""} attention
+                  </span>
+                ) : (
+                  <span className="font-sans text-earth-400 text-[12px]">
+                    <span className="text-sage-400">&#9679;</span> On route &middot; {t.activeCount} pattern{t.activeCount !== 1 ? "s" : ""} active
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Transition Signal */}
+            {t.transitionSignal && (
+              <TransitionCard
+                signal={t.transitionSignal}
+                onOpen={t.openTransitionChat}
+                onDismiss={t.dismissTransition}
+              />
+            )}
+
             {/* Insight Card */}
             {t.insight && (
               <InsightCard
@@ -262,7 +298,7 @@ export default function TodayPage() {
               />
             )}
 
-            {/* Proactive Nudges (0-2, below insight) */}
+            {/* Proactive Nudges */}
             {t.nudges.length > 0 && (
               <div className="mb-2">
                 {t.nudges.map(nudge => (
@@ -276,7 +312,7 @@ export default function TodayPage() {
               </div>
             )}
 
-            {/* Weekly Validation Cards (shown on validation day) */}
+            {/* Weekly Validation Cards */}
             {t.validationAspirations.length > 0 && (
               <div className="mb-2">
                 <div className="px-4 pb-2">
@@ -292,61 +328,6 @@ export default function TodayPage() {
                   />
                 ))}
               </div>
-            )}
-
-            {/* Through-line header */}
-            {t.throughLine && t.compiledEntries.length > 0 && (
-              <div className="animate-entrance-2 px-5 pb-5">
-                <p className="font-serif italic text-base leading-relaxed text-ink-600 max-w-[480px] tracking-[0.01em]">
-                  {t.throughLine}
-                </p>
-              </div>
-            )}
-
-            {/* Transition Signal */}
-            {t.transitionSignal && (
-              <TransitionCard
-                signal={t.transitionSignal}
-                onOpen={t.openTransitionChat}
-                onDismiss={t.dismissTransition}
-              />
-            )}
-
-            {/* Compiled Sheet Entries */}
-            {t.compiledEntries.length > 0 ? (
-              <div className="mx-4 mb-4">
-                <div className="flex flex-col gap-1.5">
-                  {t.compiledEntries.map((entry, i) => {
-                    const isChecked = t.checkedEntries.has(`${entry.aspirationId}:${entry.behaviorKey}`);
-                    return (
-                      <CompiledEntryRow
-                        key={entry.behaviorKey}
-                        entry={entry}
-                        isChecked={isChecked}
-                        isTrigger={i === 0}
-                        onToggle={() =>
-                          t.handleToggleStep(entry.aspirationId, entry.behaviorKey, !isChecked)
-                        }
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            ) : t.sheetCompiling ? (
-              <div className="px-4 pb-3">
-                <p className="font-serif italic text-sage-400 animate-entrance-2 text-sm">
-                  Building your day...
-                </p>
-              </div>
-            ) : null}
-
-            {/* Capital Pulse — shows after check-offs */}
-            {t.capitalPulse && (
-              <CapitalPulse
-                movedDimensions={t.capitalPulse.movedDimensions}
-                dormantDimension={t.capitalPulse.dormantDimension}
-                dormantDimensions={t.capitalPulse.dormantDimensions}
-              />
             )}
 
             {/* Pattern Route Cards (fallback when no compiled sheet) */}

@@ -57,7 +57,32 @@ HUMA must measure and accelerate its own obsolescence. Four capacities are track
 
 These are scored 0-25 each, total 0-100. Graduation threshold: 75.
 
-At graduation, HUMA explicitly tells the operator they've developed the capacity. It does not try to retain them. It does not withhold features. It celebrates the graduation and shifts to seasonal-only support.
+At graduation, HUMA explicitly tells the operator they've developed the capacity. It does not try to retain them. It does not withhold features. It celebrates the graduation and offers two paths forward:
+
+1. **Seasonal support.** The graduated operator uses HUMA seasonally — quarterly reviews, annual recalibrations. They've internalized the daily and weekly capacity. Revenue reduces but the relationship continues.
+
+2. **Professional transition.** The graduated operator has developed pattern literacy deeply enough to help others develop it. HUMA offers the Professional tier ($99/month) — multi-context management for clients, students, or community members. Graduation doesn't end the revenue relationship; for operators who become practitioners, it upgrades it.
+
+3. **Pattern contribution.** Whether or not a graduate becomes a Professional, they can contribute validated patterns to the commons. Their 18-24 months of behavioral data contains the most tested, most contextual patterns in the system. Contributing activates pattern royalties — a new value stream that compensates the graduate for enriching the medium.
+
+The ethical test remains: does the graduation pathway develop capacity or create dependency? Offering the Professional tier to a graduated operator who wants to help others is capacity-extending. Withholding graduation to preserve $29/month revenue is extraction. The line is clear: accelerate graduation honestly, and let the business model work because graduates create more value than active users, not less.
+
+### Evidence-Based Progress (Not Cheerleading)
+
+The Voice Bible bans emotional cheerleading — "You've got this!", "Amazing progress!", "Keep up the great work!" — because external motivation destroys internal development. This is correct.
+
+But there is a difference between hollow encouragement and showing the operator evidence of what their own behavior produced. The first is noise. The second is the mirror principle.
+
+| Creates Dependency (banned) | Develops Capacity (encouraged) |
+|---------------------------|-------------------------------|
+| "Great job this week!" | "You cooked dinner 8 of 10 days. Energy moved from 34 to 51." |
+| "You're on a roll!" | "Morning walk → family behaviors completed 90% of the time. Pattern confirmed." |
+| "Keep it up!" | "Money dropped this week. In your data, Body follows within 5 days. Worth watching." |
+| "Amazing progress on your goals!" | "Three months ago, Money was your lowest dimension at 1.2. It's now 2.8. The market garden is the driver." |
+
+The left column tells the operator how to feel. The right column shows the operator what happened. The left is extraction (it creates a need for external validation). The right is capacity development (it teaches the operator to read their own system).
+
+HUMA should surface evidence-based progress at natural milestones: weekly review, pattern validation, dimensional movement, and graduation checkpoints. The voice remains spare and specific — never celebratory, always evidential.
 
 ### One-Thing Card Sovereignty
 
