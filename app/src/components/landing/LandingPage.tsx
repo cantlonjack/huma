@@ -6,49 +6,49 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 /* ─── Dimension config ─── */
 const DIMS: { name: string; color: string; label: string; icon: string }[] = [
-  { name: "Body", color: "#3A5A40", label: "Back has been better on afternoon-movement days", icon: "M12 3c-1.5 2-4 4-4 7s2 5 4 7c2-2 4-4 4-7s-2.5-5-4-7z" },
-  { name: "People", color: "#2E6B8A", label: "Kids need pickup by 3:30 on Tuesdays", icon: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" },
-  { name: "Money", color: "#B5621E", label: "Budget tight until the 15th", icon: "M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" },
-  { name: "Home", color: "#8C8274", label: "Garden beds need layout before soil order", icon: "M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" },
-  { name: "Growth", color: "#2A4A30", label: "Reading 20min/day streak — 11 days", icon: "M12 20V10M18 20V4M6 20v-4" },
-  { name: "Joy", color: "#C87A3A", label: "Haven't played guitar since last Thursday", icon: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" },
-  { name: "Purpose", color: "#6B5A7A", label: "Side project blocked on API decision", icon: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" },
-  { name: "Identity", color: "#554D42", label: "Morning person shifting to early riser", icon: "M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z" },
+  { name: "Body", color: "#3A5A40", label: "Sleep tanks when deadlines stack up", icon: "M12 3c-1.5 2-4 4-4 7s2 5 4 7c2-2 4-4 4-7s-2.5-5-4-7z" },
+  { name: "People", color: "#2E6B8A", label: "Haven\u2019t seen Mia since the project started", icon: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" },
+  { name: "Money", color: "#B5621E", label: "Invoices out, but cash won\u2019t land until the 20th", icon: "M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" },
+  { name: "Home", color: "#8C8274", label: "Kitchen\u2019s been takeout-only for two weeks", icon: "M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" },
+  { name: "Growth", color: "#2A4A30", label: "Reading 20min/day streak \u2014 11 days", icon: "M12 20V10M18 20V4M6 20v-4" },
+  { name: "Joy", color: "#C87A3A", label: "Haven\u2019t played guitar since last Thursday", icon: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" },
+  { name: "Purpose", color: "#6B5A7A", label: "The side project that actually matters keeps waiting", icon: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" },
+  { name: "Identity", color: "#554D42", label: "Used to be a morning person \u2014 trying to get back", icon: "M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z" },
 ];
 
 /* ─── Hero conversation sequence ─── */
 const HERO_MESSAGES = [
   { role: "huma" as const, text: "What\u2019s going on in your life right now?" },
-  { role: "user" as const, text: "We just bought a place with land. Trying to start a garden but the budget is tight and I\u2019ve got back issues that flare up." },
-  { role: "huma" as const, text: "Tell me about the land \u2014 what are you working with?" },
-  { role: "user" as const, text: "Six raised beds planned, but only three get morning sun. I need to figure out layout before ordering soil. Also have a cattle panel trellis idea for beans." },
+  { role: "user" as const, text: "Freelance is picking up but I\u2019m burning out. Two big clients, a side project I care about, and I haven\u2019t cooked a real meal in weeks. Money\u2019s fine but everything else is slipping." },
+  { role: "huma" as const, text: "When everything slips at once, there\u2019s usually one thing holding it all down. What stopped first?" },
+  { role: "user" as const, text: "Cooking, honestly. Once we stopped making dinner, the evenings fell apart \u2014 screens until midnight, bad sleep, then dragging through the next day." },
 ];
 
 /* Dimensions that "light up" as conversation progresses */
 const DIM_REVEAL_SCHEDULE = [
   [], // after msg 0
-  [0, 2, 3], // after msg 1: Body, Money, Home
-  [0, 2, 3], // after msg 2: same
-  [0, 2, 3, 4], // after msg 3: + Growth
+  [0, 2, 3, 6], // after msg 1: Body, Money, Home, Purpose
+  [0, 2, 3, 6], // after msg 2: same
+  [0, 1, 2, 3, 5, 6], // after msg 3: + People, Joy
 ];
 
 /* ─── Briefing entries ─── */
 const BRIEFING = [
   {
-    headline: "Map out the raised bed layout",
-    reasoning: "You said 6 beds but only 3 get morning sun. Start with those \u2014 sketch it before ordering soil.",
-    dims: ["Home", "Body"],
+    headline: "Cook dinner tonight",
+    reasoning: "This is your keystone. It touches Body, Money, People, Home, and Joy \u2014 five dimensions from one behavior. Everything else gets easier when this one happens.",
+    dims: ["Home", "Body", "People"],
     focus: true,
   },
   {
-    headline: "Price the cattle panel trellis",
-    reasoning: "Tractor Supply has 16ft panels at $32. You need 4 for the bean tunnel.",
-    dims: ["Money", "Home"],
+    headline: "Finish the Acme deliverable by 3pm",
+    reasoning: "You said evenings fall apart when work bleeds past dinner. Hard stop at 3 gives you the kitchen window.",
+    dims: ["Money", "Purpose"],
     focus: false,
   },
   {
-    headline: "Move before dinner tonight",
-    reasoning: "Your back has been better on days you move in late afternoon. Day four of the pattern.",
+    headline: "20-minute walk before you start cooking",
+    reasoning: "On days you move in the afternoon, you sleep an hour longer. Day three of the pattern.",
     dims: ["Body", "Joy"],
     focus: false,
   },
@@ -339,7 +339,7 @@ function HeroProductDemo({ reduced }: { reduced: boolean }) {
               {/* Date line */}
               <div className="px-5 pt-4 pb-2">
                 <p className="font-sans text-earth-400" style={{ fontSize: "0.7rem", fontWeight: 500, letterSpacing: "0.02em" }}>
-                  Wednesday, April 9&ensp;&middot;&ensp;Early Spring&ensp;&middot;&ensp;Day 1
+                  Wednesday, April 9&ensp;&middot;&ensp;Week 3&ensp;&middot;&ensp;Day 16
                 </p>
               </div>
 
@@ -347,7 +347,7 @@ function HeroProductDemo({ reduced }: { reduced: boolean }) {
               <div className="px-5 pb-3">
                 <div className="border-l-2 border-l-amber-400 pl-3.5 py-0.5">
                   <p className="font-serif text-ink-600 italic" style={{ fontSize: "0.88rem", lineHeight: 1.5 }}>
-                    The garden and the budget are the same project today.
+                    The evening starts in the kitchen. Get there by 5:30.
                   </p>
                 </div>
               </div>
@@ -479,18 +479,18 @@ export default function LandingPage() {
                   letterSpacing: "-0.02em",
                 }}
               >
-                Your whole life.
+                See how your life
                 <br />
-                One model.
+                actually connects.
                 <br />
-                <span className="text-sage-600">Daily clarity.</span>
+                <span className="text-sage-600">Find the leverage.</span>
               </h1>
 
               <p
                 className="font-sans text-earth-500 mb-8 max-w-[420px]"
                 style={{ fontSize: "1.05rem", fontWeight: 300, lineHeight: 1.7 }}
               >
-                HUMA holds your full context &mdash; money, health, home, family, goals &mdash; and each morning tells you the five things that matter most, with a reason why.
+                Your money, sleep, relationships, and work aren&rsquo;t separate problems. HUMA shows you how they connect &mdash; and which one daily behavior holds everything else together.
               </p>
 
               <div className="flex flex-col sm:flex-row items-start gap-4">
@@ -540,17 +540,17 @@ export default function LandingPage() {
             {[
               {
                 label: "It remembers everything",
-                text: "Your freezer inventory. Your kid\u2019s schedule. The budget constraint from three weeks ago. HUMA holds your full context and uses all of it, every morning.",
+                text: "Your cash flow timing. Your partner\u2019s schedule. The client deadline from three weeks ago. HUMA holds your full context and uses all of it, every morning.",
                 color: "#3A5A40",
               },
               {
                 label: "It sees connections",
-                text: "The garden affects the budget. The budget affects stress. Stress affects whether you move. HUMA traces the chain and plans around it.",
+                text: "Cooking dinner improves your sleep. Sleep improves your focus. Focus gets you done by 3pm. Getting done by 3pm gives you your evening back. HUMA traces the chain \u2014 and finds the one move.",
                 color: "#2E6B8A",
               },
               {
                 label: "It learns your rhythm",
-                text: "After a week, it notices you\u2019re a night person. It flags when a dimension goes dormant. It adapts without you configuring anything.",
+                text: "After a week, it notices your best creative days follow an evening walk. It sees when a part of your life goes quiet. It adapts without you configuring anything.",
                 color: "#C87A3A",
               },
             ].map((item, i) => (

@@ -23,22 +23,22 @@ export default function MessageBubble({
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4 animate-fade-in`}>
       <div
-        className={`max-w-[85%] rounded-2xl px-5 py-3.5 leading-[1.7] ${
+        className={`max-w-[85%] leading-[1.7] ${
           isUser
-            ? "bg-sand-100 text-earth-800"
-            : "bg-white text-earth-800"
+            ? "rounded-2xl px-5 py-3.5 bg-sand-100 text-earth-800"
+            : "px-1 py-2 text-earth-800"
         }`}
       >
-        <p className={`${isUser ? "font-sans" : "font-serif text-lg"} text-base whitespace-pre-wrap`}>{message.content}</p>
+        <p className={`${isUser ? "font-sans text-base" : "font-serif text-[1.05rem]"} whitespace-pre-wrap`}>{message.content}</p>
 
         {/* Tappable Options */}
         {message.options && message.options.length > 0 && (
-          <div className="mt-4 flex flex-col gap-2">
+          <div className="mt-4 flex flex-col gap-1.5">
             {message.options.map((opt, i) => (
               <button
                 key={i}
                 onClick={() => onOptionTap?.(opt)}
-                className="text-left px-4 py-3 rounded-xl border border-sand-300 bg-sand-50 text-earth-700 font-sans text-sm hover:border-sage-400 hover:bg-sage-50 transition-all duration-200 cursor-pointer"
+                className="text-left px-4 py-3 rounded-r-xl border-l-2 border-l-sage-300 bg-sand-50/70 text-earth-700 font-sans text-sm hover:border-l-sage-500 hover:bg-sage-50 transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] cursor-pointer min-h-[44px]"
               >
                 {opt}
               </button>

@@ -1,12 +1,12 @@
 # Prompt 04: Landing Page — Put the Best Dish in the Window
 
 ## Objective
-Build a landing page that shows a new visitor what HUMA produces BEFORE asking them anything. One real example of a production sheet, one real insight, one sentence explaining what this is. Then a single CTA: "Start yours."
+Build a landing page that shows a new visitor — specifically a freelancer, solopreneur, or creative professional managing a complex self-directed life — what HUMA produces BEFORE asking them anything. An interactive product demo that walks through a real conversation, reveals dimension mapping, and shows a personalized morning briefing. Then a single CTA: "Start a conversation."
 
 ## Why This Matters
-Right now, a new visitor to `huma-two.vercel.app` lands on either the archetype selection screen or a minimal `LandingView` component. That's asking a stranger to self-categorize before they know why they should care. The funnel is a screen door.
+The beachhead is freelancers, solopreneurs, and creative professionals — people who ARE their own system. Their money, time, health, relationships, and work are visibly coupled with no employer buffer. They're already paying for fragment tools (calendars, invoicing, habit trackers, therapy apps) that don't talk to each other. HUMA is the integration layer.
 
-The production sheet is the atomic unit of value. Show it. Let people feel "oh, I want that" before asking them anything.
+The landing page must make a stranger feel "oh, I want that" before asking them anything. The interactive demo is the atomic unit of proof — it shows the conversation, the dimension mapping, and the briefing in sequence.
 
 ## Current State
 
@@ -28,118 +28,78 @@ This replaces the current `LandingView`. Structure (single scroll, no navigation
 ```
 [Full viewport, sand-50 background]
 
-H U M A
-[Cormorant Garamond, 48px, tracked wide, ink-900]
+HUMA (wordmark, nav left)                    [Get started] (nav right)
 
-See the whole. Find the leverage.
-Practice what works.
-[Cormorant Garamond, 22px, ink-700, max-w-[480px], centered]
+LIFE INFRASTRUCTURE (uppercase label)
 
-[24px spacer]
+See how your life
+actually connects.
+Find the leverage.
+[Cormorant Garamond, clamp(2rem, 4.5vw, 3.2rem), ink-900]
 
-Life infrastructure — shows how the parts
-of your life connect and which daily
-behaviors are the leverage points.
-[Source Sans 3, 16px, earth-500, max-w-[400px], centered]
+Your money, sleep, relationships, and work
+aren't separate problems. HUMA shows you how
+they connect — and which one daily behavior
+holds everything else together.
+[Source Sans 3, 1.05rem, earth-500, max-w-[420px]]
 
-[40px spacer]
+[Start a conversation →]    No account needed · 5 minutes
+[sage-700 background, sand-50 text, rounded-full]
 
-[Start yours →]
-[amber-600 background, sand-50 text, 16px, px-8 py-3, rounded-full]
+RIGHT SIDE: Interactive product demo card showing:
+1. A conversation between HUMA and a freelancer
+2. Dimension dots lighting up as context is revealed
+3. Extraction animation mapping across 8 dimensions
+4. A personalized morning briefing with through-line
 ```
 
-No images. No illustrations. No gradients. Just text on sand. Confidence through restraint.
+The hero is a two-column layout (copy left, interactive demo right). The demo IS the proof.
 
-#### Section 2: The Example Sheet (below fold)
+#### Section 2: The Difference (below fold)
 
-This is the centerpiece. Show a real-looking production sheet for a fictional but specific operator.
-
-```
-[sand-100 background section, full bleed]
-
-[16px top padding]
-
-What HUMA makes for you each morning
-[Cormorant Garamond, 20px, ink-700, centered]
-
-[24px spacer]
-
-[Production Sheet Card — white fill, sand-300 border, max-w-[520px], centered]
-
-  Tuesday, April 8 · Day 23
-  [Source Sans 3, 13px, earth-400]
-
-  Through-line: The garden and the budget are the same project today.
-  [Source Sans 3, 14px, italic, ink-600]
-
-  ┌─────────────────────────────────────────┐
-  │ ○ Map out the raised bed layout          │
-  │   You said you have 6 beds but only 3   │
-  │   get morning sun. Start with those.    │
-  │   Home · Body                            │
-  ├─────────────────────────────────────────┤
-  │ ○ Price out the cattle panel trellis     │
-  │   Tractor Supply has 16ft panels at $32. │
-  │   You need 4 for the bean tunnel.       │
-  │   Money · Home                           │
-  ├─────────────────────────────────────────┤
-  │ ○ 20-minute walk before dinner           │
-  │   You mentioned your back seizes up      │
-  │   after desk days. Movement before       │
-  │   evening is the pattern that helps.     │
-  │   Body · Joy                             │
-  └─────────────────────────────────────────┘
-
-[/Production Sheet Card]
-
-[16px spacer]
-
-It knows your freezer inventory. Your budget.
-Your back pain. Your season. Your land.
-[Source Sans 3, 14px, earth-500, centered, max-w-[400px]]
-
-Because you told it — through conversation, not forms.
-[Source Sans 3, 14px, earth-400, centered]
-```
-
-This example sheet should be **hardcoded** — not generated by Claude. It's a static marketing artifact. Make it specific and vivid enough that a real person would recognize "that's what I need."
-
-#### Section 3: The Three Things (tight, no fluff)
+Three value propositions, each with a vertical sage/sky/amber accent bar. No icons, no feature grid.
 
 ```
-[sand-50 background]
+[sand-50 background, max-w-[720px], centered]
 
-[Cormorant Garamond, 18px, ink-700, max-w-[520px], centered, each as a standalone block with 32px between]
+It reasons about your life. It doesn't just organize it.
+[Cormorant Garamond, clamp(1.4rem, 3vw, 1.9rem)]
 
-Talk about what's going on in your life.
-HUMA remembers and connects the pieces.
+[accent bar] It remembers everything
+Your cash flow timing. Your partner's schedule. The client
+deadline from three weeks ago. HUMA holds your full context
+and uses all of it, every morning.
 
-Check off what you did today.
-HUMA finds the patterns you can't see.
+[accent bar] It sees connections
+Cooking dinner improves your sleep. Sleep improves your focus.
+Focus gets you done by 3pm. Getting done by 3pm gives you
+your evening back. HUMA traces the chain — and finds the one move.
 
-Come back tomorrow.
-Your sheet gets more specific every day.
+[accent bar] It learns your rhythm
+After a week, it notices your best creative days follow an
+evening walk. It sees when a part of your life goes quiet.
+It adapts without you configuring anything.
 ```
 
-No icons. No feature grid. No "How it works" heading. Just three plain statements.
+Each block scroll-reveals with the standard cubic-bezier easing.
 
-#### Section 4: Bottom CTA
+#### Section 3: Bottom CTA
 
 ```
-[sand-100 background, 80px top/bottom padding]
+[sand-100 background, py-24 md:py-32]
 
 What's going on in your life?
-[Cormorant Garamond, 24px, ink-700, centered]
+[Cormorant Garamond, clamp(1.6rem, 3vw, 2.2rem), ink-900, centered]
 
-[24px spacer]
+Start a conversation. HUMA builds your first morning
+briefing in five minutes.
+[Source Sans 3, 0.95rem, earth-400, centered]
 
-[Start →]
-[amber-600 background, sand-50 text, 16px, px-8 py-3, rounded-full]
+[Start a conversation →]
+[sage-700 background, sand-50 text, rounded-full]
 
-[16px spacer]
-
-No account needed. No forms. Just a conversation.
-[Source Sans 3, 13px, earth-400, centered]
+No account. No forms. Just a conversation.
+[Source Sans 3, 0.8rem, earth-300, centered]
 ```
 
 ### Mobile Behavior
@@ -158,15 +118,14 @@ In `app/src/app/page.tsx`:
 
 ### OG Meta for Homepage
 
-Update `app/src/app/layout.tsx` metadata (or `page.tsx` metadata export):
+Already updated in `app/src/app/layout.tsx`:
 ```typescript
 export const metadata = {
-  title: "HUMA — Life Infrastructure",
-  description: "See the whole. Find the leverage. Practice what works.",
+  title: "HUMA — See how your life actually connects",
+  description: "Your money, sleep, relationships, and work aren't separate problems. HUMA shows you how they connect and which daily behavior holds everything together.",
   openGraph: {
-    title: "HUMA",
-    description: "Shows how the parts of your life connect and which daily behaviors are the leverage points.",
-    // Use the existing /api/og endpoint (no params = homepage OG)
+    title: "HUMA — Life Infrastructure",
+    description: "See how your life actually connects. Find the one daily behavior that holds everything else together.",
   },
 };
 ```
@@ -180,16 +139,18 @@ export const metadata = {
 | `app/src/app/layout.tsx` | Update metadata for OG |
 
 ## Design Constraints
-- **No images, no illustrations, no icons** — text and space only
+- **No stock images, no illustrations** — the interactive demo IS the visual
 - **sand-50 default background** — never white (except card fills)
-- **No shadows, no gradients, no elevation**
+- **Subtle shadow on the product demo card only** — everything else flat
 - **Cormorant Garamond** for all display/headline text
 - **Source Sans 3** for all body/functional text
 - **ink-900** for headlines, **ink-700** for subheads, **earth-400/500** for supporting text
 - **amber-600** for CTA buttons only
 - **Single easing curve** for any scroll-triggered reveals: `cubic-bezier(0.22, 1, 0.36, 1)`, 600ms
 - Respect `prefers-reduced-motion` — no scroll animations if set
-- The example sheet must feel REAL — specific operator, specific details, specific dimensions
+- The demo conversation must feel REAL — specific freelancer, specific details, specific dimensions
+- The briefing must show cross-dimensional reasoning, not generic to-dos
+- Hero conversation persona: freelancer with two big clients, a side project, burnout, stopped cooking
 
 ## What This Is NOT
 - Not a marketing site with testimonials, pricing, or feature comparison

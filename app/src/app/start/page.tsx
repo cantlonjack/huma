@@ -6,9 +6,10 @@ import AuthModal from "@/components/shared/AuthModal";
 import ArchetypeSelectionScreen from "@/components/onboarding/ArchetypeSelectionScreen";
 import MessageBubble from "@/components/onboarding/MessageBubble";
 import LifeProfile from "@/components/whole/LifeProfile";
-import { profileCompleteness, sectionForDimension } from "@/lib/life-profile-utils";
+import { profileCompleteness } from "@/lib/life-profile-utils";
+import { ConnectionThreads, dimensionKeysFromLabels } from "@/components/shared/ConnectionThreads";
 import type { StartMessage } from "@/hooks/useStart";
-import type { Behavior, PaletteConcept } from "@/types/v2";
+import type { Behavior, PaletteConcept, DimensionKey } from "@/types/v2";
 
 // ── Inlined: PalettePanel ──
 function PalettePanel({
@@ -37,6 +38,48 @@ function PalettePanel({
             {concept.text}
           </button>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Understanding Moment ──────────────────────────────────────────────────
+// Inline card that appears in the conversation when HUMA extracts context.
+// Shows the ConnectionThreads ring with newly-learned dimensions lighting up.
+// Persists in the thread — the user watches their profile weave itself.
+
+function UnderstandingMoment({
+  allKnown,
+  justLearned,
+}: {
+  allKnown: string[];
+  justLearned: string[];
+}) {
+  const allKeys = dimensionKeysFromLabels(allKnown);
+  const newKeys = dimensionKeysFromLabels(justLearned);
+  const newLabels = newKeys.map(k => {
+    const labels: Record<string, string> = {
+      body: "how you\u2019re built", people: "who\u2019s around you",
+      money: "your resources", home: "where you live",
+      growth: "how you\u2019re growing", joy: "what brings you joy",
+      purpose: "what drives you", identity: "who you are",
+    };
+    return labels[k] || k;
+  });
+
+  return (
+    <div className="flex justify-center my-5 animate-fade-in">
+      <div className="flex flex-col items-center gap-2 px-6 py-4 rounded-2xl bg-sage-50/50 border border-sage-200/60 max-w-[240px]">
+        <ConnectionThreads
+          activeDimensions={allKeys}
+          size="compact"
+        />
+        <p className="font-sans text-[11px] text-sage-500 text-center leading-relaxed">
+          {newKeys.length === 1
+            ? `Now I see ${newLabels[0]}`
+            : `Now I see ${newLabels.slice(0, -1).join(", ")} and ${newLabels[newLabels.length - 1]}`
+          }
+        </p>
       </div>
     </div>
   );
@@ -105,7 +148,14 @@ function ConversationThread({
       )}
 
       {visibleMessages.map((msg) =>
-        msg.contextNote ? (
+        msg.contextSnapshot ? (
+          /* ── Understanding Moment ── */
+          <UnderstandingMoment
+            key={msg.id}
+            allKnown={msg.contextSnapshot.allKnown}
+            justLearned={msg.contextSnapshot.justLearned}
+          />
+        ) : msg.contextNote ? (
           <div
             key={msg.id}
             className="mb-3 ml-2 font-sans text-[0.82rem] text-sage-600 italic animate-fade-in"
@@ -123,13 +173,11 @@ function ConversationThread({
       )}
 
       {streaming && messages[messages.length - 1]?.content === "" && (
-        <div className="flex justify-start mb-4">
-          <div className="bg-white rounded-2xl px-5 py-3.5">
-            <div className="flex gap-1.5">
-              <span className="w-2 h-2 bg-earth-300 rounded-full animate-pulse" />
-              <span className="w-2 h-2 bg-earth-300 rounded-full animate-pulse [animation-delay:150ms]" />
-              <span className="w-2 h-2 bg-earth-300 rounded-full animate-pulse [animation-delay:300ms]" />
-            </div>
+        <div className="flex justify-start mb-4 pl-1">
+          <div className="flex gap-1.5 py-2">
+            <span className="w-1.5 h-1.5 bg-sage-300 rounded-full animate-pulse" />
+            <span className="w-1.5 h-1.5 bg-sage-300 rounded-full animate-pulse [animation-delay:150ms]" />
+            <span className="w-1.5 h-1.5 bg-sage-300 rounded-full animate-pulse [animation-delay:300ms]" />
           </div>
         </div>
       )}
@@ -141,12 +189,14 @@ function ConversationThread({
 function ProfileMiniBar({
   completeness,
   humaContext,
+  knownDimensionKeys,
   open,
   onToggle,
   pulse,
 }: {
   completeness: { filled: number; total: number; labels: string[] };
   humaContext: import("@/types/context").HumaContext;
+  knownDimensionKeys: DimensionKey[];
   open: boolean;
   onToggle: () => void;
   pulse: boolean;
@@ -159,15 +209,22 @@ function ProfileMiniBar({
         className="w-full flex items-center justify-between px-6 py-2.5 bg-sand-50 border-t border-sand-200 cursor-pointer hover:bg-sand-100 transition-colors duration-150"
       >
         <div className="flex items-center gap-2 min-w-0">
-          <span
-            className={`w-2 h-2 rounded-full flex-shrink-0 transition-colors duration-300 ${
-              completeness.filled > 0 ? "bg-sage-400" : "bg-sand-300"
-            } ${pulse ? "animate-pulse" : ""}`}
-          />
+          {knownDimensionKeys.length > 0 ? (
+            <ConnectionThreads
+              activeDimensions={knownDimensionKeys}
+              size="micro"
+              animate={false}
+              className="flex-shrink-0"
+            />
+          ) : (
+            <span
+              className={`w-2 h-2 rounded-full flex-shrink-0 transition-colors duration-300 bg-sand-300 ${pulse ? "animate-pulse" : ""}`}
+            />
+          )}
           <span className="font-sans text-xs text-earth-500 truncate">
             {completeness.filled === 0
-              ? "Your profile — building as we talk"
-              : `${completeness.filled} of ${completeness.total} · ${completeness.labels.join(", ")}`}
+              ? "Your profile \u2014 building as we talk"
+              : `${completeness.filled} of ${completeness.total} sections`}
           </span>
         </div>
         <svg
@@ -206,7 +263,7 @@ export default function StartPage() {
     onboardingStep, transitioning, stepReady, messages, input, setInput,
     streaming, paletteConcepts, paletteLoading, showPaletteMobile,
     setShowPaletteMobile, showTransition, showAuthModal, setShowAuthModal,
-    hasMessages, recentDimensions, knownDimensionLabels, contextPercentage,
+    hasMessages, knownDimensionLabels, contextPercentage,
     scrollRef, inputRef, sendMessage, handleOptionTap,
     handleConfirmBehaviors, handlePaletteTap, handleKeyDown,
     handleAuthenticated, handleArchetypeContinueWithTemplate,
@@ -239,14 +296,10 @@ export default function StartPage() {
   const autoSwitched = useMemo(() => completeness.filled >= 2, [completeness.filled]);
   const activeTab = autoSwitched && rightPanelTab === "suggestions" ? "profile" : rightPanelTab;
 
-  // Map dimension flash to natural section names
-  const sectionDimensions = useMemo(
-    () => recentDimensions.map((d) => sectionForDimension(d)),
-    [recentDimensions],
-  );
-  const uniqueSectionDimensions = useMemo(
-    () => [...new Set(sectionDimensions)],
-    [sectionDimensions],
+  // Convert known dimension labels to DimensionKey[] for ConnectionThreads
+  const knownDimensionKeys = useMemo(
+    () => dimensionKeysFromLabels(knownDimensionLabels),
+    [knownDimensionLabels],
   );
 
   // Wait for initialization before rendering
@@ -316,12 +369,14 @@ export default function StartPage() {
             )}
           </div>
 
-          {/* Dimension capture flash — uses natural section names */}
-          {uniqueSectionDimensions.length > 0 && (
-            <div className="mt-1.5 animate-[fade-in_300ms_ease-out]">
-              <span className="font-sans text-[11px] font-medium tracking-wide text-sage-400">
-                HUMA now knows: {uniqueSectionDimensions.join(", ")}
-              </span>
+          {/* Ambient dimension dots in header — grows as context fills */}
+          {knownDimensionKeys.length > 0 && (
+            <div className="mt-1.5">
+              <ConnectionThreads
+                activeDimensions={knownDimensionKeys}
+                size="micro"
+                animate={false}
+              />
             </div>
           )}
         </div>
@@ -388,6 +443,7 @@ export default function StartPage() {
         <ProfileMiniBar
           completeness={completeness}
           humaContext={humaContext}
+          knownDimensionKeys={knownDimensionKeys}
           open={profileDrawerOpen}
           onToggle={() => setProfileDrawerOpen((o) => !o)}
           pulse={profilePulse}

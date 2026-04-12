@@ -30,9 +30,9 @@ const DIMENSION_LABELS: Record<string, string> = {
 const SAMPLE_MAPS: Record<string, { name: string; location: string; phrase: string; enterprises: string[] }> = {
   sample: {
     name: "Sarah Chen",
-    location: "Southern Oregon, Rogue Valley",
-    phrase: "A builder who works through living systems",
-    enterprises: ["No-Dig Market Garden", "Farm Education", "Preserved Foods", "Native Plant Nursery"],
+    location: "Portland, OR",
+    phrase: "A builder who creates clarity from complexity",
+    enterprises: ["UX Consulting", "Design Teaching", "Side Project", "Creative Community"],
   },
 };
 
@@ -461,7 +461,7 @@ export async function GET(request: Request) {
           }}
         >
           {isHomepage
-            ? "Everything in your life is connected. Now you can see how."
+            ? "See how your life actually connects. Find the leverage."
             : "Living Canvas"}
         </div>
 
@@ -477,7 +477,7 @@ export async function GET(request: Request) {
               marginBottom: 12,
             }}
           >
-            Map your whole situation. See the specific moves that change everything.
+            Your money, sleep, relationships, and work are one system. HUMA finds the one move.
           </div>
         ) : (
           <div
@@ -534,7 +534,7 @@ export async function GET(request: Request) {
             letterSpacing: "0.1em",
           }}
         >
-          A living systems design tool
+          Life infrastructure
         </div>
       </div>
     ),

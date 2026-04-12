@@ -45,6 +45,11 @@ export type StartMessage = ChatMessage & {
   actions?: string[] | null;
   decomposition?: DecompositionData | null;
   contextNote?: boolean;
+  /** Snapshot of all known dimensions + which are newly extracted */
+  contextSnapshot?: {
+    allKnown: string[];   // all dimension labels with data
+    justLearned: string[]; // dimension labels from this extraction
+  };
 };
 
 // ---- Hook return type -------------------------------------------------------
@@ -303,15 +308,32 @@ export function useStart(): UseStartReturn {
       if (parsedContext) {
         setKnownContext(prev => ({ ...prev, ...parsedContext }));
         // Update structured context model + show dimension indicator
+        let updatedContext: HumaContext | null = null;
         setHumaContext(prev => {
           const updated = mergeContext(prev, parsedContext as Partial<HumaContext>, "conversation");
           storeSaveHumaContext(user?.id ?? null, updated);
+          updatedContext = updated;
           return updated;
         });
         const touched = dimensionsTouched(parsedContext as Partial<HumaContext>);
         if (touched.length > 0) {
           setRecentDimensions(touched);
           setTimeout(() => setRecentDimensions([]), 4000);
+          // Inject understanding moment into conversation
+          const allKnown = updatedContext
+            ? contextCompleteness(updatedContext).strongDimensions
+            : touched;
+          setMessages(prev => {
+            const momentMsg: StartMessage = {
+              id: `understanding-${Date.now()}`,
+              role: "huma",
+              content: "",
+              createdAt: new Date().toISOString(),
+              contextNote: true,
+              contextSnapshot: { allKnown, justLearned: touched },
+            };
+            return [...prev, momentMsg];
+          });
         }
       }
 
