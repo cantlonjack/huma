@@ -12,6 +12,8 @@ import {
   AspirationQuickLook,
   RerouteCard,
   InsightCard,
+  StructuralInsightCard,
+  HypothesisCard,
   ComingUpSection,
   StandaloneBehaviorRow,
   TransitionCard,
@@ -289,7 +291,7 @@ export default function TodayPage() {
               />
             )}
 
-            {/* Insight Card */}
+            {/* Insight Card (validated — from behavioral data) */}
             {t.insight && (
               <InsightCard
                 insight={t.insight}
@@ -297,6 +299,25 @@ export default function TodayPage() {
                 onDismiss={t.dismissInsight}
               />
             )}
+
+            {/* Structural Insights (Day 1 value — from decomposition) */}
+            {t.structuralInsights.length > 0 && t.structuralInsights.slice(0, 2).map(si => (
+              <StructuralInsightCard
+                key={si.id}
+                insight={si}
+                onTellMore={() => t.openChatWithContext(si.body)}
+                onDismiss={() => t.dismissStructuralInsight(si.id)}
+              />
+            ))}
+
+            {/* Hypothesized Correlations (Days 5-7) */}
+            {t.hypotheses.length > 0 && t.hypotheses.slice(0, 1).map(h => (
+              <HypothesisCard
+                key={h.id}
+                hypothesis={h}
+                onDismiss={() => t.dismissHypothesis(h.id)}
+              />
+            ))}
 
             {/* Proactive Nudges */}
             {t.nudges.length > 0 && (

@@ -13,6 +13,7 @@ import {
   getRecentSheetHistory,
   getChatMessages,
 } from "@/lib/supabase-v2";
+import { getTopStructuralInsight } from "@/lib/structural-insights";
 
 // ─── Season (client-side, mirrors server implementation) ──────────────────
 
@@ -255,9 +256,19 @@ export async function compileSheet(
       dimensions: (e.dimensions as string[]) || [],
       checked: false,
     }));
+    // On Day 1 (no history), enhance throughLine with a structural insight if the
+    // API returned a weak or missing one
+    let throughLine: string | null = data.through_line || null;
+    if (recentHistory.length === 0 && (!throughLine || throughLine.length < 20)) {
+      const topInsight = getTopStructuralInsight(aspirations);
+      if (topInsight) {
+        throughLine = topInsight.title;
+      }
+    }
+
     const sheet: CompiledSheet = {
       entries,
-      throughLine: data.through_line || null,
+      throughLine,
       date: data.date || date,
     };
 

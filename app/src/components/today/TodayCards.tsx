@@ -1,11 +1,14 @@
 "use client";
 
-import { memo } from "react";
-import type { Aspiration, Insight } from "@/types/v2";
-import { DIMENSION_COLORS } from "@/types/v2";
+import { memo, useState } from "react";
+import type { Aspiration, Insight, DimensionKey } from "@/types/v2";
+import { DIMENSION_COLORS, DIMENSION_LABELS } from "@/types/v2";
 import { displayName } from "@/lib/display-name";
 import type { TransitionSignal } from "@/types/v2";
 import type { ComingUpItem } from "@/hooks/useToday";
+import type { StructuralInsight } from "@/lib/structural-insights";
+import type { HypothesizedCorrelation } from "@/lib/hypothesized-correlations";
+import { ConnectionThreads } from "@/components/shared/ConnectionThreads";
 
 // ─── Aspiration Quick-Look Sheet ────────────────────────────────────────────
 
@@ -238,6 +241,139 @@ export function TransitionCard({
           className="font-sans cursor-pointer text-[13px] text-ink-300 bg-transparent border-none p-0"
         >
           Not now
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Structural Insight Card ───────────────────────────────────────────────
+
+export function StructuralInsightCard({
+  insight,
+  onTellMore,
+  onDismiss,
+}: {
+  insight: StructuralInsight;
+  onTellMore: () => void;
+  onDismiss: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="animate-entrance-2 bg-sand-50 border-l-[3px] border-l-sky-600 rounded-r-xl px-4 py-3.5 mx-4 mb-3">
+      <div className="flex items-start gap-3">
+        <div className="flex-shrink-0 mt-0.5">
+          <ConnectionThreads
+            activeDimensions={insight.dimensions}
+            size="micro"
+            animate={false}
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <span className="font-sans text-[10px] font-semibold tracking-[0.18em] text-sky-600 uppercase">
+            From your structure
+          </span>
+          <p className="font-serif text-ink-700 text-[15px] leading-relaxed mt-1">
+            {insight.body}
+          </p>
+        </div>
+      </div>
+
+      {/* Expandable evidence */}
+      {insight.behaviors.length > 0 && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="font-sans cursor-pointer text-[12px] text-ink-300 mt-2 ml-[44px] bg-transparent border-none p-0 hover:text-ink-500 transition-colors"
+        >
+          {expanded ? "Hide evidence" : `${insight.behaviors.length} behavior${insight.behaviors.length === 1 ? "" : "s"} involved`}
+        </button>
+      )}
+
+      {expanded && insight.behaviors.length > 0 && (
+        <div className="ml-[44px] mt-1.5 flex flex-col gap-1">
+          {insight.behaviors.map((b, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div className="size-1 rounded-full bg-sky-600 flex-shrink-0" />
+              <span className="font-sans text-[12px] text-ink-400">{b}</span>
+            </div>
+          ))}
+          {insight.dimensions.length > 0 && (
+            <div className="flex gap-1.5 mt-1">
+              {insight.dimensions.map(dim => (
+                <span
+                  key={dim}
+                  className="font-sans text-[10px] px-1.5 py-0.5 rounded"
+                  style={{
+                    background: `${DIMENSION_COLORS[dim]}15`,
+                    color: DIMENSION_COLORS[dim],
+                  }}
+                >
+                  {DIMENSION_LABELS[dim]}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="flex justify-between items-center mt-2.5">
+        <button
+          onClick={onTellMore}
+          className="font-sans font-medium text-sky-600 cursor-pointer hover:text-sky-800 transition-colors text-[13px] bg-transparent border-none py-2 min-h-[44px]"
+        >
+          Tell me more &rarr;
+        </button>
+        <button
+          onClick={onDismiss}
+          className="font-sans text-ink-200 cursor-pointer hover:text-ink-400 transition-colors text-base bg-transparent border-none p-2 min-h-[44px] min-w-[44px] flex items-center justify-center leading-none"
+          aria-label="Dismiss insight"
+        >
+          &times;
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Hypothesis Card ───────────────────────────────────────────────────────
+
+export function HypothesisCard({
+  hypothesis,
+  onDismiss,
+}: {
+  hypothesis: HypothesizedCorrelation;
+  onDismiss: () => void;
+}) {
+  return (
+    <div className="animate-entrance-2 bg-sand-50 border-l-[3px] border-l-ink-300 border-dashed rounded-r-xl px-4 py-3.5 mx-4 mb-3">
+      <div className="flex items-start gap-3">
+        <div className="flex-shrink-0 mt-0.5">
+          <ConnectionThreads
+            activeDimensions={hypothesis.dimensions}
+            size="micro"
+            animate={false}
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <span className="font-sans text-[10px] font-semibold tracking-[0.18em] text-ink-400 uppercase">
+            HUMA suspects
+          </span>
+          <p className="font-serif text-ink-600 text-[14px] leading-relaxed mt-1">
+            {hypothesis.hypothesis}
+          </p>
+          <p className="font-sans text-[11px] text-ink-300 mt-1.5 italic">
+            Needs: {hypothesis.dataNeeded}
+          </p>
+        </div>
+      </div>
+      <div className="flex justify-end mt-2">
+        <button
+          onClick={onDismiss}
+          className="font-sans text-ink-200 cursor-pointer hover:text-ink-400 transition-colors text-base bg-transparent border-none p-2 min-h-[44px] min-w-[44px] flex items-center justify-center leading-none"
+          aria-label="Dismiss hypothesis"
+        >
+          &times;
         </button>
       </div>
     </div>

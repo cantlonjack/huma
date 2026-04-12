@@ -206,7 +206,7 @@ hard cap, not a suggestion.`
 
   const historyStr = recentHistory.length > 0
     ? recentHistory.map(h => `${h.date}: ${h.behaviorKey} — ${h.checked ? "done" : "skipped"}`).join("\n")
-    : "No history yet — this is their first day.";
+    : "No history yet — this is their first day. Use the through-line to name the most connected behavior or the strongest cross-dimensional link you see in their aspirations.";
 
   const historyAnalysis = analyzeHistory(recentHistory, dayOfWeek);
   const contextStr = formatKnownContext(knownContext);

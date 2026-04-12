@@ -15,6 +15,8 @@ import {
   logBehaviorCheckoff,
   getBehaviorWeekCounts,
 } from "@/lib/supabase-v2";
+import { generateStructuralInsights, type StructuralInsight } from "@/lib/structural-insights";
+import { generateHypothesizedCorrelations, type HypothesizedCorrelation } from "@/lib/hypothesized-correlations";
 import { detectTransition } from "@/lib/transition-detection";
 import type { TransitionSignal } from "@/types/v2";
 import { fetchNudges, dismissNudge as persistDismissNudge } from "@/lib/nudge-fetcher";
@@ -64,6 +66,8 @@ export interface UseTodayReturn {
   pushState: string;
   nudges: Nudge[];
   capitalPulse: PulseData | null;
+  structuralInsights: StructuralInsight[];
+  hypotheses: HypothesizedCorrelation[];
 
   // Derived
   activeCount: number;
@@ -88,6 +92,8 @@ export interface UseTodayReturn {
   navigateToStart: () => void;
   dismissNudge: (id: string) => void;
   engageNudge: (nudge: Nudge) => void;
+  dismissStructuralInsight: (id: string) => void;
+  dismissHypothesis: (id: string) => void;
   // Validation
   isValidationDay: boolean;
   validationAspirations: Aspiration[];
@@ -413,6 +419,66 @@ export function useToday(): UseTodayReturn {
     return computeCapitalPulse(compiledEntries, checkedEntries, aspirations);
   }, [compiledEntries, checkedEntries, aspirations]);
 
+  // ─── Structural Insights + Hypotheses (Day 1 value) ─────────────────
+  // Progression: Days 1-4 structural only, Days 5-7 + hypotheses, Days 8+ blend
+  const [dismissedStructural, setDismissedStructural] = useState<Set<string>>(() => {
+    try {
+      const cached = localStorage.getItem("huma-v2-dismissed-structural");
+      return cached ? new Set(JSON.parse(cached)) : new Set<string>();
+    } catch { return new Set<string>(); }
+  });
+
+  const [dismissedHypotheses, setDismissedHypotheses] = useState<Set<string>>(() => {
+    try {
+      const cached = localStorage.getItem("huma-v2-dismissed-hypotheses");
+      return cached ? new Set(JSON.parse(cached)) : new Set<string>();
+    } catch { return new Set<string>(); }
+  });
+
+  const structuralInsights = useMemo(() => {
+    if (aspirations.length === 0) return [];
+    // Structural insights fade after Day 15 — validated insights take priority
+    if (dayCount > 15 && insight) return [];
+
+    const all = generateStructuralInsights(aspirations);
+    return all.filter(i => !dismissedStructural.has(i.type));
+  }, [aspirations, dayCount, insight, dismissedStructural]);
+
+  const hypotheses = useMemo(() => {
+    if (aspirations.length === 0) return [];
+    // Hypotheses appear from Day 5+, fade after Day 15
+    if (dayCount < 5 || dayCount > 15) return [];
+
+    const ctx = ctxData ?? null;
+    const all = generateHypothesizedCorrelations(aspirations, ctx);
+    return all.filter(h => !dismissedHypotheses.has(h.id));
+  }, [aspirations, dayCount, ctxData, dismissedHypotheses]);
+
+  const dismissStructuralInsight = useCallback((id: string) => {
+    setDismissedStructural(prev => {
+      // Dismiss by type so the same type doesn't regenerate with a new UUID
+      const insight = structuralInsights.find(i => i.id === id);
+      const dismissKey = insight?.type || id;
+      const next = new Set(prev);
+      next.add(dismissKey);
+      try {
+        localStorage.setItem("huma-v2-dismissed-structural", JSON.stringify([...next]));
+      } catch { /* non-critical */ }
+      return next;
+    });
+  }, [structuralInsights]);
+
+  const dismissHypothesis = useCallback((id: string) => {
+    setDismissedHypotheses(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      try {
+        localStorage.setItem("huma-v2-dismissed-hypotheses", JSON.stringify([...next]));
+      } catch { /* non-critical */ }
+      return next;
+    });
+  }, []);
+
   const dismissTransition = useCallback(() => {
     setTransitionSignal(null);
     localStorage.setItem("huma-v2-transition-dismissed", new Date().toISOString());
@@ -665,6 +731,8 @@ export function useToday(): UseTodayReturn {
     pushState,
     nudges,
     capitalPulse,
+    structuralInsights,
+    hypotheses,
     activeCount,
     adjustingCount,
     rerouteAspiration,
@@ -685,6 +753,8 @@ export function useToday(): UseTodayReturn {
     navigateToStart,
     dismissNudge,
     engageNudge,
+    dismissStructuralInsight,
+    dismissHypothesis,
     isValidationDay,
     validationAspirations,
     handleValidationAnswer,
