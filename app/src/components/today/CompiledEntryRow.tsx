@@ -30,11 +30,21 @@ export function CompiledEntryRow({
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(); } }}
         className="w-full text-left cursor-pointer"
       >
-        {/* Headline */}
-        <span
-          className={`block font-serif leading-tight transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isTrigger ? "text-[19px] font-semibold" : "text-[17px] font-medium"} ${isChecked ? "text-ink-200 line-through decoration-ink-200 decoration-1" : (isTrigger ? "text-ink-900" : "text-ink-800")}`}
-        >
-          {entry.headline || entry.behaviorText}
+        {/* Headline with inline constellation */}
+        <span className="flex items-center gap-1.5">
+          {entry.dimensions && entry.dimensions.length > 0 && !isChecked && (
+            <ConnectionThreads
+              activeDimensions={dimensionKeysFromLabels(entry.dimensions)}
+              size="inline"
+              animate={false}
+              className="flex-shrink-0"
+            />
+          )}
+          <span
+            className={`font-serif leading-tight transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isTrigger ? "text-[19px] font-semibold" : "text-[17px] font-medium"} ${isChecked ? "text-ink-200 line-through decoration-ink-200 decoration-1" : (isTrigger ? "text-ink-900" : "text-ink-800")}`}
+          >
+            {entry.headline || entry.behaviorText}
+          </span>
         </span>
 
         {/* Detail preview */}
@@ -60,16 +70,6 @@ export function CompiledEntryRow({
               more &darr;
             </span>
           </span>
-        )}
-
-        {/* Dimension threads */}
-        {entry.dimensions && entry.dimensions.length > 0 && !isChecked && (
-          <div className="mt-1.5">
-            <ConnectionThreads
-              activeDimensions={dimensionKeysFromLabels(entry.dimensions)}
-              size="micro"
-            />
-          </div>
         )}
       </div>
     </div>

@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { toPng } from "html-to-image";
 import type { Insight, DimensionKey } from "@/types/v2";
-import { DIMENSION_COLORS, DIMENSION_LABELS } from "@/types/v2";
+import { ConnectionThreads } from "@/components/shared/ConnectionThreads";
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -45,60 +45,6 @@ export function isShareworthyInsight(insight: Insight): boolean {
   );
 }
 
-// ─── Dimension Circle ───────────────────────────────────────────
-
-function DimensionCircle({
-  dimension,
-  size,
-  delay,
-}: {
-  dimension: DimensionKey;
-  size: number;
-  delay: number;
-}) {
-  const color = DIMENSION_COLORS[dimension] || COLORS.sageLabel;
-  const label = DIMENSION_LABELS[dimension] || dimension;
-
-  return (
-    <div
-      className="flex flex-col items-center gap-3"
-      style={{
-        opacity: 0,
-        animation: `insight-circle-in 600ms cubic-bezier(0.22, 1, 0.36, 1) ${delay}ms forwards`,
-      }}
-    >
-      <div
-        className="rounded-full opacity-85"
-        style={{
-          width: `${size}px`,
-          height: `${size}px`,
-          backgroundColor: color,
-        }}
-      />
-      <span className="font-sans text-[13px] font-medium tracking-[0.12em] uppercase text-earth-300">
-        {label}
-      </span>
-    </div>
-  );
-}
-
-// ─── Connection Line (between dimension circles) ────────────────
-
-function ConnectionLine({ width }: { width: number }) {
-  return (
-    <div
-      className="self-center"
-      style={{
-        width: `${width}px`,
-        height: "1px",
-        backgroundColor: COLORS.divider,
-        marginTop: `-${24 + 6}px`,
-        marginBottom: "30px",
-      }}
-    />
-  );
-}
-
 // ─── Export Layout (static, for image generation — inline styles preserved) ──
 
 function ExportLayout({
@@ -109,7 +55,6 @@ function ExportLayout({
   operatorName: string;
 }) {
   const dims = insight.dimensionsInvolved as DimensionKey[];
-  const circleSize = dims.length <= 3 ? 56 : 44;
 
   return (
     <div
@@ -151,48 +96,20 @@ function ExportLayout({
         HUMA SEES
       </div>
 
-      {/* Dimension circles */}
+      {/* Signature constellation */}
       <div
         style={{
           display: "flex",
-          alignItems: "flex-start",
-          gap: "40px",
+          justifyContent: "center",
           marginBottom: "56px",
         }}
       >
-        {dims.map((dim) => (
-          <div
-            key={dim}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "12px",
-            }}
-          >
-            <div
-              style={{
-                width: `${circleSize}px`,
-                height: `${circleSize}px`,
-                borderRadius: "50%",
-                backgroundColor: DIMENSION_COLORS[dim] || COLORS.sageLabel,
-                opacity: 0.85,
-              }}
-            />
-            <span
-              style={{
-                fontFamily: "'Source Sans 3', 'Source Sans Pro', sans-serif",
-                fontSize: "13px",
-                fontWeight: 500,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                color: COLORS.sandDark,
-              }}
-            >
-              {DIMENSION_LABELS[dim] || dim}
-            </span>
-          </div>
-        ))}
+        <ConnectionThreads
+          activeDimensions={dims}
+          size="signature"
+          darkMode
+          animate={false}
+        />
       </div>
 
       {/* Thin divider */}
@@ -286,7 +203,6 @@ export default function ShareworthyInsightCard({
   const [displayScale, setDisplayScale] = useState(0.35);
 
   const dims = insight.dimensionsInvolved as DimensionKey[];
-  const circleSize = dims.length <= 3 ? 56 : 44;
 
   // Display scale
   useEffect(() => {
@@ -410,24 +326,14 @@ export default function ShareworthyInsightCard({
             HUMA SEES
           </p>
 
-          {/* Dimension circles row */}
-          <div className="flex justify-center items-start gap-8 mb-9 relative">
-            {dims.map((dim, i) => (
-              <DimensionCircle
-                key={dim}
-                dimension={dim}
-                size={circleSize}
-                delay={200 + i * 100}
-              />
-            ))}
+          {/* Signature constellation — the recognizable HUMA shape */}
+          <div className="flex justify-center mb-7 relative">
+            <ConnectionThreads
+              activeDimensions={dims}
+              size="signature"
+              darkMode
+            />
           </div>
-
-          {/* Connection lines between circles */}
-          {dims.length > 1 && (
-            <div className="flex justify-center mb-7 relative">
-              <ConnectionLine width={Math.min((dims.length - 1) * 72, 280)} />
-            </div>
-          )}
 
           {/* Thin divider */}
           <div

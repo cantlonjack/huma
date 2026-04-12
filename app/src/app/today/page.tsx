@@ -22,6 +22,7 @@ import { ValidationCard } from "@/components/today/ValidationCard";
 import type { Nudge, DimensionKey } from "@/types/v2";
 import { DIMENSION_LABELS } from "@/types/v2";
 import { ConnectionThreads } from "@/components/shared/ConnectionThreads";
+import type { PulseState } from "@/components/shared/ConnectionThreads";
 
 // ── Inlined: NudgeCard ──
 const TYPE_LABELS: Record<string, string> = {
@@ -93,6 +94,13 @@ const CapitalPulse = memo(function CapitalPulse({
 }) {
   const movedCount = movedDimensions.length;
 
+  // Pulse states: moved dims are settled (slower breathing),
+  // all 8 dims shown but unmoved ones breathe faster (calling attention)
+  const pulseStates: PulseState[] = ALL_DIMENSIONS.map(dim => ({
+    dimension: dim,
+    settled: movedDimensions.includes(dim),
+  }));
+
   let summaryStr = `${movedCount} of ${ALL_DIMENSIONS.length} dimensions moved today.`;
   if (dormantDimension) {
     summaryStr += ` ${DIMENSION_LABELS[dormantDimension.key]} hasn\u2019t been touched in ${dormantDimension.days} days.`;
@@ -100,11 +108,15 @@ const CapitalPulse = memo(function CapitalPulse({
 
   return (
     <div className="mx-4 mt-3 mb-1">
+      <p className="font-sans text-[9px] font-semibold tracking-[0.22em] text-ink-300 text-center mb-2 uppercase">
+        Your shape today
+      </p>
       <div className="flex justify-center">
         <ConnectionThreads
           activeDimensions={movedDimensions}
           dormantDimensions={dormantDimensions}
-          size="compact"
+          size="pulse"
+          pulseStates={pulseStates}
         />
       </div>
       <p className="font-sans text-[12px] text-ink-400 mt-2 leading-normal text-center">

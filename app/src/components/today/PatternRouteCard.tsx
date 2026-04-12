@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import type { Aspiration } from "@/types/v2";
+import type { DimensionKey } from "@/types/v2";
 import { DIMENSION_COLORS } from "@/types/v2";
 import { displayName } from "@/lib/display-name";
 import WeekRhythm from "@/components/today/WeekRhythm";
 import type { BehaviorStep } from "@/hooks/useToday";
 import { triggerCaption } from "@/hooks/useToday";
+import { ConnectionThreads } from "@/components/shared/ConnectionThreads";
 
 export function PatternRouteCard({
   aspiration,
@@ -212,34 +214,23 @@ export function PatternRouteCard({
         />
       )}
 
-      {/* Footer: dimensions + timing/validation */}
+      {/* Footer: dimensions constellation + timing/validation */}
       {!showCompletion && (() => {
-        const allDims = Array.from(new Set(steps.flatMap(s => s.dimensions)));
-        const LABELS: Record<string, string> = {
-          body: "Body", people: "People", money: "Money", home: "Home",
-          growth: "Growth", joy: "Joy", purpose: "Purpose", identity: "Identity",
-        };
+        const allDims = Array.from(new Set(steps.flatMap(s => s.dimensions))) as DimensionKey[];
         return (
           <>
             {allDims.length > 0 && (
-              <div className="px-3.5 pt-1.5 border-t border-sand-200 flex items-center gap-1.5">
-                <div className="flex gap-[3px] flex-shrink-0">
-                  {allDims.map(dim => (
-                    <div
-                      key={dim}
-                      className="size-[5px] rounded-full"
-                      style={{ background: DIMENSION_COLORS[dim as keyof typeof DIMENSION_COLORS] || "var(--color-sage-400)" }}
-                    />
-                  ))}
-                </div>
-                <span className="font-sans text-sage-400 text-[11px]">
-                  Touches {allDims.map(d => LABELS[d] || d).join(", ")}
-                </span>
+              <div className="px-3.5 pt-2 border-t border-sand-200 flex items-center gap-2">
+                <ConnectionThreads
+                  activeDimensions={allDims}
+                  size="badge"
+                  animate={false}
+                />
               </div>
             )}
 
             <div
-              className={`px-3.5 flex justify-between items-center ${allDims.length > 0 ? "pt-1.5 pb-2.5" : "py-2.5 border-t border-sand-200"}`}
+              className={`px-3.5 flex justify-between items-center ${allDims.length > 0 ? "pt-1 pb-2.5" : "py-2.5 border-t border-sand-200"}`}
             >
               <span className="font-sans text-sage-400 text-xs">
                 {aspiration.triggerData?.window
