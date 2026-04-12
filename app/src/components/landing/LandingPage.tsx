@@ -3,6 +3,8 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { ConnectionThreads } from "@/components/shared/ConnectionThreads";
+import type { DimensionKey } from "@/types/v2";
 
 /* ─── Dimension config ─── */
 const DIMS: { name: string; color: string; label: string; icon: string }[] = [
@@ -30,6 +32,11 @@ const DIM_REVEAL_SCHEDULE = [
   [0, 2, 3, 6], // after msg 1: Body, Money, Home, Purpose
   [0, 2, 3, 6], // after msg 2: same
   [0, 1, 2, 3, 5, 6], // after msg 3: + People, Joy
+];
+
+/* Map DIMS indices to DimensionKey */
+const IDX_TO_KEY: DimensionKey[] = [
+  "body", "people", "money", "home", "growth", "joy", "purpose", "identity",
 ];
 
 /* ─── Briefing entries ─── */
@@ -212,21 +219,12 @@ function HeroProductDemo({ reduced }: { reduced: boolean }) {
             </span>
           </div>
 
-          {/* Mini dimension dots */}
-          <div className="flex gap-1.5">
-            {DIMS.slice(0, 8).map((d, i) => (
-              <span
-                key={d.name}
-                className="w-2 h-2 rounded-full"
-                style={{
-                  background: revealedDims.includes(i) ? d.color : "var(--color-sand-200)",
-                  opacity: revealedDims.includes(i) ? 0.85 : 0.4,
-                  transition: reduced ? "none" : "all 600ms cubic-bezier(0.22, 1, 0.36, 1)",
-                  transform: revealedDims.includes(i) ? "scale(1.2)" : "scale(1)",
-                }}
-              />
-            ))}
-          </div>
+          {/* Mini dimension threads */}
+          <ConnectionThreads
+            activeDimensions={revealedDims.map(i => IDX_TO_KEY[i])}
+            size="micro"
+            animate={!reduced}
+          />
         </div>
 
         {/* Content area */}
@@ -289,7 +287,7 @@ function HeroProductDemo({ reduced }: { reduced: boolean }) {
               )}
             </div>
 
-            {/* Extraction overlay */}
+            {/* Extraction overlay — ConnectionThreads ring weaves in */}
             {phase === "extracting" && (
               <div
                 className="absolute inset-0 flex items-center justify-center"
@@ -298,28 +296,12 @@ function HeroProductDemo({ reduced }: { reduced: boolean }) {
                   animation: !reduced ? "fade-in-fast 400ms ease both" : "none",
                 }}
               >
-                <div className="text-center">
-                  <div className="flex justify-center gap-2 mb-4">
-                    {DIMS.map((d, i) => (
-                      <div
-                        key={d.name}
-                        className="flex flex-col items-center gap-1"
-                        style={
-                          !reduced
-                            ? { animation: `dim-pop 500ms cubic-bezier(0.22,1,0.36,1) ${i * 80}ms both` }
-                            : undefined
-                        }
-                      >
-                        <span
-                          className="w-3 h-3 rounded-full"
-                          style={{ background: d.color, opacity: 0.85 }}
-                        />
-                        <span className="font-sans text-earth-400" style={{ fontSize: "0.55rem" }}>
-                          {d.name}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                <div className="flex flex-col items-center gap-3">
+                  <ConnectionThreads
+                    activeDimensions={revealedDims.map(i => IDX_TO_KEY[i])}
+                    size="compact"
+                    animate={!reduced}
+                  />
                   <p className="font-sans text-earth-400" style={{ fontSize: "0.8rem", fontWeight: 400 }}>
                     Mapping across 8 dimensions...
                   </p>
@@ -376,17 +358,11 @@ function HeroProductDemo({ reduced }: { reduced: boolean }) {
                   <p className="font-sans text-earth-400 mb-1.5" style={{ fontSize: "0.76rem", fontWeight: 300, lineHeight: 1.5 }}>
                     {entry.reasoning}
                   </p>
-                  <div className="flex gap-2">
-                    {entry.dims.map((d) => {
-                      const dim = DIMS.find((x) => x.name === d);
-                      return (
-                        <span key={d} className="inline-flex items-center gap-1 font-sans text-earth-400" style={{ fontSize: "0.65rem" }}>
-                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: dim?.color || "#8C8274", opacity: 0.7 }} />
-                          {d}
-                        </span>
-                      );
-                    })}
-                  </div>
+                  <ConnectionThreads
+                    activeDimensions={entry.dims.map(d => d.toLowerCase() as DimensionKey)}
+                    size="micro"
+                    animate={false}
+                  />
                 </div>
               ))}
             </div>
