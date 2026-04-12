@@ -646,7 +646,7 @@ export default function LandingPage() {
             </button>
             <button
               onClick={() => scrollTo("foundations")}
-              className="hidden sm:block font-sans text-earth-400 hover:text-ink-700 cursor-pointer"
+              className="hidden md:block font-sans text-earth-400 hover:text-ink-700 cursor-pointer"
               style={{ fontSize: "0.84rem", fontWeight: 400, transition: reduced ? "none" : "color 200ms" }}
             >
               Foundations
@@ -875,46 +875,83 @@ export default function LandingPage() {
                 Each action comes with a reason why it matters today. You can check things off, push back, or update your context. The system learns and adapts.
               </p>
             </div>
-            {/* Visual: briefing snippet */}
+            {/* Visual: sheet with check-offs + capital pulse */}
             <div
               className="rounded-xl border border-sand-200 bg-white overflow-hidden"
               style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}
             >
+              {/* Sheet entries with check states */}
               <div className="px-5 pt-4 pb-2">
                 <p className="font-sans text-earth-400" style={{ fontSize: "0.68rem", fontWeight: 500, letterSpacing: "0.02em" }}>
-                  Wednesday, April 9&ensp;&middot;&ensp;Day 23
+                  Day 23&ensp;&middot;&ensp;3 of 5 complete
                 </p>
               </div>
-              <div className="px-5 pb-3">
-                <div className="border-l-2 border-l-amber-400 pl-3 py-0.5">
-                  <p className="font-serif text-ink-600 italic" style={{ fontSize: "0.85rem", lineHeight: 1.5 }}>
-                    The garden and the budget are the same project today.
-                  </p>
-                </div>
-              </div>
               <div className="mx-5 border-t border-sand-100" />
-              {BRIEFING.map((entry, i) => (
-                <div key={i} className={`px-5 py-3 ${i < BRIEFING.length - 1 ? "border-b border-sand-50" : ""}`}>
-                  {entry.focus && (
-                    <p className="font-sans text-amber-600 mb-0.5" style={{ fontSize: "0.55rem", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" }}>
-                      Focus
+              {[
+                { text: "Map out the raised bed layout", checked: true, dims: ["Home", "Body"] },
+                { text: "Price the cattle panel trellis", checked: true, dims: ["Money", "Home"] },
+                { text: "Move before dinner tonight", checked: true, dims: ["Body", "Joy"] },
+                { text: "Review the seed order list", checked: false, dims: ["Home", "Growth"] },
+                { text: "Call Mom about the rototiller", checked: false, dims: ["People", "Home"] },
+              ].map((item, i) => (
+                <div key={i} className={`px-5 py-2.5 flex items-start gap-3 ${i < 4 ? "border-b border-sand-50" : ""}`}>
+                  <div className={`w-4 h-4 rounded-full border-2 mt-0.5 shrink-0 flex items-center justify-center ${
+                    item.checked ? "border-sage-500 bg-sage-500" : "border-sand-300"
+                  }`}>
+                    {item.checked && (
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <p className={`font-serif leading-snug text-[13.5px] ${item.checked ? "text-earth-300 line-through" : "text-ink-800"}`}>
+                      {item.text}
                     </p>
-                  )}
-                  <p className={`font-serif leading-snug mb-0.5 ${entry.focus ? "text-ink-900 text-[14px] font-medium" : "text-ink-800 text-[13.5px]"}`}>
-                    {entry.headline}
-                  </p>
-                  <p className="font-sans text-earth-400" style={{ fontSize: "0.74rem", fontWeight: 300, lineHeight: 1.45 }}>
-                    {entry.reasoning}
-                  </p>
+                    <div className="flex gap-1.5 mt-0.5">
+                      {item.dims.map((d) => {
+                        const dim = DIMS.find((x) => x.name === d);
+                        return (
+                          <span key={d} className="w-1.5 h-1.5 rounded-full" style={{ background: dim?.color || "#8C8274", opacity: item.checked ? 0.3 : 0.6 }} />
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               ))}
+
+              {/* Capital pulse mini */}
+              <div className="px-5 py-3 border-t border-sand-100 bg-sand-50/50">
+                <p className="font-sans text-earth-400 mb-2" style={{ fontSize: "0.6rem", fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase" }}>
+                  Capital moved today
+                </p>
+                <div className="flex gap-1.5">
+                  {DIMS.map((d, i) => {
+                    const active = [0, 2, 3, 5].includes(i); // Body, Money, Home, Joy
+                    return (
+                      <div key={d.name} className="flex-1 flex flex-col items-center gap-1">
+                        <div
+                          className="w-full h-1.5 rounded-full"
+                          style={{
+                            background: active ? d.color : "var(--color-sand-200)",
+                            opacity: active ? 0.7 : 0.4,
+                          }}
+                        />
+                        <span className="font-sans text-earth-300" style={{ fontSize: "0.5rem" }}>
+                          {d.name.slice(0, 3)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* ═══ WHAT MAKES IT DIFFERENT ═══ */}
-      <section className="px-6 py-24 md:py-32 bg-white border-y border-sand-200">
+      <section className="px-6 py-20 md:py-28 bg-white border-y border-sand-200">
         <div className="max-w-[1000px] mx-auto">
           <p
             {...reveal(5)}
@@ -998,68 +1035,53 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══ FOUNDATIONS ═══ */}
-      <section id="foundations" className="px-6 py-24 md:py-32 bg-sand-50">
-        <div className="max-w-[800px] mx-auto">
+      {/* ═══ FOUNDATIONS — compact inline ═══ */}
+      <section id="foundations" className="px-6 py-16 md:py-20 bg-sand-50 border-t border-sand-200">
+        <div className="max-w-[1000px] mx-auto">
           <div
             ref={setRef(10)}
-            className={`${mounted && !reduced ? "landing-reveal" : ""}`}
+            className={`text-center mb-8 ${mounted && !reduced ? "landing-reveal" : ""}`}
             style={!reduced ? { opacity: mounted ? undefined : 0 } : undefined}
           >
-            <p className="font-sans text-sage-600 mb-3" style={{ fontSize: "0.68rem", fontWeight: 600, letterSpacing: "0.22em", textTransform: "uppercase" }}>
+            <p className="font-sans text-sage-600 mb-2" style={{ fontSize: "0.68rem", fontWeight: 600, letterSpacing: "0.22em", textTransform: "uppercase" }}>
               Standing on the shoulders of giants
             </p>
-            <h2 className="font-serif text-ink-900 mb-4" style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", fontWeight: 400, lineHeight: 1.2 }}>
-              Built on frameworks that have stood
-              <br className="hidden md:block" />
-              the test of time.
-            </h2>
-            <p className="font-sans text-earth-500 mb-12 max-w-[560px]" style={{ fontSize: "0.95rem", fontWeight: 300, lineHeight: 1.7 }}>
-              HUMA doesn&apos;t invent a new philosophy. It synthesizes established schools of thought into a system that fits in your pocket and works every morning.
+            <p className="font-sans text-earth-400 max-w-[440px] mx-auto" style={{ fontSize: "0.88rem", fontWeight: 300, lineHeight: 1.6 }}>
+              HUMA synthesizes established frameworks into a system that fits in your pocket.
             </p>
           </div>
 
           <div
             ref={setRef(11)}
-            className={`grid grid-cols-2 md:grid-cols-3 gap-4 mb-16 ${mounted && !reduced ? "landing-reveal" : ""}`}
+            className={`flex flex-wrap justify-center gap-3 ${mounted && !reduced ? "landing-reveal" : ""}`}
             style={!reduced ? { opacity: mounted ? undefined : 0 } : undefined}
           >
             {FRAMEWORKS.map((f) => (
-              <div key={f.name} className="py-4 px-5 rounded-lg border border-sand-200 bg-white flex items-start gap-3">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-sage-500)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" opacity="0.6">
+              <span
+                key={f.name}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-sand-200 bg-white font-sans text-earth-600"
+                style={{ fontSize: "0.8rem", fontWeight: 400 }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-sage-500)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.55">
                   <path d={f.icon} />
                 </svg>
-                <div>
-                  <p className="font-serif text-ink-800 mb-0.5" style={{ fontSize: "0.95rem", fontWeight: 500 }}>
-                    {f.name}
-                  </p>
-                  <p className="font-sans text-earth-300" style={{ fontSize: "0.75rem", fontWeight: 300 }}>
-                    {f.origin}
-                  </p>
-                </div>
-              </div>
+                {f.name}
+                <span className="text-earth-300" style={{ fontSize: "0.7rem", fontWeight: 300 }}>{f.origin}</span>
+              </span>
             ))}
-          </div>
-
-          <div
-            ref={setRef(12)}
-            className={`flex flex-col md:flex-row items-start md:items-center gap-3 pt-8 border-t border-sand-200 ${mounted && !reduced ? "landing-reveal" : ""}`}
-            style={!reduced ? { opacity: mounted ? undefined : 0 } : undefined}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-sage-500)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5 md:mt-0" opacity="0.5">
-              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z" />
-            </svg>
-            <p className="font-sans text-earth-400" style={{ fontSize: "0.88rem", fontWeight: 300, lineHeight: 1.6 }}>
-              Proudly created in the Great Lake State.
-            </p>
           </div>
         </div>
       </section>
 
       {/* ═══ BOTTOM CTA ═══ */}
-      <section className="px-6 py-24 md:py-32 bg-white border-t border-sand-200">
+      <section
+        className="px-6 py-24 md:py-32"
+        style={{
+          background: "linear-gradient(180deg, var(--color-sand-100) 0%, var(--color-sand-50) 100%)",
+        }}
+      >
         <div
-          ref={setRef(13)}
+          ref={setRef(12)}
           className={`max-w-[520px] mx-auto text-center ${mounted && !reduced ? "landing-reveal" : ""}`}
           style={!reduced ? { opacity: mounted ? undefined : 0 } : undefined}
         >
@@ -1098,7 +1120,7 @@ export default function LandingPage() {
             </span>
           </div>
           <p className="font-sans text-earth-300" style={{ fontSize: "0.7rem", fontWeight: 300 }}>
-            &copy; {new Date().getFullYear()} HUMA
+            Proudly created in the Great Lake State &middot; &copy; {new Date().getFullYear()} HUMA
           </p>
         </div>
       </footer>
