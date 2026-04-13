@@ -6,62 +6,47 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { ConnectionThreads } from "@/components/shared/ConnectionThreads";
 import type { DimensionKey } from "@/types/v2";
 
-/* ─── Dimension config ─── */
-const DIMS: { name: string; color: string; label: string; icon: string }[] = [
-  { name: "Body", color: "#3A5A40", label: "Sleep tanks when deadlines stack up", icon: "M12 3c-1.5 2-4 4-4 7s2 5 4 7c2-2 4-4 4-7s-2.5-5-4-7z" },
-  { name: "People", color: "#2E6B8A", label: "Haven\u2019t seen Mia since the project started", icon: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" },
-  { name: "Money", color: "#B5621E", label: "Invoices out, but cash won\u2019t land until the 20th", icon: "M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" },
-  { name: "Home", color: "#8C8274", label: "Kitchen\u2019s been takeout-only for two weeks", icon: "M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" },
-  { name: "Growth", color: "#2A4A30", label: "Reading 20min/day streak \u2014 11 days", icon: "M12 20V10M18 20V4M6 20v-4" },
-  { name: "Joy", color: "#C87A3A", label: "Haven\u2019t played guitar since last Thursday", icon: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" },
-  { name: "Purpose", color: "#6B5A7A", label: "The side project that actually matters keeps waiting", icon: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" },
-  { name: "Identity", color: "#554D42", label: "Used to be a morning person \u2014 trying to get back", icon: "M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z" },
-];
+/* ─── Demo data ─── */
 
-/* ─── Hero conversation sequence ─── */
-const HERO_MESSAGES = [
+const DEMO_MESSAGES = [
   { role: "huma" as const, text: "What\u2019s going on in your life right now?" },
-  { role: "user" as const, text: "Freelance is picking up but I\u2019m burning out. Two big clients, a side project I care about, and I haven\u2019t cooked a real meal in weeks. Money\u2019s fine but everything else is slipping." },
-  { role: "huma" as const, text: "When everything slips at once, there\u2019s usually one thing holding it all down. What stopped first?" },
-  { role: "user" as const, text: "Cooking, honestly. Once we stopped making dinner, the evenings fell apart \u2014 screens until midnight, bad sleep, then dragging through the next day." },
-];
-
-/* Dimensions that "light up" as conversation progresses */
-const DIM_REVEAL_SCHEDULE = [
-  [], // after msg 0
-  [0, 2, 3, 6], // after msg 1: Body, Money, Home, Purpose
-  [0, 2, 3, 6], // after msg 2: same
-  [0, 1, 2, 3, 5, 6], // after msg 3: + People, Joy
-];
-
-/* Map DIMS indices to DimensionKey */
-const IDX_TO_KEY: DimensionKey[] = [
-  "body", "people", "money", "home", "growth", "joy", "purpose", "identity",
-];
-
-/* ─── Briefing entries ─── */
-const BRIEFING = [
   {
-    headline: "Cook dinner tonight",
-    reasoning: "This is your keystone. It touches Body, Money, People, Home, and Joy \u2014 five dimensions from one behavior. Everything else gets easier when this one happens.",
-    dims: ["Home", "Body", "People"],
-    focus: true,
-  },
-  {
-    headline: "Finish the Acme deliverable by 3pm",
-    reasoning: "You said evenings fall apart when work bleeds past dinner. Hard stop at 3 gives you the kitchen window.",
-    dims: ["Money", "Purpose"],
-    focus: false,
-  },
-  {
-    headline: "20-minute walk before you start cooking",
-    reasoning: "On days you move in the afternoon, you sleep an hour longer. Day three of the pattern.",
-    dims: ["Body", "Joy"],
-    focus: false,
+    role: "user" as const,
+    text: "Freelance is picking up but I\u2019m burning out. Two big clients, a side project, and I haven\u2019t cooked a real meal in weeks.",
   },
 ];
+
+const DEMO_DIMS_AFTER_MSG: DimensionKey[][] = [
+  [], // after huma message
+  ["body", "money", "home", "purpose"], // after user message
+];
+
+const CONTEXT_LINES = [
+  { section: "WHO YOU ARE", detail: "Freelance designer, 2 clients" },
+  { section: "WHAT YOU HAVE", detail: "Income variable \u00b7 Kitchen unused 2 weeks" },
+  { section: "HOW YOUR TIME WORKS", detail: "Deadline-driven \u00b7 Evenings unstructured" },
+];
+
+const BRIEFING_KEYSTONE = {
+  label: "Cook dinner tonight",
+  badge: "Keystone",
+  reasoning:
+    "This touches Body, Money, People, Home, and Joy \u2014 five dimensions from one behavior.",
+};
+
+const BRIEFING_ACTIONS = [
+  "Finish Acme deliverable by 3pm",
+  "20-minute walk before cooking",
+];
+
+const BRIEFING_WATCHING =
+  "Sleep hasn\u2019t recovered in 4 days. Body follows Home in your pattern.";
+
+const INSIGHT_TEXT =
+  "On days you cook dinner, everything else follows. This is your keystone.";
 
 /* ─── Scroll reveal ─── */
+
 function useScrollReveal() {
   const refs = useRef<(HTMLElement | null)[]>([]);
   const reduced = useReducedMotion();
@@ -82,7 +67,7 @@ function useScrollReveal() {
           }
         });
       },
-      { threshold: 0.1, rootMargin: "0px 0px -60px 0px" }
+      { threshold: 0.1, rootMargin: "0px 0px -60px 0px" },
     );
     refs.current.forEach((el) => {
       if (el) obs.observe(el);
@@ -94,26 +79,38 @@ function useScrollReveal() {
     (idx: number) => (el: HTMLElement | null) => {
       refs.current[idx] = el;
     },
-    []
+    [],
   );
 }
 
-/* ─── Typing animation for a single message ─── */
+/* ─── Typing animation ─── */
+
 function useTypingText(text: string, active: boolean, speed = 25) {
   const [displayed, setDisplayed] = useState("");
   const [done, setDone] = useState(false);
   const reduced = useReducedMotion();
 
   useEffect(() => {
-    if (!active) { setDisplayed(""); setDone(false); return; }
-    if (reduced) { setDisplayed(text); setDone(true); return; }
+    if (!active) {
+      setDisplayed("");
+      setDone(false);
+      return;
+    }
+    if (reduced) {
+      setDisplayed(text);
+      setDone(true);
+      return;
+    }
     let i = 0;
     setDisplayed("");
     setDone(false);
     const interval = setInterval(() => {
       i++;
       setDisplayed(text.slice(0, i));
-      if (i >= text.length) { clearInterval(interval); setDone(true); }
+      if (i >= text.length) {
+        clearInterval(interval);
+        setDone(true);
+      }
     }, speed);
     return () => clearInterval(interval);
   }, [active, text, speed, reduced]);
@@ -122,58 +119,73 @@ function useTypingText(text: string, active: boolean, speed = 25) {
 }
 
 /* ══════════════════════════════════════════════════════════════ */
-/*  HERO — Interactive product demo                              */
+/*  SECTION 2 — Interactive Demo                                  */
 /* ══════════════════════════════════════════════════════════════ */
 
-function HeroProductDemo({ reduced }: { reduced: boolean }) {
-  const [phase, setPhase] = useState<"conversation" | "extracting" | "briefing">("conversation");
+type DemoPhase = "conversation" | "context" | "briefing" | "insight";
+
+function DemoSection({ reduced }: { reduced: boolean }) {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [started, setStarted] = useState(false);
+  const [phase, setPhase] = useState<DemoPhase>("conversation");
   const [msgIndex, setMsgIndex] = useState(0);
   const [showMessage, setShowMessage] = useState(false);
-  const [revealedDims, setRevealedDims] = useState<number[]>([]);
-  const [briefingVisible, setBriefingVisible] = useState(false);
   const [visibleMessages, setVisibleMessages] = useState<number[]>([]);
+  const [activeDims, setActiveDims] = useState<DimensionKey[]>([]);
 
-  // Message typing
-  const currentMsg = HERO_MESSAGES[msgIndex];
+  const currentMsg = DEMO_MESSAGES[msgIndex];
   const typing = useTypingText(
     currentMsg?.text || "",
     showMessage && phase === "conversation",
-    currentMsg?.role === "user" ? 18 : 22
+    currentMsg?.role === "user" ? 18 : 22,
   );
 
-  // Sequence the conversation
+  // Start on scroll into view
   useEffect(() => {
     if (reduced) {
-      setVisibleMessages([0, 1, 2, 3]);
-      setRevealedDims([0, 2, 3, 4]);
-      setPhase("briefing");
-      setBriefingVisible(true);
+      setStarted(true);
+      setVisibleMessages([0, 1]);
+      setActiveDims(DEMO_DIMS_AFTER_MSG[1]);
+      setPhase("insight");
       return;
     }
-
-    // Start first message after delay
-    const t = setTimeout(() => {
-      setShowMessage(true);
-    }, 600);
-    return () => clearTimeout(t);
+    const el = sectionRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setStarted(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.2 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
   }, [reduced]);
 
-  // When typing finishes, advance
+  // Kick off first message
   useEffect(() => {
-    if (!typing.done || !showMessage || reduced) return;
+    if (!started || reduced) return;
+    const t = setTimeout(() => setShowMessage(true), 600);
+    return () => clearTimeout(t);
+  }, [started, reduced]);
 
-    // Add this message to visible
-    setVisibleMessages((prev) => {
-      if (prev.includes(msgIndex)) return prev;
-      return [...prev, msgIndex];
-    });
+  // Track when conversation finishes typing (separate from phase changes
+  // to avoid cleanup racing — typing.done resets when phase leaves "conversation")
+  const [conversationDone, setConversationDone] = useState(false);
 
-    // Reveal dims for this stage
-    if (DIM_REVEAL_SCHEDULE[msgIndex]) {
-      setRevealedDims(DIM_REVEAL_SCHEDULE[msgIndex]);
+  // Advance conversation messages
+  useEffect(() => {
+    if (!typing.done || !showMessage || reduced || conversationDone) return;
+
+    setVisibleMessages((prev) => (prev.includes(msgIndex) ? prev : [...prev, msgIndex]));
+
+    if (DEMO_DIMS_AFTER_MSG[msgIndex]?.length) {
+      setActiveDims(DEMO_DIMS_AFTER_MSG[msgIndex]);
     }
 
-    if (msgIndex < HERO_MESSAGES.length - 1) {
+    if (msgIndex < DEMO_MESSAGES.length - 1) {
       const t = setTimeout(() => {
         setMsgIndex((i) => i + 1);
         setShowMessage(false);
@@ -181,224 +193,416 @@ function HeroProductDemo({ reduced }: { reduced: boolean }) {
       }, 800);
       return () => clearTimeout(t);
     } else {
-      // Conversation done → extracting → briefing
-      const t = setTimeout(() => {
-        setPhase("extracting");
-        setRevealedDims([0, 1, 2, 3, 4, 5, 6, 7]);
-        setTimeout(() => {
-          setPhase("briefing");
-          setTimeout(() => setBriefingVisible(true), 300);
-        }, 1800);
-      }, 1000);
+      // Mark conversation as complete — phase transitions handled separately
+      const t = setTimeout(() => setConversationDone(true), 800);
       return () => clearTimeout(t);
     }
-  }, [typing.done, showMessage, msgIndex, reduced]);
+  }, [typing.done, showMessage, msgIndex, reduced, conversationDone]);
+
+  // Phase auto-advancement (decoupled from typing to avoid cleanup races)
+  useEffect(() => {
+    if (!conversationDone || reduced) return;
+    const t1 = setTimeout(() => {
+      setPhase("context");
+      setActiveDims(["body", "money", "home", "purpose", "people"]);
+    }, 400);
+    const t2 = setTimeout(() => setPhase("briefing"), 3700);
+    const t3 = setTimeout(() => setPhase("insight"), 7000);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [conversationDone, reduced]);
+
+  // Reduced motion: static vertical layout
+  if (reduced) {
+    return (
+      <section ref={sectionRef} className="px-6 py-16 md:py-20">
+        <div className="max-w-[680px] mx-auto space-y-8">
+          <DemoConversation
+            visibleMessages={[0, 1]}
+            msgIndex={1}
+            showMessage={false}
+            typingDone={true}
+            typingDisplayed=""
+            activeDims={DEMO_DIMS_AFTER_MSG[1]}
+            reduced={true}
+          />
+          <DemoContextPanel reduced={true} />
+          <DemoBriefing reduced={true} />
+          <DemoInsight reduced={true} />
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <div className="relative w-full max-w-[560px]">
-      {/* Product frame */}
-      <div
-        className="rounded-2xl overflow-hidden border border-sand-200"
-        style={{
-          background: "#FFFFFF",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.08), 0 4px 20px rgba(0,0,0,0.04)",
-        }}
-      >
-        {/* Top bar */}
-        <div className="px-5 py-3 border-b border-sand-100 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span
-              className="font-serif text-ink-800"
-              style={{ fontSize: "0.85rem", fontWeight: 500, letterSpacing: "0.15em" }}
-            >
-              HUMA
-            </span>
-            <span className="text-earth-300" style={{ fontSize: "0.7rem" }}>&middot;</span>
-            <span className="font-sans text-earth-300" style={{ fontSize: "0.7rem" }}>
-              {phase === "conversation" ? "Listening..." : phase === "extracting" ? "Mapping context..." : "Your briefing"}
-            </span>
-          </div>
-
-          {/* Mini dimension threads */}
-          <ConnectionThreads
-            activeDimensions={revealedDims.map(i => IDX_TO_KEY[i])}
-            size="micro"
-            animate={!reduced}
+    <section ref={sectionRef} className="px-6 py-16 md:py-24">
+      <div className="max-w-[680px] mx-auto lg:max-w-[960px]">
+        {/* Phase: Conversation */}
+        <div
+          style={{
+            opacity: phase === "conversation" ? 1 : 0,
+            maxHeight: phase === "conversation" ? 600 : 0,
+            overflow: "hidden",
+            transition: "opacity 500ms cubic-bezier(0.22,1,0.36,1), max-height 500ms cubic-bezier(0.22,1,0.36,1)",
+          }}
+        >
+          <DemoConversation
+            visibleMessages={visibleMessages}
+            msgIndex={msgIndex}
+            showMessage={showMessage}
+            typingDone={typing.done}
+            typingDisplayed={typing.displayed}
+            activeDims={activeDims}
+            reduced={false}
           />
         </div>
 
-        {/* Content area */}
-        <div className="relative" style={{ minHeight: 340 }}>
-          {/* ── Conversation view ── */}
-          <div
-            style={{
-              opacity: phase === "briefing" ? 0 : 1,
-              transition: reduced ? "none" : "opacity 500ms ease",
-              position: phase === "briefing" ? "absolute" : "relative",
-              inset: 0,
-              pointerEvents: phase === "briefing" ? "none" : "auto",
-            }}
-          >
-            <div className="px-5 py-4 space-y-3" style={{ minHeight: 280 }}>
-              {visibleMessages.map((idx) => {
-                const msg = HERO_MESSAGES[idx];
-                const isCurrentlyTyping = idx === msgIndex && showMessage && !typing.done;
-                const text = idx === msgIndex && showMessage ? typing.displayed : msg.text;
-
-                return (
-                  <div
-                    key={idx}
-                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                    style={
-                      !reduced
-                        ? { animation: `msg-in 400ms cubic-bezier(0.22,1,0.36,1) both` }
-                        : undefined
-                    }
-                  >
-                    <div
-                      className={`max-w-[85%] px-4 py-2.5 rounded-2xl ${
-                        msg.role === "user"
-                          ? "bg-sage-50 text-ink-800"
-                          : "bg-sand-100 text-ink-700"
-                      }`}
-                      style={{ fontSize: "0.85rem", lineHeight: 1.55 }}
-                    >
-                      <span className="font-sans">{text}</span>
-                      {isCurrentlyTyping && !reduced && (
-                        <span
-                          className="inline-block w-[2px] h-[0.85em] bg-sage-400 ml-0.5 align-text-bottom"
-                          style={{ animation: "cursor-blink 0.8s step-end infinite" }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* Typing indicator between messages */}
-              {phase === "conversation" && !showMessage && msgIndex > 0 && (
-                <div className="flex justify-start">
-                  <div className="bg-sand-100 rounded-2xl px-4 py-2.5 flex gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-earth-300" style={{ animation: "typing-dot 1.2s ease-in-out infinite" }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-earth-300" style={{ animation: "typing-dot 1.2s ease-in-out 0.2s infinite" }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-earth-300" style={{ animation: "typing-dot 1.2s ease-in-out 0.4s infinite" }} />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Extraction overlay — ConnectionThreads ring weaves in */}
-            {phase === "extracting" && (
-              <div
-                className="absolute inset-0 flex items-center justify-center"
-                style={{
-                  background: "rgba(250,248,243,0.92)",
-                  animation: !reduced ? "fade-in-fast 400ms ease both" : "none",
-                }}
-              >
-                <div className="flex flex-col items-center gap-3">
-                  <ConnectionThreads
-                    activeDimensions={revealedDims.map(i => IDX_TO_KEY[i])}
-                    size="compact"
-                    animate={!reduced}
-                  />
-                  <p className="font-sans text-earth-400" style={{ fontSize: "0.8rem", fontWeight: 400 }}>
-                    Mapping across 8 dimensions...
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* ── Briefing view ── */}
-          {phase === "briefing" && (
-            <div
-              style={{
-                opacity: briefingVisible ? 1 : 0,
-                transition: reduced ? "none" : "opacity 600ms ease",
-              }}
-            >
-              {/* Date line */}
-              <div className="px-5 pt-4 pb-2">
-                <p className="font-sans text-earth-400" style={{ fontSize: "0.7rem", fontWeight: 500, letterSpacing: "0.02em" }}>
-                  Wednesday, April 9&ensp;&middot;&ensp;Week 3&ensp;&middot;&ensp;Day 16
-                </p>
-              </div>
-
-              {/* Through-line */}
-              <div className="px-5 pb-3">
-                <div className="border-l-2 border-l-amber-400 pl-3.5 py-0.5">
-                  <p className="font-serif text-ink-600 italic" style={{ fontSize: "0.88rem", lineHeight: 1.5 }}>
-                    The evening starts in the kitchen. Get there by 5:30.
-                  </p>
-                </div>
-              </div>
-
-              <div className="mx-5 border-t border-sand-100" />
-
-              {/* Entries */}
-              {BRIEFING.map((entry, i) => (
-                <div
-                  key={i}
-                  className={`px-5 py-3.5 ${i < BRIEFING.length - 1 ? "border-b border-sand-50" : ""}`}
-                  style={
-                    !reduced
-                      ? { animation: `msg-in 400ms cubic-bezier(0.22,1,0.36,1) ${i * 150}ms both` }
-                      : undefined
-                  }
-                >
-                  {entry.focus && (
-                    <p className="font-sans text-amber-600 mb-1" style={{ fontSize: "0.55rem", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase" }}>
-                      Today&apos;s focus
-                    </p>
-                  )}
-                  <p className={`font-serif leading-snug mb-1 ${entry.focus ? "text-ink-900 text-[15px] font-medium" : "text-ink-800 text-[14px]"}`}>
-                    {entry.headline}
-                  </p>
-                  <p className="font-sans text-earth-400 mb-1.5" style={{ fontSize: "0.76rem", fontWeight: 300, lineHeight: 1.5 }}>
-                    {entry.reasoning}
-                  </p>
-                  <ConnectionThreads
-                    activeDimensions={entry.dims.map(d => d.toLowerCase() as DimensionKey)}
-                    size="micro"
-                    animate={false}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+        {/* Phase: Context Assembly */}
+        <div
+          style={{
+            opacity: phase === "context" ? 1 : 0,
+            maxHeight: phase === "context" ? 600 : 0,
+            overflow: "hidden",
+            transition: "opacity 600ms cubic-bezier(0.22,1,0.36,1), max-height 500ms cubic-bezier(0.22,1,0.36,1)",
+          }}
+        >
+          <DemoContextPanel reduced={false} />
         </div>
 
-        {/* Bottom input bar */}
-        <div className="px-5 py-3 border-t border-sand-100 flex items-center gap-3">
-          <div
-            className="flex-1 rounded-full bg-sand-50 px-4 py-2 font-sans text-earth-300"
-            style={{ fontSize: "0.8rem" }}
-          >
-            Tell HUMA what&apos;s going on...
-          </div>
-          <div className="w-8 h-8 rounded-full bg-sage-600 flex items-center justify-center shrink-0">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </div>
+        {/* Phase: Briefing */}
+        <div
+          style={{
+            opacity: phase === "briefing" ? 1 : 0,
+            maxHeight: phase === "briefing" ? 600 : 0,
+            overflow: "hidden",
+            transition: "opacity 600ms cubic-bezier(0.22,1,0.36,1), max-height 500ms cubic-bezier(0.22,1,0.36,1)",
+          }}
+        >
+          <DemoBriefing reduced={false} />
+        </div>
+
+        {/* Phase: Insight */}
+        <div
+          style={{
+            opacity: phase === "insight" ? 1 : 0,
+            maxHeight: phase === "insight" ? 600 : 0,
+            overflow: "hidden",
+            transition: "opacity 600ms cubic-bezier(0.22,1,0.36,1), max-height 500ms cubic-bezier(0.22,1,0.36,1)",
+          }}
+        >
+          <DemoInsight reduced={false} />
+        </div>
+
+        {/* Phase dots */}
+        <div className="flex justify-center gap-2 mt-8">
+          {(["conversation", "context", "briefing", "insight"] as DemoPhase[]).map((p) => (
+            <div
+              key={p}
+              className="w-1.5 h-1.5 rounded-full transition-colors duration-500"
+              style={{
+                background: p === phase ? "#B5621E" : "#DDD4C0",
+              }}
+            />
+          ))}
         </div>
       </div>
+    </section>
+  );
+}
 
-      {/* Phase label below the card */}
-      <div className="mt-5 text-center">
-        <p className="font-sans text-earth-300" style={{ fontSize: "0.78rem", fontWeight: 300, lineHeight: 1.5 }}>
-          {phase === "conversation" && "A five-minute conversation. That\u2019s all it takes."}
-          {phase === "extracting" && "HUMA maps what you said across eight life dimensions."}
-          {phase === "briefing" && "Your first morning briefing \u2014 generated, not templated."}
-        </p>
+/* ── Demo sub-components ── */
+
+function DemoConversation({
+  visibleMessages,
+  msgIndex,
+  showMessage,
+  typingDone,
+  typingDisplayed,
+  activeDims,
+  reduced,
+}: {
+  visibleMessages: number[];
+  msgIndex: number;
+  showMessage: boolean;
+  typingDone: boolean;
+  typingDisplayed: string;
+  activeDims: DimensionKey[];
+  reduced: boolean;
+}) {
+  return (
+    <div className="lg:flex lg:gap-10 lg:items-start">
+      {/* Conversation bubbles */}
+      <div className="flex-1 space-y-3 max-w-[480px]">
+        {visibleMessages.map((idx) => {
+          const msg = DEMO_MESSAGES[idx];
+          const isCurrentlyTyping = idx === msgIndex && showMessage && !typingDone;
+          const text = idx === msgIndex && showMessage ? typingDisplayed : msg.text;
+
+          return (
+            <div
+              key={idx}
+              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+              style={!reduced ? { animation: "msg-in 400ms cubic-bezier(0.22,1,0.36,1) both" } : undefined}
+            >
+              <div
+                className={`max-w-[85%] px-4 py-2.5 rounded-2xl ${
+                  msg.role === "user" ? "bg-sage-50 text-ink-800" : "bg-sand-100 text-ink-700"
+                }`}
+                style={{ fontSize: "0.88rem", lineHeight: 1.55 }}
+              >
+                <span className="font-sans">{text}</span>
+                {isCurrentlyTyping && !reduced && (
+                  <span
+                    className="inline-block w-[2px] h-[0.85em] bg-sage-400 ml-0.5 align-text-bottom"
+                    style={{ animation: "cursor-blink 0.8s step-end infinite" }}
+                  />
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ConnectionThreads — lights up as conversation progresses */}
+      <div className="hidden lg:flex lg:items-center lg:justify-center lg:pt-4">
+        <ConnectionThreads activeDimensions={activeDims} size="compact" animate={!reduced} />
+      </div>
+
+      {/* Mobile: inline ConnectionThreads below conversation */}
+      <div className="flex justify-center mt-4 lg:hidden">
+        <ConnectionThreads activeDimensions={activeDims} size="compact" animate={!reduced} />
+      </div>
+    </div>
+  );
+}
+
+function DemoContextPanel({ reduced }: { reduced: boolean }) {
+  return (
+    <div className="max-w-[480px] mx-auto lg:mx-0">
+      <div
+        className="rounded-xl border border-sand-200 bg-sand-50 overflow-hidden"
+        style={!reduced ? { animation: "msg-in 500ms cubic-bezier(0.22,1,0.36,1) both" } : undefined}
+      >
+        {/* Header */}
+        <div className="px-5 py-3 border-b border-sand-200">
+          <p
+            className="font-sans text-earth-400"
+            style={{ fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase" }}
+          >
+            Your life &mdash; what HUMA sees
+          </p>
+        </div>
+
+        {/* Context lines */}
+        <div className="px-5 py-4 space-y-4">
+          {CONTEXT_LINES.map((line, i) => (
+            <div key={i}>
+              <p
+                className="font-sans text-earth-400 mb-0.5"
+                style={{
+                  fontSize: "0.6rem",
+                  fontWeight: 600,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                }}
+              >
+                {line.section}
+              </p>
+              <p className="font-sans text-ink-700" style={{ fontSize: "0.85rem", lineHeight: 1.5 }}>
+                {line.detail}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Progress */}
+        <div className="px-5 py-3 border-t border-sand-200 flex items-center gap-2">
+          <div className="flex gap-0.5">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                className="w-4 h-1 rounded-full"
+                style={{ background: i < 5 ? "#5C7A62" : "#DDD4C0" }}
+              />
+            ))}
+          </div>
+          <span className="font-sans text-earth-300" style={{ fontSize: "0.7rem" }}>
+            5 of 8 dimensions seen
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DemoBriefing({ reduced }: { reduced: boolean }) {
+  return (
+    <div className="max-w-[480px] mx-auto lg:mx-0">
+      <div
+        className="rounded-xl border border-sand-200 bg-sand-50 overflow-hidden"
+        style={!reduced ? { animation: "msg-in 500ms cubic-bezier(0.22,1,0.36,1) both" } : undefined}
+      >
+        {/* Keystone */}
+        <div className="px-5 pt-5 pb-4">
+          <p
+            className="font-sans text-earth-400 mb-2"
+            style={{ fontSize: "0.6rem", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" }}
+          >
+            Your keystone
+          </p>
+          <div className="flex items-start gap-3">
+            <div className="flex-1">
+              <p className="font-serif text-ink-900" style={{ fontSize: "1.05rem", fontWeight: 500, lineHeight: 1.3 }}>
+                {BRIEFING_KEYSTONE.label}
+              </p>
+              <p className="font-sans text-earth-400 mt-1" style={{ fontSize: "0.8rem", lineHeight: 1.5 }}>
+                {BRIEFING_KEYSTONE.reasoning}
+              </p>
+            </div>
+            <span
+              className="shrink-0 px-2 py-0.5 rounded-full font-sans text-amber-600 bg-amber-100"
+              style={{ fontSize: "0.6rem", fontWeight: 600, letterSpacing: "0.08em" }}
+            >
+              {BRIEFING_KEYSTONE.badge}
+            </span>
+          </div>
+        </div>
+
+        <div className="mx-5 border-t border-sand-100" />
+
+        {/* Field report */}
+        <div className="px-5 py-4">
+          <p
+            className="font-sans text-earth-400 mb-2"
+            style={{ fontSize: "0.6rem", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" }}
+          >
+            Field report
+          </p>
+          <div className="space-y-2">
+            {BRIEFING_ACTIONS.map((action, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div
+                  className="w-4 h-4 rounded border border-sand-300 shrink-0"
+                  aria-hidden="true"
+                />
+                <span className="font-sans text-ink-700" style={{ fontSize: "0.85rem" }}>
+                  {action}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mx-5 border-t border-sand-100" />
+
+        {/* Watching */}
+        <div className="px-5 py-4">
+          <p
+            className="font-sans text-earth-400 mb-2"
+            style={{ fontSize: "0.6rem", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" }}
+          >
+            Watching
+          </p>
+          <p className="font-sans text-ink-600" style={{ fontSize: "0.85rem", lineHeight: 1.5 }}>
+            {BRIEFING_WATCHING}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DemoInsight({ reduced }: { reduced: boolean }) {
+  return (
+    <div className="max-w-[360px] mx-auto">
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{
+          background: "#1A1714",
+          ...(reduced ? {} : { animation: "msg-in 600ms cubic-bezier(0.22,1,0.36,1) both" }),
+        }}
+      >
+        <div className="flex flex-col items-center px-6 py-8">
+          <ConnectionThreads
+            activeDimensions={["body", "money", "home", "purpose", "people", "joy"]}
+            size="signature"
+            darkMode={true}
+            animate={!reduced}
+          />
+          <p
+            className="font-serif text-center mt-5"
+            style={{ fontSize: "0.95rem", lineHeight: 1.6, color: "#EDE6D8" }}
+          >
+            &ldquo;{INSIGHT_TEXT}&rdquo;
+          </p>
+          <p
+            className="font-sans text-center mt-3"
+            style={{ fontSize: "0.65rem", fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "#8C8274" }}
+          >
+            From your structure
+          </p>
+
+          {/* Share button */}
+          <button
+            className="mt-5 flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#3D3830] cursor-pointer"
+            style={{
+              background: "transparent",
+              transition: reduced ? "none" : "border-color 300ms cubic-bezier(0.22,1,0.36,1)",
+            }}
+            aria-label="Share insight"
+            tabIndex={-1}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8C8274" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+            <span className="font-sans" style={{ fontSize: "0.75rem", color: "#8C8274" }}>
+              Share
+            </span>
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
 /* ══════════════════════════════════════════════════════════════ */
-/*  MAIN LANDING PAGE                                            */
+/*  SECTION 3 — Three Truths with mini constellations             */
+/* ══════════════════════════════════════════════════════════════ */
+
+const THREE_TRUTHS: {
+  statement: string;
+  explanation: string;
+  dims: DimensionKey[];
+}[] = [
+  {
+    statement: "Your life isn\u2019t separate buckets.",
+    explanation:
+      "Money, sleep, relationships, purpose \u2014 they move together. HUMA shows you the connections you\u2019re already living.",
+    dims: ["body", "people", "money", "home", "growth", "joy", "purpose", "identity"],
+  },
+  {
+    statement: "One behavior holds more than you think.",
+    explanation:
+      "Cooking dinner isn\u2019t about food. It\u2019s Body, Money, People, Home, and Joy in one decision. HUMA finds your keystone.",
+    dims: ["home", "body", "money", "people", "joy"],
+  },
+  {
+    statement: "Your patterns are already there.",
+    explanation:
+      "You don\u2019t need motivation. You need to see what\u2019s already working \u2014 and what quietly stopped.",
+    dims: ["body", "growth", "purpose"],
+  },
+];
+
+/* ══════════════════════════════════════════════════════════════ */
+/*  MAIN LANDING PAGE                                              */
 /* ══════════════════════════════════════════════════════════════ */
 
 export default function LandingPage() {
@@ -406,197 +610,227 @@ export default function LandingPage() {
   const reduced = useReducedMotion();
   const setRef = useScrollReveal();
   const [mounted, setMounted] = useState(false);
+  const [entryInput, setEntryInput] = useState("");
+  const [scrollCueVisible, setScrollCueVisible] = useState(true);
 
   useEffect(() => setMounted(true), []);
 
-  const go = () => router.push("/start");
+  // Hide scroll cue on first scroll
+  useEffect(() => {
+    const onScroll = () => {
+      if (window.scrollY > 20) {
+        setScrollCueVisible(false);
+        window.removeEventListener("scroll", onScroll);
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const goWithMessage = useCallback(
+    (msg?: string) => {
+      if (msg && msg.trim()) {
+        router.push(`/start?msg=${encodeURIComponent(msg.trim())}`);
+      } else {
+        router.push("/start");
+      }
+    },
+    [router],
+  );
+
+  const handleEntrySubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      goWithMessage(entryInput);
+    },
+    [entryInput, goWithMessage],
+  );
 
   return (
     <div className="min-h-screen bg-sand-50 overflow-x-hidden">
-      {/* ═══ NAV ═══ */}
-      <nav className="sticky top-0 z-50 bg-sand-50/90 backdrop-blur-md border-b border-sand-200/60">
-        <div className="max-w-[1120px] mx-auto px-6 h-14 flex items-center justify-between">
-          <span
-            className="font-serif text-ink-900"
-            style={{ fontSize: "1rem", fontWeight: 400, letterSpacing: "0.25em" }}
+      {/* ═══ SECTION 1: Hero — The Hook ═══ */}
+      <section className="min-h-dvh flex flex-col items-center justify-center px-6 relative">
+        <div className="max-w-[680px] mx-auto text-center">
+          <h1
+            className="font-serif text-ink-900 mb-6"
+            style={{
+              fontSize: "clamp(2rem, 5vw, 3rem)",
+              fontWeight: 400,
+              lineHeight: 1.15,
+              letterSpacing: "-0.01em",
+            }}
+          >
+            See the whole.{" "}
+            <span className="text-sage-600">Find the leverage.</span>
+          </h1>
+
+          {/* ConnectionThreads — the "before" state: all dims at low opacity, disconnected */}
+          <div className="flex justify-center mb-6 opacity-30">
+            <ConnectionThreads
+              activeDimensions={["body", "people", "money", "home", "growth", "joy", "purpose", "identity"]}
+              connections={[]}
+              size="compact"
+              animate={!reduced}
+            />
+          </div>
+
+          <p
+            className="font-sans text-ink-500 mx-auto mb-8"
+            style={{
+              fontSize: "clamp(1rem, 2vw, 1.15rem)",
+              fontWeight: 300,
+              lineHeight: 1.7,
+              maxWidth: "480px",
+            }}
+          >
+            Most people manage their life in pieces.
+            <br />
+            HUMA shows you how the pieces connect &mdash;
+            <br />
+            and which one holds everything together.
+          </p>
+
+          <button
+            onClick={() => {
+              const demo = document.getElementById("demo");
+              demo?.scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
+            }}
+            className="inline-flex items-center gap-1 font-sans text-earth-400 hover:text-earth-500 cursor-pointer"
+            style={{
+              fontSize: "0.85rem",
+              fontWeight: 400,
+              background: "none",
+              border: "none",
+              transition: reduced ? "none" : "color 200ms",
+            }}
+          >
+            Watch it work
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M12 5v14M19 12l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Scroll cue */}
+        <div
+          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+          style={{
+            opacity: scrollCueVisible ? 0.4 : 0,
+            transition: reduced ? "none" : "opacity 600ms cubic-bezier(0.22,1,0.36,1)",
+          }}
+        >
+          <div
+            className="w-px h-8 bg-earth-300 mx-auto"
+            style={
+              !reduced
+                ? { animation: "scroll-bounce 2s cubic-bezier(0.22,1,0.36,1) infinite" }
+                : undefined
+            }
+          />
+        </div>
+      </section>
+
+      {/* ═══ SECTION 2: The Demo ═══ */}
+      <div id="demo">
+        <DemoSection reduced={reduced} />
+      </div>
+
+      {/* ═══ SECTION 3: Three Truths ═══ */}
+      <section className="px-6 py-16 md:py-24">
+        <div className="max-w-[600px] mx-auto space-y-16 md:space-y-20">
+          {THREE_TRUTHS.map((truth, i) => (
+            <div
+              key={i}
+              ref={setRef(i)}
+              className={`flex flex-col items-center text-center ${mounted && !reduced ? "landing-reveal" : ""}`}
+              style={!reduced && mounted ? undefined : !reduced ? { opacity: 0 } : undefined}
+            >
+              <ConnectionThreads
+                activeDimensions={truth.dims}
+                size="badge"
+                animate={!reduced}
+                className="mb-5"
+              />
+
+              <h3
+                className="font-serif text-ink-900 mb-3"
+                style={{ fontSize: "clamp(1.2rem, 2.5vw, 1.5rem)", fontWeight: 500, lineHeight: 1.3 }}
+              >
+                {truth.statement}
+              </h3>
+
+              <p
+                className="font-sans text-earth-500"
+                style={{ fontSize: "0.95rem", fontWeight: 300, lineHeight: 1.7, maxWidth: "420px" }}
+              >
+                {truth.explanation}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══ SECTION 4: Entry — Type Your First Message ═══ */}
+      <section className="px-6 py-20 md:py-28 bg-sand-100">
+        <div
+          ref={setRef(3)}
+          className={`max-w-[480px] mx-auto text-center ${mounted && !reduced ? "landing-reveal" : ""}`}
+          style={!reduced && mounted ? undefined : !reduced ? { opacity: 0 } : undefined}
+        >
+          <h2
+            className="font-serif text-ink-900 mb-8"
+            style={{ fontSize: "clamp(1.4rem, 3vw, 1.9rem)", fontWeight: 400, lineHeight: 1.3 }}
+          >
+            What&rsquo;s going on in your life right now?
+          </h2>
+
+          <form onSubmit={handleEntrySubmit} className="relative mb-4">
+            <input
+              type="text"
+              value={entryInput}
+              onChange={(e) => setEntryInput(e.target.value)}
+              placeholder="Start typing..."
+              className="w-full bg-sand-50 border border-sand-300 rounded-xl px-5 py-4 pr-14 font-sans text-ink-800 placeholder:text-earth-300 focus:outline-none focus:border-sage-400"
+              style={{
+                fontSize: "1.05rem",
+                height: "56px",
+                transition: reduced ? "none" : "border-color 200ms cubic-bezier(0.22,1,0.36,1)",
+              }}
+            />
+            <button
+              type="submit"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-lg bg-amber-600 hover:bg-amber-500 flex items-center justify-center cursor-pointer"
+              style={{
+                transition: reduced ? "none" : "background-color 200ms cubic-bezier(0.22,1,0.36,1)",
+              }}
+              aria-label="Start"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FAF8F3" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+          </form>
+
+          <p className="font-sans text-earth-300" style={{ fontSize: "0.82rem", fontWeight: 300 }}>
+            No account needed. Start talking.
+          </p>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 5: Footer ═══ */}
+      <footer className="px-6 py-8 bg-sand-50 border-t border-sand-200">
+        <div className="max-w-[680px] mx-auto text-center">
+          <p
+            className="font-serif text-ink-900 mb-1"
+            style={{ fontSize: "0.9rem", fontWeight: 400, letterSpacing: "0.2em" }}
           >
             HUMA
-          </span>
-
-          <button
-            onClick={go}
-            className="font-sans font-medium text-sand-50 bg-sage-700 hover:bg-sage-600 rounded-full px-5 py-2 cursor-pointer"
-            style={{ fontSize: "0.84rem", transition: reduced ? "none" : "all 200ms cubic-bezier(0.22, 1, 0.36, 1)" }}
-          >
-            Get started
-          </button>
-        </div>
-      </nav>
-
-      {/* ═══ HERO ═══ */}
-      <section className="px-6 pt-16 pb-20 md:pt-24 md:pb-28">
-        <div className="max-w-[1120px] mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_560px] gap-12 lg:gap-16 items-start">
-            {/* Left — copy */}
-            <div className="pt-4 md:pt-12 lg:pt-16">
-              <p
-                className="font-sans text-sage-600 mb-4"
-                style={{ fontSize: "0.72rem", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase" }}
-              >
-                Life infrastructure
-              </p>
-
-              <h1
-                className="font-serif text-ink-900 mb-5"
-                style={{
-                  fontSize: "clamp(2rem, 4.5vw, 3.2rem)",
-                  fontWeight: 400,
-                  lineHeight: 1.08,
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                See how your life
-                <br />
-                actually connects.
-                <br />
-                <span className="text-sage-600">Find the leverage.</span>
-              </h1>
-
-              <p
-                className="font-sans text-earth-500 mb-8 max-w-[420px]"
-                style={{ fontSize: "1.05rem", fontWeight: 300, lineHeight: 1.7 }}
-              >
-                Your money, sleep, relationships, and work aren&rsquo;t separate problems. HUMA shows you how they connect &mdash; and which one daily behavior holds everything else together.
-              </p>
-
-              <div className="flex flex-col sm:flex-row items-start gap-4">
-                <button
-                  onClick={go}
-                  className="inline-flex items-center justify-center rounded-full bg-sage-700 hover:bg-sage-600 text-sand-50 font-sans font-medium px-8 py-3.5 min-h-[48px] cursor-pointer"
-                  style={{
-                    fontSize: "0.95rem",
-                    boxShadow: "0 4px 20px rgba(58,90,64,0.15)",
-                    transition: reduced ? "none" : "all 300ms cubic-bezier(0.22, 1, 0.36, 1)",
-                  }}
-                >
-                  Start a conversation&ensp;&rarr;
-                </button>
-                <span className="font-sans text-earth-300 self-center" style={{ fontSize: "0.8rem", fontWeight: 300 }}>
-                  No account needed &middot; 5 minutes
-                </span>
-              </div>
-            </div>
-
-            {/* Right — interactive product demo */}
-            <div className="flex justify-center lg:justify-end">
-              <HeroProductDemo reduced={reduced} />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ THE DIFFERENCE — tight, inline ═══ */}
-      <section className="px-6 py-16 md:py-20 border-t border-sand-200">
-        <div className="max-w-[720px] mx-auto">
-          <h2
-            ref={setRef(0)}
-            className={`font-serif text-ink-900 mb-12 text-center ${mounted && !reduced ? "landing-reveal" : ""}`}
-            style={{
-              fontSize: "clamp(1.4rem, 3vw, 1.9rem)",
-              fontWeight: 400,
-              lineHeight: 1.3,
-              opacity: !reduced && mounted ? undefined : !reduced ? 0 : undefined,
-            }}
-          >
-            It reasons about your life.{" "}
-            <span className="text-earth-400">It doesn&apos;t just organize it.</span>
-          </h2>
-
-          <div className="space-y-10">
-            {[
-              {
-                label: "It remembers everything",
-                text: "Your cash flow timing. Your partner\u2019s schedule. The client deadline from three weeks ago. HUMA holds your full context and uses all of it, every morning.",
-                color: "#3A5A40",
-              },
-              {
-                label: "It sees connections",
-                text: "Cooking dinner improves your sleep. Sleep improves your focus. Focus gets you done by 3pm. Getting done by 3pm gives you your evening back. HUMA traces the chain \u2014 and finds the one move.",
-                color: "#2E6B8A",
-              },
-              {
-                label: "It learns your rhythm",
-                text: "After a week, it notices your best creative days follow an evening walk. It sees when a part of your life goes quiet. It adapts without you configuring anything.",
-                color: "#C87A3A",
-              },
-            ].map((item, i) => (
-              <div
-                key={i}
-                ref={setRef(i + 1)}
-                className={`flex items-start gap-5 ${mounted && !reduced ? "landing-reveal" : ""}`}
-                style={!reduced ? { opacity: mounted ? undefined : 0 } : undefined}
-              >
-                <div
-                  className="w-1 shrink-0 rounded-full mt-1"
-                  style={{ background: item.color, opacity: 0.6, height: "2.8rem" }}
-                />
-                <div>
-                  <p className="font-serif text-ink-900 mb-1.5" style={{ fontSize: "1.05rem", fontWeight: 500, lineHeight: 1.3 }}>
-                    {item.label}
-                  </p>
-                  <p className="font-sans text-earth-500" style={{ fontSize: "0.9rem", fontWeight: 300, lineHeight: 1.7 }}>
-                    {item.text}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ BOTTOM CTA ═══ */}
-      <section className="px-6 py-24 md:py-32 bg-sand-100">
-        <div
-          ref={setRef(4)}
-          className={`max-w-[520px] mx-auto text-center ${mounted && !reduced ? "landing-reveal" : ""}`}
-          style={!reduced ? { opacity: mounted ? undefined : 0 } : undefined}
-        >
-          <h2 className="font-serif text-ink-900 mb-4" style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", fontWeight: 400, lineHeight: 1.25 }}>
-            What&rsquo;s going on in your life?
-          </h2>
-          <p className="font-sans text-earth-400 mb-8" style={{ fontSize: "0.95rem", fontWeight: 300, lineHeight: 1.6 }}>
-            Start a conversation. HUMA builds your first morning briefing in five minutes.
           </p>
-          <button
-            onClick={go}
-            className="inline-flex items-center justify-center rounded-full bg-sage-700 hover:bg-sage-600 text-sand-50 font-sans font-medium px-10 py-4 min-h-[52px] cursor-pointer"
-            style={{
-              fontSize: "1rem",
-              boxShadow: "0 4px 24px rgba(58,90,64,0.15)",
-              transition: reduced ? "none" : "all 300ms cubic-bezier(0.22, 1, 0.36, 1)",
-            }}
-          >
-            Start a conversation&ensp;&rarr;
-          </button>
-          <p className="font-sans text-earth-300 mt-4" style={{ fontSize: "0.8rem", fontWeight: 300 }}>
-            No account. No forms. Just a conversation.
+          <p className="font-sans text-earth-300" style={{ fontSize: "0.75rem", fontWeight: 300 }}>
+            Life infrastructure
           </p>
-        </div>
-      </section>
-
-      {/* ═══ FOOTER ═══ */}
-      <footer className="px-6 py-8 border-t border-sand-200 bg-sand-50">
-        <div className="max-w-[1120px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="font-serif text-ink-900" style={{ fontSize: "0.9rem", fontWeight: 400, letterSpacing: "0.2em" }}>
-              HUMA
-            </span>
-            <span className="font-sans text-earth-300" style={{ fontSize: "0.75rem", fontWeight: 300 }}>
-              Life infrastructure
-            </span>
-          </div>
-          <p className="font-sans text-earth-300" style={{ fontSize: "0.7rem", fontWeight: 300 }}>
-            Proudly created in the Great Lake State &middot; &copy; {new Date().getFullYear()} HUMA
+          <p className="font-sans text-earth-300 mt-3" style={{ fontSize: "0.65rem", fontWeight: 300 }}>
+            &copy; {new Date().getFullYear()}
           </p>
         </div>
       </footer>
@@ -621,17 +855,9 @@ export default function LandingPage() {
           from { opacity: 0; transform: translateY(6px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes typing-dot {
-          0%, 100% { opacity: 0.3; transform: scale(0.85); }
-          50% { opacity: 1; transform: scale(1.1); }
-        }
-        @keyframes dim-pop {
-          from { opacity: 0; transform: scale(0.5); }
-          to { opacity: 1; transform: scale(1); }
-        }
-        @keyframes fade-in-fast {
-          from { opacity: 0; }
-          to { opacity: 1; }
+        @keyframes scroll-bounce {
+          0%, 100% { transform: translateY(0); opacity: 0.4; }
+          50% { transform: translateY(8px); opacity: 0.7; }
         }
         @media (prefers-reduced-motion: reduce) {
           .landing-reveal {

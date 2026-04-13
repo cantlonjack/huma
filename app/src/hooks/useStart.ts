@@ -128,6 +128,7 @@ export function useStart(): UseStartReturn {
   } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const prefillSentRef = useRef(false);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -151,11 +152,16 @@ export function useStart(): UseStartReturn {
   // Also determine whether to show archetype selection or skip to conversation
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const prefillMsg = params.get("msg");
     const isFresh = params.get("fresh") === "1";
-    if (isFresh) {
+    if (isFresh || prefillMsg) {
       // Clear stale conversation state for a clean start
       localStorage.removeItem("huma-v2-start-messages");
       localStorage.removeItem("huma-v2-behaviors");
+      // When arriving from landing page with a message, skip archetype selection
+      if (prefillMsg) {
+        setOnboardingStep("conversation");
+      }
       setStepReady(true);
       return;
     }
@@ -645,6 +651,17 @@ export function useStart(): UseStartReturn {
     } catch { /* treat as first conversation */ }
     return !humaContext._version;
   })();
+
+  // Auto-send prefill message from landing page entry (?msg=...)
+  useEffect(() => {
+    if (!stepReady || prefillSentRef.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const prefillMsg = params.get("msg");
+    if (prefillMsg && onboardingStep === "conversation") {
+      prefillSentRef.current = true;
+      sendMessage(prefillMsg);
+    }
+  }, [stepReady, onboardingStep, sendMessage]);
 
   // Suppress unused variable warning — pendingAspiration is kept in state
   // for future use when AuthModal needs pre-fill data
