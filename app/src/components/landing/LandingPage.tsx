@@ -266,7 +266,7 @@ function DemoSection({ reduced }: { reduced: boolean }) {
             opacity: phase === "context" ? 1 : 0,
             maxHeight: phase === "context" ? 600 : 0,
             overflow: "hidden",
-            transition: "opacity 600ms cubic-bezier(0.22,1,0.36,1), max-height 500ms cubic-bezier(0.22,1,0.36,1)",
+            transition: "opacity 600ms cubic-bezier(0.22,1,0.36,1), max-height 600ms cubic-bezier(0.22,1,0.36,1)",
           }}
         >
           <DemoContextPanel reduced={false} />
@@ -278,7 +278,7 @@ function DemoSection({ reduced }: { reduced: boolean }) {
             opacity: phase === "briefing" ? 1 : 0,
             maxHeight: phase === "briefing" ? 600 : 0,
             overflow: "hidden",
-            transition: "opacity 600ms cubic-bezier(0.22,1,0.36,1), max-height 500ms cubic-bezier(0.22,1,0.36,1)",
+            transition: "opacity 600ms cubic-bezier(0.22,1,0.36,1), max-height 600ms cubic-bezier(0.22,1,0.36,1)",
           }}
         >
           <DemoBriefing reduced={false} />
@@ -290,7 +290,7 @@ function DemoSection({ reduced }: { reduced: boolean }) {
             opacity: phase === "insight" ? 1 : 0,
             maxHeight: phase === "insight" ? 600 : 0,
             overflow: "hidden",
-            transition: "opacity 600ms cubic-bezier(0.22,1,0.36,1), max-height 500ms cubic-bezier(0.22,1,0.36,1)",
+            transition: "opacity 600ms cubic-bezier(0.22,1,0.36,1), max-height 600ms cubic-bezier(0.22,1,0.36,1)",
           }}
         >
           <DemoInsight reduced={false} />
@@ -389,7 +389,7 @@ function DemoContextPanel({ reduced }: { reduced: boolean }) {
         {/* Header */}
         <div className="px-5 py-3 border-b border-sand-200">
           <p
-            className="font-sans text-earth-400"
+            className="font-sans text-earth-500"
             style={{ fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase" }}
           >
             Your life &mdash; what HUMA sees
@@ -401,7 +401,7 @@ function DemoContextPanel({ reduced }: { reduced: boolean }) {
           {CONTEXT_LINES.map((line, i) => (
             <div key={i}>
               <p
-                className="font-sans text-earth-400 mb-0.5"
+                className="font-sans text-earth-500 mb-0.5"
                 style={{
                   fontSize: "0.6rem",
                   fontWeight: 600,
@@ -429,7 +429,7 @@ function DemoContextPanel({ reduced }: { reduced: boolean }) {
               />
             ))}
           </div>
-          <span className="font-sans text-earth-300" style={{ fontSize: "0.7rem" }}>
+          <span className="font-sans text-earth-400" style={{ fontSize: "0.7rem" }}>
             5 of 8 dimensions seen
           </span>
         </div>
@@ -448,7 +448,7 @@ function DemoBriefing({ reduced }: { reduced: boolean }) {
         {/* Keystone */}
         <div className="px-5 pt-5 pb-4">
           <p
-            className="font-sans text-earth-400 mb-2"
+            className="font-sans text-earth-500 mb-2"
             style={{ fontSize: "0.6rem", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" }}
           >
             Your keystone
@@ -458,7 +458,7 @@ function DemoBriefing({ reduced }: { reduced: boolean }) {
               <p className="font-serif text-ink-900" style={{ fontSize: "1.05rem", fontWeight: 500, lineHeight: 1.3 }}>
                 {BRIEFING_KEYSTONE.label}
               </p>
-              <p className="font-sans text-earth-400 mt-1" style={{ fontSize: "0.8rem", lineHeight: 1.5 }}>
+              <p className="font-sans text-earth-500 mt-1" style={{ fontSize: "0.8rem", lineHeight: 1.5 }}>
                 {BRIEFING_KEYSTONE.reasoning}
               </p>
             </div>
@@ -476,7 +476,7 @@ function DemoBriefing({ reduced }: { reduced: boolean }) {
         {/* Field report */}
         <div className="px-5 py-4">
           <p
-            className="font-sans text-earth-400 mb-2"
+            className="font-sans text-earth-500 mb-2"
             style={{ fontSize: "0.6rem", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" }}
           >
             Field report
@@ -501,7 +501,7 @@ function DemoBriefing({ reduced }: { reduced: boolean }) {
         {/* Watching */}
         <div className="px-5 py-4">
           <p
-            className="font-sans text-earth-400 mb-2"
+            className="font-sans text-earth-500 mb-2"
             style={{ fontSize: "0.6rem", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" }}
           >
             Watching
@@ -545,15 +545,10 @@ function DemoInsight({ reduced }: { reduced: boolean }) {
             From your structure
           </p>
 
-          {/* Share button */}
-          <button
-            className="mt-5 flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#3D3830] cursor-pointer"
-            style={{
-              background: "transparent",
-              transition: reduced ? "none" : "border-color 300ms cubic-bezier(0.22,1,0.36,1)",
-            }}
-            aria-label="Share insight"
-            tabIndex={-1}
+          {/* Share button (presentational — demo only) */}
+          <div
+            className="mt-5 flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#3D3830]"
+            aria-hidden="true"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8C8274" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="18" cy="5" r="3" />
@@ -565,7 +560,7 @@ function DemoInsight({ reduced }: { reduced: boolean }) {
             <span className="font-sans" style={{ fontSize: "0.75rem", color: "#8C8274" }}>
               Share
             </span>
-          </button>
+          </div>
         </div>
       </div>
     </div>
@@ -656,8 +651,8 @@ export default function LandingPage() {
             style={{
               fontSize: "clamp(2rem, 5vw, 3rem)",
               fontWeight: 400,
-              lineHeight: 1.15,
-              letterSpacing: "-0.01em",
+              lineHeight: 1.25,
+              letterSpacing: "-0.015em",
             }}
           >
             See the whole.{" "}
@@ -665,7 +660,7 @@ export default function LandingPage() {
           </h1>
 
           {/* ConnectionThreads — the "before" state: all dims at low opacity, disconnected */}
-          <div className="flex justify-center mb-6 opacity-30">
+          <div className="flex justify-center mb-6 opacity-50">
             <ConnectionThreads
               activeDimensions={["body", "people", "money", "home", "growth", "joy", "purpose", "identity"]}
               connections={[]}
@@ -675,7 +670,7 @@ export default function LandingPage() {
           </div>
 
           <p
-            className="font-sans text-ink-500 mx-auto mb-8"
+            className="font-sans text-ink-600 mx-auto mb-8"
             style={{
               fontSize: "clamp(1rem, 2vw, 1.15rem)",
               fontWeight: 300,
@@ -695,7 +690,7 @@ export default function LandingPage() {
               const demo = document.getElementById("demo");
               demo?.scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
             }}
-            className="inline-flex items-center gap-1 font-sans text-earth-400 hover:text-earth-500 cursor-pointer"
+            className="inline-flex items-center gap-1 font-sans text-earth-500 hover:text-earth-600 cursor-pointer"
             style={{
               fontSize: "0.85rem",
               fontWeight: 400,
@@ -704,7 +699,7 @@ export default function LandingPage() {
               transition: reduced ? "none" : "color 200ms",
             }}
           >
-            Watch it work
+            See how it works
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M12 5v14M19 12l-7 7-7-7" />
             </svg>
@@ -723,7 +718,7 @@ export default function LandingPage() {
             className="w-px h-8 bg-earth-300 mx-auto"
             style={
               !reduced
-                ? { animation: "scroll-bounce 2s cubic-bezier(0.22,1,0.36,1) infinite" }
+                ? { animation: "scroll-bounce 1.5s cubic-bezier(0.22,1,0.36,1) infinite" }
                 : undefined
             }
           />
@@ -754,13 +749,13 @@ export default function LandingPage() {
 
               <h3
                 className="font-serif text-ink-900 mb-3"
-                style={{ fontSize: "clamp(1.2rem, 2.5vw, 1.5rem)", fontWeight: 500, lineHeight: 1.3 }}
+                style={{ fontSize: "clamp(1.3rem, 2.5vw, 1.6rem)", fontWeight: 500, lineHeight: 1.3 }}
               >
                 {truth.statement}
               </h3>
 
               <p
-                className="font-sans text-earth-500"
+                className="font-sans text-earth-600"
                 style={{ fontSize: "0.95rem", fontWeight: 300, lineHeight: 1.7, maxWidth: "420px" }}
               >
                 {truth.explanation}
@@ -785,21 +780,25 @@ export default function LandingPage() {
           </h2>
 
           <form onSubmit={handleEntrySubmit} className="relative mb-4">
+            <label htmlFor="huma-entry" className="sr-only">
+              What&rsquo;s going on in your life right now?
+            </label>
             <input
+              id="huma-entry"
               type="text"
               value={entryInput}
               onChange={(e) => setEntryInput(e.target.value)}
               placeholder="Start typing..."
-              className="w-full bg-sand-50 border border-sand-300 rounded-xl px-5 py-4 pr-14 font-sans text-ink-800 placeholder:text-earth-300 focus:outline-none focus:border-sage-400"
+              className="w-full bg-sand-50 border border-sand-300 rounded-xl px-5 py-4 pr-14 font-sans text-ink-800 placeholder:text-earth-350 focus:border-sage-500"
               style={{
                 fontSize: "1.05rem",
                 height: "56px",
-                transition: reduced ? "none" : "border-color 200ms cubic-bezier(0.22,1,0.36,1)",
+                transition: reduced ? "none" : "border-color 200ms cubic-bezier(0.22,1,0.36,1), box-shadow 200ms cubic-bezier(0.22,1,0.36,1)",
               }}
             />
             <button
               type="submit"
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-lg bg-amber-600 hover:bg-amber-500 flex items-center justify-center cursor-pointer"
+              className="absolute right-2 top-1/2 -translate-y-1/2 size-11 rounded-lg bg-amber-600 hover:bg-amber-500 active:bg-amber-700 flex items-center justify-center cursor-pointer"
               style={{
                 transition: reduced ? "none" : "background-color 200ms cubic-bezier(0.22,1,0.36,1)",
               }}
@@ -811,7 +810,7 @@ export default function LandingPage() {
             </button>
           </form>
 
-          <p className="font-sans text-earth-300" style={{ fontSize: "0.82rem", fontWeight: 300 }}>
+          <p className="font-sans text-earth-400" style={{ fontSize: "0.82rem", fontWeight: 300 }}>
             No account needed. Start talking.
           </p>
         </div>
@@ -826,10 +825,10 @@ export default function LandingPage() {
           >
             HUMA
           </p>
-          <p className="font-sans text-earth-300" style={{ fontSize: "0.75rem", fontWeight: 300 }}>
+          <p className="font-sans text-earth-400" style={{ fontSize: "0.75rem", fontWeight: 300 }}>
             Life infrastructure
           </p>
-          <p className="font-sans text-earth-300 mt-3" style={{ fontSize: "0.65rem", fontWeight: 300 }}>
+          <p className="font-sans text-earth-400 mt-3" style={{ fontSize: "0.65rem", fontWeight: 300 }}>
             &copy; {new Date().getFullYear()}
           </p>
         </div>
@@ -856,8 +855,8 @@ export default function LandingPage() {
           to { opacity: 1; transform: translateY(0); }
         }
         @keyframes scroll-bounce {
-          0%, 100% { transform: translateY(0); opacity: 0.4; }
-          50% { transform: translateY(8px); opacity: 0.7; }
+          0%, 100% { transform: translateY(0); opacity: 0.3; }
+          50% { transform: translateY(6px); opacity: 0.6; }
         }
         @media (prefers-reduced-motion: reduce) {
           .landing-reveal {

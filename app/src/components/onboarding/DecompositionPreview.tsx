@@ -70,7 +70,7 @@ export default function DecompositionPreview({
                 isTrigger
                   ? "bg-sage-50 border-sage-300"
                   : "bg-sand-50 border-sand-200"
-              } ${!b.enabled && editing ? "opacity-40" : "opacity-100"}`}
+              } ${!b.enabled && editing ? "opacity-40" : "opacity-100"} transition-opacity`}
             >
               {/* Toggle or static circle */}
               {editing ? (
@@ -154,9 +154,9 @@ export default function DecompositionPreview({
       {decomposition?.coming_up && decomposition.coming_up.length > 0 && (
         <div className="mt-5">
           <p className="font-sans text-xs text-earth-400 uppercase tracking-wider mb-2">Coming Up</p>
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             {decomposition.coming_up.map((item, i) => (
-              <div key={i} className="px-4 py-2 rounded-lg bg-sand-50/60">
+              <div key={i} className="px-4 py-2.5 rounded-lg bg-sand-50/60">
                 <p className="font-sans text-sm text-earth-500">
                   <span className="font-medium text-earth-600">{item.name}</span>
                   {item.timeframe && <span className="text-earth-400"> · {item.timeframe}</span>}
@@ -174,9 +174,9 @@ export default function DecompositionPreview({
       {decomposition?.longer_arc && decomposition.longer_arc.length > 0 && (
         <div className="mt-4">
           <p className="font-sans text-xs text-earth-400 uppercase tracking-wider mb-2">The Longer Arc</p>
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             {decomposition.longer_arc.map((item, i) => (
-              <div key={i} className="px-4 py-2 rounded-lg bg-sand-50/60">
+              <div key={i} className="px-4 py-2.5 rounded-lg bg-sand-100/60 border border-sand-200/60">
                 <p className="font-sans text-sm text-earth-500">
                   <span className="font-medium text-earth-600">{item.phase}</span>
                   {item.timeframe && <span className="text-earth-400"> · {item.timeframe}</span>}
@@ -203,7 +203,7 @@ export default function DecompositionPreview({
           <>
             <button
               onClick={handleConfirm}
-              className="px-5 py-2.5 rounded-xl font-sans text-sm font-medium bg-sage-700 text-white hover:bg-sage-800 transition-all duration-200 cursor-pointer"
+              className="px-5 py-2.5 rounded-xl font-sans text-sm font-medium bg-sage-700 text-white hover:bg-sage-600 active:bg-sage-800 transition-all duration-200 cursor-pointer"
             >
               Start tomorrow
             </button>
@@ -221,7 +221,7 @@ export default function DecompositionPreview({
                 setEditing(false);
                 handleConfirm();
               }}
-              className="px-5 py-2.5 rounded-xl font-sans text-sm font-medium bg-sage-700 text-white hover:bg-sage-800 transition-all duration-200 cursor-pointer"
+              className="px-5 py-2.5 rounded-xl font-sans text-sm font-medium bg-sage-700 text-white hover:bg-sage-600 active:bg-sage-800 transition-all duration-200 cursor-pointer"
             >
               Looks good — start tomorrow
             </button>

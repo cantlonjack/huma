@@ -159,7 +159,7 @@ function ExportLayout({
       {/* Insight text */}
       <div
         style={{
-          fontFamily: "'Cormorant Garamond', 'Cormorant', serif",
+          fontFamily: "'Cormorant Garamond', 'Cormorant', Georgia, 'Times New Roman', serif",
           fontSize: "28px",
           fontWeight: 400,
           fontStyle: "italic",
@@ -357,8 +357,9 @@ export default function ShareworthyInsightCard({
   const generatePng = useCallback(async (): Promise<{ dataUrl: string; blob: Blob } | null> => {
     if (!cardRef.current) return null;
     try {
-      // Brief delay for SVG/font settling
-      await new Promise((r) => setTimeout(r, 500));
+      // Wait for fonts and SVGs to settle before capture
+      await document.fonts.ready;
+      await new Promise((r) => setTimeout(r, 100));
 
       const dataUrl = await toPng(cardRef.current, {
         width: CARD_W,
@@ -465,7 +466,7 @@ export default function ShareworthyInsightCard({
         >
           {/* ─── Visible card (interactive, animated) ─── */}
           <div
-            className="rounded-2xl max-w-[420px] w-full relative overflow-hidden"
+            className="rounded-2xl max-w-[420px] w-[calc(100%-16px)] relative overflow-hidden"
             style={{
               backgroundColor: COLORS.bg,
               boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
@@ -558,20 +559,20 @@ export default function ShareworthyInsightCard({
             <button
               onClick={handleShareOpen}
               disabled={busy}
-              className="px-6 py-2.5 text-sm rounded-full transition-all font-sans font-medium disabled:opacity-50 bg-sage-700 text-white"
+              className="px-6 py-2.5 min-h-[44px] text-sm rounded-full transition-all duration-200 font-sans font-medium disabled:opacity-50 bg-sage-700 text-white hover:bg-sage-600 active:bg-sage-800 cursor-pointer"
             >
               Share
             </button>
             <button
               onClick={handleSaveImage}
               disabled={busy}
-              className="px-6 py-2.5 text-sm rounded-full border border-sage-500 transition-all font-sans font-medium disabled:opacity-50 text-sage-400"
+              className="px-6 py-2.5 min-h-[44px] text-sm rounded-full border border-sage-500 transition-all duration-200 font-sans font-medium disabled:opacity-50 text-sage-400 hover:bg-sage-500/10 active:bg-sage-500/20 cursor-pointer"
             >
               {busy ? "Generating..." : "Save Image"}
             </button>
             <button
               onClick={onDismiss}
-              className="px-6 py-2.5 text-sm rounded-full border border-earth-600 transition-all font-sans text-earth-400"
+              className="px-6 py-2.5 min-h-[44px] text-sm rounded-full border border-earth-600 transition-all duration-200 font-sans text-earth-400 hover:bg-earth-600/10 active:bg-earth-600/20 cursor-pointer"
             >
               Close
             </button>

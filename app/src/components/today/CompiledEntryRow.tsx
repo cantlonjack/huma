@@ -25,7 +25,7 @@ export function CompiledEntryRow({
     if (!isChecked) {
       setJustChecked(true);
       if (!reducedMotion) {
-        setTimeout(() => setJustChecked(false), 600);
+        setTimeout(() => setJustChecked(false), 500);
       } else {
         setJustChecked(false);
       }

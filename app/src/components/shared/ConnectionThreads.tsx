@@ -369,8 +369,7 @@ function Ring({
     svgProps.width = sz;
     svgProps.height = sz;
   } else if (size === "signature") {
-    svgProps.width = 200;
-    svgProps.height = 200;
+    svgProps.style = { width: "100%", maxWidth: "200px", height: "auto" };
   } else {
     // full
     svgProps.style = { width: "100%", maxWidth: "280px", height: "auto" };
@@ -439,7 +438,7 @@ function Ring({
             <path
               d={threadD(from, to, r, C)}
               fill="none"
-              stroke={useDarkBg ? threadColor : threadColor}
+              stroke={threadColor}
               strokeWidth={sw}
               strokeLinecap="round"
               pathLength={1}

@@ -55,7 +55,7 @@ export function PatternRouteCard({
 
     if (!wasChecked) {
       setGlowingStep(stepText);
-      setTimeout(() => setGlowingStep(null), 600);
+      setTimeout(() => setGlowingStep(null), 500);
       setTimeout(() => {
         setMicroCounters(prev => new Set(prev).add(stepText));
       }, 150);
@@ -92,7 +92,7 @@ export function PatternRouteCard({
             className="cursor-pointer px-4 pt-1 pb-2.5"
           >
             <span className="font-serif italic text-sage-400 text-[13px]">
-              Still mapping your route.
+              Let&apos;s define what this looks like day to day.
             </span>
           </button>
         </div>
@@ -141,7 +141,7 @@ export function PatternRouteCard({
               <button
                 key={`${aspiration.id}-${i}`}
                 onClick={() => handleToggle(step.text)}
-                className={`w-full text-left cursor-pointer flex items-start gap-2 px-4 transition-[background] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isTrigger ? "py-3" : "py-2.5"} ${isTrigger && !isChecked ? "bg-gradient-to-br from-amber-100/40 to-amber-100" : "bg-transparent"}`}
+                className={`w-full text-left cursor-pointer flex items-start gap-2 px-4 min-h-[44px] transition-[background] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isTrigger ? "py-3" : "py-2.5"} ${isTrigger && !isChecked ? "bg-gradient-to-br from-amber-100/40 to-amber-100" : "bg-transparent hover:bg-sand-50 active:bg-sand-100"}`}
                 style={{
                   borderBottom: i < steps.length - 1 ? "1px solid var(--color-sand-200)" : "none",
                 }}
@@ -187,7 +187,8 @@ export function PatternRouteCard({
                       <div
                         key={dim}
                         title={dim}
-                        className={`size-1.5 rounded-full transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${glowingStep === step.text ? "animate-dim-glow" : ""}`}
+                        aria-label={dim}
+                        className={`size-1.5 rounded-full transition-opacity duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${glowingStep === step.text ? "animate-dim-glow" : ""}`}
                         style={{
                           background: DIMENSION_COLORS[dim as keyof typeof DIMENSION_COLORS] || "var(--color-sage-400)",
                           opacity: isChecked && glowingStep !== step.text ? 0.35 : 1,

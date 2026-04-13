@@ -108,7 +108,7 @@ export default function ContextAssemblyPanel({
       if (!prevSectionIds.current.has(id)) {
         if (!reducedMotion) {
           setFlashSection(id);
-          const timer = setTimeout(() => setFlashSection(null), 400);
+          const timer = setTimeout(() => setFlashSection(null), 600);
           prevSectionIds.current = currentIds;
           return () => clearTimeout(timer);
         }
@@ -143,7 +143,7 @@ export default function ContextAssemblyPanel({
         </div>
 
         {/* Segmented progress bar */}
-        <div className="flex gap-0.5 mb-1">
+        <div className="flex gap-[2px] mb-1">
           {DIMENSION_SEGMENTS.map((seg) => {
             const isActive = knownDimensionKeys.includes(seg.key);
             return (
@@ -205,7 +205,7 @@ export default function ContextAssemblyPanel({
       {/* Still unknown list */}
       {sparseSections.length > 0 && (
         <div className="px-1 mt-1">
-          <p className="font-sans text-[10px] tracking-[0.08em] uppercase text-earth-300 mb-1">
+          <p className="font-sans text-[10px] tracking-[0.08em] uppercase text-earth-400 mb-1">
             Still unknown
           </p>
           <p className="font-sans text-[12px] text-earth-400 leading-relaxed">

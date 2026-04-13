@@ -381,20 +381,20 @@ export default function TodayPage() {
             )}
 
             {/* Aspiration Ribbon — navigation, not story */}
-            <div className="hide-scrollbar overflow-x-auto mb-3" style={{ WebkitOverflowScrolling: "touch" }}>
+            <div className="hide-scrollbar overflow-x-auto mb-3 scroll-smooth">
               <div className="flex gap-2 animate-entrance-2 px-4">
                 {t.aspirations.map(asp => (
                   <button
                     key={asp.id}
                     onClick={() => t.setQuickLookAspiration(asp)}
-                    className="flex-shrink-0 cursor-pointer bg-sand-100 border border-sand-300 rounded-full px-3.5 py-2.5 text-[13px] font-sans text-sage-600 whitespace-nowrap min-h-[44px] flex items-center"
+                    className="flex-shrink-0 cursor-pointer bg-sand-100 border border-sand-300 rounded-full px-3.5 py-2.5 text-[13px] font-sans text-sage-600 whitespace-nowrap min-h-[44px] flex items-center hover:bg-sand-200 hover:border-sand-350 active:bg-sand-250 transition-colors duration-150"
                   >
                     {displayName(asp.clarifiedText || asp.rawText)}
                   </button>
                 ))}
                 <button
                   onClick={t.openNewAspirationChat}
-                  className="flex-shrink-0 cursor-pointer bg-transparent border border-dashed border-sage-200 rounded-full px-3.5 py-2.5 text-[13px] font-sans text-sage-400 whitespace-nowrap min-h-[44px] flex items-center gap-1"
+                  className="flex-shrink-0 cursor-pointer bg-transparent border border-dashed border-sage-200 rounded-full px-3.5 py-2.5 text-[13px] font-sans text-sage-400 whitespace-nowrap min-h-[44px] flex items-center gap-1 hover:border-sage-400 hover:text-sage-500 active:bg-sage-50 transition-colors duration-150"
                   aria-label="Add aspiration"
                 >
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -466,8 +466,8 @@ export default function TodayPage() {
             {t.validationAspirations.length > 0 && (
               <div className="mb-2">
                 <div className="px-4 pb-2">
-                  <span className="font-sans text-[11px] font-semibold tracking-[0.22em] text-ink-300">
-                    WEEKLY CHECK-IN
+                  <span className="font-sans text-[10px] font-semibold tracking-[0.22em] text-ink-300 uppercase">
+                    Weekly Check-in
                   </span>
                 </div>
                 {t.validationAspirations.map(asp => (
@@ -534,8 +534,8 @@ export default function TodayPage() {
             {t.standaloneEntries.length > 0 && (
               <>
                 <div className="px-4 pt-4 pb-2">
-                  <span className="font-sans text-[11px] font-semibold tracking-[0.22em] text-ink-300">
-                    TODAY&apos;S BEHAVIORS
+                  <span className="font-sans text-[10px] font-semibold tracking-[0.22em] text-ink-300 uppercase">
+                    Today&apos;s Behaviors
                   </span>
                 </div>
                 {t.standaloneEntries.map(entry => (
@@ -571,13 +571,14 @@ export default function TodayPage() {
           >
             <button
               onClick={() => t.openChatWithContext(null)}
-              className="flex-1 text-left cursor-pointer bg-white border border-sand-300 rounded-full px-3.5 py-2 text-sm font-sans text-sage-300"
+              className="flex-1 text-left cursor-pointer bg-white border border-sand-300 rounded-full px-3.5 py-2 text-sm font-sans text-sage-300 hover:border-sage-300 transition-colors duration-150"
             >
               Tell HUMA something...
             </button>
             <button
               onClick={() => t.openChatWithContext(null)}
-              className="cursor-pointer flex-shrink-0 bg-amber-600 rounded-full size-8 border-none flex items-center justify-center"
+              className="cursor-pointer flex-shrink-0 bg-amber-600 hover:bg-amber-500 active:bg-amber-700 rounded-full size-9 border-none flex items-center justify-center transition-colors duration-150"
+              aria-label="Open chat"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="19" x2="12" y2="5" />

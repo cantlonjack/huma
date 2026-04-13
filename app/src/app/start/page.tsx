@@ -123,7 +123,7 @@ function ConversationThread({
       : messages;
 
   return (
-    <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 pb-4">
+    <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 md:px-6 pb-4">
       {!hasMessages && (
         <div className="flex flex-col items-center justify-center h-full pb-16">
           <h2 className="font-serif text-2xl text-earth-700">
@@ -330,11 +330,11 @@ export default function StartPage() {
   if (showTransition) {
     return (
       <div className="min-h-dvh bg-sand-50 flex items-center justify-center animate-fade-in">
-        <div className="text-center px-8">
-          <p className="font-serif text-2xl text-sage-700 mb-3">
+        <div className="text-center px-8 max-w-sm">
+          <p className="font-serif text-xl md:text-2xl text-sage-700 mb-3">
             Your day starts tomorrow.
           </p>
-          <p className="font-sans text-sm text-earth-400">
+          <p className="font-sans text-sm text-earth-500">
             I&apos;ll have your sheet ready.
           </p>
         </div>
@@ -374,7 +374,7 @@ export default function StartPage() {
               <div className="flex items-center gap-2 animate-[fade-in_500ms_ease-out]">
                 <div className="w-20 h-1 bg-sand-200 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-sage-400 rounded-full transition-all duration-700 ease-out"
+                    className="h-full bg-sage-500 rounded-full transition-all duration-700 ease-out"
                     style={{ width: `${(completeness.filled / completeness.total) * 100}%` }}
                   />
                 </div>
@@ -421,13 +421,13 @@ export default function StartPage() {
               onKeyDown={handleKeyDown}
               placeholder="Type or just start talking..."
               disabled={streaming}
-              className="w-full py-3 pr-12 font-sans text-base text-earth-800 bg-transparent border-b border-sand-300 focus:border-sage-500 focus:outline-none placeholder:text-earth-300 disabled:opacity-50 transition-colors duration-200"
+              className="w-full py-3 pr-12 font-sans text-base text-earth-800 bg-transparent border-b border-sand-300 focus:border-sage-500 placeholder:text-earth-350 disabled:opacity-50 transition-colors duration-200"
             />
             {input.trim() && (
               <button
                 onClick={() => sendMessage(input)}
                 disabled={streaming}
-                className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-sage-600 hover:text-sage-700 disabled:opacity-50 cursor-pointer transition-colors duration-200"
+                className="absolute right-0 top-1/2 -translate-y-1/2 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-sage-600 hover:text-sage-700 active:text-sage-800 disabled:opacity-50 cursor-pointer transition-colors duration-200"
                 aria-label="Send"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
