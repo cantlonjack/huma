@@ -3,73 +3,112 @@
 import { useState } from "react";
 import type { SheetEntry } from "@/types/v2";
 import { ConnectionThreads, dimensionKeysFromLabels } from "@/components/shared/ConnectionThreads";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 export function CompiledEntryRow({
   entry,
   isChecked,
-  isTrigger,
+  isKeystone,
   onToggle,
 }: {
   entry: SheetEntry;
   isChecked: boolean;
-  isTrigger: boolean;
+  isKeystone: boolean;
   onToggle: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [justChecked, setJustChecked] = useState(false);
+  const reducedMotion = useReducedMotion();
   const hasDetail = entry.detail && typeof entry.detail === "string" && entry.detail.length > 0;
+  const dims = entry.dimensions ? dimensionKeysFromLabels(entry.dimensions) : [];
+
+  const handleToggle = () => {
+    if (!isChecked) {
+      setJustChecked(true);
+      if (!reducedMotion) {
+        setTimeout(() => setJustChecked(false), 600);
+      } else {
+        setJustChecked(false);
+      }
+    }
+    onToggle();
+  };
 
   return (
     <div
-      className={`transition-[background] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${isTrigger ? "border-l-[3px] border-l-amber-600 bg-sand-100 rounded-r-lg p-5" : "border-l-[3px] border-l-transparent bg-transparent py-[18px] pr-5 pl-[23px]"}`}
+      className={`relative transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isChecked ? "opacity-60" : "opacity-100"}`}
     >
-      {/* Tap row */}
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={onToggle}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(); } }}
-        className="w-full text-left cursor-pointer"
-      >
-        {/* Headline with inline constellation */}
-        <span className="flex items-center gap-1.5">
-          {entry.dimensions && entry.dimensions.length > 0 && !isChecked && (
-            <ConnectionThreads
-              activeDimensions={dimensionKeysFromLabels(entry.dimensions)}
-              size="inline"
-              animate={false}
-              className="flex-shrink-0"
-            />
+      {/* Keystone left accent */}
+      {isKeystone && (
+        <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-full bg-amber-500/60" />
+      )}
+
+      <div className={`flex items-start gap-3 ${isKeystone ? "pl-4" : "pl-0"}`}>
+        {/* Custom circle checkbox */}
+        <button
+          onClick={handleToggle}
+          className="flex-shrink-0 mt-[5px] cursor-pointer bg-transparent border-none p-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
+          aria-label={isChecked ? "Uncheck" : "Check"}
+          role="checkbox"
+          aria-checked={isChecked}
+        >
+          <div
+            className={`size-5 rounded-full border-[1.5px] transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] flex items-center justify-center ${
+              isChecked
+                ? "bg-sage-700 border-sage-700"
+                : "bg-transparent border-sage-300 hover:border-sage-500"
+            } ${justChecked && !reducedMotion ? "animate-dim-glow" : ""}`}
+          >
+            {isChecked && (
+              <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                <path d="M1 4.5L4 7.5L10 1.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </div>
+        </button>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0 pt-[10px]">
+          {/* Keystone label */}
+          {isKeystone && !isChecked && (
+            <span className="block font-sans text-[9px] font-semibold tracking-[0.22em] text-amber-600 mb-1 uppercase">
+              Your keystone
+            </span>
           )}
+
+          {/* Headline — Cormorant, serif */}
           <span
-            className={`font-serif leading-tight transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isTrigger ? "text-[19px] font-semibold" : "text-[17px] font-medium"} ${isChecked ? "text-ink-200 line-through decoration-ink-200 decoration-1" : (isTrigger ? "text-ink-900" : "text-ink-800")}`}
+            className={`block font-serif leading-snug transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              isKeystone ? "text-[19px] font-semibold" : "text-[17px] font-medium"
+            } ${
+              isChecked
+                ? "text-ink-300 line-through decoration-ink-300 decoration-1"
+                : "text-ink-900"
+            }`}
           >
             {entry.headline || entry.behaviorText}
           </span>
-        </span>
 
-        {/* Detail preview */}
-        {hasDetail && !isChecked && (
-          <p
-            className="font-sans text-sm leading-normal text-ink-500 mt-1 overflow-hidden transition-[max-height] duration-[250ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
-            style={{ maxHeight: expanded ? "200px" : "1.5em" }}
-          >
-            {entry.detail as string}
-          </p>
-        )}
+          {/* Reasoning — always visible, Source Sans */}
+          {hasDetail && (
+            <p
+              className={`font-sans text-sm leading-relaxed mt-1 transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                isChecked ? "text-ink-300" : "text-ink-500"
+              }`}
+            >
+              {entry.detail as string}
+            </p>
+          )}
+        </div>
 
-        {/* Expand hint */}
-        {hasDetail && !expanded && !isChecked && (
-          <span
-            role="button"
-            tabIndex={0}
-            onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); setExpanded(true); } }}
-            className="block cursor-pointer pt-1"
-          >
-            <span className="font-sans text-xs text-ink-300">
-              more &darr;
-            </span>
-          </span>
+        {/* Badge ConnectionThreads — float right */}
+        {dims.length > 0 && (
+          <div className={`flex-shrink-0 mt-[10px] transition-opacity duration-300 ${isChecked ? "opacity-40" : "opacity-100"}`}>
+            <ConnectionThreads
+              activeDimensions={dims}
+              size="badge"
+              animate={!reducedMotion && !isChecked}
+            />
+          </div>
         )}
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Aspiration, Insight, SheetEntry, Nudge, DimensionKey, ValidationAnswer } from "@/types/v2";
+import { DIMENSION_LABELS } from "@/types/v2";
 import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { getLocalDate } from "@/lib/date-utils";
@@ -34,7 +35,7 @@ import {
 
 // Re-export types and helpers from their canonical locations for backwards compatibility
 export type { BehaviorStep, ComingUpItem } from "@/lib/today-utils";
-export { formatHeaderDate, getDayCount, getBehaviorChain, triggerCaption } from "@/lib/today-utils";
+export { formatHeaderDate, formatBriefingDate, getDayCount, getBehaviorChain, triggerCaption } from "@/lib/today-utils";
 import { getDayCount, getReadyComingUp } from "@/lib/today-utils";
 import type { ComingUpItem } from "@/lib/today-utils";
 import { trackEvent } from "@/lib/analytics";
@@ -74,6 +75,13 @@ export interface UseTodayReturn {
   adjustingCount: number;
   rerouteAspiration: Aspiration | null;
   comingUpItems: ComingUpItem[];
+
+  // Briefing
+  keystoneEntry: SheetEntry | null;
+  stateSentence: string | null;
+  watchingSignal: { text: string; dimensions: [DimensionKey, DimensionKey] } | null;
+  checkedCount: number;
+  isEvening: boolean;
 
   // Actions
   setQuickLookAspiration: (a: Aspiration | null) => void;
@@ -646,6 +654,92 @@ export function useToday(): UseTodayReturn {
   const activeCount = aspirations.length;
   const comingUpItems = getReadyComingUp(aspirations, weekCounts, dayCount);
 
+  // ─── Briefing Data ─────────────────────────────────────────────────────
+
+  // Keystone: entry marked focus, or the one touching the most dimensions
+  const keystoneEntry = useMemo<SheetEntry | null>(() => {
+    if (compiledEntries.length === 0) return null;
+    // First entry is typically the focus/trigger
+    const first = compiledEntries[0];
+    // Find the entry touching the most dimensions
+    let best = first;
+    let bestCount = first.dimensions?.length || 0;
+    for (const entry of compiledEntries) {
+      const count = entry.dimensions?.length || 0;
+      if (count > bestCount) {
+        best = entry;
+        bestCount = count;
+      }
+    }
+    return best;
+  }, [compiledEntries]);
+
+  // State sentence: which dimensions are moving, which are dormant
+  const stateSentence = useMemo<string | null>(() => {
+    if (!capitalPulse && compiledEntries.length === 0) return null;
+
+    // If we have pulse data (user has checked things off)
+    if (capitalPulse) {
+      const parts: string[] = [];
+      const moved = capitalPulse.movedDimensions;
+      if (moved.length >= 2) {
+        const labels = moved.slice(0, 2).map(d => DIMENSION_LABELS[d]);
+        parts.push(`${labels.join(" and ")} are moving together today.`);
+      } else if (moved.length === 1) {
+        parts.push(`${DIMENSION_LABELS[moved[0]]} moved today.`);
+      }
+      if (capitalPulse.dormantDimension) {
+        const dim = capitalPulse.dormantDimension;
+        parts.push(`${DIMENSION_LABELS[dim.key]} has been quiet for ${dim.days} days.`);
+      }
+      return parts.length > 0 ? parts.join(" ") : null;
+    }
+
+    // Pre-check state: derive from today's sheet dimensions
+    const allDims = new Set<string>();
+    for (const entry of compiledEntries) {
+      if (entry.dimensions) {
+        for (const d of entry.dimensions) allDims.add(d);
+      }
+    }
+    if (allDims.size >= 2) {
+      const arr = Array.from(allDims).slice(0, 3);
+      const labels = arr.map(d => DIMENSION_LABELS[d as DimensionKey] || d);
+      return `Today touches ${labels.join(", ")}.`;
+    }
+    return null;
+  }, [capitalPulse, compiledEntries]);
+
+  // Watching signal: from dormant dims + hypothesized correlations
+  const watchingSignal = useMemo<{ text: string; dimensions: [DimensionKey, DimensionKey] } | null>(() => {
+    // Use hypothesized correlations if available
+    if (hypotheses.length > 0) {
+      const h = hypotheses[0];
+      if (h.dimensions && h.dimensions.length >= 2) {
+        return {
+          text: h.hypothesis,
+          dimensions: [h.dimensions[0], h.dimensions[1]],
+        };
+      }
+    }
+    // Or use dormant dimension data
+    if (capitalPulse?.dormantDimension && capitalPulse.dormantDimensions.length >= 1) {
+      const dormant = capitalPulse.dormantDimension;
+      // Find a moving dim to pair with
+      const moving = capitalPulse.movedDimensions[0];
+      if (moving) {
+        return {
+          text: `${DIMENSION_LABELS[dormant.key]} dropped this week. Worth watching.`,
+          dimensions: [dormant.key, moving],
+        };
+      }
+    }
+    return null;
+  }, [hypotheses, capitalPulse]);
+
+  const checkedCount = checkedEntries.size;
+  const isEvening = useMemo(() => new Date().getHours() >= 18, []);
+
   // ─── Weekly Validation ─────────────────────────────────────────────────
   const isValidationDay = useMemo(() => {
     const today = new Date(date + "T12:00:00");
@@ -758,5 +852,10 @@ export function useToday(): UseTodayReturn {
     isValidationDay,
     validationAspirations,
     handleValidationAnswer,
+    keystoneEntry,
+    stateSentence,
+    watchingSignal,
+    checkedCount,
+    isEvening,
   };
 }

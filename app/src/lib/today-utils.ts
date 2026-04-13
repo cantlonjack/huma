@@ -21,6 +21,14 @@ export function formatHeaderDate(dateStr: string): string {
   return `${weekday} ${month} ${day}`;
 }
 
+export function formatBriefingDate(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00");
+  const weekday = d.toLocaleDateString("en-US", { weekday: "long" });
+  const month = d.toLocaleDateString("en-US", { month: "long" });
+  const day = d.getDate();
+  return `${weekday}, ${month} ${day}`;
+}
+
 export function getDayCount(): number {
   try {
     const start = localStorage.getItem("huma-v2-start-date");

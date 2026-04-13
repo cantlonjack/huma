@@ -5,7 +5,7 @@ import { displayName } from "@/lib/display-name";
 import TabShell from "@/components/shared/TabShell";
 import TodaySkeleton from "@/components/today/TodaySkeleton";
 import NotificationSettings from "@/components/today/NotificationSettings";
-import { useToday, formatHeaderDate, getBehaviorChain } from "@/hooks/useToday";
+import { useToday, formatBriefingDate, getBehaviorChain } from "@/hooks/useToday";
 import { PatternRouteCard } from "@/components/today/PatternRouteCard";
 import { CompiledEntryRow } from "@/components/today/CompiledEntryRow";
 import {
@@ -19,6 +19,7 @@ import {
   TransitionCard,
 } from "@/components/today/TodayCards";
 import { ValidationCard } from "@/components/today/ValidationCard";
+import WeekRhythm from "@/components/today/WeekRhythm";
 import type { Nudge, DimensionKey } from "@/types/v2";
 import { DIMENSION_LABELS } from "@/types/v2";
 import { ConnectionThreads } from "@/components/shared/ConnectionThreads";
@@ -78,56 +79,117 @@ const NudgeCard = memo(function NudgeCard({
   );
 });
 
-// ── Inlined: CapitalPulse (connection threads ring) ──
+// ── Briefing Pulse (connection threads ring for header) ──
 const ALL_DIMENSIONS: DimensionKey[] = [
   "body", "people", "money", "home", "growth", "joy", "purpose", "identity",
 ];
 
-const CapitalPulse = memo(function CapitalPulse({
+const BriefingPulse = memo(function BriefingPulse({
+  compiledDimensions,
   movedDimensions,
-  dormantDimension,
   dormantDimensions = [],
 }: {
-  movedDimensions: DimensionKey[];
-  dormantDimension?: { key: DimensionKey; days: number } | null;
+  compiledDimensions: DimensionKey[];
+  movedDimensions?: DimensionKey[];
   dormantDimensions?: DimensionKey[];
 }) {
-  const movedCount = movedDimensions.length;
+  // Show all dimensions from today's sheet as active, with pulse states
+  const active = movedDimensions && movedDimensions.length > 0
+    ? Array.from(new Set([...compiledDimensions, ...movedDimensions]))
+    : compiledDimensions;
 
-  // Pulse states: moved dims are settled (slower breathing),
-  // all 8 dims shown but unmoved ones breathe faster (calling attention)
   const pulseStates: PulseState[] = ALL_DIMENSIONS.map(dim => ({
     dimension: dim,
-    settled: movedDimensions.includes(dim),
+    settled: movedDimensions ? movedDimensions.includes(dim) : false,
   }));
 
-  let summaryStr = `${movedCount} of ${ALL_DIMENSIONS.length} dimensions moved today.`;
-  if (dormantDimension) {
-    summaryStr += ` ${DIMENSION_LABELS[dormantDimension.key]} hasn\u2019t been touched in ${dormantDimension.days} days.`;
-  }
-
   return (
-    <div className="mx-4 mt-3 mb-1">
-      <p className="font-sans text-[9px] font-semibold tracking-[0.22em] text-ink-300 text-center mb-2 uppercase">
-        Your shape today
-      </p>
-      <div className="flex justify-center">
-        <ConnectionThreads
-          activeDimensions={movedDimensions}
-          dormantDimensions={dormantDimensions}
-          size="pulse"
-          pulseStates={pulseStates}
-        />
+    <div className="flex justify-center">
+      <ConnectionThreads
+        activeDimensions={active as DimensionKey[]}
+        dormantDimensions={dormantDimensions}
+        size="compact"
+        pulseStates={pulseStates}
+      />
+    </div>
+  );
+});
+
+// ── Watching Footer ──
+const WatchingFooter = memo(function WatchingFooter({
+  text,
+  dimensions,
+}: {
+  text: string;
+  dimensions: [DimensionKey, DimensionKey];
+}) {
+  return (
+    <div className="mx-5 animate-entrance-3">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="font-sans text-[10px] font-semibold tracking-[0.22em] text-ink-300 uppercase">
+          Watching
+        </span>
+        <div className="flex-1 h-px bg-sand-200" />
       </div>
-      <p className="font-sans text-[12px] text-ink-400 mt-2 leading-normal text-center">
-        {summaryStr}
-      </p>
+      <div className="flex items-start gap-4">
+        <div className="flex-1">
+          <p className="font-sans text-sm text-ink-500 leading-relaxed">
+            {text}
+          </p>
+        </div>
+        {/* Mini constellation showing the two dimensions */}
+        <div className="flex-shrink-0">
+          <ConnectionThreads
+            activeDimensions={dimensions}
+            size="badge"
+            animate={true}
+          />
+        </div>
+      </div>
     </div>
   );
 });
 
 export default function TodayPage() {
   const t = useToday();
+
+  // Gather all dimensions from compiled entries for the pulse
+  const compiledDimensions = Array.from(
+    new Set(t.compiledEntries.flatMap(e => e.dimensions || []))
+  ) as DimensionKey[];
+
+  // Evening state sentence override
+  const eveningSentence = t.isEvening && t.compiledEntries.length > 0
+    ? (() => {
+        const total = t.compiledEntries.length;
+        const checked = t.compiledEntries.filter(e => {
+          const key = `${e.aspirationId}:${e.behaviorKey}`;
+          return t.checkedEntries.has(key);
+        }).length;
+        if (checked === 0) return null;
+        const movedDims = t.capitalPulse?.movedDimensions || [];
+        const dimNote = movedDims.length > 0
+          ? ` ${movedDims.map(d => DIMENSION_LABELS[d]).join(", ")} moved.`
+          : "";
+        return `${checked} of ${total} happened today.${dimNote}`;
+      })()
+    : null;
+
+  // First structural insight for Day 1 empty state
+  const firstStructuralInsight = t.structuralInsights.length > 0 ? t.structuralInsights[0] : null;
+
+  // Aggregate rhythm data for WeekRhythm in footer
+  const aggregateRhythm = (() => {
+    const agg: Record<number, number> = {};
+    for (const aspId in t.rhythmData) {
+      const days = t.rhythmData[aspId];
+      for (const dow in days) {
+        agg[Number(dow)] = (agg[Number(dow)] || 0) + days[Number(dow)];
+      }
+    }
+    return agg;
+  })();
+  const hasRhythmData = t.dayCount >= 7 && Object.keys(aggregateRhythm).length > 0;
 
   return (
     <TabShell
@@ -157,13 +219,13 @@ export default function TodayPage() {
       <div className="min-h-dvh bg-sand-50 flex flex-col pb-[140px]">
         <h1 className="sr-only">Today</h1>
 
-        {/* ═══ Header — quiet, date-forward ═══ */}
+        {/* ═══ Minimal Top Bar ═══ */}
         <div className="h-[44px] border-b border-sand-300 flex justify-between items-center px-4">
           <span className="font-sans font-medium text-sage-500 text-[11px] tracking-[0.4em] leading-none">
             H U M A
           </span>
           <span className="font-sans text-sage-400 text-[11px]">
-            {formatHeaderDate(t.date)} &middot; Day {t.dayCount}
+            Day {t.dayCount}
           </span>
         </div>
 
@@ -195,63 +257,127 @@ export default function TodayPage() {
           </div>
         ) : (
           <>
-            {/* ═══ THE BRIEFING ═══ */}
+            {/* ═══ 1. BRIEFING HEADER — "State of Your System" ═══ */}
 
-            {/* Through-line — the opening line of the letter */}
-            {t.throughLine && t.compiledEntries.length > 0 ? (
-              <div className="animate-entrance-1 px-5 pt-8 pb-6">
-                <p className="font-serif italic text-[22px] leading-snug text-ink-700 max-w-[480px] tracking-[0.01em]">
-                  {t.throughLine}
+            {t.compiledEntries.length > 0 || t.sheetCompiling ? (
+              <div className="animate-entrance-1 px-5 pt-8 pb-2">
+                {/* Pulse ConnectionThreads — breathing constellation */}
+                <BriefingPulse
+                  compiledDimensions={compiledDimensions}
+                  movedDimensions={t.capitalPulse?.movedDimensions}
+                  dormantDimensions={t.capitalPulse?.dormantDimensions}
+                />
+
+                {/* Date */}
+                <p className="font-serif text-ink-700 text-center text-[15px] mt-4 tracking-wide">
+                  {formatBriefingDate(t.date)}
                 </p>
-                <div className="w-10 h-[2px] rounded-full bg-amber-500 mt-4 opacity-60" />
-              </div>
-            ) : t.sheetCompiling ? (
-              <div className="px-5 pt-8 pb-6">
-                <p className="font-serif italic text-sage-400 animate-entrance-1 text-lg">
-                  Building your day...
-                </p>
+
+                {/* State sentence — observation, not instruction */}
+                {(eveningSentence || t.stateSentence) && (
+                  <p className="font-serif italic text-ink-500 text-center text-[15px] leading-relaxed mt-2 max-w-[380px] mx-auto">
+                    {eveningSentence || t.stateSentence}
+                  </p>
+                )}
+
+                {/* Through-line */}
+                {t.throughLine && !t.sheetCompiling && (
+                  <p className="font-serif italic text-[20px] leading-snug text-ink-700 mt-6 max-w-[480px] tracking-[0.01em]">
+                    {t.throughLine}
+                  </p>
+                )}
+
+                {t.sheetCompiling && (
+                  <p className="font-serif italic text-sage-400 text-center text-lg mt-6">
+                    Building your day...
+                  </p>
+                )}
               </div>
             ) : (
-              /* No compiled sheet — show a quiet date greeting */
-              <div className="px-5 pt-6 pb-4" />
+              /* No compiled sheet — Day 1 / empty state with breathing constellation */
+              <div className="animate-entrance-1 px-5 pt-8 pb-4 flex flex-col items-center">
+                <BriefingPulse compiledDimensions={compiledDimensions} />
+
+                <p className="font-serif text-ink-700 text-center text-[15px] mt-4 tracking-wide">
+                  {formatBriefingDate(t.date)}
+                </p>
+
+                {firstStructuralInsight && (
+                  <p className="font-serif italic text-ink-500 text-center text-[15px] leading-relaxed mt-2 max-w-[380px]">
+                    {firstStructuralInsight.title}
+                  </p>
+                )}
+              </div>
             )}
 
-            {/* Compiled Sheet Entries — the body of the briefing */}
+            {/* ═══ 2. FIELD REPORT — Narrative Entries ═══ */}
             {t.compiledEntries.length > 0 && (
-              <div className="mx-4 mb-2">
-                <div className="flex flex-col gap-1.5">
+              <div className="mx-5 mt-4 mb-2 animate-entrance-2">
+                {/* Section label */}
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="font-sans text-[10px] font-semibold tracking-[0.22em] text-ink-300 uppercase">
+                    Field Report
+                  </span>
+                  <div className="flex-1 h-px bg-sand-200" />
+                </div>
+
+                {/* Entries — flowing narrative */}
+                <div className="flex flex-col">
                   {t.compiledEntries.map((entry, i) => {
-                    const isChecked = t.checkedEntries.has(`${entry.aspirationId}:${entry.behaviorKey}`);
+                    const key = `${entry.aspirationId}:${entry.behaviorKey}`;
+                    const isChecked = t.checkedEntries.has(key);
+                    const isKeystone = t.keystoneEntry?.behaviorKey === entry.behaviorKey
+                      && t.keystoneEntry?.aspirationId === entry.aspirationId;
+
                     return (
-                      <CompiledEntryRow
-                        key={entry.behaviorKey}
-                        entry={entry}
-                        isChecked={isChecked}
-                        isTrigger={i === 0}
-                        onToggle={() =>
-                          t.handleToggleStep(entry.aspirationId, entry.behaviorKey, !isChecked)
-                        }
-                      />
+                      <div key={entry.behaviorKey}>
+                        <CompiledEntryRow
+                          entry={entry}
+                          isChecked={isChecked}
+                          isKeystone={isKeystone}
+                          onToggle={() =>
+                            t.handleToggleStep(entry.aspirationId, entry.behaviorKey, !isChecked)
+                          }
+                        />
+                        {/* Thin sage divider between entries (not after last) */}
+                        {i < t.compiledEntries.length - 1 && (
+                          <div className="h-px bg-sage-200/40 my-3 ml-[56px]" />
+                        )}
+                      </div>
                     );
                   })}
                 </div>
               </div>
             )}
 
-            {/* Capital Pulse — the closing: how your system stands */}
-            {t.capitalPulse && (
-              <CapitalPulse
-                movedDimensions={t.capitalPulse.movedDimensions}
-                dormantDimension={t.capitalPulse.dormantDimension}
-                dormantDimensions={t.capitalPulse.dormantDimensions}
-              />
+            {/* ═══ 3. Divider ═══ */}
+            {t.compiledEntries.length > 0 && (
+              <div className="mx-5 my-5 border-t border-sand-200" />
             )}
+
+            {/* ═══ 4. "What to Watch" or Weekly Rhythm ═══ */}
+            {t.watchingSignal ? (
+              <WatchingFooter
+                text={t.watchingSignal.text}
+                dimensions={t.watchingSignal.dimensions}
+              />
+            ) : hasRhythmData ? (
+              <div className="mx-5 mb-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="font-sans text-[10px] font-semibold tracking-[0.22em] text-ink-300 uppercase">
+                    Your Week
+                  </span>
+                  <div className="flex-1 h-px bg-sand-200" />
+                </div>
+                <WeekRhythm dayCounts={aggregateRhythm} />
+              </div>
+            ) : null}
 
             {/* ═══ BELOW THE BRIEFING — supporting material ═══ */}
 
-            {/* Divider between briefing and navigation */}
-            {(t.compiledEntries.length > 0 || t.capitalPulse) && (
-              <div className="mx-4 my-4 border-t border-sand-200" />
+            {/* Divider before supporting content */}
+            {(t.watchingSignal || hasRhythmData) && (
+              <div className="mx-5 my-4 border-t border-sand-200" />
             )}
 
             {/* Aspiration Ribbon — navigation, not story */}
@@ -322,15 +448,6 @@ export default function TodayPage() {
               />
             ))}
 
-            {/* Hypothesized Correlations (Days 5-7) */}
-            {t.hypotheses.length > 0 && t.hypotheses.slice(0, 1).map(h => (
-              <HypothesisCard
-                key={h.id}
-                hypothesis={h}
-                onDismiss={() => t.dismissHypothesis(h.id)}
-              />
-            ))}
-
             {/* Proactive Nudges */}
             {t.nudges.length > 0 && (
               <div className="mb-2">
@@ -397,7 +514,7 @@ export default function TodayPage() {
                 );
               })}
 
-            {/* Coming Up */}
+            {/* Coming Up — remove card styling, flow as narrative */}
             <ComingUpSection items={t.comingUpItems} />
 
             {/* Reroute Card */}
