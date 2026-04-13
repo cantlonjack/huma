@@ -88,7 +88,18 @@ export function CompiledEntryRow({
             {entry.headline || entry.behaviorText}
           </span>
 
-          {/* Reasoning — always visible, Source Sans */}
+          {/* Because — WHY this matters, visible by default */}
+          {entry.because && (
+            <p
+              className={`font-serif italic text-[13.5px] leading-relaxed mt-1.5 transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                isChecked ? "text-ink-300" : "text-earth-500"
+              }`}
+            >
+              {entry.because}
+            </p>
+          )}
+
+          {/* Detail — the how-to, shown on tap */}
           {hasDetail && (
             <p
               className={`font-sans text-sm leading-relaxed mt-1 transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${

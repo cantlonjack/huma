@@ -31,21 +31,21 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://huma.earth"),
-  title: "HUMA — See how your life actually connects",
+  title: "HUMA — Design the life you actually want",
   description:
-    "Your money, sleep, relationships, and work aren\u2019t separate problems. HUMA shows you how they connect and which daily behavior holds everything together.",
+    "Your daily patterns were inherited, not chosen. HUMA helps you see the ones you\u2019re running, choose proven ones that match what you want, and validate they work with your own data.",
   manifest: "/manifest.json",
   openGraph: {
-    title: "HUMA — Life Infrastructure",
+    title: "HUMA — Life Design Partner",
     description:
-      "See how your life actually connects. Find the one daily behavior that holds everything else together.",
+      "Stop running on autopilot. HUMA helps you consciously design your life \u2014 one proven pattern at a time.",
     images: ["/api/og"],
   },
   twitter: {
     card: "summary_large_image",
-    title: "HUMA — Life Infrastructure",
+    title: "HUMA — Life Design Partner",
     description:
-      "See how your life actually connects. Find the one daily behavior that holds everything else together.",
+      "Stop running on autopilot. HUMA helps you consciously design your life \u2014 one proven pattern at a time.",
     images: ["/api/og"],
   },
 };

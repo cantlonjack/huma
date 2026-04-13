@@ -261,35 +261,44 @@ export default function TodayPage() {
 
             {t.compiledEntries.length > 0 || t.sheetCompiling ? (
               <div className="animate-entrance-1 px-5 pt-8 pb-2">
-                {/* Pulse ConnectionThreads — breathing constellation */}
-                <BriefingPulse
-                  compiledDimensions={compiledDimensions}
-                  movedDimensions={t.capitalPulse?.movedDimensions}
-                  dormantDimensions={t.capitalPulse?.dormantDimensions}
-                />
+                {/* Date + Day count — subtle top line */}
+                <div className="flex items-center justify-between mb-6">
+                  <p className="font-sans text-earth-400 text-[11px] tracking-wide">
+                    {formatBriefingDate(t.date)}
+                  </p>
+                  <BriefingPulse
+                    compiledDimensions={compiledDimensions}
+                    movedDimensions={t.capitalPulse?.movedDimensions}
+                    dormantDimensions={t.capitalPulse?.dormantDimensions}
+                  />
+                </div>
 
-                {/* Date */}
-                <p className="font-serif text-ink-700 text-center text-[15px] mt-4 tracking-wide">
-                  {formatBriefingDate(t.date)}
-                </p>
+                {/* Opening — letter greeting, the hero element */}
+                {t.opening && !t.sheetCompiling && (
+                  <p className="font-serif text-ink-700 text-[17px] leading-relaxed mb-4">
+                    {t.opening}
+                  </p>
+                )}
 
-                {/* State sentence — observation, not instruction */}
-                {(eveningSentence || t.stateSentence) && (
-                  <p className="font-serif italic text-ink-500 text-center text-[15px] leading-relaxed mt-2 max-w-[380px] mx-auto">
+                {/* State sentence fallback (when no opening yet) */}
+                {!t.opening && (eveningSentence || t.stateSentence) && (
+                  <p className="font-serif text-ink-600 text-[17px] leading-relaxed mb-4">
                     {eveningSentence || t.stateSentence}
                   </p>
                 )}
 
-                {/* Through-line */}
+                {/* Through-line — the thread connecting today's actions */}
                 {t.throughLine && !t.sheetCompiling && (
-                  <p className="font-serif italic text-[20px] leading-snug text-ink-700 mt-6 max-w-[480px] tracking-[0.01em]">
-                    {t.throughLine}
-                  </p>
+                  <div className="border-l-2 border-l-amber-400 pl-3.5 py-0.5 mb-2">
+                    <p className="font-serif italic text-[15px] leading-snug text-ink-600">
+                      {t.throughLine}
+                    </p>
+                  </div>
                 )}
 
                 {t.sheetCompiling && (
-                  <p className="font-serif italic text-sage-400 text-center text-lg mt-6">
-                    Building your day...
+                  <p className="font-serif italic text-sage-400 text-lg">
+                    Writing your letter...
                   </p>
                 )}
               </div>
@@ -310,18 +319,10 @@ export default function TodayPage() {
               </div>
             )}
 
-            {/* ═══ 2. FIELD REPORT — Narrative Entries ═══ */}
+            {/* ═══ 2. TODAY'S ACTIONS — Narrative Entries ═══ */}
             {t.compiledEntries.length > 0 && (
-              <div className="mx-5 mt-4 mb-2 animate-entrance-2">
-                {/* Section label */}
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="font-sans text-[10px] font-semibold tracking-[0.22em] text-ink-300 uppercase">
-                    Field Report
-                  </span>
-                  <div className="flex-1 h-px bg-sand-200" />
-                </div>
-
-                {/* Entries — flowing narrative */}
+              <div className="mx-5 mt-2 mb-2 animate-entrance-2">
+                {/* Entries — flowing narrative with connection transitions */}
                 <div className="flex flex-col">
                   {t.compiledEntries.map((entry, i) => {
                     const key = `${entry.aspirationId}:${entry.behaviorKey}`;
@@ -331,6 +332,12 @@ export default function TodayPage() {
 
                     return (
                       <div key={entry.behaviorKey}>
+                        {/* Connection transition from previous entry */}
+                        {i > 0 && entry.connectionNote && (
+                          <p className="font-serif italic text-earth-400 text-[13px] leading-relaxed pl-[56px] py-2">
+                            {entry.connectionNote}
+                          </p>
+                        )}
                         <CompiledEntryRow
                           entry={entry}
                           isChecked={isChecked}
@@ -339,8 +346,8 @@ export default function TodayPage() {
                             t.handleToggleStep(entry.aspirationId, entry.behaviorKey, !isChecked)
                           }
                         />
-                        {/* Thin sage divider between entries (not after last) */}
-                        {i < t.compiledEntries.length - 1 && (
+                        {/* Thin divider between entries (when no connection note follows) */}
+                        {i < t.compiledEntries.length - 1 && !t.compiledEntries[i + 1]?.connectionNote && (
                           <div className="h-px bg-sage-200/40 my-3 ml-[56px]" />
                         )}
                       </div>
@@ -350,7 +357,33 @@ export default function TodayPage() {
               </div>
             )}
 
-            {/* ═══ 3. Divider ═══ */}
+            {/* ═══ 3. Inline insight — woven into the narrative after entries ═══ */}
+            {t.compiledEntries.length > 0 && t.insight && (
+              <div className="mx-5 mt-3 mb-1">
+                <InsightCard
+                  insight={t.insight}
+                  onTellMore={() => t.openChatWithContext(t.insight!.text)}
+                  onDismiss={t.dismissInsight}
+                />
+              </div>
+            )}
+
+            {/* ═══ P.S. — Nudges as letter postscripts ═══ */}
+            {t.compiledEntries.length > 0 && t.nudges.length > 0 && (
+              <div className="mx-5 mt-3 mb-1">
+                <p className="font-serif italic text-earth-400 text-[13px] mb-2">P.S.</p>
+                {t.nudges.map(nudge => (
+                  <NudgeCard
+                    key={nudge.id}
+                    nudge={nudge}
+                    onDismiss={t.dismissNudge}
+                    onEngage={t.engageNudge}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* ═══ Divider ═══ */}
             {t.compiledEntries.length > 0 && (
               <div className="mx-5 my-5 border-t border-sand-200" />
             )}
@@ -429,8 +462,8 @@ export default function TodayPage() {
               />
             )}
 
-            {/* Insight Card (validated — from behavioral data) */}
-            {t.insight && (
+            {/* Insight Card — shown inline after entries when compiled; standalone when no entries */}
+            {t.compiledEntries.length === 0 && t.insight && (
               <InsightCard
                 insight={t.insight}
                 onTellMore={() => t.openChatWithContext(t.insight!.text)}
@@ -448,8 +481,8 @@ export default function TodayPage() {
               />
             ))}
 
-            {/* Proactive Nudges */}
-            {t.nudges.length > 0 && (
+            {/* Proactive Nudges — shown as P.S. when compiled entries exist; standalone otherwise */}
+            {t.compiledEntries.length === 0 && t.nudges.length > 0 && (
               <div className="mb-2">
                 {t.nudges.map(nudge => (
                   <NudgeCard
@@ -467,7 +500,7 @@ export default function TodayPage() {
               <div className="mb-2">
                 <div className="px-4 pb-2">
                   <span className="font-sans text-[10px] font-semibold tracking-[0.22em] text-ink-300 uppercase">
-                    Weekly Check-in
+                    How did last week go?
                   </span>
                 </div>
                 {t.validationAspirations.map(asp => (

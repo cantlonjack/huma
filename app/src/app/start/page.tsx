@@ -312,7 +312,7 @@ export default function StartPage() {
   }, [sendMessage]);
 
   // Auto-switch to profile tab once 2+ sections have content
-  const autoSwitched = useMemo(() => completeness.filled >= 2, [completeness.filled]);
+  const autoSwitched = useMemo(() => completeness.filled >= 3, [completeness.filled]);
   const activeTab = autoSwitched && rightPanelTab === "suggestions" ? "profile" : rightPanelTab;
 
   // Convert known dimension labels to DimensionKey[] for ConnectionThreads
@@ -380,8 +380,8 @@ export default function StartPage() {
                 </div>
                 <span className="font-sans text-[10px] text-earth-400 tracking-wide">
                   {completeness.filled} of {completeness.total} sections
-                  {isFirstConversation && completeness.filled >= 2 && (
-                    <span className="ml-2 text-sage-500">Almost ready for your first sheet</span>
+                  {isFirstConversation && completeness.filled >= 1 && (
+                    <span className="ml-2 text-sage-500">Almost ready for your first letter</span>
                   )}
                 </span>
               </div>
@@ -438,7 +438,7 @@ export default function StartPage() {
           </div>
 
           {/* Quick Start affordance — escape hatch to move to planning */}
-          {isFirstConversation && exchangeCount >= 3 && completeness.filled >= 2 && (
+          {isFirstConversation && exchangeCount >= 2 && completeness.filled >= 1 && (
             <button
               onClick={() => sendMessage("Let's make a plan for this week")}
               className="mt-2 font-sans text-xs text-sage-500 hover:text-sage-600 transition-colors duration-200 cursor-pointer"

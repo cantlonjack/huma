@@ -61,6 +61,7 @@ export interface UseTodayReturn {
   whyStatementForChat: string | null;
   compiledEntries: SheetEntry[];
   throughLine: string | null;
+  opening: string | null;
   sheetCompiling: boolean;
   notifSettingsOpen: boolean;
   transitionSignal: TransitionSignal | null;
@@ -121,6 +122,7 @@ export function useToday(): UseTodayReturn {
   const [chatMode, setChatMode] = useState<"default" | "new-aspiration">("default");
   const [compiledEntries, setCompiledEntries] = useState<SheetEntry[]>([]);
   const [throughLine, setThroughLine] = useState<string | null>(null);
+  const [opening, setOpening] = useState<string | null>(null);
   const [sheetCompiling, setSheetCompiling] = useState(false);
   const [notifSettingsOpen, setNotifSettingsOpen] = useState(false);
   const [transitionSignal, setTransitionSignal] = useState<TransitionSignal | null>(null);
@@ -281,6 +283,7 @@ export function useToday(): UseTodayReturn {
             checked: false,
           })));
           setThroughLine(parsed.throughLine || null);
+          setOpening(parsed.opening || null);
           sheetCompiledRef.current = true;
           return;
         }
@@ -313,6 +316,7 @@ export function useToday(): UseTodayReturn {
         if (result.entries.length > 0) {
           setCompiledEntries(result.entries.slice(0, 5));
           setThroughLine(result.throughLine || null);
+          setOpening(result.opening || null);
 
           trackEvent("sheet_compiled", {
             entry_count: result.entries.length,
@@ -323,6 +327,7 @@ export function useToday(): UseTodayReturn {
             localStorage.setItem(cacheKey, JSON.stringify({
               entries: result.entries,
               throughLine: result.throughLine,
+              opening: result.opening,
               date: result.date,
             }));
           } catch { /* storage full */ }
@@ -819,6 +824,7 @@ export function useToday(): UseTodayReturn {
     whyStatementForChat,
     compiledEntries,
     throughLine,
+    opening,
     sheetCompiling,
     notifSettingsOpen,
     transitionSignal,

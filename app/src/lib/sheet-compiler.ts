@@ -128,6 +128,7 @@ export interface CompileSheetOptions {
 export interface CompiledSheet {
   entries: SheetEntry[];
   throughLine: string | null;
+  opening: string | null;
   date: string;
   compiledOffline?: boolean;
 }
@@ -255,6 +256,9 @@ export async function compileSheet(
       timeOfDay: ((e.time_of_day as string) || "morning") as "morning" | "midday" | "evening",
       dimensions: (e.dimensions as string[]) || [],
       checked: false,
+      because: (e.because as string) || undefined,
+      connectionNote: (e.connection_note as string) || undefined,
+      patternNote: (e.pattern_note as string) || undefined,
     }));
     // On Day 1 (no history), enhance throughLine with a structural insight if the
     // API returned a weak or missing one
@@ -269,6 +273,7 @@ export async function compileSheet(
     const sheet: CompiledSheet = {
       entries,
       throughLine,
+      opening: (data.opening as string) || null,
       date: data.date || date,
     };
 
@@ -370,5 +375,5 @@ export function compileSheetOffline(
     checked: false,
   }));
 
-  return { entries, throughLine: null, date, compiledOffline: true };
+  return { entries, throughLine: null, opening: null, date, compiledOffline: true };
 }

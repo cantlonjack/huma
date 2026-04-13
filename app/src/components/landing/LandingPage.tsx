@@ -8,30 +8,30 @@ import type { DimensionKey } from "@/types/v2";
 
 /* ─── Dimension config ─── */
 const DIMS: { name: string; color: string; label: string; icon: string }[] = [
-  { name: "Body", color: "#3A5A40", label: "Sleep tanks when deadlines stack up", icon: "M12 3c-1.5 2-4 4-4 7s2 5 4 7c2-2 4-4 4-7s-2.5-5-4-7z" },
-  { name: "People", color: "#2E6B8A", label: "Haven\u2019t seen Mia since the project started", icon: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" },
-  { name: "Money", color: "#B5621E", label: "Invoices out, but cash won\u2019t land until the 20th", icon: "M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" },
-  { name: "Home", color: "#8C8274", label: "Kitchen\u2019s been takeout-only for two weeks", icon: "M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" },
-  { name: "Growth", color: "#2A4A30", label: "Reading 20min/day streak \u2014 11 days", icon: "M12 20V10M18 20V4M6 20v-4" },
-  { name: "Joy", color: "#C87A3A", label: "Haven\u2019t played guitar since last Thursday", icon: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" },
-  { name: "Purpose", color: "#6B5A7A", label: "The side project that actually matters keeps waiting", icon: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" },
-  { name: "Identity", color: "#554D42", label: "Used to be a morning person \u2014 trying to get back", icon: "M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z" },
+  { name: "Body", color: "#3A5A40", label: "Five hours of sleep since the promotion", icon: "M12 3c-1.5 2-4 4-4 7s2 5 4 7c2-2 4-4 4-7s-2.5-5-4-7z" },
+  { name: "People", color: "#2E6B8A", label: "Haven\u2019t had a real dinner with Sarah in weeks", icon: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" },
+  { name: "Money", color: "#B5621E", label: "Promotion pays more, but lifestyle inflated to match", icon: "M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" },
+  { name: "Home", color: "#8C8274", label: "Writing desk in the spare room \u2014 untouched for a month", icon: "M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" },
+  { name: "Growth", color: "#2A4A30", label: "Morning pages streak \u2014 14 days and counting", icon: "M12 20V10M18 20V4M6 20v-4" },
+  { name: "Joy", color: "#C87A3A", label: "The caf\u00e9 walk is the only thing that feels like mine", icon: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" },
+  { name: "Purpose", color: "#6B5A7A", label: "Writing is the thing. Everything else is logistics.", icon: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" },
+  { name: "Identity", color: "#554D42", label: "I said yes to director. Who did I say no to?", icon: "M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z" },
 ];
 
 /* ─── Hero conversation sequence ─── */
 const HERO_MESSAGES = [
   { role: "huma" as const, text: "What\u2019s going on in your life right now?" },
-  { role: "user" as const, text: "Freelance is picking up but I\u2019m burning out. Two big clients, a side project I care about, and I haven\u2019t cooked a real meal in weeks. Money\u2019s fine but everything else is slipping." },
-  { role: "huma" as const, text: "When everything slips at once, there\u2019s usually one thing holding it all down. What stopped first?" },
-  { role: "user" as const, text: "Cooking, honestly. Once we stopped making dinner, the evenings fell apart \u2014 screens until midnight, bad sleep, then dragging through the next day." },
+  { role: "user" as const, text: "I got the promotion I\u2019ve been chasing for three years. Director title, bigger salary. But I feel\u2026 empty? I thought this was what I wanted." },
+  { role: "huma" as const, text: "That\u2019s worth sitting with. When you picture the life you actually want \u2014 not the one you planned \u2014 what shows up?" },
+  { role: "user" as const, text: "Honestly? I want to write. I keep telling myself it\u2019s a hobby, but every morning I skip my pages to answer emails, I feel like I\u2019m betraying something." },
 ];
 
 /* Dimensions that "light up" as conversation progresses */
 const DIM_REVEAL_SCHEDULE = [
   [], // after msg 0
-  [0, 2, 3, 6], // after msg 1: Body, Money, Home, Purpose
-  [0, 2, 3, 6], // after msg 2: same
-  [0, 1, 2, 3, 5, 6], // after msg 3: + People, Joy
+  [2, 6, 7], // after msg 1: Money, Purpose, Identity
+  [2, 6, 7], // after msg 2: same
+  [0, 1, 4, 5, 6, 7], // after msg 3: + Body, People, Growth, Joy
 ];
 
 /* Map DIMS indices to DimensionKey */
@@ -42,21 +42,21 @@ const IDX_TO_KEY: DimensionKey[] = [
 /* ─── Briefing entries ─── */
 const BRIEFING = [
   {
-    headline: "Cook dinner tonight",
-    reasoning: "This is your keystone. It touches Body, Money, People, Home, and Joy \u2014 five dimensions from one behavior. Everything else gets easier when this one happens.",
-    dims: ["Home", "Body", "People"],
+    headline: "Morning pages before email",
+    reasoning: "You chose this pattern: writing first, work second. Day 14 of your creative sovereignty routine. The mornings you write, your satisfaction scores are 3x higher.",
+    dims: ["Growth", "Purpose", "Joy"],
     focus: true,
   },
   {
-    headline: "Finish the Acme deliverable by 3pm",
-    reasoning: "You said evenings fall apart when work bleeds past dinner. Hard stop at 3 gives you the kitchen window.",
-    dims: ["Money", "Purpose"],
+    headline: "Delegate the Henderson report",
+    reasoning: "Your time audit shows 6 hours a week on tasks your team can own. That\u2019s 6 hours back for what actually matters to you.",
+    dims: ["Money", "Growth"],
     focus: false,
   },
   {
-    headline: "20-minute walk before you start cooking",
-    reasoning: "On days you move in the afternoon, you sleep an hour longer. Day three of the pattern.",
-    dims: ["Body", "Joy"],
+    headline: "Walk to the caf\u00e9 at 5pm",
+    reasoning: "On writing days you need a clear endpoint. Your data shows the walk resets your evening \u2014 and your best nights with Sarah follow.",
+    dims: ["Body", "People", "Joy"],
     focus: false,
   },
 ];
@@ -329,7 +329,7 @@ function HeroProductDemo({ reduced }: { reduced: boolean }) {
               <div className="px-5 pb-3">
                 <div className="border-l-2 border-l-amber-400 pl-3.5 py-0.5">
                   <p className="font-serif text-ink-600 italic" style={{ fontSize: "0.88rem", lineHeight: 1.5 }}>
-                    The evening starts in the kitchen. Get there by 5:30.
+                    Today is about one choice: does the writing come first? Everything else follows from that.
                   </p>
                 </div>
               </div>
@@ -390,7 +390,7 @@ function HeroProductDemo({ reduced }: { reduced: boolean }) {
         <p className="font-sans text-earth-300" style={{ fontSize: "0.78rem", fontWeight: 300, lineHeight: 1.5 }}>
           {phase === "conversation" && "A five-minute conversation. That\u2019s all it takes."}
           {phase === "extracting" && "HUMA maps what you said across eight life dimensions."}
-          {phase === "briefing" && "Your first morning briefing \u2014 generated, not templated."}
+          {phase === "briefing" && "Your first daily letter \u2014 personal, evidence-backed, designed around your life."}
         </p>
       </div>
     </div>
@@ -443,7 +443,7 @@ export default function LandingPage() {
                 className="font-sans text-sage-600 mb-4"
                 style={{ fontSize: "0.72rem", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase" }}
               >
-                Life infrastructure
+                Life design partner
               </p>
 
               <h1
@@ -455,18 +455,18 @@ export default function LandingPage() {
                   letterSpacing: "-0.02em",
                 }}
               >
-                See how your life
+                Your life is running on
                 <br />
-                actually connects.
+                patterns you never chose.
                 <br />
-                <span className="text-sage-600">Find the leverage.</span>
+                <span className="text-sage-600">Design better ones.</span>
               </h1>
 
               <p
                 className="font-sans text-earth-500 mb-8 max-w-[420px]"
                 style={{ fontSize: "1.05rem", fontWeight: 300, lineHeight: 1.7 }}
               >
-                Your money, sleep, relationships, and work aren&rsquo;t separate problems. HUMA shows you how they connect &mdash; and which one daily behavior holds everything else together.
+                How you eat, sleep, spend, work, and relate &mdash; most of it was inherited, not chosen. HUMA helps you see the patterns you&rsquo;re actually running, choose proven ones that match what you want, and validate they work with your own data.
               </p>
 
               <div className="flex flex-col sm:flex-row items-start gap-4">
@@ -508,25 +508,25 @@ export default function LandingPage() {
               opacity: !reduced && mounted ? undefined : !reduced ? 0 : undefined,
             }}
           >
-            It reasons about your life.{" "}
-            <span className="text-earth-400">It doesn&apos;t just organize it.</span>
+            It helps you design your life.{" "}
+            <span className="text-earth-400">Not just organize it.</span>
           </h2>
 
           <div className="space-y-10">
             {[
               {
-                label: "It remembers everything",
-                text: "Your cash flow timing. Your partner\u2019s schedule. The client deadline from three weeks ago. HUMA holds your full context and uses all of it, every morning.",
+                label: "It knows your whole situation",
+                text: "Your goals, constraints, relationships, finances, health \u2014 HUMA holds all of it and always works in your interest. Not a chatbot giving generic advice. A strategist who actually knows you.",
                 color: "#3A5A40",
               },
               {
-                label: "It sees connections",
-                text: "Cooking dinner improves your sleep. Sleep improves your focus. Focus gets you done by 3pm. Getting done by 3pm gives you your evening back. HUMA traces the chain \u2014 and finds the one move.",
+                label: "It designs your pathway",
+                text: "Based on proven frameworks and your specific situation, HUMA maps the stages from where you are to where you want to be \u2014 then breaks each stage into daily patterns you can actually practice.",
                 color: "#2E6B8A",
               },
               {
-                label: "It learns your rhythm",
-                text: "After a week, it notices your best creative days follow an evening walk. It sees when a part of your life goes quiet. It adapts without you configuring anything.",
+                label: "It validates what works",
+                text: "Every pattern you adopt gets tested against your own data. After two weeks, HUMA shows you proof: this is working, or this needs to change. No guessing. No faith required.",
                 color: "#C87A3A",
               },
             ].map((item, i) => (
@@ -565,7 +565,7 @@ export default function LandingPage() {
             What&rsquo;s going on in your life?
           </h2>
           <p className="font-sans text-earth-400 mb-8" style={{ fontSize: "0.95rem", fontWeight: 300, lineHeight: 1.6 }}>
-            Start a conversation. HUMA builds your first morning briefing in five minutes.
+            Start a conversation. HUMA writes your first daily letter in five minutes.
           </p>
           <button
             onClick={go}
@@ -592,7 +592,7 @@ export default function LandingPage() {
               HUMA
             </span>
             <span className="font-sans text-earth-300" style={{ fontSize: "0.75rem", fontWeight: 300 }}>
-              Life infrastructure
+              Life design partner
             </span>
           </div>
           <p className="font-sans text-earth-300" style={{ fontSize: "0.7rem", fontWeight: 300 }}>

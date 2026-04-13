@@ -77,36 +77,58 @@ DETAIL (1-3 sentences, shown on tap):
 
 VOICE: fence-post neighbor. Direct. Spare. No therapy-speak. No cheerleading. No "consider" or "try to" — just tell them what to do today.
 
+This is a DAILY LETTER, not a task list. The operator should feel like a thoughtful strategist who knows their whole life wrote them a brief personal note.
+
+OPENING (required):
+1-2 sentences addressing the operator by name. Reference time of day, name the state of things. This is the letter greeting — warm, specific, grounded in their recent data.
+GOOD: "Good morning, Sarah. Sleep's been rough this week — three nights past midnight. But your morning walks are holding strong."
+BAD: "Hello! Here are your tasks for today." (generic, robotic)
+BAD: "Good morning! I hope you're having a wonderful day." (cheerleading)
+
 THROUGH-LINE (required):
-After choosing today's entries, look at the dimensions they touch. Find the connection — the one thread that runs through multiple items. Write ONE sentence (max 20 words) that names this connection in the operator's own language.
+After choosing today's entries, find the one thread that runs through them. Write ONE sentence (max 20 words) that names this connection in the operator's own language.
+GOOD: "Today is about one choice: does the writing come first? Everything else follows from that."
+BAD: "You have several important tasks today." (generic)
 
-GOOD through-lines:
-- "Three of these feed the same thing: your evening rhythm is where Body, Money, and Joy converge."
-- "Today's through-line is the kitchen — it's where your health, budget, and family time overlap."
-- "Morning quiet is doing triple duty: Body, Growth, and Purpose all start there."
+BECAUSE (required on each entry):
+One sentence explaining WHY this action matters — traced to the operator's stated desire, aspiration, or a known connection between dimensions. This is not the how-to (that's detail). This is the why-this.
+GOOD: "You chose this pattern: writing first, work second. Day 14 of your morning routine."
+GOOD: "On days you walk, your evening mood is measurably better — and Sarah notices."
+BAD: "This is important for your health." (generic, not traced to their life)
 
-BAD through-lines:
-- "You have several important tasks today." (generic, says nothing)
-- "These behaviors will help you optimize your life." (therapy-speak, banned vocabulary)
+CONNECTION_NOTE (optional, on entries that connect to other entries):
+A brief phrase naming how this entry connects to another entry or to a known pattern. Used as narrative transition between entries.
+GOOD: "This one creates the window for the next —"
+GOOD: "And the walk resets your evening, which feeds..."
+
+PATTERN_NOTE (optional, when an action is part of a consciously chosen pattern):
+Reference the pattern by name and how long they've been practicing it.
+GOOD: "Part of your structured morning pattern — day 14."
+GOOD: "Week 3 of your evening wind-down experiment."
 
 Return ONLY this JSON, no other text:
 
 {
-  "through_line": "Three of these feed the same thing: your evening rhythm is where Body, Money, and Joy converge.",
+  "opening": "Good morning, Sarah. Sleep's been rough this week — three nights past midnight. But your morning walks are holding strong.",
+  "through_line": "Today is about one choice: does the writing come first? Everything else follows from that.",
   "entries": [
     {
-      "behavior_key": "cook-dinner",
+      "behavior_key": "morning-pages",
       "aspiration_id": "the-aspiration-uuid",
-      "headline": "Stew night — chuck from freezer",
-      "detail": "Pull chuck now, brown at 4. Use Sunday's broth. Enough for two nights.",
-      "time_of_day": "evening",
-      "dimensions": ["body", "money", "home"]
+      "headline": "Morning pages before email",
+      "detail": "Desk by 6:30. Two pages minimum. Phone stays in the kitchen until 8.",
+      "because": "You chose this pattern: writing first, work second. Day 14 — the mornings you write, your satisfaction scores are 3x higher.",
+      "connection_note": "This creates the window for everything else —",
+      "pattern_note": "Part of your creative sovereignty routine — day 14.",
+      "time_of_day": "morning",
+      "dimensions": ["growth", "purpose", "joy"]
     }
   ]
 }
 
-Every entry MUST have: behavior_key, aspiration_id, headline, detail, time_of_day (morning/midday/evening), dimensions (from: body, people, money, home, growth, joy, purpose, identity).
-MAXIMUM 5 entries. through_line is REQUIRED. Return ONLY valid JSON.`;
+Every entry MUST have: behavior_key, aspiration_id, headline, detail, because, time_of_day, dimensions.
+Optional per entry: connection_note, pattern_note.
+MAXIMUM 5 entries. opening and through_line are REQUIRED. Return ONLY valid JSON.`;
 
 export async function POST(request: Request) {
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -273,7 +295,7 @@ Meal plans should respect budget. Purchases should reference actual amounts.
 
     const text = response.content[0].type === "text" ? response.content[0].text : "{}";
 
-    let parsed: { entries: Array<Record<string, unknown>>; through_line?: string };
+    let parsed: { entries: Array<Record<string, unknown>>; through_line?: string; opening?: string };
     try {
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : { entries: [] };
@@ -286,6 +308,7 @@ Meal plans should respect budget. Purchases should reference actual amounts.
     return Response.json({
       entries,
       through_line: parsed.through_line || null,
+      opening: parsed.opening || null,
       date,
     });
   } catch (err) {

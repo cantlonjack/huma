@@ -238,6 +238,12 @@ export interface SheetEntry {
   checked: boolean;
   checkedAt?: string;
   streakText?: string;
+  /** WHY this action matters — traces to the user's desire and aspiration */
+  because?: string;
+  /** Narrative transition connecting this entry to the next or to a known pattern */
+  connectionNote?: string;
+  /** Reference to a conscious pattern the user adopted, if applicable */
+  patternNote?: string;
 }
 
 // ─── Insights ────────────────────────────────────────────────────────────────

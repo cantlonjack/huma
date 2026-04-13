@@ -104,7 +104,7 @@ export interface UseStartReturn {
 export function useStart(): UseStartReturn {
   const router = useRouter();
   const { user } = useAuth();
-  const [onboardingStep, setOnboardingStep] = useState<"archetype" | "conversation">("archetype");
+  const [onboardingStep, setOnboardingStep] = useState<"archetype" | "conversation">("conversation");
   const [transitioning, setTransitioning] = useState(false);
   const [stepReady, setStepReady] = useState(false);
   const [messages, setMessages] = useState<StartMessage[]>([]);
