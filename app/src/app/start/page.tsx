@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useStart } from "@/hooks/useStart";
 import AuthModal from "@/components/shared/AuthModal";
 import ArchetypeSelectionScreen from "@/components/onboarding/ArchetypeSelectionScreen";
 import MessageBubble from "@/components/onboarding/MessageBubble";
-import LifeProfile from "@/components/whole/LifeProfile";
+import ContextAssemblyPanel from "@/components/onboarding/ContextAssemblyPanel";
 import { profileCompleteness } from "@/lib/life-profile-utils";
 import { ConnectionThreads, dimensionKeysFromLabels } from "@/components/shared/ConnectionThreads";
 import type { StartMessage } from "@/hooks/useStart";
@@ -193,6 +193,7 @@ function ProfileMiniBar({
   open,
   onToggle,
   pulse,
+  onGapPromptTap,
 }: {
   completeness: { filled: number; total: number; labels: string[] };
   humaContext: import("@/types/context").HumaContext;
@@ -200,13 +201,15 @@ function ProfileMiniBar({
   open: boolean;
   onToggle: () => void;
   pulse: boolean;
+  onGapPromptTap?: (question: string) => void;
 }) {
   return (
     <div className="lg:hidden">
-      {/* Mini-bar */}
+      {/* Mini-bar — 80px peek height */}
       <button
         onClick={onToggle}
         className="w-full flex items-center justify-between px-6 py-2.5 bg-sand-50 border-t border-sand-200 cursor-pointer hover:bg-sand-100 transition-colors duration-150"
+        style={{ minHeight: "44px" }}
       >
         <div className="flex items-center gap-2 min-w-0">
           {knownDimensionKeys.length > 0 ? (
@@ -223,7 +226,7 @@ function ProfileMiniBar({
           )}
           <span className="font-sans text-xs text-earth-500 truncate">
             {completeness.filled === 0
-              ? "Your profile \u2014 building as we talk"
+              ? "Your life \u2014 building as we talk"
               : `${completeness.filled} of ${completeness.total} sections`}
           </span>
         </div>
@@ -247,10 +250,10 @@ function ProfileMiniBar({
         }`}
       >
         <div className="overflow-y-auto max-h-[50vh] border-t border-sand-200 bg-sand-50 px-5 py-4">
-          <LifeProfile
+          <ContextAssemblyPanel
             humaContext={humaContext}
-            aspirations={[]}
-            mode="filling"
+            knownDimensionKeys={knownDimensionKeys}
+            onGapPromptTap={onGapPromptTap}
           />
         </div>
       </div>
@@ -274,6 +277,7 @@ export default function StartPage() {
   const [rightPanelTab, setRightPanelTab] = useState<"suggestions" | "profile">("suggestions");
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
   const [profilePulse, setProfilePulse] = useState(false);
+  const [hasAutoPeeked, setHasAutoPeeked] = useState(false);
 
   const completeness = useMemo(
     () => profileCompleteness(humaContext),
@@ -287,10 +291,25 @@ export default function StartPage() {
       setProfilePulse(true);
       const timer = setTimeout(() => setProfilePulse(false), 1500);
       prevFilledRef.current = completeness.filled;
+
+      // Auto-peek on first context extraction (mobile) — briefly open drawer
+      if (!hasAutoPeeked && completeness.filled === 1) {
+        setHasAutoPeeked(true);
+        setProfileDrawerOpen(true);
+        const peekTimer = setTimeout(() => setProfileDrawerOpen(false), 3000);
+        return () => { clearTimeout(timer); clearTimeout(peekTimer); };
+      }
+
       return () => clearTimeout(timer);
     }
     prevFilledRef.current = completeness.filled;
-  }, [completeness.filled]);
+  }, [completeness.filled, hasAutoPeeked]);
+
+  // Gap prompt handler — inject question into conversation input
+  const handleGapPromptTap = useCallback((question: string) => {
+    sendMessage(question);
+    setProfileDrawerOpen(false); // Close drawer on mobile after tap
+  }, [sendMessage]);
 
   // Auto-switch to profile tab once 2+ sections have content
   const autoSwitched = useMemo(() => completeness.filled >= 2, [completeness.filled]);
@@ -447,6 +466,7 @@ export default function StartPage() {
           open={profileDrawerOpen}
           onToggle={() => setProfileDrawerOpen((o) => !o)}
           pulse={profilePulse}
+          onGapPromptTap={handleGapPromptTap}
         />
 
         {/* Mobile palette tray */}
@@ -494,10 +514,10 @@ export default function StartPage() {
             <PalettePanel concepts={paletteConcepts} onTap={handlePaletteTap} loading={paletteLoading} />
           ) : (
             <div className="p-5">
-              <LifeProfile
+              <ContextAssemblyPanel
                 humaContext={humaContext}
-                aspirations={[]}
-                mode="filling"
+                knownDimensionKeys={knownDimensionKeys}
+                onGapPromptTap={handleGapPromptTap}
               />
             </div>
           )}

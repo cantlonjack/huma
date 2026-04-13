@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import type { Behavior } from "@/types/v2";
+import { useState, useMemo } from "react";
+import type { Behavior, DimensionKey } from "@/types/v2";
 import type { DecompositionData } from "@/lib/parse-markers-v2";
+import { ConnectionThreads } from "@/components/shared/ConnectionThreads";
 
 interface DecompositionPreviewProps {
   aspirationName?: string | null;
@@ -33,6 +34,25 @@ export default function DecompositionPreview({
 
   // Find trigger behavior
   const triggerKey = behaviors.find(b => (b as { is_trigger?: boolean }).is_trigger)?.key || behaviors[0]?.key;
+
+  // Collect all unique dimensions across all behaviors
+  const allDimensions = useMemo(() => {
+    const dims = new Set<DimensionKey>();
+    behaviors.forEach(b => {
+      b.dimensions?.forEach(d => dims.add(d.dimension));
+    });
+    return Array.from(dims);
+  }, [behaviors]);
+
+  // Per-behavior dimension keys
+  const behaviorDimensions = useMemo(() => {
+    const map = new Map<string, DimensionKey[]>();
+    behaviors.forEach(b => {
+      const dims = (b.dimensions || []).map(d => d.dimension);
+      map.set(b.key, dims);
+    });
+    return map;
+  }, [behaviors]);
 
   return (
     <div className="mt-4">
@@ -83,13 +103,13 @@ export default function DecompositionPreview({
                 <span className="mt-0.5 w-5 h-5 rounded-full border-2 border-earth-300 flex-shrink-0" />
               )}
 
-              <div>
+              <div className="flex-1 min-w-0">
                 {isTrigger && (
                   <p className="font-sans text-[10px] text-sage-600 uppercase tracking-wider mb-0.5">The Decision</p>
                 )}
-                <div className="flex items-baseline gap-2">
+                <div className="flex items-center gap-2">
                   <p
-                    className={`font-sans text-sm text-earth-700 font-medium ${
+                    className={`font-sans text-sm text-earth-700 font-medium flex-1 min-w-0 ${
                       !b.enabled && editing ? "line-through decoration-earth-400" : ""
                     }`}
                   >
@@ -97,6 +117,14 @@ export default function DecompositionPreview({
                   </p>
                   {(b as Behavior & { source?: string }).source === "template" && (
                     <span className="font-sans text-[11px] text-earth-300 italic shrink-0">suggested</span>
+                  )}
+                  {/* Inline dimension spread */}
+                  {(behaviorDimensions.get(b.key)?.length ?? 0) > 0 && (
+                    <ConnectionThreads
+                      activeDimensions={behaviorDimensions.get(b.key) || []}
+                      size="inline"
+                      animate={false}
+                    />
                   )}
                 </div>
                 {b.detail && (
@@ -107,6 +135,20 @@ export default function DecompositionPreview({
           );
         })}
       </div>
+
+      {/* Dimension spread summary */}
+      {allDimensions.length > 0 && (
+        <div className="mt-3 flex items-center gap-2">
+          <ConnectionThreads
+            activeDimensions={allDimensions}
+            size="micro"
+            animate={false}
+          />
+          <p className="font-sans text-[11px] text-earth-400">
+            This aspiration touches {allDimensions.length} of 8 dimensions
+          </p>
+        </div>
+      )}
 
       {/* COMING UP section */}
       {decomposition?.coming_up && decomposition.coming_up.length > 0 && (
