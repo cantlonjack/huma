@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import type { Insight, DimensionKey } from "@/types/v2";
 import { ConnectionThreads } from "@/components/shared/ConnectionThreads";
 
@@ -12,17 +13,29 @@ interface InsightCardProps {
 
 export default function InsightCard({ insight, onDismiss, shareworthy, onShare }: InsightCardProps) {
   const dims = (insight.dimensionsInvolved || []) as DimensionKey[];
+  const [showSharePulse, setShowSharePulse] = useState(false);
+
+  // When shareworthy becomes true, pulse the badge once
+  useEffect(() => {
+    if (shareworthy) {
+      setShowSharePulse(true);
+      const timer = setTimeout(() => setShowSharePulse(false), 1200);
+      return () => clearTimeout(timer);
+    }
+  }, [shareworthy]);
 
   return (
     <div className="mx-4 relative overflow-hidden rounded-2xl bg-white border border-sand-250">
       {/* Dimension constellation header */}
       <div className="flex items-center gap-2 px-4 pt-3 pb-1">
         {dims.length > 0 && (
-          <ConnectionThreads
-            activeDimensions={dims}
-            size="badge"
-            animate={false}
-          />
+          <div className={showSharePulse ? "animate-insight-badge-pulse" : ""}>
+            <ConnectionThreads
+              activeDimensions={dims}
+              size="badge"
+              animate={false}
+            />
+          </div>
         )}
         <p className="font-sans font-medium text-[10px] tracking-[0.18em] uppercase text-sage-300 m-0">
           HUMA SEES
@@ -53,7 +66,7 @@ export default function InsightCard({ insight, onDismiss, shareworthy, onShare }
           {shareworthy && onShare && (
             <button
               onClick={onShare}
-              className="font-sans font-medium cursor-pointer text-xs text-amber-600 bg-transparent border-none pl-2 tracking-wide"
+              className="font-sans font-medium cursor-pointer text-xs text-amber-600 bg-transparent border-none pl-2 tracking-wide animate-insight-share-fade-in"
             >
               Share this
             </button>

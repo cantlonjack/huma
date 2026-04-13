@@ -519,6 +519,32 @@ textarea:focus-visible {
   animation: share-card-in 400ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* ─── Insight Card Share Animations ─── */
+
+@keyframes insight-badge-pulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.animate-insight-badge-pulse {
+  animation: insight-badge-pulse 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes insight-share-fade-in {
+  from { opacity: 0; transform: translateX(4px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-insight-share-fade-in {
+  animation: insight-share-fade-in 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes share-sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
 @keyframes insight-circle-in {
   from { opacity: 0; transform: scale(0.6); }
   to { opacity: 1; transform: scale(1); }
