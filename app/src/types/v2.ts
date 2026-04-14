@@ -139,6 +139,50 @@ export interface PatternStep {
   isTrigger: boolean;
 }
 
+// ─── Pattern Provenance (RPPL) ────────────────────────────────────────────
+// Tracks where patterns come from, what they link to, and evidence of
+// validation across contexts. Foundation for the RPPL commons.
+
+/** How this pattern was originally created. */
+export type PatternSource =
+  | "template"        // From archetype template pre-population
+  | "conversation"    // Extracted from aspiration decomposition
+  | "formalized"      // Promoted from emerging behavior
+  | "research"        // Based on published research (future)
+  | "community";      // Refined through community validation (future)
+
+/** RPPL validation confidence — aligned with RPPL v0.1 schema. */
+export type PatternConfidence = "seed" | "emerging" | "validated" | "proven";
+
+/** A link to another pattern (by RPPL ID or pattern UUID). */
+export interface PatternLink {
+  rpplId?: string;    // Canonical RPPL ID (e.g., "rppl:operations:production-batching:v1")
+  patternId?: string; // Local pattern UUID (for user-created patterns)
+  relationship: "synergy" | "conflict" | "enables" | "part_of" | "contains" | "derived_from";
+}
+
+/** Provenance metadata for a pattern. */
+export interface PatternProvenance {
+  source: PatternSource;
+  rpplId?: string;                // Canonical RPPL ID if linked to a library pattern
+  sourceTradition?: string;       // Intellectual lineage (e.g., "Richard Perkins / Enterprise Economics")
+  originalContext?: string;       // Where/how this was first practiced
+  keyReference?: string;          // Book, paper, or practitioner to credit
+}
+
+/** Composition and connection metadata. */
+export interface PatternComposition {
+  links: PatternLink[];           // Synergies, conflicts, enables, part_of, contains
+  derivedFrom?: string;           // RPPL ID or pattern UUID this was adapted from
+}
+
+/** Validation evidence across contexts. */
+export interface PatternEvidence {
+  confidence: PatternConfidence;
+  contextTags: string[];          // Life situation tags (e.g., "single-parent", "urban", "tight-budget")
+  validationNotes?: string;       // Qualitative note on how validation went
+}
+
 export interface Pattern {
   id: string;
   aspirationId: string;
@@ -150,6 +194,10 @@ export interface Pattern {
   validationCount: number;      // Days completed in current 30-day window
   validationTarget: number;     // Target days (default 30)
   status: PatternStatus;        // finding (<50%), working (50-90%), validated (>90%)
+  // ─── Provenance (RPPL) ───
+  provenance?: PatternProvenance;
+  composition?: PatternComposition;
+  evidence?: PatternEvidence;
   createdAt: string;
   updatedAt: string;
 }

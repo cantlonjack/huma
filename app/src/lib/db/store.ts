@@ -459,7 +459,7 @@ export async function storeSavePattern(
 export async function storeUpdatePattern(
   userId: string | null,
   patternId: string,
-  updates: Partial<Pick<Pattern, "name" | "trigger" | "steps" | "timeWindow" | "validationMetric" | "validationCount" | "validationTarget" | "status">>,
+  updates: Partial<Pick<Pattern, "name" | "trigger" | "steps" | "timeWindow" | "validationMetric" | "validationCount" | "validationTarget" | "status" | "provenance" | "composition" | "evidence">>,
 ): Promise<void> {
   // 1. Update in localStorage
   const existing = readLocalPatterns();

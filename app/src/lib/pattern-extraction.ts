@@ -61,6 +61,8 @@ export function extractPatternFromAspiration(
     validationCount: 0,
     validationTarget: 30,
     status: "finding",
+    provenance: { source: "conversation" },
+    evidence: { confidence: "seed", contextTags: [] },
     createdAt: now,
     updatedAt: now,
   };

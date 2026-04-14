@@ -189,6 +189,8 @@ export function useGrow(): UseGrowReturn {
       validationCount: 0,
       validationTarget: 30,
       status: "finding",
+      provenance: { source: "formalized" },
+      evidence: { confidence: "seed", contextTags: [] },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -243,7 +245,7 @@ export function useGrow(): UseGrowReturn {
 
   const handlePatternUpdate = useCallback(async (
     patternId: string,
-    updates: Partial<Pick<Pattern, "name" | "trigger" | "steps" | "timeWindow">>
+    updates: Partial<Pick<Pattern, "name" | "trigger" | "steps" | "timeWindow" | "provenance" | "composition" | "evidence">>
   ) => {
     setLocalPatterns(prev => (prev ?? patterns).map(p => {
       if (p.id !== patternId) return p;

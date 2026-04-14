@@ -15,6 +15,15 @@ function mapPatternRow(row: Record<string, unknown>): Pattern {
     validationCount: (row.validation_count as number) || 0,
     validationTarget: (row.validation_target as number) || 30,
     status: (row.status as Pattern["status"]) || "finding",
+    provenance: row.provenance && Object.keys(row.provenance as object).length > 0
+      ? (row.provenance as Pattern["provenance"])
+      : undefined,
+    composition: row.composition && Object.keys(row.composition as object).length > 0
+      ? (row.composition as Pattern["composition"])
+      : undefined,
+    evidence: row.evidence && Object.keys(row.evidence as object).length > 0
+      ? (row.evidence as Pattern["evidence"])
+      : undefined,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
@@ -67,6 +76,9 @@ export async function savePattern(
     validation_count: pattern.validationCount,
     validation_target: pattern.validationTarget,
     status: pattern.status,
+    provenance: pattern.provenance || {},
+    composition: pattern.composition || {},
+    evidence: pattern.evidence || {},
   });
 
   if (error) throw error;
@@ -76,7 +88,7 @@ export async function updatePattern(
   supabase: SupabaseClient,
   patternId: string,
   userId: string,
-  updates: Partial<Pick<Pattern, "name" | "trigger" | "steps" | "timeWindow" | "validationMetric" | "validationCount" | "validationTarget" | "status">>
+  updates: Partial<Pick<Pattern, "name" | "trigger" | "steps" | "timeWindow" | "validationMetric" | "validationCount" | "validationTarget" | "status" | "provenance" | "composition" | "evidence">>
 ) {
   const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (updates.name !== undefined) payload.name = updates.name;
@@ -87,6 +99,9 @@ export async function updatePattern(
   if (updates.validationCount !== undefined) payload.validation_count = updates.validationCount;
   if (updates.validationTarget !== undefined) payload.validation_target = updates.validationTarget;
   if (updates.status !== undefined) payload.status = updates.status;
+  if (updates.provenance !== undefined) payload.provenance = updates.provenance;
+  if (updates.composition !== undefined) payload.composition = updates.composition;
+  if (updates.evidence !== undefined) payload.evidence = updates.evidence;
 
   const { error } = await supabase
     .from("patterns")

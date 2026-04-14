@@ -614,6 +614,17 @@ export function prePopulateFromArchetypes(
           validationCount: 0,
           validationTarget: 30,
           status: "finding",
+          provenance: {
+            source: "template",
+            sourceTradition: template.name,
+          },
+          composition: {
+            links: template.relevantPatternIds.map(rpplId => ({
+              rpplId,
+              relationship: "derived_from" as const,
+            })),
+          },
+          evidence: { confidence: "seed", contextTags: [] },
           createdAt: now,
           updatedAt: now,
         });
