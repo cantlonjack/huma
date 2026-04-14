@@ -3,14 +3,21 @@
 import { useState, useEffect, useRef } from "react";
 
 type ResetOption = "clear-chat" | "clear-context" | "start-fresh";
+type SettingsTab = "profile" | "data";
 
 interface SettingsSheetProps {
   open: boolean;
   onClose: () => void;
   onAction: (action: ResetOption) => void;
+  // Profile props
+  operatorName?: string;
+  archetypes?: string[];
+  whyStatement?: string | null;
+  onArchetypeTap?: () => void;
+  onWhySave?: (value: string) => void;
 }
 
-const OPTIONS: {
+const RESET_OPTIONS: {
   key: ResetOption;
   label: string;
   description: string;
@@ -98,14 +105,35 @@ export default function SettingsSheet({
   open,
   onClose,
   onAction,
+  operatorName,
+  archetypes,
+  whyStatement,
+  onArchetypeTap,
+  onWhySave,
 }: SettingsSheetProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const [selectedOption, setSelectedOption] = useState<ResetOption | null>(null);
+  const [tab, setTab] = useState<SettingsTab>("profile");
+  const [editingWhy, setEditingWhy] = useState(false);
+  const [whyDraft, setWhyDraft] = useState(whyStatement || "");
+  const whyInputRef = useRef<HTMLInputElement>(null);
 
-  // Reset selection when sheet opens/closes
+  // Reset state when sheet opens/closes
   useEffect(() => {
-    if (!open) setSelectedOption(null);
+    if (!open) {
+      setSelectedOption(null);
+      setTab("profile");
+      setEditingWhy(false);
+    }
   }, [open]);
+
+  useEffect(() => {
+    setWhyDraft(whyStatement || "");
+  }, [whyStatement]);
+
+  useEffect(() => {
+    if (editingWhy && whyInputRef.current) whyInputRef.current.focus();
+  }, [editingWhy]);
 
   // Close on backdrop tap
   useEffect(() => {
@@ -127,6 +155,17 @@ export default function SettingsSheet({
 
   if (!open) return null;
 
+  const handleWhySave = () => {
+    setEditingWhy(false);
+    if (whyDraft.trim() && whyDraft.trim() !== (whyStatement || "") && onWhySave) {
+      onWhySave(whyDraft.trim());
+    }
+  };
+
+  const archetypeDisplay = archetypes && archetypes.length > 0
+    ? archetypes.join(" \u00B7 ")
+    : null;
+
   const confirmMessages: Record<ResetOption, { title: string; body: string; confirm: string }> = {
     "clear-chat": {
       title: "Clear chat history?",
@@ -146,15 +185,13 @@ export default function SettingsSheet({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/25"
-    >
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/25">
       <div
         ref={sheetRef}
         role="dialog"
         aria-modal="true"
         aria-label="Settings"
-        className="w-full max-w-[440px] bg-sand-50 rounded-t-2xl px-5 pt-6 pb-8"
+        className="w-full max-w-[440px] bg-sand-50 rounded-t-2xl px-5 pt-6 pb-8 max-h-[85dvh] overflow-y-auto"
         style={{
           animation:
             "settings-slide-up 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
@@ -167,49 +204,132 @@ export default function SettingsSheet({
 
         {!selectedOption ? (
           <>
-            <h3 className="font-serif font-medium text-[20px] text-earth-650 leading-tight mb-1">
+            <h3 className="font-serif font-medium text-[20px] text-earth-650 leading-tight mb-4">
               Settings
             </h3>
-            <p className="font-sans text-[13px] text-earth-350 leading-snug mb-5">
-              Manage your data
-            </p>
 
-            <div className="flex flex-col gap-2">
-              {OPTIONS.map((opt) => (
+            {/* Tab switcher */}
+            <div className="flex gap-1 bg-sand-200 rounded-lg p-0.5 mb-5">
+              <button
+                onClick={() => setTab("profile")}
+                className={`flex-1 font-sans cursor-pointer text-[13px] font-medium py-2 rounded-md border-none transition-colors duration-200 ${
+                  tab === "profile"
+                    ? "bg-sand-50 text-earth-650 shadow-sm"
+                    : "bg-transparent text-earth-350"
+                }`}
+              >
+                Profile
+              </button>
+              <button
+                onClick={() => setTab("data")}
+                className={`flex-1 font-sans cursor-pointer text-[13px] font-medium py-2 rounded-md border-none transition-colors duration-200 ${
+                  tab === "data"
+                    ? "bg-sand-50 text-earth-650 shadow-sm"
+                    : "bg-transparent text-earth-350"
+                }`}
+              >
+                Data
+              </button>
+            </div>
+
+            {tab === "profile" ? (
+              <div className="flex flex-col gap-4">
+                {/* Name */}
+                <div className="bg-sand-100 rounded-xl p-4">
+                  <span className="font-sans text-[11px] tracking-[0.12em] uppercase text-sage-400 block mb-1">Name</span>
+                  <span className="font-serif text-[17px] text-earth-650">
+                    {operatorName || "Not set"}
+                  </span>
+                </div>
+
+                {/* Archetype */}
                 <button
-                  key={opt.key}
-                  onClick={() => setSelectedOption(opt.key)}
-                  className="flex items-start gap-3 cursor-pointer text-left w-full p-3.5 px-4 bg-sand-100 border-none rounded-xl transition-colors duration-200 hover:bg-sand-200"
+                  onClick={onArchetypeTap}
+                  className="relative bg-sand-100 cursor-pointer rounded-xl p-4 pr-10 text-left border-none w-full transition-colors duration-200 hover:bg-sand-200"
                 >
-                  <div className="shrink-0 mt-px">
-                    {opt.icon}
-                  </div>
-                  <div>
-                    <span className="font-sans font-medium block text-sm text-earth-650">
-                      {opt.label}
-                    </span>
-                    <span className="font-sans block text-xs text-earth-350 leading-snug mt-0.5">
-                      {opt.description}
-                    </span>
-                  </div>
+                  <span className="font-sans text-[11px] tracking-[0.12em] uppercase text-sage-400 block mb-1">Archetype</span>
+                  <span className={`font-sans text-[14px] font-medium ${archetypeDisplay ? "text-earth-650" : "text-sand-350"}`}>
+                    {archetypeDisplay || "Tap to set"}
+                  </span>
                   <svg
                     width="16"
                     height="16"
                     viewBox="0 0 16 16"
                     fill="none"
-                    className="shrink-0 mt-0.5 ml-auto"
+                    className="absolute right-4 top-1/2 -translate-y-1/2"
                   >
-                    <path
-                      d="M6 4l4 4-4 4"
-                      stroke="#948B7D"
-                      strokeWidth="1.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
+                    <path d="M6 4l4 4-4 4" stroke="#948B7D" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
-              ))}
-            </div>
+
+                {/* WHY statement */}
+                <div className="bg-sand-100 rounded-xl p-4">
+                  <span className="font-sans text-[11px] tracking-[0.12em] uppercase text-sage-400 block mb-1">WHY</span>
+                  {editingWhy ? (
+                    <input
+                      ref={whyInputRef}
+                      type="text"
+                      value={whyDraft}
+                      onChange={(e) => setWhyDraft(e.target.value)}
+                      onBlur={handleWhySave}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleWhySave();
+                        if (e.key === "Escape") setEditingWhy(false);
+                      }}
+                      aria-label="WHY statement"
+                      className="font-serif w-full text-[15px] italic text-sage-700 bg-white border border-sage-450 rounded-lg py-2 px-3 outline-none"
+                    />
+                  ) : (
+                    <button
+                      onClick={() => { setWhyDraft(whyStatement || ""); setEditingWhy(true); }}
+                      className="cursor-pointer bg-transparent border-none p-0 text-left w-full"
+                    >
+                      <span className={`font-serif text-[15px] italic leading-snug ${whyStatement ? "text-sage-600" : "text-sand-350"}`}>
+                        {whyStatement || "Tap to add your WHY"}
+                      </span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* Data tab — existing reset options */
+              <div className="flex flex-col gap-2">
+                {RESET_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.key}
+                    onClick={() => setSelectedOption(opt.key)}
+                    className="flex items-start gap-3 cursor-pointer text-left w-full p-3.5 px-4 bg-sand-100 border-none rounded-xl transition-colors duration-200 hover:bg-sand-200"
+                  >
+                    <div className="shrink-0 mt-px">
+                      {opt.icon}
+                    </div>
+                    <div>
+                      <span className="font-sans font-medium block text-sm text-earth-650">
+                        {opt.label}
+                      </span>
+                      <span className="font-sans block text-xs text-earth-350 leading-snug mt-0.5">
+                        {opt.description}
+                      </span>
+                    </div>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      className="shrink-0 mt-0.5 ml-auto"
+                    >
+                      <path
+                        d="M6 4l4 4-4 4"
+                        stroke="#948B7D"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                ))}
+              </div>
+            )}
           </>
         ) : (
           /* Confirmation step */

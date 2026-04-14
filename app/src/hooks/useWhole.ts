@@ -79,7 +79,6 @@ export interface UseWholeReturn {
   // UI state
   loaded: boolean;
   computing: boolean;
-  viewMode: "brief" | "map";
   selectedNode: HolonNode | null;
   archetypeSelectorOpen: boolean;
   chatShellOpen: boolean;
@@ -88,7 +87,6 @@ export interface UseWholeReturn {
   whyEvolution: WhyEvolutionData | null;
   shareworthyOpen: boolean;
   regeneratedCanvas: CanvasData | null;
-  manageMode: boolean;
   settingsOpen: boolean;
   confirmAction: {
     type: "archive" | "delete" | "clear-context" | "delete-principle";
@@ -110,7 +108,6 @@ export interface UseWholeReturn {
   selectedFullNode: HolonNode | undefined | null;
 
   // Handlers
-  handleNodeTap: (node: HolonNode) => void;
   handleDismissInsight: () => Promise<void>;
   handleArchetypeSave: (selected: string[]) => Promise<void>;
   handleWhySave: (value: string) => Promise<void>;
@@ -125,7 +122,6 @@ export interface UseWholeReturn {
   handleWhyEvolutionAccept: (newWhy: string) => Promise<void>;
   handleWhyEvolutionDismiss: () => void;
   handleWhyTapNoContext: () => void;
-  handleManageToggle: () => void;
   handleConfirmAction: () => Promise<void>;
   handleArchiveUndo: () => Promise<void>;
   handleSettingsAction: (action: "clear-chat" | "clear-context" | "start-fresh") => Promise<void>;
@@ -133,7 +129,6 @@ export interface UseWholeReturn {
   handleTellMore: (dimension: string) => void;
 
   // Setters needed by JSX
-  setViewMode: React.Dispatch<React.SetStateAction<"brief" | "map">>;
   setArchetypeSelectorOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setChatShellOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setChatShellMode: React.Dispatch<React.SetStateAction<"default" | "new-aspiration" | "dimension">>;
@@ -168,14 +163,12 @@ export function useWhole(): UseWholeReturn {
   const [computing, setComputing] = useState(false);
   const [selectedNode, setSelectedNode] = useState<HolonNode | null>(null);
   const [archetypeSelectorOpen, setArchetypeSelectorOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"brief" | "map">("brief");
   const [chatShellOpen, setChatShellOpen] = useState(false);
   const [chatShellMode, setChatShellMode] = useState<"default" | "new-aspiration" | "dimension">("default");
   const [chatShellDimension, setChatShellDimension] = useState<string | null>(null);
   const [whyEvolution, setWhyEvolution] = useState<WhyEvolutionData | null>(null);
   const [shareworthyOpen, setShareworthyOpen] = useState(false);
   const [regeneratedCanvas, setRegeneratedCanvas] = useState<CanvasData | null>(null);
-  const [manageMode, setManageMode] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{
     type: "archive" | "delete" | "clear-context" | "delete-principle";
@@ -641,18 +634,7 @@ export function useWhole(): UseWholeReturn {
     setChatShellOpen(true);
   }, []);
 
-  // ─── Manage mode handlers ────────────────────────────────────────────────
-
-  const handleManageToggle = useCallback(() => {
-    setManageMode((prev) => {
-      if (prev) {
-        setSelectedNode(null);
-        setConfirmAction(null);
-        setArchiveToast(null);
-      }
-      return !prev;
-    });
-  }, []);
+  // ─── Action handlers ─────────────────────────────────────────────────────
 
   const handleConfirmAction = useCallback(async () => {
     if (!confirmAction) return;
@@ -803,7 +785,6 @@ export function useWhole(): UseWholeReturn {
     allPatterns,
     loaded,
     computing,
-    viewMode,
     selectedNode,
     archetypeSelectorOpen,
     chatShellOpen,
@@ -812,7 +793,6 @@ export function useWhole(): UseWholeReturn {
     whyEvolution,
     shareworthyOpen,
     regeneratedCanvas,
-    manageMode,
     settingsOpen,
     confirmAction,
     archiveToast,
@@ -826,7 +806,6 @@ export function useWhole(): UseWholeReturn {
     holonLinks,
     shapeHeight,
     selectedFullNode,
-    handleNodeTap,
     handleDismissInsight,
     handleArchetypeSave,
     handleWhySave,
@@ -841,13 +820,11 @@ export function useWhole(): UseWholeReturn {
     handleWhyEvolutionAccept,
     handleWhyEvolutionDismiss,
     handleWhyTapNoContext,
-    handleManageToggle,
     handleConfirmAction,
     handleArchiveUndo,
     handleSettingsAction,
     handleContextFieldRemove,
     handleTellMore,
-    setViewMode,
     setArchetypeSelectorOpen,
     setChatShellOpen,
     setChatShellMode,
