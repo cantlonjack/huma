@@ -1,8 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useChat, type RichMessage } from "@/hooks/useChat";
+import { useChat, type RichMessage, type SessionType } from "@/hooks/useChat";
 import { PastConversation } from "@/components/chat/PastConversation";
+
+// ── Dimension keywords for dynamic context matching ──
+const DIMENSION_KEYWORDS: Record<string, string[]> = {
+  body: ["health", "sleep", "exercise", "eat", "nutrition", "energy", "tired", "workout", "weight", "sick"],
+  people: ["family", "friend", "partner", "wife", "husband", "kid", "parent", "relationship", "community"],
+  money: ["money", "income", "budget", "debt", "save", "invest", "expense", "salary", "cost", "financial"],
+  home: ["home", "house", "apartment", "move", "garden", "kitchen", "space", "room", "land"],
+  growth: ["learn", "skill", "read", "study", "course", "career", "practice", "improve"],
+  joy: ["fun", "play", "hobby", "rest", "relax", "enjoy", "creative", "music", "art"],
+  purpose: ["purpose", "meaning", "value", "why", "mission", "contribute", "vision"],
+  identity: ["identity", "role", "who", "culture", "transition"],
+  time: ["time", "schedule", "routine", "morning", "evening", "busy", "overwhelm"],
+};
+
+function detectRelevantDimensions(messages: Array<{ role: string; content: string }>): string[] {
+  const recent = messages.slice(-4).filter(m => m.role === "user").map(m => m.content.toLowerCase()).join(" ");
+  if (!recent) return [];
+  const matched: string[] = [];
+  for (const [dim, keywords] of Object.entries(DIMENSION_KEYWORDS)) {
+    if (keywords.some(kw => recent.includes(kw))) matched.push(dim);
+  }
+  return matched.slice(0, 3);
+}
 
 // ── Inlined: ContextCard ──
 function ContextCard({
@@ -10,19 +33,26 @@ function ContextCard({
   behaviorCount,
   dayNum,
   context,
+  relevantDimensions,
 }: {
   aspirationCount: number;
   behaviorCount: number;
   dayNum: number;
   context: Record<string, unknown>;
+  relevantDimensions: string[];
 }) {
   const parts: string[] = [];
   if (aspirationCount > 0) parts.push(`${aspirationCount} aspiration${aspirationCount > 1 ? "s" : ""}`);
   if (behaviorCount > 0) parts.push(`${behaviorCount} behaviors`);
   if (dayNum > 0) parts.push(`Day ${dayNum}`);
 
+  // Show relevant dimension context first (based on conversation topic), then fill with others
   const ctxEntries = Object.entries(context).filter(([, v]) => v !== null && v !== undefined && v !== "");
-  for (const [k, v] of ctxEntries.slice(0, 2)) {
+  const relevantEntries = ctxEntries.filter(([k]) => relevantDimensions.includes(k));
+  const otherEntries = ctxEntries.filter(([k]) => !relevantDimensions.includes(k));
+  const orderedEntries = [...relevantEntries, ...otherEntries].slice(0, 3);
+
+  for (const [k, v] of orderedEntries) {
     const label = k.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
     parts.push(`${label}: ${String(v)}`);
   }
@@ -43,12 +73,72 @@ function ContextCard({
   );
 }
 
+// ── Session Entry Points ──
+const SESSION_ENTRIES: { type: SessionType; label: string; description: string }[] = [
+  { type: "decision", label: "Think through a decision", description: "Weigh options against your whole situation" },
+  { type: "pattern", label: "Work on a pattern", description: "Design or refine a daily practice" },
+  { type: "revisit", label: "Revisit what I want", description: "Check if your aspirations still fit" },
+];
+
+function SessionEntryPoints({ onSelect }: { onSelect: (type: SessionType, prompt: string) => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center h-64 text-center">
+      <p className="font-serif text-ink-700 text-[22px] leading-tight mb-6">
+        What are you designing?
+      </p>
+      <div className="flex flex-col gap-2 w-full max-w-sm px-6">
+        {SESSION_ENTRIES.map(({ type, label, description }) => (
+          <button
+            key={type}
+            onClick={() => onSelect(type, label)}
+            className="text-left rounded-xl border border-sand-300 bg-sand-50 hover:border-sage-400 hover:bg-sage-50 transition-all duration-200 cursor-pointer px-4 py-3"
+          >
+            <p className="font-sans font-medium text-sm text-ink-700">{label}</p>
+            <p className="font-sans text-xs text-ink-400 mt-0.5">{description}</p>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Inline ref rendering ──
+function renderWithRefs(text: string): React.ReactNode {
+  // Split on ⟨aspiration:slug⟩ or ⟨pattern:slug⟩ tokens
+  const parts = text.split(/(⟨(?:aspiration|pattern):[a-z0-9-]+⟩)/g);
+  if (parts.length === 1) return text;
+  return parts.map((part, i) => {
+    const refMatch = part.match(/⟨(aspiration|pattern):([a-z0-9-]+)⟩/);
+    if (refMatch) {
+      const [, refType, slug] = refMatch;
+      const label = slug.replace(/-/g, " ");
+      return (
+        <span key={i} className="inline-flex items-center rounded-full bg-sage-50 px-2 py-0.5 mx-0.5 align-baseline">
+          <span className="font-sans text-xs font-medium text-sage-600">
+            {refType === "aspiration" ? "◆" : "↻"} {label}
+          </span>
+        </span>
+      );
+    }
+    return part;
+  });
+}
+
 export default function ChatPage() {
   const {
     input, setInput, streaming, knownContext, aspirations, loaded, scrollRef,
     sendMessage, handleKeyDown, latestConversation, pastConversations,
-    behaviorCount, dayNum, conversations,
+    behaviorCount, dayNum, conversations, sessionType, setSessionType,
   } = useChat();
+
+  const relevantDimensions = detectRelevantDimensions(
+    latestConversation?.messages.map(m => ({ role: m.role, content: m.content })) || []
+  );
+
+  const handleSessionEntry = (type: SessionType, prompt: string) => {
+    setSessionType(type);
+    sendMessage(prompt);
+  };
 
   return (
     <div className="min-h-dvh bg-sand-50 flex flex-col pb-40">
@@ -65,6 +155,7 @@ export default function ChatPage() {
         behaviorCount={behaviorCount}
         dayNum={dayNum}
         context={knownContext}
+        relevantDimensions={relevantDimensions}
       />
 
       {/* Main content */}
@@ -74,11 +165,7 @@ export default function ChatPage() {
             <span className="rounded-full animate-dot-pulse size-2 bg-sage-400" />
           </div>
         ) : conversations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-center">
-            <p className="font-serif text-ink-700 text-[22px] leading-tight">
-              What&apos;s on your mind?
-            </p>
-          </div>
+          <SessionEntryPoints onSelect={handleSessionEntry} />
         ) : (
           <>
             {/* Latest conversation (fully expanded) */}
@@ -101,7 +188,7 @@ export default function ChatPage() {
                   return (
                     <div key={msg.id} className="mb-3 max-w-[680px]">
                       <p className="font-serif text-ink-700 whitespace-pre-wrap text-base leading-[1.7]">
-                        {msg.content}
+                        {renderWithRefs(msg.content)}
                       </p>
 
                       {msg.contextExtracted && Object.keys(msg.contextExtracted).length > 0 && (
@@ -168,7 +255,7 @@ export default function ChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="What's on your mind?"
+            placeholder="What are you designing?"
             disabled={streaming}
             className="flex-1 font-sans bg-transparent focus:outline-none placeholder:text-ink-300 disabled:opacity-50 text-sm leading-snug text-ink-800"
           />

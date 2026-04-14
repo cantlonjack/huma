@@ -26,6 +26,7 @@ export const v2ChatSchema = z.object({
   tabContext: z.record(z.string(), z.unknown()).optional(),
   dayCount: z.number().int().positive().optional(),
   chatMode: z.string().optional(),
+  sessionType: z.enum(["open", "decision", "pattern", "revisit"]).optional(),
   humaContext: z.record(z.string(), z.unknown()).optional(),
   isFirstConversation: z.boolean().optional(),
   exchangeCount: z.number().int().nonnegative().optional(),

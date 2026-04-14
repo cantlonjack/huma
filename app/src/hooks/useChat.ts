@@ -17,6 +17,8 @@ import {
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
+export type SessionType = "open" | "decision" | "pattern" | "revisit";
+
 export type RichMessage = ChatMessage & {
   options?: string[] | null;
   behaviors?: Behavior[] | null;
@@ -106,6 +108,8 @@ export interface UseChatReturn {
   pastConversations: ConversationGroup[];
   behaviorCount: number;
   dayNum: number;
+  sessionType: SessionType;
+  setSessionType: (type: SessionType) => void;
 }
 
 // ─── Hook ───────────────────────────────────────────────────────────────────
@@ -118,6 +122,7 @@ export function useChat(): UseChatReturn {
   const [knownContext, setKnownContext] = useState<Record<string, unknown>>({});
   const [aspirations, setAspirations] = useState<Aspiration[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [sessionType, setSessionType] = useState<SessionType>("open");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll
@@ -188,6 +193,7 @@ export function useChat(): UseChatReturn {
           messages: allMessages,
           knownContext,
           aspirations: aspirations.map(a => ({ rawText: a.rawText, clarifiedText: a.clarifiedText, status: a.status })),
+          sessionType,
         }),
       });
 
@@ -322,5 +328,7 @@ export function useChat(): UseChatReturn {
     pastConversations,
     behaviorCount,
     dayNum,
+    sessionType,
+    setSessionType,
   };
 }

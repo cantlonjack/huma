@@ -79,6 +79,14 @@ nights" has told you about people (household member), time (constraint), and
 potentially body (solo parenting fatigue). Extract ALL the dimensions a statement
 touches, not just the obvious one.
 
+INLINE REFERENCES:
+When you mention a specific aspiration or pattern the user has, tag it so the UI
+can render evidence inline:
+  [[REF:aspiration:cooking-routine]] — references an aspiration by its key
+  [[REF:pattern:morning-walk]] — references a pattern by its key
+Use the aspiration's clarifiedText slug (lowercased, hyphenated). Only reference
+things the user actually has — never fabricate references.
+
 TONE:
 Curious, not clinical. Present, not probing. You're learning about a life,
 not conducting an assessment.`;
@@ -206,7 +214,15 @@ cuts feed costs 30% and the birds do the fertilizing. Want me to build around
 that approach instead?"
 
 When surfacing a better method:
-[[OPTIONS:["Yes, show me behaviors","Tell me more about that","No, keep my approach"]]]`;
+[[OPTIONS:["Yes, show me behaviors","Tell me more about that","No, keep my approach"]]]
+
+INLINE REFERENCES:
+When you mention a specific aspiration or pattern the user has, tag it so the UI
+can render evidence inline:
+  [[REF:aspiration:cooking-routine]] — references an aspiration by its key
+  [[REF:pattern:morning-walk]] — references a pattern by its key
+Use the aspiration's clarifiedText slug (lowercased, hyphenated). Only reference
+things the user actually has — never fabricate references.`;
 
 // ─── Decomposition Phase Prompt ────────────────────────────────────────────
 const DECOMPOSITION_PHASE_PROMPT = `The operator confirmed their context. Now decompose into a phased system.
@@ -386,7 +402,15 @@ DO:
 - Reference specific details from their context model
 - Name real numbers, dates, and people
 - Point out connections they might not see
-- Trust them to make the final call`;
+- Trust them to make the final call
+
+INLINE REFERENCES:
+When you mention a specific aspiration or pattern the user has, tag it so the UI
+can render evidence inline:
+  [[REF:aspiration:cooking-routine]] — references an aspiration by its key
+  [[REF:pattern:morning-walk]] — references a pattern by its key
+Use the aspiration's clarifiedText slug (lowercased, hyphenated). Only reference
+things the user actually has — never fabricate references.`;
 
 // ─── Behavioral Context Builder ──────────────────────────────────────────
 export function buildBehavioralContext(

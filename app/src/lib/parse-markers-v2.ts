@@ -29,6 +29,11 @@ export interface ParsedDecision {
   frameworks_surfaced: string[];
 }
 
+export interface ParsedRef {
+  type: "aspiration" | "pattern";
+  slug: string;
+}
+
 export interface ParsedMarkers {
   cleanText: string;
   parsedOptions: string[] | null;
@@ -40,6 +45,7 @@ export interface ParsedMarkers {
   parsedReorganization: ReorganizationPlan | null;
   parsedReplaceAspiration: string | null;
   parsedDecision: ParsedDecision | null;
+  parsedRefs: ParsedRef[];
 }
 
 const MARKER_TYPES = ["OPTIONS", "BEHAVIORS", "ACTIONS", "CONTEXT", "ASPIRATION_NAME", "DECOMPOSITION", "REORGANIZATION", "DECISION"] as const;
@@ -194,10 +200,21 @@ export function parseMarkersV2(text: string): ParsedMarkers {
     })) as (Behavior & { is_trigger?: boolean })[];
   }
 
+  // Parse [[REF:type:slug]] markers — these stay as semantic tokens in the text
+  // for the UI to render as inline badges
+  const parsedRefs: ParsedRef[] = [];
+  const refRegex = /\[\[REF:(aspiration|pattern):([a-z0-9-]+)\]\]/g;
+  let refMatch;
+  while ((refMatch = refRegex.exec(cleanText)) !== null) {
+    parsedRefs.push({ type: refMatch[1] as "aspiration" | "pattern", slug: refMatch[2] });
+  }
+  // Replace REF markers with a clean token the UI can detect
+  cleanText = cleanText.replace(refRegex, "⟨$1:$2⟩");
+
   // Strip incomplete markers at end of stream
   cleanText = cleanText
-    .replace(/\[\[(?:OPTIONS|BEHAVIORS|ACTIONS|CONTEXT|ASPIRATION_NAME|DECOMPOSITION|REORGANIZATION|REPLACE_ASPIRATION|DECISION):?[\s\S]*$/g, "")
+    .replace(/\[\[(?:OPTIONS|BEHAVIORS|ACTIONS|CONTEXT|ASPIRATION_NAME|DECOMPOSITION|REORGANIZATION|REPLACE_ASPIRATION|DECISION|REF):?[\s\S]*$/g, "")
     .trim();
 
-  return { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName, parsedDecomposition, parsedReorganization, parsedReplaceAspiration, parsedDecision };
+  return { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName, parsedDecomposition, parsedReorganization, parsedReplaceAspiration, parsedDecision, parsedRefs };
 }
