@@ -15,7 +15,7 @@ import { mapAspirationStatus } from "@/lib/whole-utils";
 import { isShareworthyInsight } from "@/components/whole/ShareworthyInsightCard";
 import { displayName } from "@/lib/display-name";
 import { DIMENSION_LABELS, DIMENSION_COLORS } from "@/types/v2";
-import type { DimensionKey, Aspiration } from "@/types/v2";
+import type { DimensionKey, Aspiration, PathwayStage } from "@/types/v2";
 
 /* ─── Connections section: dimension-grouped aspiration overlaps ─── */
 
@@ -161,7 +161,37 @@ export default function WholePage() {
               {/* 1. Desires — aspirations as sentences */}
               <AspirationsList aspirations={w.aspirations} />
 
-              {/* 2. Chosen Patterns — with evidence status */}
+              {/* 2. Pathway — staged plan (forward-looking, renders when data exists) */}
+              {w.pathway && (
+                <div className="mx-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="font-sans text-[10px] font-semibold tracking-[0.22em] text-ink-300 uppercase">
+                      Your pathway
+                    </span>
+                    <div className="flex-1 h-px bg-sand-200" />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {w.pathway.stages.map((stage: PathwayStage, idx: number) => (
+                      <div
+                        key={idx}
+                        className={`flex items-start gap-2.5 ${stage.status === "active" ? "opacity-100" : "opacity-50"}`}
+                      >
+                        <span className={`mt-1.5 shrink-0 w-2 h-2 rounded-full ${
+                          stage.status === "completed" ? "bg-sage-500" :
+                          stage.status === "active" ? "bg-amber-500" :
+                          "bg-sand-300"
+                        }`} />
+                        <div>
+                          <span className="font-sans text-[13px] font-medium text-earth-500">{stage.name}</span>
+                          <p className="font-serif text-[13px] text-sage-450 leading-snug mt-0.5 m-0">{stage.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 3. Chosen Patterns — with evidence status */}
               <PatternsList patterns={w.allPatterns} />
 
               {/* 3. Connections — dimension overlaps */}

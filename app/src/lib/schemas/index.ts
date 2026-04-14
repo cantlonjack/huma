@@ -112,6 +112,7 @@ export const sheetCompileSchema = z.object({
   dayCount: z.number().int().positive().optional().default(1),
   archetypes: z.array(z.string()).optional().default([]),
   whyStatement: z.string().optional().default(""),
+  timeOfDay: z.enum(["morning", "evening"]).optional().default("morning"),
 });
 
 export type SheetCompileRequest = z.infer<typeof sheetCompileSchema>;

@@ -99,6 +99,17 @@ export function CompiledEntryRow({
             </p>
           )}
 
+          {/* Pattern note — conscious pattern reference */}
+          {entry.patternNote && (
+            <p
+              className={`font-sans text-[12px] leading-relaxed mt-1 transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                isChecked ? "text-ink-300" : "text-sage-500"
+              }`}
+            >
+              ↻ {entry.patternNote}
+            </p>
+          )}
+
           {/* Detail — the how-to, shown on tap */}
           {hasDetail && (
             <p

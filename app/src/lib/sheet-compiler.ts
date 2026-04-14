@@ -232,6 +232,7 @@ export async function compileSheet(
     dayCount,
     archetypes,
     whyStatement,
+    timeOfDay: new Date().getHours() >= 18 ? "evening" : "morning",
   };
 
   try {

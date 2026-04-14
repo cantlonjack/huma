@@ -15,6 +15,9 @@ import {
 
 const SHEET_PROMPT = `You are compiling today's production sheet for {name}.
 Today is {day_of_week}, {date}. Season: {season}. Day {day_count} with HUMA.
+Time of day: {time_of_day}.
+If evening: The opening should reflect on the day — what happened, what held, what shifted. Tone is reflective, not action-oriented. Don't list tomorrow's actions. Acknowledge what was done.
+If morning: The opening frames the day ahead — state of things, what's at stake, what's possible.
 
 {identity_section}
 
@@ -273,7 +276,8 @@ Meal plans should respect budget. Purchases should reference actual amounts.
     .replace("{day_of_week}", dayOfWeek)
     .replace("{date}", date)
     .replace("{season}", season)
-    .replace("{day_count}", String(dayCount));
+    .replace("{day_count}", String(dayCount))
+    .replace("{time_of_day}", req.timeOfDay || "morning");
 
   try {
     const anthropic = new Anthropic();

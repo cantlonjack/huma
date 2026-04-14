@@ -7,7 +7,7 @@ import type { HolonNode, HolonLink, InsightAnnotation } from "@/components/whole
 import type { WhyEvolutionData } from "@/components/whole/WhyEvolution";
 import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
-import type { Aspiration, Insight, Principle, KnownContext, Pattern, Behavior, FutureAction, FuturePhase } from "@/types/v2";
+import type { Aspiration, Insight, Principle, KnownContext, Pattern, Pathway, Behavior, FutureAction, FuturePhase } from "@/types/v2";
 import type { HumaContext } from "@/types/context";
 import { createEmptyContext } from "@/types/context";
 import type { CanvasData } from "@/engine/canvas-types";
@@ -75,6 +75,9 @@ export interface UseWholeReturn {
 
   // All patterns (for context view)
   allPatterns: Pattern[];
+
+  // Pathway (forward-looking, null until populated)
+  pathway: Pathway | null;
 
   // UI state
   loaded: boolean;
@@ -783,6 +786,7 @@ export function useWhole(): UseWholeReturn {
     correlations,
     historicalInsights,
     allPatterns,
+    pathway: null,
     loaded,
     computing,
     selectedNode,

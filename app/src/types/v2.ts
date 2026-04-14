@@ -202,6 +202,26 @@ export interface Pattern {
   updatedAt: string;
 }
 
+// ─── Pathway ─────────────────────────────────────────────────────────────────
+// Cross-aspiration staged plan. Each stage contains patterns to practice.
+
+export interface PathwayStage {
+  name: string;
+  description: string;
+  patternIds: string[];
+  status: "upcoming" | "active" | "completed";
+  timeframe?: string;
+}
+
+export interface Pathway {
+  id: string;
+  name: string;
+  aspirationIds: string[];
+  stages: PathwayStage[];
+  currentStage: number;
+  createdAt: string;
+}
+
 // ─── Merge Suggestions ────────────────────────────────────────────────────
 // When two patterns from different aspirations share one or more behaviors,
 // HUMA surfaces a merge suggestion on the pattern card. The operator can
@@ -498,6 +518,7 @@ export interface SheetCompileRequest {
   dayCount: number;                                // Days since operator started
   archetypes?: string[];                           // Primary/secondary archetype names
   whyStatement?: string;                           // Operator's WHY
+  timeOfDay?: "morning" | "evening";               // Client-detected time of day
 }
 
 export interface SheetCompileResponse {
