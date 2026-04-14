@@ -18,6 +18,35 @@ import {
   getSharedCaption,
 } from "@/hooks/useGrow";
 
+// ─── Evidence helpers ─────────────────────────────────────────────────────
+
+function getEvidenceStatement(pattern: Pattern): string {
+  const name = displayName(pattern.name);
+  const count = pattern.validationCount;
+  const target = pattern.validationTarget;
+  if (pattern.status === "validated") {
+    return `Your ${name} is confirmed \u2014 ${count} of ${target} days.`;
+  } else if (pattern.status === "working") {
+    return `Your ${name} is building \u2014 ${count} of ${target} days.`;
+  }
+  return `Watching your ${name} \u2014 ${count} of ${target} days so far.`;
+}
+
+function getProvenanceLabel(pattern: Pattern): string | null {
+  if (!pattern.provenance) return null;
+  if (pattern.provenance.sourceTradition) {
+    return `Based on: ${pattern.provenance.sourceTradition}`;
+  }
+  switch (pattern.provenance.source) {
+    case "conversation": return "Discovered in conversation";
+    case "formalized": return "Discovered from your data";
+    case "template": return "From archetype template";
+    case "research": return "Based on published research";
+    case "community": return "Community-validated pattern";
+    default: return null;
+  }
+}
+
 const PatternCard = memo(function PatternCard({
   pattern,
   aspirations,
@@ -32,6 +61,7 @@ const PatternCard = memo(function PatternCard({
   onUpdate,
   onArchive,
   onRemove,
+  displayMode = "default",
 }: {
   pattern: Pattern;
   aspirations: Aspiration[];
@@ -47,6 +77,7 @@ const PatternCard = memo(function PatternCard({
   onUpdate?: (patternId: string, updates: Partial<Pick<Pattern, "name" | "trigger" | "steps" | "timeWindow">>) => void;
   onArchive?: (patternId: string) => void;
   onRemove?: (patternId: string) => void;
+  displayMode?: "default" | "evidence";
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -124,7 +155,7 @@ const PatternCard = memo(function PatternCard({
   return (
     <div
       onClick={editing ? undefined : onToggle}
-      className={`bg-white border border-sand-300 rounded-2xl mb-5 overflow-hidden ${editing ? "cursor-default" : hasExpandContent ? "cursor-pointer" : "cursor-default"}`}
+      className={`bg-white border border-sand-300 rounded-2xl mb-5 overflow-hidden ${editing ? "cursor-default" : (hasExpandContent || displayMode === "evidence") ? "cursor-pointer" : "cursor-default"}`}
     >
       {/* Header */}
       <div className="px-4 pt-3.5 pb-3 border-b border-sand-200/80 flex justify-between items-center gap-2">
@@ -277,6 +308,37 @@ const PatternCard = memo(function PatternCard({
             </button>
           </div>
         </div>
+      ) : displayMode === "evidence" ? (
+        <div className="px-4 py-3.5">
+          {/* Evidence statement */}
+          <p className="font-serif text-[16px] text-sage-700 leading-[1.45] m-0">
+            {getEvidenceStatement(pattern)}
+          </p>
+          {/* Sparkline trend note */}
+          {sparkline?.trend === "rising" && (
+            <p className="font-serif text-[13px] italic text-sage-500 mt-1.5 m-0">
+              Momentum is building.
+            </p>
+          )}
+          {sparkline?.trend === "dropping" && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onInvestigate?.(pattern.id); }}
+              className="font-serif cursor-pointer text-[13px] italic text-amber-600 bg-transparent border-none p-0 mt-1.5 underline decoration-dotted underline-offset-2"
+            >
+              Something changed — investigate
+            </button>
+          )}
+          {/* Provenance */}
+          {(() => {
+            const label = getProvenanceLabel(pattern);
+            if (!label) return null;
+            return (
+              <p className="font-sans text-[11px] text-sage-400 italic mt-2 m-0">
+                {label}
+              </p>
+            );
+          })()}
+        </div>
       ) : (
         <div className="px-4 py-3.5">
           {/* The Decision */}
@@ -370,15 +432,58 @@ const PatternCard = memo(function PatternCard({
         </div>
       )}
 
-      {/* Expanded: Coming Up + Longer Arc */}
+      {/* Expanded detail */}
       <div
         style={{
-          maxHeight: expanded ? "600px" : "0px",
+          maxHeight: expanded ? "800px" : "0px",
           opacity: expanded ? 1 : 0,
           overflow: "hidden",
           transition: "max-height 300ms cubic-bezier(0.22, 1, 0.36, 1), opacity 300ms cubic-bezier(0.22, 1, 0.36, 1)",
         }}
       >
+        {/* Evidence mode: show trigger/pathway + sparkline in expanded */}
+        {displayMode === "evidence" && (triggerStep || pathwaySteps.length > 0 || (sparkline && sparkline.points.length >= 2)) && (
+          <div className="px-4 py-3.5 border-t border-sand-200/80">
+            {triggerStep && (
+              <div className={pathwaySteps.length > 0 ? "mb-3.5" : ""}>
+                <span className="font-sans block text-[9px] font-semibold tracking-[0.18em] text-amber-600 mb-1">
+                  THE DECISION
+                </span>
+                <span className="font-sans text-[15px] font-medium text-sage-700 leading-[1.4]">
+                  {triggerStep.text}
+                </span>
+              </div>
+            )}
+            {pathwaySteps.length > 0 && (
+              <div>
+                <span className="font-sans block text-[9px] font-semibold tracking-[0.18em] text-sage-400 mb-2">
+                  GOLDEN PATHWAY
+                </span>
+                <div className="flex flex-col gap-1.5">
+                  {pathwaySteps.map((step, i) => (
+                    <div key={i} className="flex items-start gap-2.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-sage-300 mt-1.5 shrink-0" />
+                      <span className="font-sans text-sage-600 text-sm leading-[1.4]">
+                        {step.text}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {sparkline && sparkline.points.length >= 2 && (
+              <div className="mt-3.5 flex items-center gap-2">
+                <span className="font-sans text-[11px] text-sage-400">Last 30 days</span>
+                <Sparkline
+                  points={sparkline.points}
+                  trend={sparkline.trend}
+                  width={120}
+                  height={28}
+                />
+              </div>
+            )}
+          </div>
+        )}
         {hasExpandContent && (
           <div className="px-4 pb-3.5 border-t border-sand-200/80">
             {/* Coming Up */}
@@ -445,8 +550,8 @@ const PatternCard = memo(function PatternCard({
               }}
             />
           </div>
-          {/* Sparkline — right side, only when data exists */}
-          {sparkline && sparkline.points.length >= 2 && (
+          {/* Sparkline — in evidence mode, shown in expanded section instead */}
+          {displayMode !== "evidence" && sparkline && sparkline.points.length >= 2 && (
             <Sparkline
               points={sparkline.points}
               trend={sparkline.trend}
@@ -459,12 +564,12 @@ const PatternCard = memo(function PatternCard({
         <div className="font-sans text-[11px] text-sage-400 mt-1.5 flex justify-between">
           <span>{pattern.validationCount} of {pattern.validationTarget} days</span>
           <div className="flex items-center gap-1.5">
-            {sparkline && sparkline.trend === "rising" && (
+            {displayMode !== "evidence" && sparkline && sparkline.trend === "rising" && (
               <span className="font-serif text-[11px] text-sage-700 italic">
                 momentum
               </span>
             )}
-            {sparkline && sparkline.trend === "dropping" && (
+            {displayMode !== "evidence" && sparkline && sparkline.trend === "dropping" && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -480,8 +585,8 @@ const PatternCard = memo(function PatternCard({
         </div>
       </div>
 
-      {/* Celebrated validation — acknowledgment when a pattern is proven */}
-      {pattern.status === "validated" && (
+      {/* Celebrated validation — in evidence mode, the statement already communicates this */}
+      {displayMode !== "evidence" && pattern.status === "validated" && (
         <div className="px-4 py-3 border-t border-sage-100 bg-sage-50/50">
           <p className="font-serif text-[13px] text-sage-700 leading-[1.4]">
             You&rsquo;ve proven this works. It&rsquo;s part of your operating system now.

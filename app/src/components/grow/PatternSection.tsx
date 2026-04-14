@@ -56,6 +56,7 @@ function DimensionFold({
   onUpdate,
   onArchive,
   onRemove,
+  displayMode,
 }: {
   label: string;
   color: string;
@@ -72,6 +73,7 @@ function DimensionFold({
   onUpdate?: (patternId: string, updates: Partial<Pick<Pattern, "name" | "trigger" | "steps" | "timeWindow">>) => void;
   onArchive?: (patternId: string) => void;
   onRemove?: (patternId: string) => void;
+  displayMode?: "default" | "evidence";
 }) {
   const [open, setOpen] = useState(false);
 
@@ -135,6 +137,7 @@ function DimensionFold({
             onUpdate={onUpdate}
             onArchive={onArchive}
             onRemove={onRemove}
+            displayMode={displayMode}
           />
         ))}
       </div>
@@ -161,6 +164,7 @@ export default function PatternSection({
   onUpdate,
   onArchive,
   onRemove,
+  displayMode,
 }: {
   title: string;
   subtitle: string;
@@ -178,6 +182,7 @@ export default function PatternSection({
   onUpdate?: (patternId: string, updates: Partial<Pick<Pattern, "name" | "trigger" | "steps" | "timeWindow">>) => void;
   onArchive?: (patternId: string) => void;
   onRemove?: (patternId: string) => void;
+  displayMode?: "default" | "evidence";
 }) {
   const needsFolding = patterns.length > MAX_VISIBLE_CARDS;
   const visible = needsFolding ? patterns.slice(0, 5) : patterns;
@@ -216,6 +221,7 @@ export default function PatternSection({
           onUpdate={onUpdate}
           onArchive={onArchive}
           onRemove={onRemove}
+          displayMode={displayMode}
         />
       ))}
 
@@ -243,6 +249,7 @@ export default function PatternSection({
               onUpdate={onUpdate}
               onArchive={onArchive}
               onRemove={onRemove}
+              displayMode={displayMode}
             />
           ))}
         </div>

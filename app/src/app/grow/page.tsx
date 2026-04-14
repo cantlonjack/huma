@@ -94,10 +94,10 @@ function GrowSkeleton() {
 }
 
 const STAGE_HEADLINES: Record<string, string> = {
-  early: "Getting started",
-  frequency: "What\u2019s showing up",
-  correlation: "Connections forming",
-  patterns: "Your patterns",
+  early: "Building the picture",
+  frequency: "Patterns emerging",
+  correlation: "Evidence building",
+  patterns: "What the evidence shows",
 };
 
 export default function GrowPage() {
@@ -125,7 +125,7 @@ export default function GrowPage() {
           {!g.loading && g.stage === "patterns" && g.patterns.length > 0 && (
             <p className="font-sans text-sage-400 text-[13px] mt-1">
               {g.patterns.length} pattern{g.patterns.length !== 1 ? "s" : ""} &middot;{" "}
-              {g.validated.length} validated, {g.working.length} working, {g.finding.length} finding
+              {g.validated.length} confirmed, {g.working.length} building, {g.finding.length} watching
             </p>
           )}
           {!g.loading && g.stage !== "patterns" && (
@@ -175,9 +175,10 @@ export default function GrowPage() {
             {/* Validated patterns */}
             {g.validated.length > 0 && (
               <PatternSection
-                title="Validated"
-                subtitle="These patterns are working. They're part of your operating system."
+                title="Confirmed — you have proof"
+                subtitle="These patterns are part of your operating system."
                 whySubtitle={g.whyStatement ? `These serve your WHY: \u201c${g.whyStatement}\u201d` : undefined}
+                displayMode="evidence"
                 patterns={g.validated}
                 aspirations={g.aspirations}
                 expandedId={g.expandedId}
@@ -197,8 +198,9 @@ export default function GrowPage() {
             {/* Working patterns */}
             {g.working.length > 0 && (
               <PatternSection
-                title="Working"
-                subtitle="You're building these. Keep going."
+                title="Building — the signal is getting stronger"
+                subtitle="Keep going. The evidence is accumulating."
+                displayMode="evidence"
                 patterns={g.working}
                 aspirations={g.aspirations}
                 expandedId={g.expandedId}
@@ -218,8 +220,9 @@ export default function GrowPage() {
             {/* Finding patterns */}
             {g.finding.length > 0 && (
               <PatternSection
-                title="Finding"
-                subtitle="Still emerging. The shape will clarify with use."
+                title="Watching — just started tracking"
+                subtitle="Still forming. The shape will clarify with use."
+                displayMode="evidence"
                 patterns={g.finding}
                 aspirations={g.aspirations}
                 expandedId={g.expandedId}
