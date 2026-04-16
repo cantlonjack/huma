@@ -5,8 +5,8 @@ export { frameworkSeeds } from "./frameworks";
 export { principleSeeds } from "./principles";
 export { bodyHealthSeeds } from "./body-health";
 export { growthPurposeJoySeeds } from "./growth-purpose-joy";
+export { moneyLivelihoodSeeds } from "./money-livelihood";
 // Future practice domains:
-// export { moneyLivelihoodSeeds } from "./money-livelihood";
 // export { homeRelationshipsSeeds } from "./home-relationships";
 // export { parentingDigitalSeeds } from "./parenting-digital";
 
@@ -17,6 +17,7 @@ import { frameworkSeeds } from "./frameworks";
 import { principleSeeds } from "./principles";
 import { bodyHealthSeeds } from "./body-health";
 import { growthPurposeJoySeeds } from "./growth-purpose-joy";
+import { moneyLivelihoodSeeds } from "./money-livelihood";
 
 export const allSeeds = [
   ...axiomSeeds,
@@ -25,4 +26,5 @@ export const allSeeds = [
   ...principleSeeds,
   ...bodyHealthSeeds,
   ...growthPurposeJoySeeds,
+  ...moneyLivelihoodSeeds,
 ];
