@@ -1,7 +1,16 @@
 import { describe, it, expect } from "vitest";
-import { scoreBehaviors, getSeason, analyzeHistory, formatKnownContext } from "./sheet-service";
+import {
+  scoreBehaviors,
+  getSeason,
+  analyzeHistory,
+  formatKnownContext,
+  normalizeSheetAspirations,
+  formatCompressedContextForSheet,
+  sheetVerificationSummary,
+} from "./sheet-service";
 import type { SheetCompileRequest, KnownContext } from "@/types/v2";
 import type { RecentEntry } from "./sheet-service";
+import { createEmptyContext } from "@/types/context";
 
 // ─── Helper ──────────────────────────────────────────────────────────────────
 
@@ -323,5 +332,142 @@ describe("formatKnownContext", () => {
     const ctx: KnownContext = { custom_field: "some value" };
     const result = formatKnownContext(ctx);
     expect(result).toContain("custom_field: some value");
+  });
+});
+
+// ─── normalizeSheetAspirations ───────────────────────────────────────────────
+
+describe("normalizeSheetAspirations", () => {
+  it("produces valid Aspiration[] with status 'active', empty dimensionsTouched, DimensionEffect[] shape", () => {
+    const simple: SheetCompileRequest["aspirations"] = [
+      {
+        id: "a1",
+        rawText: "raw",
+        clarifiedText: "clarified",
+        behaviors: [
+          {
+            key: "b1",
+            text: "walk",
+            frequency: "daily",
+            detail: "20 min",
+            enabled: true,
+            dimensions: ["body", "joy"],
+          } as SheetCompileRequest["aspirations"][0]["behaviors"][0],
+        ],
+      },
+    ];
+
+    const out = normalizeSheetAspirations(simple);
+    expect(out).toHaveLength(1);
+    const asp = out[0];
+    expect(asp.status).toBe("active");
+    expect(asp.stage).toBe("active");
+    expect(asp.dimensionsTouched).toEqual([]);
+    expect(asp.behaviors[0].dimensions).toHaveLength(2);
+    expect(asp.behaviors[0].dimensions[0]).toEqual({
+      dimension: "body",
+      direction: "builds",
+      reasoning: "",
+    });
+    expect(asp.behaviors[0].dimensions[1].dimension).toBe("joy");
+  });
+
+  it("defaults to empty DimensionEffect[] when dimensions field missing on behavior", () => {
+    const simple: SheetCompileRequest["aspirations"] = [
+      {
+        id: "a1",
+        rawText: "r",
+        clarifiedText: "c",
+        behaviors: [
+          { key: "b1", text: "walk", frequency: "daily" },
+        ],
+      },
+    ];
+    const out = normalizeSheetAspirations(simple);
+    expect(out[0].behaviors[0].dimensions).toEqual([]);
+  });
+});
+
+// ─── formatCompressedContextForSheet ─────────────────────────────────────────
+
+describe("formatCompressedContextForSheet", () => {
+  it("empty aspirations returns folded output only (no expanded blocks)", () => {
+    const ctx = createEmptyContext();
+    const out = formatCompressedContextForSheet({
+      humaContext: ctx,
+      aspirations: [],
+    });
+    expect(out).toContain("LIFE[");
+    expect(out).not.toContain("PRC:");
+  });
+
+  it("active aspirations get folded + one expanded block per aspiration", () => {
+    const ctx = createEmptyContext();
+    const out = formatCompressedContextForSheet({
+      humaContext: ctx,
+      aspirations: [
+        {
+          id: "a1",
+          rawText: "Move",
+          clarifiedText: "Move",
+          title: "Move",
+          status: "active",
+          stage: "active",
+          dimensionsTouched: [],
+          behaviors: [
+            {
+              key: "b1",
+              text: "walk",
+              frequency: "daily",
+              enabled: true,
+              dimensions: [{ dimension: "body", direction: "builds", reasoning: "" }],
+            },
+          ],
+        },
+      ],
+    });
+    expect(out).toContain("LIFE[");
+    expect(out).toContain("ASP:Move[");
+    expect(out).toContain("PRC:walk");
+  });
+});
+
+// ─── sheetVerificationSummary ────────────────────────────────────────────────
+
+describe("sheetVerificationSummary", () => {
+  it("returns { verification, summary } shape", () => {
+    const ctx = createEmptyContext();
+    const result = sheetVerificationSummary({
+      humaContext: ctx,
+      aspirations: [],
+      rpplSeeds: [],
+    });
+    expect(result).toHaveProperty("verification");
+    expect(result).toHaveProperty("summary");
+    expect(typeof result.summary).toBe("string");
+    expect(result.verification).toHaveProperty("integrity");
+    expect(result.verification).toHaveProperty("suggestions");
+  });
+
+  it("flags an unconnected aspiration in the summary", () => {
+    const ctx = createEmptyContext();
+    const result = sheetVerificationSummary({
+      humaContext: ctx,
+      rpplSeeds: [],
+      aspirations: [
+        {
+          id: "a1",
+          rawText: "Write book",
+          clarifiedText: "Write book",
+          title: "Write book",
+          status: "active",
+          stage: "active",
+          dimensionsTouched: [],
+          behaviors: [],
+        },
+      ],
+    });
+    expect(result.verification.unconnectedAspirations).toContain("Write book");
+    expect(result.summary).toContain("unconnected");
   });
 });
