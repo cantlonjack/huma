@@ -4,7 +4,10 @@ import { rateLimited, serviceUnavailable, internalError } from "@/lib/api-error"
 import { v2ChatSchema } from "@/lib/schemas";
 import { parseBody } from "@/lib/schemas/parse";
 import type { HumaContext } from "@/types/context";
+import type { Aspiration, Pattern } from "@/types/v2";
+import type { CapitalScore } from "@/engine/canvas-types";
 import { buildStaticPrompt, buildDynamicPrompt, detectMode } from "@/lib/services/prompt-builder";
+import { allSeeds } from "@/data/rppl-seeds";
 
 export async function POST(request: Request) {
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -20,7 +23,11 @@ export async function POST(request: Request) {
 
   const parsed = await parseBody(request, v2ChatSchema);
   if (parsed.error) return parsed.error;
-  const { messages, knownContext, aspirations, sourceTab, tabContext, dayCount, chatMode, humaContext, isFirstConversation, exchangeCount } = parsed.data;
+  const {
+    messages, knownContext, aspirations, sourceTab, tabContext, dayCount, chatMode,
+    humaContext, isFirstConversation, exchangeCount,
+    fullAspirations, patterns, capitalScores, behaviorCounts,
+  } = parsed.data;
 
   try {
     const anthropic = new Anthropic();
@@ -32,6 +39,11 @@ export async function POST(request: Request) {
     if (humaContext && typeof humaContext === "object") {
       parsedHumaContext = humaContext as unknown as HumaContext;
     }
+
+    // Cast compressed-encoding inputs back to their runtime types.
+    const parsedFullAspirations = fullAspirations as unknown as Aspiration[] | undefined;
+    const parsedPatterns = patterns as unknown as Pattern[] | undefined;
+    const parsedCapitalScores = capitalScores as unknown as CapitalScore[] | undefined;
 
     const mode = detectMode(userTexts, chatMode, aspirations);
 
@@ -49,6 +61,11 @@ export async function POST(request: Request) {
       humaContext: parsedHumaContext,
       isFirstConversation,
       exchangeCount,
+      fullAspirations: parsedFullAspirations,
+      patterns: parsedPatterns,
+      capitalScores: parsedCapitalScores,
+      behaviorCounts,
+      rpplSeeds: allSeeds,
     });
 
     // Progressive model selection: Haiku for first 2 exchanges (simple Q&A),

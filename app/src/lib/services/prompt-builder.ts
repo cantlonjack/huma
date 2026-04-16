@@ -747,7 +747,26 @@ export function buildDynamicPrompt(options: Omit<BuildPromptOptions, 'mode'> & {
       dayCount,
       behaviorCounts,
     };
-    contextProse = encodeLifeGraph(encodingInput, "folded");
+
+    // If the tab context points at a specific aspiration (e.g., a pattern card
+    // on /grow or a selected aspiration on /today), expand it to Level 1.
+    let focusedAspirationId: string | undefined;
+    const selectedPattern = tabContext?.selectedPattern as { aspirationId?: string; aspirationName?: string } | undefined;
+    const tabAsps = tabContext?.aspirations as Array<{ id?: string; name?: string }> | undefined;
+    if (selectedPattern?.aspirationId) {
+      focusedAspirationId = selectedPattern.aspirationId;
+    } else if (selectedPattern?.aspirationName && fullAspirations) {
+      const match = fullAspirations.find(a =>
+        (a.clarifiedText || a.rawText || a.title) === selectedPattern.aspirationName
+      );
+      if (match) focusedAspirationId = match.id;
+    } else if (tabAsps && tabAsps.length === 1 && tabAsps[0].id) {
+      focusedAspirationId = tabAsps[0].id;
+    }
+
+    contextProse = focusedAspirationId
+      ? encodeLifeGraph(encodingInput, "aspiration", focusedAspirationId)
+      : encodeLifeGraph(encodingInput, "folded");
   } else if (hasStructuredContext) {
     contextProse = contextForPrompt(ctx);
   } else {

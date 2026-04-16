@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import type { ChatMessage, Behavior, Aspiration, ReorganizationPlan } from "@/types/v2";
+import { useState, useRef, useCallback, useEffect } from "react";
+import type { ChatMessage, Behavior, Aspiration, Pattern, ReorganizationPlan } from "@/types/v2";
 import type { HumaContext } from "@/types/context";
 import { parseMarkersV2 as parseMarkers } from "@/lib/parse-markers-v2";
 import { MAX_MESSAGE_LENGTH } from "@/lib/constants";
 import { createClient } from "@/lib/supabase";
-import { saveChatMessage } from "@/lib/supabase-v2";
+import { saveChatMessage, getBehaviorWeekCounts } from "@/lib/supabase-v2";
+import { storeLoadPatterns } from "@/lib/db/store";
 import { getLocalDate } from "@/lib/date-utils";
 import { containsBehavioralLanguage } from "@/lib/behavioral-language";
 import { enqueuePendingSync } from "@/lib/pending-sync";
@@ -63,6 +64,17 @@ export function useMessageStream({
   const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
   const [markerRetryMessageId, setMarkerRetryMessageId] = useState<string | null>(null);
   const [markerRetryAttempted, setMarkerRetryAttempted] = useState(false);
+  const [patterns, setPatterns] = useState<Pattern[]>([]);
+
+  // Load patterns (Supabase for auth'd users, localStorage otherwise) so the
+  // chat prompt can include the full life graph. Reloads when user changes.
+  useEffect(() => {
+    let cancelled = false;
+    storeLoadPatterns(user?.id ?? null).then(loaded => {
+      if (!cancelled) setPatterns(loaded);
+    }).catch(() => { /* ignore — patterns optional */ });
+    return () => { cancelled = true; };
+  }, [user]);
 
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim();
@@ -111,6 +123,28 @@ export function useMessageStream({
 
       const allMessages = [...queuedContext.map(q => ({ role: q.role, content: q.content })), ...newMessages.map(m => ({ role: m.role === "huma" ? "assistant" : m.role, content: m.content }))];
 
+      // Build behaviorCounts keyed by `${aspirationId}:${behaviorKey}` for
+      // compressed encoding. Auth'd users pull from Supabase (last 7 days);
+      // unauth'd users ship no counts — encoder handles absence gracefully.
+      let behaviorCounts: Record<string, { completed: number; total: number }> | undefined;
+      if (user) {
+        try {
+          const supabase = createClient();
+          if (supabase) {
+            const rawCounts = await getBehaviorWeekCounts(supabase, user.id);
+            const mapped: Record<string, { completed: number; total: number }> = {};
+            for (const [behaviorKey, counts] of Object.entries(rawCounts)) {
+              for (const asp of aspirations) {
+                if (asp.behaviors?.some(b => b.key === behaviorKey)) {
+                  mapped[`${asp.id}:${behaviorKey}`] = counts;
+                }
+              }
+            }
+            if (Object.keys(mapped).length > 0) behaviorCounts = mapped;
+          }
+        } catch { /* counts are optional */ }
+      }
+
       const res = await fetch("/api/v2-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -122,6 +156,10 @@ export function useMessageStream({
           sourceTab,
           tabContext,
           dayCount,
+          // Compressed-encoding inputs — light up Phase 2/3 in chat.
+          fullAspirations: aspirations,
+          patterns,
+          ...(behaviorCounts && { behaviorCounts }),
           ...(mode === "new-aspiration" && { chatMode: "new-aspiration" }),
         }),
       });
@@ -268,7 +306,7 @@ export function useMessageStream({
     } finally {
       setStreaming(false);
     }
-  }, [messages, streaming, knownContext, humaContext, aspirations, user, mode, sourceTab, tabContext, onContextExtracted, onAspirationCreated, onReorganization, onDecision]);
+  }, [messages, streaming, knownContext, humaContext, aspirations, patterns, user, mode, sourceTab, tabContext, onContextExtracted, onAspirationCreated, onReorganization, onDecision]);
 
   return {
     messages,

@@ -30,6 +30,14 @@ export const v2ChatSchema = z.object({
   humaContext: z.record(z.string(), z.unknown()).optional(),
   isFirstConversation: z.boolean().optional(),
   exchangeCount: z.number().int().nonnegative().optional(),
+  // Compressed encoding inputs (Phase 2 / chat integration)
+  fullAspirations: z.array(z.record(z.string(), z.unknown())).optional(),
+  patterns: z.array(z.record(z.string(), z.unknown())).optional(),
+  capitalScores: z.array(z.record(z.string(), z.unknown())).optional(),
+  behaviorCounts: z.record(z.string(), z.object({
+    completed: z.number(),
+    total: z.number(),
+  })).optional(),
 });
 
 export type V2ChatRequest = z.infer<typeof v2ChatSchema>;
