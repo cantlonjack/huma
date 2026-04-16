@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { useGrow } from "@/hooks/useGrow";
 import { displayName } from "@/lib/display-name";
 import TabShell from "@/components/shared/TabShell";
@@ -10,6 +11,7 @@ import PatternSection from "@/components/grow/PatternSection";
 import CompletionStats from "@/components/grow/CompletionStats";
 import BehaviorFrequency from "@/components/grow/BehaviorFrequency";
 import CorrelationCards from "@/components/grow/CorrelationCards";
+import { GapSection } from "@/components/grow/GapCard";
 
 // ── Inlined: EmptyState ──
 function EmptyState({ onAddAspiration }: { onAddAspiration: () => void }) {
@@ -103,6 +105,13 @@ const STAGE_HEADLINES: Record<string, string> = {
 export default function GrowPage() {
   const g = useGrow();
 
+  const handlePlanAspiration = useCallback(() => {
+    // Open the chat in new-aspiration mode. The aspiration context for
+    // decomposition flows through tabContext; wiring a deeper routing
+    // flag can happen once a dedicated "decompose-existing" chat mode ships.
+    g.setNewAspirationOpen(true);
+  }, [g]);
+
   return (
     <TabShell
       contextPrompt={g.newAspirationOpen ? "What are you trying to make work?" : "What patterns are you noticing in your days?"}
@@ -134,6 +143,15 @@ export default function GrowPage() {
             </p>
           )}
         </div>
+
+        {/* Gaps in pathway — surfaced whenever verification finds unconnected aspirations */}
+        {!g.loading && g.unconnectedAspirations.length > 0 && (
+          <GapSection
+            unconnectedAspirations={g.unconnectedAspirations}
+            dormantCapitalCount={g.verification?.dormantCapitals.length ?? 0}
+            onPlan={handlePlanAspiration}
+          />
+        )}
 
         {/* Content — progressive disclosure by stage */}
         {g.loading ? (
@@ -192,6 +210,7 @@ export default function GrowPage() {
                 onUpdate={g.handlePatternUpdate}
                 onArchive={g.handlePatternArchive}
                 onRemove={g.handlePatternRemove}
+                behaviorCounts={g.behaviorCounts}
               />
             )}
 
@@ -214,6 +233,7 @@ export default function GrowPage() {
                 onUpdate={g.handlePatternUpdate}
                 onArchive={g.handlePatternArchive}
                 onRemove={g.handlePatternRemove}
+                behaviorCounts={g.behaviorCounts}
               />
             )}
 
@@ -236,6 +256,7 @@ export default function GrowPage() {
                 onUpdate={g.handlePatternUpdate}
                 onArchive={g.handlePatternArchive}
                 onRemove={g.handlePatternRemove}
+                behaviorCounts={g.behaviorCounts}
               />
             )}
 

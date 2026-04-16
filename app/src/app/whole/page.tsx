@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import TabShell from "@/components/shared/TabShell";
 import InsightCard from "@/components/whole/InsightCard";
 import ShareworthyInsightCard from "@/components/whole/ShareworthyInsightCard";
@@ -10,6 +11,7 @@ import PatternsList from "@/components/whole/PatternsList";
 import ConfirmationSheet from "@/components/whole/ConfirmationSheet";
 import SettingsSheet from "@/components/whole/SettingsSheet";
 import WholeSkeleton from "@/components/whole/WholeSkeleton";
+import CapacityIndicator from "@/components/whole/CapacityIndicator";
 import { useWhole } from "@/hooks/useWhole";
 import { mapAspirationStatus } from "@/lib/whole-utils";
 import { isShareworthyInsight } from "@/components/whole/ShareworthyInsightCard";
@@ -75,6 +77,17 @@ function ConnectionsList({ aspirations }: { aspirations: Aspiration[] }) {
 
 export default function WholePage() {
   const w = useWhole();
+
+  // Unconnected aspirations — active aspirations with no behaviors defined.
+  // Matches verifyLifeGraph's "unconnectedAspirations" definition by ID.
+  const unconnectedIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const a of w.aspirations) {
+      if (a.status !== "active") continue;
+      if (!a.behaviors || a.behaviors.length === 0) set.add(a.id);
+    }
+    return set;
+  }, [w.aspirations]);
 
   const chatPrompt = w.chatShellMode === "new-aspiration"
     ? "What are you trying to make work?"
@@ -156,10 +169,17 @@ export default function WholePage() {
               </div>
             )}
 
+            {/* Capacity — the soil your frameworks grow in */}
+            {w.humaContext?.capacityState && (
+              <div className="mt-5">
+                <CapacityIndicator capacityState={w.humaContext.capacityState} />
+              </div>
+            )}
+
             {/* ─── Single Life Design View ─── */}
             <div className="mt-5 flex flex-col gap-6">
               {/* 1. Desires — aspirations as sentences */}
-              <AspirationsList aspirations={w.aspirations} />
+              <AspirationsList aspirations={w.aspirations} unconnectedIds={unconnectedIds} />
 
               {/* 2. Pathway — staged plan (forward-looking, renders when data exists) */}
               {w.pathway && (

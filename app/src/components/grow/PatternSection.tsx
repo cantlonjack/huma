@@ -57,6 +57,7 @@ function DimensionFold({
   onArchive,
   onRemove,
   displayMode,
+  behaviorCounts,
 }: {
   label: string;
   color: string;
@@ -74,6 +75,7 @@ function DimensionFold({
   onArchive?: (patternId: string) => void;
   onRemove?: (patternId: string) => void;
   displayMode?: "default" | "evidence";
+  behaviorCounts?: Record<string, { completed: number; total: number }>;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -138,6 +140,7 @@ function DimensionFold({
             onArchive={onArchive}
             onRemove={onRemove}
             displayMode={displayMode}
+            behaviorCounts={behaviorCounts}
           />
         ))}
       </div>
@@ -165,6 +168,7 @@ export default function PatternSection({
   onArchive,
   onRemove,
   displayMode,
+  behaviorCounts,
 }: {
   title: string;
   subtitle: string;
@@ -183,6 +187,7 @@ export default function PatternSection({
   onArchive?: (patternId: string) => void;
   onRemove?: (patternId: string) => void;
   displayMode?: "default" | "evidence";
+  behaviorCounts?: Record<string, { completed: number; total: number }>;
 }) {
   const needsFolding = patterns.length > MAX_VISIBLE_CARDS;
   const visible = needsFolding ? patterns.slice(0, 5) : patterns;
@@ -222,6 +227,7 @@ export default function PatternSection({
           onArchive={onArchive}
           onRemove={onRemove}
           displayMode={displayMode}
+          behaviorCounts={behaviorCounts}
         />
       ))}
 
@@ -250,6 +256,7 @@ export default function PatternSection({
               onArchive={onArchive}
               onRemove={onRemove}
               displayMode={displayMode}
+              behaviorCounts={behaviorCounts}
             />
           ))}
         </div>

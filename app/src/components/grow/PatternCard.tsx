@@ -5,6 +5,8 @@ import type { Pattern, Aspiration, SparklineData, MergeSuggestion } from "@/type
 import { DIMENSION_COLORS, DIMENSION_LABELS } from "@/types/v2";
 import { displayName } from "@/lib/display-name";
 import Sparkline from "@/components/grow/Sparkline";
+import PatternHealth from "@/components/grow/PatternHealth";
+import { getRpplHealth, getRpplOutputs } from "@/lib/rppl-interface";
 import {
   statusLabel,
   statusColor,
@@ -62,6 +64,7 @@ const PatternCard = memo(function PatternCard({
   onArchive,
   onRemove,
   displayMode = "default",
+  behaviorCounts,
 }: {
   pattern: Pattern;
   aspirations: Aspiration[];
@@ -78,6 +81,7 @@ const PatternCard = memo(function PatternCard({
   onArchive?: (patternId: string) => void;
   onRemove?: (patternId: string) => void;
   displayMode?: "default" | "evidence";
+  behaviorCounts?: Record<string, { completed: number; total: number }>;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -584,6 +588,27 @@ const PatternCard = memo(function PatternCard({
           </div>
         </div>
       </div>
+
+      {/* RPPL health + outputs — typed interface surfacing */}
+      {(() => {
+        if (!behaviorCounts) return null;
+        const primaryKey = triggerStep?.behaviorKey || pattern.steps[0]?.behaviorKey;
+        if (!primaryKey) return null;
+        const health = getRpplHealth(
+          pattern.aspirationId,
+          primaryKey,
+          [pattern],
+          behaviorCounts,
+        );
+        const outputs = getRpplOutputs(
+          pattern.aspirationId,
+          primaryKey,
+          aspirations,
+          behaviorCounts,
+        );
+        if (outputs.capitalEffects.length === 0 && !health) return null;
+        return <PatternHealth health={health} outputs={outputs} />;
+      })()}
 
       {/* Celebrated validation — in evidence mode, the statement already communicates this */}
       {displayMode !== "evidence" && pattern.status === "validated" && (

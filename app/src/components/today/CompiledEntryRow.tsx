@@ -10,11 +10,13 @@ export function CompiledEntryRow({
   isChecked,
   isKeystone,
   onToggle,
+  onShowProvenance,
 }: {
   entry: SheetEntry;
   isChecked: boolean;
   isKeystone: boolean;
   onToggle: () => void;
+  onShowProvenance?: (entry: SheetEntry) => void;
 }) {
   const [justChecked, setJustChecked] = useState(false);
   const reducedMotion = useReducedMotion();
@@ -131,6 +133,18 @@ export function CompiledEntryRow({
               animate={!reducedMotion && !isChecked}
             />
           </div>
+        )}
+
+        {/* RPPL provenance affordance */}
+        {onShowProvenance && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onShowProvenance(entry); }}
+            className="flex-shrink-0 mt-[10px] cursor-pointer bg-transparent border border-sand-300 rounded-full size-5 p-0 flex items-center justify-center text-sage-400 hover:text-sage-600 hover:border-sage-300 transition-colors duration-150"
+            aria-label="Where does this come from?"
+            title="Where does this come from?"
+          >
+            <span className="font-sans text-[10px] font-semibold leading-none">?</span>
+          </button>
         )}
       </div>
     </div>

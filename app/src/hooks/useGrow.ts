@@ -1,8 +1,12 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Pattern, Aspiration, DimensionKey, SparklineData, EmergingBehavior, MergeSuggestion, MonthlyReviewData } from "@/types/v2";
+import { verifyLifeGraph, type GraphVerification } from "@/lib/graph-verification";
+import { allSeeds } from "@/data/rppl-seeds";
+import { createEmptyContext } from "@/types/context";
+import { fetchHumaContext } from "@/lib/queries";
 import { DIMENSION_COLORS, DIMENSION_LABELS } from "@/types/v2";
 import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
@@ -62,6 +66,11 @@ export interface UseGrowReturn {
   completionStats: { checked: number; total: number };
   behaviorFrequencies: Array<{ behaviorKey: string; behaviorName: string; completed: number; totalDays: number }>;
   behaviorCorrelations: Array<{ behaviorA: string; behaviorB: string; coRate: number; withoutRate: number }>;
+
+  // Graph verification — typed RPPL integration
+  verification: GraphVerification | null;
+  unconnectedAspirations: Aspiration[];
+  behaviorCounts: Record<string, { completed: number; total: number }>;
 
   // Derived
   dayCount: number;
@@ -128,6 +137,12 @@ export function useGrow(): UseGrowReturn {
   const { data: ctxData } = useQuery({
     queryKey: queryKeys.knownContext(userId),
     queryFn: () => fetchKnownContext(userId),
+    enabled,
+  });
+
+  const { data: humaCtx } = useQuery({
+    queryKey: queryKeys.humaContext(userId),
+    queryFn: () => fetchHumaContext(userId),
     enabled,
   });
 
@@ -418,6 +433,46 @@ export function useGrow(): UseGrowReturn {
   const working = patterns.filter(p => p.status === "working");
   const finding = patterns.filter(p => p.status === "finding");
 
+  // ─── Graph verification (typed RPPL integration) ───────────────────────
+  // Build behaviorCounts from patterns' validation data. This powers
+  // getRpplHealth/Outputs on pattern cards and dormant-capital detection.
+  const behaviorCounts = useMemo<Record<string, { completed: number; total: number }>>(() => {
+    const counts: Record<string, { completed: number; total: number }> = {};
+    for (const pattern of patterns) {
+      for (const step of pattern.steps) {
+        const key = `${pattern.aspirationId}:${step.behaviorKey}`;
+        if (!counts[key]) {
+          counts[key] = {
+            completed: pattern.validationCount || 0,
+            total: pattern.validationTarget || 30,
+          };
+        }
+      }
+    }
+    return counts;
+  }, [patterns]);
+
+  const verification = useMemo<GraphVerification | null>(() => {
+    if (aspirations.length === 0) return null;
+    try {
+      return verifyLifeGraph(
+        aspirations,
+        patterns,
+        allSeeds,
+        humaCtx || createEmptyContext(),
+        behaviorCounts,
+      );
+    } catch {
+      return null;
+    }
+  }, [aspirations, patterns, humaCtx, behaviorCounts]);
+
+  const unconnectedAspirations = useMemo(() => {
+    return aspirations.filter(
+      a => a.status === "active" && (!a.behaviors || a.behaviors.length === 0),
+    );
+  }, [aspirations]);
+
   return {
     loading,
     patterns,
@@ -446,6 +501,9 @@ export function useGrow(): UseGrowReturn {
     finding,
     mergeSuggestions,
     confirmRemovePattern: confirmRemovePatternObj,
+    verification,
+    unconnectedAspirations,
+    behaviorCounts,
     setNewAspirationOpen,
     setConfirmRemoveId,
     handleToggleExpand,

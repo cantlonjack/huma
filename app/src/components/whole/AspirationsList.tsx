@@ -8,6 +8,8 @@ import { mapAspirationStatus } from "@/lib/whole-utils";
 
 interface AspirationsListProps {
   aspirations: Aspiration[];
+  /** Aspiration IDs that have no behavioral pathway — rendered as dashed/unconnected */
+  unconnectedIds?: Set<string>;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -20,7 +22,13 @@ const STATUS_LABELS: Record<string, string> = {
   completed: "Completed",
 };
 
-function AspirationRow({ aspiration }: { aspiration: Aspiration }) {
+function AspirationRow({
+  aspiration,
+  unconnected,
+}: {
+  aspiration: Aspiration;
+  unconnected?: boolean;
+}) {
   const status = mapAspirationStatus(aspiration);
   const name = displayName(aspiration.title || aspiration.clarifiedText || aspiration.rawText);
   const behaviorCount = aspiration.behaviors?.length || 0;
@@ -31,7 +39,12 @@ function AspirationRow({ aspiration }: { aspiration: Aspiration }) {
     <div className="flex items-start gap-3 py-2.5">
       {/* Status indicator */}
       <div className="mt-1 shrink-0">
-        {status === "working" || status === "active" ? (
+        {unconnected ? (
+          <span
+            className="block w-2 h-2 rounded-full border border-dashed border-amber-500 bg-transparent"
+            aria-label="No daily practice yet"
+          />
+        ) : status === "working" || status === "active" ? (
           <span className="block w-2 h-2 rounded-full bg-sage-500" />
         ) : status === "finding" ? (
           <span className="block w-2 h-2 rounded-full border border-sage-400 bg-transparent" />
@@ -56,6 +69,11 @@ function AspirationRow({ aspiration }: { aspiration: Aspiration }) {
               {activeBehaviors}/{behaviorCount} behaviors
             </span>
           )}
+          {unconnected && (
+            <span className="font-sans text-[11px] italic text-amber-600">
+              no daily practice yet
+            </span>
+          )}
         </div>
 
         {/* Dimension dots */}
@@ -77,7 +95,7 @@ function AspirationRow({ aspiration }: { aspiration: Aspiration }) {
 
 const MemoizedRow = memo(AspirationRow);
 
-export default function AspirationsList({ aspirations }: AspirationsListProps) {
+export default function AspirationsList({ aspirations, unconnectedIds }: AspirationsListProps) {
   const visible = aspirations.filter(
     (a) => a.status !== "archived" && a.status !== "dropped"
   );
@@ -86,18 +104,38 @@ export default function AspirationsList({ aspirations }: AspirationsListProps) {
 
   const active = visible.filter((a) => a.status === "active" || !a.status);
   const other = visible.filter((a) => a.status && a.status !== "active");
+  const hasUnconnected = !!unconnectedIds && visible.some(a => unconnectedIds.has(a.id));
 
   return (
     <div className="px-5">
-      <h2 className="font-sans font-medium text-[11px] tracking-[0.14em] uppercase text-sage-400 mb-2 m-0">
-        Aspirations
-      </h2>
+      <div className="flex items-baseline justify-between mb-2">
+        <h2 className="font-sans font-medium text-[11px] tracking-[0.14em] uppercase text-sage-400 m-0">
+          Aspirations
+        </h2>
+        {hasUnconnected && (
+          <span
+            className="inline-flex items-center gap-1.5 font-sans text-[10px] italic text-sage-400"
+            title="Dashed = no daily practice tied to this aspiration yet"
+          >
+            <span className="w-2 h-2 rounded-full border border-dashed border-amber-500" />
+            unconnected
+          </span>
+        )}
+      </div>
       <div className="divide-y divide-sand-200">
         {active.map((a) => (
-          <MemoizedRow key={a.id} aspiration={a} />
+          <MemoizedRow
+            key={a.id}
+            aspiration={a}
+            unconnected={unconnectedIds?.has(a.id)}
+          />
         ))}
         {other.map((a) => (
-          <MemoizedRow key={a.id} aspiration={a} />
+          <MemoizedRow
+            key={a.id}
+            aspiration={a}
+            unconnected={unconnectedIds?.has(a.id)}
+          />
         ))}
       </div>
     </div>

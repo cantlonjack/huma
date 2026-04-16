@@ -1,6 +1,8 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/components/shared/AuthProvider";
 import { displayName } from "@/lib/display-name";
 import TabShell from "@/components/shared/TabShell";
 import TodaySkeleton from "@/components/today/TodaySkeleton";
@@ -8,6 +10,8 @@ import NotificationSettings from "@/components/today/NotificationSettings";
 import { useToday, formatBriefingDate, getBehaviorChain } from "@/hooks/useToday";
 import { PatternRouteCard } from "@/components/today/PatternRouteCard";
 import { CompiledEntryRow } from "@/components/today/CompiledEntryRow";
+import RpplProvenanceSheet from "@/components/today/RpplProvenanceSheet";
+import { queryKeys, fetchPatterns } from "@/lib/queries";
 import {
   AspirationQuickLook,
   RerouteCard,
@@ -20,7 +24,7 @@ import {
 } from "@/components/today/TodayCards";
 import { ValidationCard } from "@/components/today/ValidationCard";
 import WeekRhythm from "@/components/today/WeekRhythm";
-import type { Nudge, DimensionKey } from "@/types/v2";
+import type { Nudge, DimensionKey, SheetEntry } from "@/types/v2";
 import { DIMENSION_LABELS } from "@/types/v2";
 import { ConnectionThreads } from "@/components/shared/ConnectionThreads";
 import type { PulseState } from "@/components/shared/ConnectionThreads";
@@ -152,6 +156,16 @@ const WatchingFooter = memo(function WatchingFooter({
 
 export default function TodayPage() {
   const t = useToday();
+  const { user } = useAuth();
+  const [provenanceEntry, setProvenanceEntry] = useState<SheetEntry | null>(null);
+
+  // Load patterns so sheet entries can surface their RPPL provenance.
+  const { data: patternData } = useQuery({
+    queryKey: queryKeys.patterns(user?.id ?? null),
+    queryFn: () => fetchPatterns(user?.id ?? null),
+    enabled: true,
+  });
+  const patterns = patternData?.patterns ?? [];
 
   // Gather all dimensions from compiled entries for the pulse
   const compiledDimensions = Array.from(
@@ -345,6 +359,7 @@ export default function TodayPage() {
                           onToggle={() =>
                             t.handleToggleStep(entry.aspirationId, entry.behaviorKey, !isChecked)
                           }
+                          onShowProvenance={setProvenanceEntry}
                         />
                         {/* Thin divider between entries (when no connection note follows) */}
                         {i < t.compiledEntries.length - 1 && !t.compiledEntries[i + 1]?.connectionNote && (
@@ -626,6 +641,16 @@ export default function TodayPage() {
       <NotificationSettings
         open={t.notifSettingsOpen}
         onClose={() => t.setNotifSettingsOpen(false)}
+      />
+
+      {/* RPPL Provenance Sheet */}
+      <RpplProvenanceSheet
+        open={!!provenanceEntry}
+        onClose={() => setProvenanceEntry(null)}
+        aspirationId={provenanceEntry?.aspirationId}
+        behaviorKey={provenanceEntry?.behaviorKey}
+        patterns={patterns}
+        behaviorText={provenanceEntry?.headline || provenanceEntry?.behaviorText}
       />
 
       {/* Aspiration Quick-Look */}
