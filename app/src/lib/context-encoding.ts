@@ -67,34 +67,36 @@ function encodeDimensionScore(
   const details: string[] = [];
   const flags: string[] = [];
 
+  // Partial contexts (older saves, migration drift) may be missing some
+  // dimension objects — use optional chaining throughout.
   switch (dimensionKey) {
     case "body":
-      if (context.body.sleep) details.push(`sleep:${context.body.sleep}`);
-      if (context.body.conditions?.length) details.push(context.body.conditions[0]);
+      if (context.body?.sleep) details.push(`sleep:${context.body.sleep}`);
+      if (context.body?.conditions?.length) details.push(context.body.conditions[0]);
       break;
     case "people":
-      if (context.people.household?.length) details.push(`household:${context.people.household.length}`);
+      if (context.people?.household?.length) details.push(`household:${context.people.household.length}`);
       break;
     case "money":
-      if (context.money.income) details.push(context.money.income);
-      if (context.money.debt) flags.push("debt-active");
+      if (context.money?.income) details.push(context.money.income);
+      if (context.money?.debt) flags.push("debt-active");
       break;
     case "home":
-      if (context.home.location) details.push(context.home.location);
-      if (context.home.land) details.push(context.home.land);
+      if (context.home?.location) details.push(context.home.location);
+      if (context.home?.land) details.push(context.home.land);
       break;
     case "growth":
-      if (context.growth.currentLearning?.length) details.push(`learning:${context.growth.currentLearning.length}`);
+      if (context.growth?.currentLearning?.length) details.push(`learning:${context.growth.currentLearning.length}`);
       break;
     case "joy":
-      if (context.joy.sources?.length) details.push(`sources:${context.joy.sources.length}`);
-      if (!context.joy.sources?.length && !context.joy.rhythms?.length) flags.push("dormant");
+      if (context.joy?.sources?.length) details.push(`sources:${context.joy.sources.length}`);
+      if (!context.joy?.sources?.length && !context.joy?.rhythms?.length) flags.push("dormant");
       break;
     case "purpose":
-      if (context.purpose.whyStatement) details.push("WHY:set");
+      if (context.purpose?.whyStatement) details.push("WHY:set");
       break;
     case "identity":
-      if (context.identity.archetypes?.length) details.push(context.identity.archetypes[0]);
+      if (context.identity?.archetypes?.length) details.push(context.identity.archetypes[0]);
       break;
   }
 
@@ -147,7 +149,7 @@ export function encodeFolded(input: EncodingInput): string {
   lines.push(`LIFE[d${dayCount || 0} a${activeAspirations.length} p${activePatterns.length}]`);
 
   // WHY statement
-  if (context.purpose.whyStatement) {
+  if (context.purpose?.whyStatement) {
     lines.push(` WHY:"${context.purpose.whyStatement}"`);
   }
 
@@ -188,8 +190,8 @@ export function encodeFolded(input: EncodingInput): string {
 
   // Flags (aggregate warnings)
   const flags: string[] = [];
-  if (!context.joy.sources?.length && !context.joy.rhythms?.length) flags.push("joy-dormant");
-  if (context.money.debt) flags.push("debt-active");
+  if (!context.joy?.sources?.length && !context.joy?.rhythms?.length) flags.push("joy-dormant");
+  if (context.money?.debt) flags.push("debt-active");
   if (flags.length > 0) {
     lines.push(` \u26a0\ufe0fFLAGS: ${flags.join(", ")}`);
   }
