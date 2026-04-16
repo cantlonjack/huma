@@ -16,6 +16,11 @@ export const capacitySeeds: RpplSeed[] = [
     domains: ["growth", "identity"],
     description:
       "The capacity to observe your own experience — metacognition. Without awareness, you cannot apply ANY framework because you cannot see what's happening. The Trivium requires observing your own thinking. Polyvagal theory requires noticing your nervous system state. The Scientific Method requires honest observation. Awareness is the prerequisite for every other capacity and every framework. It is not the same as intelligence — it is the ability to watch yourself think, feel, and act.",
+    outputs: [
+      { name: "Metacognition", portType: "state", key: "metacognition", description: "Ability to observe your own thinking" },
+      { name: "Self-observation", portType: "state", key: "self_observation", description: "Noticing patterns, reactions, and states in real-time" },
+      { name: "Emotional granularity", portType: "state", key: "emotional_granularity", description: "Specificity in identifying inner states" },
+    ],
     indicators: [
       "Can describe what actually happened vs. their story about what happened",
       "Notices patterns in own behavior before being shown data",
@@ -95,6 +100,11 @@ export const capacitySeeds: RpplSeed[] = [
     domains: ["identity", "growth"],
     description:
       "The willingness to see what's actually there rather than what you want to see. Awareness lets you observe; honesty lets you report accurately — to yourself first, then to any system tracking your life. Without honesty, every framework becomes a rationalization engine: you'll 'first-principles' your way to the conclusion you already wanted, track behaviors but lie to yourself about completion, and explain away data that contradicts your self-image. Honesty is the bridge between seeing and changing.",
+    outputs: [
+      { name: "Data integrity", portType: "state", key: "data_integrity", description: "Self-report matches actual behavior" },
+      { name: "Self-accuracy", portType: "state", key: "self_accuracy", description: "Truthful self-assessment without distortion" },
+      { name: "Feedback receptivity", portType: "state", key: "feedback_receptivity", description: "Willingness to hear and act on disconfirming data" },
+    ],
     indicators: [
       "Self-report matches behavioral data (says they exercise, data confirms it)",
       "Acknowledges when behavior doesn't match stated values without excessive defensiveness",
@@ -166,6 +176,11 @@ export const capacitySeeds: RpplSeed[] = [
     domains: ["meta", "identity"],
     description:
       "The generative force — the fact that something matters to you. Without care, nothing is motivated. You can have perfect awareness, total honesty, and full agency, but if nothing matters, no framework activates. Care is what Natural Law calls the 'generative principle' and what the Hermetic tradition calls the driving force behind Mentalism. If you don't care about anything, HUMA can't help yet — the conversation must first explore what used to matter, what might matter, what has been numbed.",
+    outputs: [
+      { name: "Intrinsic motivation", portType: "state", key: "motivation", description: "Sustained drive from meaning, not obligation" },
+      { name: "Engagement", portType: "state", key: "engagement", description: "Consistent return to what matters" },
+      { name: "Meaning", portType: "state", key: "meaning", description: "Felt sense that something is worth the cost" },
+    ],
     indicators: [
       "Consistent engagement with at least one aspiration over time",
       "Emotional response to progress or regression (it matters enough to feel something)",
@@ -238,6 +253,11 @@ export const capacitySeeds: RpplSeed[] = [
     domains: ["identity", "purpose"],
     description:
       "The felt sense that your choices matter — not the philosophical axiom that free will exists, but the lived experience of choosing and seeing consequences follow. Learned helplessness kills every framework. A person who genuinely believes they can't change anything will not apply the Trivium, will not test inherited beliefs, will not redesign their environment. Agency is restored through small wins: making a tiny choice, seeing a result, and building from there.",
+    outputs: [
+      { name: "Self-efficacy", portType: "state", key: "self_efficacy", description: "Felt sense that your choices produce results" },
+      { name: "Initiative", portType: "state", key: "initiative", description: "Acting without external prompting" },
+      { name: "Internal locus of control", portType: "state", key: "internal_locus", description: "Connecting outcomes to own choices, not circumstances" },
+    ],
     indicators: [
       "Uses 'I choose' or 'I decided' language rather than 'I have to' or 'I can't'",
       "Takes initiative without being prompted — active rather than passive posture",
@@ -319,6 +339,11 @@ export const capacitySeeds: RpplSeed[] = [
     domains: ["growth"],
     description:
       "The felt recognition that your current understanding is incomplete. Without humility, you can't learn — you'll adopt one framework, treat it as complete truth, and reject everything that contradicts it. Humility is the prerequisite for the Trivium's Grammar phase (you must know you don't know before you can gather), for the Scientific Method (you must be willing to be wrong), and for HUMA's entire validation process (your patterns might not be working, and the data will tell you).",
+    outputs: [
+      { name: "Learning openness", portType: "state", key: "learning_openness", description: "Willingness to encounter and absorb new information" },
+      { name: "Belief flexibility", portType: "state", key: "belief_flexibility", description: "Ability to update conclusions when evidence warrants" },
+      { name: "Provisional thinking", portType: "state", key: "provisional_thinking", description: "Holding positions as current-best rather than absolute" },
+    ],
     indicators: [
       "Asks questions rather than making statements when encountering new domains",
       "Revises beliefs when evidence contradicts them — without excessive identity distress",

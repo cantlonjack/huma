@@ -5,9 +5,15 @@ import { rateLimited, serviceUnavailable, internalError } from "@/lib/api-error"
 import { sheetCompileSchema } from "@/lib/schemas";
 import { parseBody } from "@/lib/schemas/parse";
 import type { KnownContext } from "@/types/v2";
+import type { HumaContext } from "@/types/context";
+import { compressConversationHistory } from "@/lib/context-encoding";
+import { allSeeds } from "@/data/rppl-seeds";
 import {
   getSeason,
   formatKnownContext,
+  formatCompressedContextForSheet,
+  sheetVerificationSummary,
+  normalizeSheetAspirations,
   scoreBehaviors,
   analyzeHistory,
   type RecentEntry,
@@ -158,6 +164,7 @@ export async function POST(request: Request) {
   const name = req.name;
   const aspirations = req.aspirations;
   const knownContext = req.knownContext as KnownContext;
+  const humaContext = req.humaContext as HumaContext | undefined;
   const recentHistory = req.recentHistory as RecentEntry[];
   const conversationMessages = req.conversationMessages;
   const date = req.date || new Date().toISOString().split("T")[0];
@@ -234,12 +241,54 @@ hard cap, not a suggestion.`
     : "No history yet — this is their first day. Use the through-line to name the most connected behavior or the strongest cross-dimensional link you see in their aspirations.";
 
   const historyAnalysis = analyzeHistory(recentHistory, dayOfWeek);
-  const contextStr = formatKnownContext(knownContext);
 
-  const recentConvo = conversationMessages.slice(-20);
-  const conversationStr = recentConvo.length > 0
-    ? recentConvo.map(m => `${m.role === "user" ? "Operator" : "HUMA"}: ${m.content}`).join("\n\n")
-    : "No conversation yet.";
+  // Build behaviorCounts from recentHistory for compressed encoding
+  const behaviorCounts: Record<string, { completed: number; total: number }> = {};
+  for (const entry of recentHistory) {
+    // The key format for encoding is aspirationId:behaviorKey.
+    // recentHistory only has behaviorKey, so fall back to matching via aspiration lookup.
+    for (const asp of aspirations) {
+      if (asp.behaviors?.some(b => b.key === entry.behaviorKey)) {
+        const key = `${asp.id}:${entry.behaviorKey}`;
+        if (!behaviorCounts[key]) behaviorCounts[key] = { completed: 0, total: 0 };
+        behaviorCounts[key].total++;
+        if (entry.checked) behaviorCounts[key].completed++;
+      }
+    }
+  }
+
+  // Use compressed encoding when HumaContext is provided; else legacy formatter.
+  // Normalize the sheet's simpler aspiration shape to full Aspiration objects.
+  const normalizedAspirations = humaContext && humaContext._version
+    ? normalizeSheetAspirations(aspirations)
+    : null;
+
+  const contextStr = humaContext && humaContext._version && normalizedAspirations
+    ? formatCompressedContextForSheet({
+        humaContext,
+        aspirations: normalizedAspirations,
+        behaviorCounts,
+        dayCount,
+      })
+    : formatKnownContext(knownContext);
+
+  // Graph verification (Phase 3) — surface unconnected aspirations, dormant capitals.
+  const verificationStr = humaContext && humaContext._version && normalizedAspirations
+    ? sheetVerificationSummary({
+        humaContext,
+        aspirations: normalizedAspirations,
+        behaviorCounts,
+        dayCount,
+        rpplSeeds: allSeeds,
+      }).summary
+    : "";
+
+  // Compress conversation history: keep last 5 full, condense older to 1 line each.
+  const conversationStr = humaContext && humaContext._version
+    ? compressConversationHistory(conversationMessages.slice(-20), 5)
+    : (conversationMessages.slice(-20).length > 0
+        ? conversationMessages.slice(-20).map(m => `${m.role === "user" ? "Operator" : "HUMA"}: ${m.content}`).join("\n\n")
+        : "No conversation yet.");
 
   const identityParts: string[] = [];
   if (archetypes.length > 0) {
@@ -270,7 +319,7 @@ Meal plans should respect budget. Purchases should reference actual amounts.
     .replace("{specificity_section}", specificitySection)
     .replace("{selection_section}", selectionSection)
     .replace("{conversation_transcript}", conversationStr)
-    .replace("{known_context}", contextStr)
+    .replace("{known_context}", verificationStr ? `${contextStr}\n\n${verificationStr}` : contextStr)
     .replace("{recent_history}", historyStr)
     .replace("{history_analysis}", historyAnalysis + (financialSection ? "\n\n" + financialSection : ""))
     .replace("{day_of_week}", dayOfWeek)

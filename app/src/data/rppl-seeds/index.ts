@@ -1,4 +1,4 @@
-export type { RpplSeed, RpplType, PrincipleSource } from "./types";
+export type { RpplSeed, RpplType, PrincipleSource, PortType, RpplPort } from "./types";
 export { axiomSeeds } from "./axioms";
 export { capacitySeeds } from "./capacities";
 export { frameworkSeeds } from "./frameworks";

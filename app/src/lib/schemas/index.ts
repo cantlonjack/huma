@@ -98,6 +98,7 @@ export const sheetCompileSchema = z.object({
     })),
   })).default([]),
   knownContext: z.record(z.string(), z.unknown()).optional().default({}),
+  humaContext: z.record(z.string(), z.unknown()).optional(),
   recentHistory: z.array(z.object({
     date: z.string(),
     behaviorKey: z.string(),

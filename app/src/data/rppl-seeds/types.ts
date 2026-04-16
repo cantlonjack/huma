@@ -16,6 +16,26 @@ import type {
 
 export type RpplType = "axiom" | "principle" | "capacity" | "framework" | "practice";
 
+// ─── Port Types (typed I/O for composability) ──────────────────────────────
+// What flows between RPPLs. Enables graph verification, gap detection,
+// and compressed encoding.
+
+export type PortType =
+  | "dimension"     // body, people, money, home, growth, joy, purpose, identity
+  | "capital"       // financial, material, living, social, intellectual, experiential, spiritual, cultural
+  | "capacity"      // awareness, honesty, care, agency, humility
+  | "state"         // sleep_quality, stress_level, energy, focus, mood, etc.
+  | "resource"      // time, money, attention, social_support
+  | "boolean";      // binary prerequisites (has_outdoor_access, has_partner, etc.)
+
+export interface RpplPort {
+  name: string;           // Human-readable: "Morning sunlight access"
+  portType: PortType;     // What category of data flows here
+  key: string;            // Machine key: "morning_light_access"
+  required?: boolean;     // Default true for inputs, always true for outputs
+  description?: string;   // What this port means in context
+}
+
 export type PrincipleSource =
   | "axiomatic" // Derived directly from an axiom (irreducible truth)
   | "derived" // From a framework (user chose this based on understanding)
@@ -63,6 +83,10 @@ export interface RpplSeed {
   timeWindow?: string; // When to practice
   servesPrinciples?: string[]; // rpplIds of principles this practice embodies
   servesCapacities?: string[]; // rpplIds of capacities this practice cultivates
+
+  // ─── Ports (typed I/O for composability) ───
+  inputs?: RpplPort[];    // What this RPPL requires to function
+  outputs?: RpplPort[];   // What this RPPL produces when practiced
 
   // ─── Shared fields ───
   provenance: PatternProvenance;

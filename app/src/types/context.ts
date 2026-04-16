@@ -181,6 +181,22 @@ export interface Decision {
   followUpDue?: string;          // when to ask "how did this work out?"
 }
 
+// ─── Capacity State ─────────────────────────────────────────────────────────
+// The "soil measurement" — determines what frameworks can take root.
+// Assessed from behavioral signals, not self-report.
+
+export type CapacityLevel = "undeveloped" | "emerging" | "developing" | "strong";
+
+export interface CapacityState {
+  awareness: CapacityLevel;
+  honesty: CapacityLevel;
+  care: CapacityLevel;
+  agency: CapacityLevel;
+  humility: CapacityLevel;
+  _assessedAt?: string;      // ISO timestamp of last assessment
+  _assessedFrom?: string;    // "conversation" | "behavioral" | "self-report"
+}
+
 // ─── The Complete Context Model ─────────────────────────────────────────────
 
 export interface HumaContext {
@@ -198,6 +214,7 @@ export interface HumaContext {
   time: TimeContext;
   temporal: TemporalContext;
   decisions: Decision[];
+  capacityState?: CapacityState;
 
   // Meta
   _sources: ContextSource[];

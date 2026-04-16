@@ -2,7 +2,12 @@
 // Extracted from sheet/route.ts — behavior scoring, history analysis,
 // season derivation, and context formatting for sheet compilation.
 
-import type { KnownContext, SheetCompileRequest } from "@/types/v2";
+import type { KnownContext, SheetCompileRequest, Aspiration, Pattern } from "@/types/v2";
+import type { HumaContext } from "@/types/context";
+import type { CapitalScore } from "@/engine/canvas-types";
+import type { RpplSeed } from "@/data/rppl-seeds/types";
+import { encodeLifeGraph, type EncodingInput } from "@/lib/context-encoding";
+import { verifyLifeGraph, verificationSummary, type GraphVerification } from "@/lib/graph-verification";
 
 // ─── Season derivation ────────────────────────────────────────────────────
 // Returns a human-readable season string from a YYYY-MM-DD date.
@@ -95,6 +100,98 @@ export function formatKnownContext(ctx: KnownContext): string {
   }
 
   return lines.length > 0 ? lines.join("\n") : "Limited context so far.";
+}
+
+// ─── Sheet aspiration normalizer ──────────────────────────────────────────
+// The sheet request schema uses a simpler aspiration shape than the full
+// Aspiration type (behaviors have `dimensions: string[]` rather than
+// DimensionEffect[]; no status; no dimensionsTouched). This normalizer
+// converts to the full shape so compressed encoding + verification work.
+
+export function normalizeSheetAspirations(
+  simple: SheetCompileRequest["aspirations"],
+): Aspiration[] {
+  return simple.map(a => ({
+    id: a.id,
+    rawText: a.rawText,
+    clarifiedText: a.clarifiedText,
+    status: "active" as const,
+    stage: "active" as const,
+    dimensionsTouched: [],
+    behaviors: a.behaviors.map(b => {
+      const dims = ((b as { dimensions?: string[] }).dimensions ?? []) as string[];
+      return {
+        key: b.key,
+        text: b.text,
+        frequency: b.frequency as "daily" | "weekly" | "specific-days",
+        days: b.days,
+        detail: b.detail,
+        enabled: b.enabled,
+        dimensions: dims.map(d => ({
+          dimension: d as Aspiration["behaviors"][number]["dimensions"][number]["dimension"],
+          direction: "builds" as const,
+          reasoning: "",
+        })),
+      };
+    }),
+  })) as unknown as Aspiration[];
+}
+
+// ─── Compressed context for sheet compilation (Phase 2) ───────────────────
+// Produces a compressed life-graph encoding for the sheet prompt when full
+// HumaContext + aspirations + patterns are available. Saves 50-60% of tokens
+// versus formatKnownContext + full aspirations JSON.
+
+export interface SheetCompressedContextInput {
+  humaContext: HumaContext;
+  aspirations: Aspiration[];
+  patterns?: Pattern[];
+  capitalScores?: CapitalScore[];
+  dayCount?: number;
+  behaviorCounts?: Record<string, { completed: number; total: number }>;
+}
+
+export function formatCompressedContextForSheet(
+  input: SheetCompressedContextInput,
+): string {
+  const encodingInput: EncodingInput = {
+    context: input.humaContext,
+    aspirations: input.aspirations,
+    patterns: input.patterns || [],
+    capitalScores: input.capitalScores,
+    dayCount: input.dayCount,
+    behaviorCounts: input.behaviorCounts,
+  };
+  // Folded (Level 0) for global view + one aspiration expanded per active asp
+  const folded = encodeLifeGraph(encodingInput, "folded");
+
+  const activeAsps = input.aspirations.filter(a => a.status === "active");
+  const expanded = activeAsps
+    .map(a => encodeLifeGraph(encodingInput, "aspiration", a.id))
+    .join("\n\n");
+
+  return expanded ? `${folded}\n\n${expanded}` : folded;
+}
+
+// ─── Graph verification for sheet compilation (Phase 3) ───────────────────
+// Runs graph verification and returns a compact summary to inject into the
+// sheet prompt. Helps the compiler surface gaps (unconnected aspirations,
+// dormant capitals) when choosing the 5 actions.
+
+export function sheetVerificationSummary(
+  input: SheetCompressedContextInput & { rpplSeeds: RpplSeed[] },
+): { verification: GraphVerification; summary: string } {
+  const verification = verifyLifeGraph(
+    input.aspirations,
+    input.patterns || [],
+    input.rpplSeeds,
+    input.humaContext,
+    input.behaviorCounts,
+  );
+  return {
+    verification,
+    summary: verificationSummary(verification),
+  };
 }
 
 // ─── Behavior leverage scoring ───────────────────────────────────────────────

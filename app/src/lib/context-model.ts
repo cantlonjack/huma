@@ -247,6 +247,13 @@ export function contextForPrompt(context: HumaContext): string {
     sections.push(`IDENTITY & PURPOSE:\n${purposeLines.join("\n")}`);
   }
 
+  // Capacity State (the "soil")
+  if (context.capacityState) {
+    const cs = context.capacityState;
+    const capacityLine = `CAP[aw:${cs.awareness} ho:${cs.honesty} ca:${cs.care} ag:${cs.agency} hu:${cs.humility}]`;
+    sections.push(`CAPACITY STATE:\n${capacityLine}`);
+  }
+
   // People
   const peopleLines: string[] = [];
   if (context.people.household?.length) {

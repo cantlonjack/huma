@@ -16,6 +16,15 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["growth"],
     description:
       "The three-part method of learning HOW to think, not what to think. Grammar gathers the raw facts and defines terms. Logic tests those facts for internal consistency, validity, and truth. Rhetoric applies and communicates understanding effectively. Together they form the operating system of the mind — applicable to any subject, any decision, any claim.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Humility", portType: "capacity", key: "humility" },
+    ],
+    outputs: [
+      { name: "Critical thinking", portType: "state", key: "critical_thinking" },
+      { name: "Logical clarity", portType: "state", key: "logical_clarity" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual" },
+    ],
     tenets: [
       "Grammar: systematically gather knowledge — define terms precisely, collect facts, understand the raw material before analyzing it",
       "Logic (Dialectic): test gathered knowledge for consistency and truth — identify contradictions, evaluate arguments, distinguish valid reasoning from fallacious",
@@ -85,6 +94,15 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["growth"],
     description:
       "The four-part method of understanding the structure of reality through number and proportion. Arithmetic studies pure number (discrete quantity). Geometry studies number in space (continuous quantity). Music studies number in time (ratio, harmony, proportion). Astronomy studies number in space and time (cosmological pattern and cycle). Together they reveal the mathematical order that underlies all natural phenomena.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Humility", portType: "capacity", key: "humility" },
+    ],
+    outputs: [
+      { name: "Pattern recognition", portType: "state", key: "pattern_recognition" },
+      { name: "Proportional thinking", portType: "state", key: "proportional_thinking" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual" },
+    ],
     tenets: [
       "Arithmetic: pure number — the foundation of quantity, pattern, and relationship (discrete)",
       "Geometry: number in space — proportion, form, structure, and spatial relationships (continuous)",
@@ -151,6 +169,16 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["money", "purpose", "home"],
     description:
       "Allan Savory's decision-making framework for managing complex wholes. Define what you manage (your 'whole'), articulate your holistic context (quality of life + future resource base + forms of production), then test every decision against seven questions. Originally designed for land management, it applies powerfully to life design — every major decision tested against your stated context, not reactive impulse.",
+    inputs: [
+      { name: "Honesty", portType: "capacity", key: "honesty" },
+      { name: "Care", portType: "capacity", key: "care" },
+      { name: "Agency", portType: "capacity", key: "agency" },
+    ],
+    outputs: [
+      { name: "Decision clarity", portType: "state", key: "decision_clarity" },
+      { name: "Holistic context", portType: "state", key: "holistic_context" },
+      { name: "Resource awareness", portType: "state", key: "resource_awareness" },
+    ],
     tenets: [
       "Define your 'whole': clearly identify what you are managing — yourself, your family, your household, your enterprise. You cannot manage what you haven't defined.",
       "Create a holistic context with three parts: (1) Quality of life statement — how you want your life to feel and function, (2) Future resource base — the resources (health, relationships, skills, savings, land) that must be sustained to support that quality of life, (3) Forms of production — how you will produce what you need",
@@ -218,6 +246,17 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["growth"],
     description:
       "Reasoning from fundamental truths rather than by analogy or convention. Decompose any claim, assumption, or 'the way things are done' into its base elements. Verify each independently. Rebuild understanding from verified foundations. The antidote to 'this is how it's always been done' and 'everyone does it this way.'",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Honesty", portType: "capacity", key: "honesty" },
+      { name: "Agency", portType: "capacity", key: "agency" },
+      { name: "Humility", portType: "capacity", key: "humility" },
+    ],
+    outputs: [
+      { name: "Assumption clarity", portType: "state", key: "assumption_clarity" },
+      { name: "Foundational reasoning", portType: "state", key: "foundational_reasoning" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual" },
+    ],
     tenets: [
       "Identify your assumptions: every belief, every 'obvious truth,' every 'common sense' conclusion rests on assumptions. Name them.",
       "Decompose to fundamentals: break each assumption down to its most basic, independently verifiable components",
@@ -284,6 +323,15 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["home", "body", "money"],
     description:
       "David Holmgren's twelve principles for designing sustainable human systems. Originally for agriculture and land design, these principles apply directly to life design — every one describes a universal pattern for creating systems that sustain themselves and produce abundance over time rather than depleting their foundations.",
+    inputs: [
+      { name: "Care", portType: "capacity", key: "care" },
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+    ],
+    outputs: [
+      { name: "Systems thinking", portType: "state", key: "systems_thinking" },
+      { name: "Design coherence", portType: "state", key: "design_coherence" },
+      { name: "Resource efficiency", portType: "state", key: "resource_efficiency" },
+    ],
     tenets: [
       "1. Observe and interact: engage thoughtfully before intervening. Understand the system before changing it.",
       "2. Catch and store energy: capture resources (time, money, attention, knowledge) when they're abundant for use when they're scarce",
@@ -361,6 +409,14 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["home", "money"],
     description:
       "Darren Doherty's hierarchy for developing landscapes and systems, built on P.A. Yeomans' Keyline Scale of Permanence. The core insight: address things in order of how permanent they are. Don't optimize your economy before you've addressed your water. Don't redesign your kitchen before you've fixed your sleep. Applied to life: there is a permanence hierarchy — health outlasts career, relationships outlast addresses, purpose outlasts any single job.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Humility", portType: "capacity", key: "humility" },
+    ],
+    outputs: [
+      { name: "Priority clarity", portType: "state", key: "priority_clarity" },
+      { name: "Permanence awareness", portType: "state", key: "permanence_awareness" },
+    ],
     tenets: [
       "Address things in order of permanence — most permanent first, least permanent last",
       "The Regrarians scale (landscape): Climate → Geography → Water → Access → Forestry → Buildings → Fencing → Soils → Economy → Energy",
@@ -424,6 +480,15 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["growth", "home"],
     description:
       "Christopher Alexander's foundational insight: good design is not a single grand plan but a network of interconnected patterns at multiple scales, each solving a recurring problem in a specific context. Patterns compose — small patterns nest within larger ones, creating coherent wholes. This is the meta-framework that describes what RPPLs actually ARE: a pattern language for life.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Care", portType: "capacity", key: "care" },
+    ],
+    outputs: [
+      { name: "Pattern recognition", portType: "state", key: "pattern_recognition" },
+      { name: "Compositional thinking", portType: "state", key: "compositional_thinking" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual" },
+    ],
     tenets: [
       "A 'pattern' is a proven solution to a recurring problem in a context — it names the problem, describes the context, and offers a resolution",
       "Patterns exist at multiple scales: a doorway pattern exists within a room pattern, within a building pattern, within a neighborhood pattern. Each scale has its own patterns.",
@@ -482,6 +547,15 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["growth"],
     description:
       "Aristotle's system for evaluating whether an argument is valid. The original toolkit for distinguishing sound reasoning from fallacious reasoning. Categories of being, rules of syllogistic inference, and the identification of sophistical refutations (logical fallacies). Most bad advice — health, financial, relationship — contains identifiable logical errors. Recognizing them is a superpower.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Humility", portType: "capacity", key: "humility" },
+    ],
+    outputs: [
+      { name: "Logical validity", portType: "state", key: "logical_validity" },
+      { name: "Fallacy detection", portType: "state", key: "fallacy_detection" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual" },
+    ],
     tenets: [
       "Valid reasoning follows specific rules of inference — a conclusion follows necessarily from its premises only if the logical form is correct",
       "Syllogistic reasoning: if all A are B, and all B are C, then all A are C. Violations of this form produce fallacious conclusions that feel true but aren't.",
@@ -543,6 +617,15 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["growth", "people"],
     description:
       "Systematic questioning to expose assumptions, clarify thinking, and arrive at truth through dialogue rather than instruction. The interlocutor discovers truth through their own reasoning — they are never told what to think, but guided to see what they already know (or don't). This is the conversational engine of HUMA: guided questioning that helps the user discover what they actually think and want.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Humility", portType: "capacity", key: "humility" },
+    ],
+    outputs: [
+      { name: "Self-examination", portType: "state", key: "self_examination" },
+      { name: "Question quality", portType: "state", key: "question_quality" },
+      { name: "Social capital", portType: "capital", key: "social" },
+    ],
     tenets: [
       "Begin with intellectual humility: 'I know that I know nothing' — genuine inquiry starts from acknowledging what you don't know",
       "Question definitions: 'What do you mean by X?' — most disagreements and confusions dissolve when terms are precisely defined",
@@ -611,6 +694,16 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["growth", "body"],
     description:
       "The actual method of acquiring reliable knowledge: observe, hypothesize, design an experiment, test, measure, conclude, share, and allow others to replicate or refute. Not 'trust the experts' — the method is inherently anti-authoritarian. It says 'test it yourself.' N=1 self-experimentation, properly tracked, is legitimate science. HUMA's pattern validation IS the scientific method applied to your own life.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Honesty", portType: "capacity", key: "honesty" },
+      { name: "Humility", portType: "capacity", key: "humility" },
+    ],
+    outputs: [
+      { name: "Experimental rigor", portType: "state", key: "experimental_rigor" },
+      { name: "Data literacy", portType: "state", key: "data_literacy" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual" },
+    ],
     tenets: [
       "Observation: notice something that needs explanation. Gather data before forming opinions.",
       "Hypothesis: propose a testable explanation — 'I think X causes Y.' This must be falsifiable.",
@@ -683,6 +776,16 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["meta", "identity", "joy"],
     description:
       "A practical philosophy for living well regardless of external circumstances. The dichotomy of control: focus all energy on what you can influence (your judgments, intentions, actions) and accept what you cannot (other people, events, outcomes). Virtue — wisdom, justice, courage, temperance — is the only true good. Everything else is 'preferred' or 'dispreferred,' not good or evil in itself.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Care", portType: "capacity", key: "care" },
+      { name: "Agency", portType: "capacity", key: "agency" },
+    ],
+    outputs: [
+      { name: "Emotional regulation", portType: "state", key: "emotional_regulation" },
+      { name: "Resilience", portType: "state", key: "resilience" },
+      { name: "Spiritual capital", portType: "capital", key: "spiritual" },
+    ],
     tenets: [
       "Dichotomy of control: some things are within your power (your opinions, desires, aversions, actions) and some are not (your body, possessions, reputation, public office). Focus exclusively on the former.",
       "Virtue is the sole good: wisdom (understanding what is truly good), justice (giving each their due), courage (enduring what must be endured), temperance (moderation in all things). External goods are 'preferred indifferents.'",
@@ -751,6 +854,15 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["meta", "people", "identity"],
     description:
       "The foundational ethical principle that no person has the right to initiate force, fraud, or coercion against another person or their property. All human interaction should be voluntary. This is not pacifism — it affirms the right to defend against aggression. Applied to life design, it clarifies a crucial question: are you doing what you're doing because you CHOSE it, or because someone — culture, authority, social pressure — told you to?",
+    inputs: [
+      { name: "Agency", portType: "capacity", key: "agency" },
+      { name: "Honesty", portType: "capacity", key: "honesty" },
+    ],
+    outputs: [
+      { name: "Ethical clarity", portType: "state", key: "ethical_clarity" },
+      { name: "Boundary setting", portType: "state", key: "boundary_setting" },
+      { name: "Social capital", portType: "capital", key: "social" },
+    ],
     tenets: [
       "Self-ownership: you own your body, your labor, and the products of your labor. No one else has a higher claim to you than you do.",
       "Non-aggression: initiating force, fraud, or coercion against another person or their property is wrong. This applies to individuals, groups, and institutions alike.",
@@ -821,6 +933,14 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["meta"],
     description:
       "The internal environment (terrain) is the primary determinant of health, not external pathogens alone. A healthy terrain resists disease; an unhealthy terrain is vulnerable. This shifts health strategy from 'avoid and destroy pathogens' to 'build and maintain a resilient internal environment.' Presented alongside germ theory as a complementary lens — both pathogen virulence and host terrain matter — with the user's own data determining which lens serves them.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Care", portType: "capacity", key: "care" },
+    ],
+    outputs: [
+      { name: "Terrain awareness", portType: "state", key: "terrain_awareness" },
+      { name: "Living capital", portType: "capital", key: "living" },
+    ],
     tenets: [
       "The terrain is primary: the state of your internal environment — gut microbiome, immune function, metabolic health, nutritional status, sleep quality, stress levels — determines your vulnerability or resilience",
       "A healthy terrain is naturally resistant: organisms that cause disease in a weakened host are often harmless in a strong one. The host matters at least as much as the pathogen.",
@@ -888,6 +1008,14 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["meta", "joy", "growth"],
     description:
       "The body is fundamentally a light-driven system. Every cell contains molecular clocks (PER, CRY, BMAL1, CLOCK genes) that synchronize to the solar cycle via light exposure, primarily through the suprachiasmatic nucleus (SCN). Disrupting this synchronization — through artificial light at night, irregular eating, shift work, or chronic indoor living — produces cascading metabolic, immune, and cognitive dysfunction. This framework underpins virtually every 'health pattern' in the RPPL library.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Care", portType: "capacity", key: "care" },
+    ],
+    outputs: [
+      { name: "Circadian alignment", portType: "state", key: "circadian_alignment" },
+      { name: "Living capital", portType: "capital", key: "living" },
+    ],
     tenets: [
       "Every cell has a clock: molecular clock genes (PER1/2, CRY1/2, BMAL1, CLOCK) operate in every tissue. The SCN in the hypothalamus is the master coordinator, synchronized by light hitting the retina.",
       "Light is the primary zeitgeber (time-giver): morning sunlight (especially the blue-shifted spectrum at sunrise) sets the master clock. Evening darkness signals melatonin release. Artificial light at night disrupts this signal.",
@@ -965,6 +1093,14 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["body", "home", "money"],
     description:
       "The laws governing energy and entropy — possibly the most practically important physics for life design. The Second Law: every closed system tends toward disorder (entropy). Your health, relationships, skills, home, and finances all degrade toward chaos unless you actively input energy to maintain them. The First Law: energy is conserved — you cannot create something from nothing, and every output requires a proportional input. These are not metaphors. They are the literal physics of why daily maintenance patterns matter.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Honesty", portType: "capacity", key: "honesty" },
+    ],
+    outputs: [
+      { name: "Energy awareness", portType: "state", key: "energy_awareness" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual" },
+    ],
     tenets: [
       "First Law (Conservation): energy cannot be created or destroyed, only transformed. Every output requires an input. There is no free lunch — in health, wealth, or relationships.",
       "Second Law (Entropy): every isolated system moves toward maximum disorder. Without active energy input, everything decays — muscles atrophy, skills erode, relationships drift, houses crumble, gardens revert to weeds.",
@@ -1028,6 +1164,15 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["growth"],
     description:
       "Patterns repeat at every scale — not as metaphor but as mathematical structure. A coastline looks the same whether viewed from a satellite or with a magnifying glass. Your daily rhythm mirrors your weekly rhythm mirrors your seasonal rhythm mirrors your life arc. A dysfunctional morning produces a dysfunctional week by the same structural pattern. This is why HUMA's 'small patterns compose into life design' is mathematically real, not motivational.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Humility", portType: "capacity", key: "humility" },
+    ],
+    outputs: [
+      { name: "Scale recognition", portType: "state", key: "scale_recognition" },
+      { name: "Pattern recognition", portType: "state", key: "pattern_recognition" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual" },
+    ],
     tenets: [
       "Self-similarity: the same structural pattern appears at multiple scales. The part contains the whole in miniature.",
       "Fractals are generated by simple rules applied recursively: complex outcomes arise from simple repeated processes — small daily actions, repeated consistently, produce life-scale structures",
@@ -1092,6 +1237,14 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["growth"],
     description:
       "Small changes in initial conditions cascade into massively different outcomes. This is not randomness — chaotic systems are deterministic but unpredictable beyond short horizons. Applied to life: the night you cooked dinner instead of ordering out cascaded into better sleep, better focus, better work, a better evening. Leverage points are real because of chaos theory. HUMA tracks exactly these cascading micro-decisions.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Humility", portType: "capacity", key: "humility" },
+    ],
+    outputs: [
+      { name: "Complexity awareness", portType: "state", key: "complexity_awareness" },
+      { name: "Adaptability", portType: "state", key: "adaptability" },
+    ],
     tenets: [
       "Sensitive dependence on initial conditions: tiny differences in starting state produce dramatically different trajectories over time. This is mathematically proven, not speculation.",
       "Deterministic but unpredictable: chaotic systems follow rules, but those rules amplify small differences until long-term prediction becomes impossible. This is why rigid life plans fail but daily patterns succeed.",
@@ -1156,6 +1309,14 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["growth"],
     description:
       "Three principles from quantum mechanics that legitimately apply to life design — stripped of mystical distortion. Uncertainty: you cannot know everything simultaneously, which is why data-driven validation beats assumption. Complementarity: apparently contradictory descriptions can both be true (rest AND effort, individual AND community). The observer effect: measurement changes the measured — tracking your behavior literally changes your behavior, which is a feature, not a bug.",
+    inputs: [
+      { name: "Humility", portType: "capacity", key: "humility" },
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+    ],
+    outputs: [
+      { name: "Uncertainty tolerance", portType: "state", key: "uncertainty_tolerance" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual" },
+    ],
     tenets: [
       "Uncertainty principle (Heisenberg): fundamental limits exist on simultaneous knowledge. You cannot optimize every dimension at once. Accepting uncertainty is not weakness — it's accurate physics. This is why HUMA validates with data instead of assuming.",
       "Complementarity (Bohr): wave AND particle — both descriptions are necessary, neither is complete alone. Applied: rest AND effort are both productive. Structure AND freedom are both necessary. Individual AND community are both true. Holding complementary truths without forcing resolution is maturity.",
@@ -1217,6 +1378,14 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["growth"],
     description:
       "Claude Shannon's mathematical framework for signal versus noise. Your life is full of information, most of it noise. The skill is compression: extracting the signal that actually matters from the overwhelming stream of data, news, opinions, metrics, and stimuli. This is what HUMA's daily letter does — compresses your entire life context into 5 actionable behaviors. Information theory also explains why attention is finite and must be allocated, not just spent.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Honesty", portType: "capacity", key: "honesty" },
+    ],
+    outputs: [
+      { name: "Signal clarity", portType: "state", key: "signal_clarity" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual" },
+    ],
     tenets: [
       "Signal vs. noise: in any information stream, only a fraction is meaningful (signal). The rest is noise — irrelevant, redundant, or misleading. The ratio matters more than the volume.",
       "Compression: the art of representing the same essential information in fewer bits. A good summary, a good metric, a good daily plan — these are acts of compression. Lossy compression (some detail lost) is acceptable when the signal is preserved.",
@@ -1280,6 +1449,14 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["money", "growth"],
     description:
       "Not just a business heuristic — it's a mathematical distribution that appears throughout nature, economics, and human behavior. A small fraction of inputs produces a disproportionate fraction of outputs. 20% of your behaviors produce 80% of your results. 20% of your relationships provide 80% of your connection. HUMA's leverage point identification IS Pareto analysis applied to life — finding the vital few among the trivial many.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Agency", portType: "capacity", key: "agency" },
+    ],
+    outputs: [
+      { name: "Leverage identification", portType: "state", key: "leverage_identification" },
+      { name: "Focus", portType: "state", key: "focus" },
+    ],
     tenets: [
       "Power law distribution: inputs and outputs are not equally distributed. A small number of causes produce a disproportionate share of effects. This is empirically observed across domains.",
       "The vital few vs. the trivial many: in any system, a small subset of elements carries most of the load. Identifying and optimizing these elements produces outsized returns.",
@@ -1349,6 +1526,15 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["purpose", "growth", "people"],
     description:
       "Carl Jung's framework for understanding the psyche's structure: the ego (conscious identity), the shadow (denied and repressed aspects), the persona (public mask), the anima/animus (contrasexual inner figure), and the Self (the integrating whole). Individuation — becoming who you actually are rather than who you were told to be — is the central process. HUMA already uses archetypes; Jung's deeper framework explains WHY they resonate and what the shadow costs you when unexamined.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Honesty", portType: "capacity", key: "honesty" },
+    ],
+    outputs: [
+      { name: "Shadow awareness", portType: "state", key: "shadow_awareness" },
+      { name: "Individuation", portType: "state", key: "individuation" },
+      { name: "Spiritual capital", portType: "capital", key: "spiritual" },
+    ],
     tenets: [
       "The Shadow: what you deny, repress, or refuse to acknowledge in yourself doesn't disappear — it operates unconsciously, shaping your behavior, reactions, and projections. Integrating the shadow is the prerequisite for authentic living.",
       "The Persona: the social mask you present to the world. Necessary but dangerous when you mistake the mask for the self. 'I am what I present' is a confusion of persona with identity.",
@@ -1414,6 +1600,14 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["growth", "purpose"],
     description:
       "Mihaly Csikszentmihalyi's research on optimal experience: the state where you are fully immersed, energized, and performing at your best. Flow is not random — its conditions are known and designable: clear goals, immediate feedback, and challenge matched to skill. This is a framework you can structure your day around. HUMA's daily letter could explicitly create flow conditions by setting clear goals (5 actions), providing immediate feedback (check-offs), and matching challenge to current capacity.",
+    inputs: [
+      { name: "Care", portType: "capacity", key: "care" },
+      { name: "Agency", portType: "capacity", key: "agency" },
+    ],
+    outputs: [
+      { name: "Flow access", portType: "state", key: "flow_access" },
+      { name: "Experiential capital", portType: "capital", key: "experiential" },
+    ],
     tenets: [
       "Flow conditions are known: (1) Clear goals — you know exactly what you're trying to do. (2) Immediate feedback — you know how you're doing in real time. (3) Challenge-skill balance — the task is hard enough to engage but not so hard it overwhelms.",
       "The flow channel: too much challenge relative to skill produces anxiety. Too little produces boredom. Flow exists in the narrow channel between them. As skill grows, challenge must increase to maintain flow.",
@@ -1478,6 +1672,15 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["growth", "money"],
     description:
       "Daniel Kahneman's research demonstrating that human cognition operates in two modes: System 1 (fast, automatic, intuitive, error-prone) and System 2 (slow, deliberate, analytical, effortful). Most daily decisions run on System 1 — which is systematically biased in predictable ways. You are not a rational actor. You are a biased actor whose biases are PREDICTABLE and therefore DESIGNABLE. HUMA's job is to help you upgrade System 1 patterns using System 2 analysis — then let the improved System 1 run on autopilot.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Humility", portType: "capacity", key: "humility" },
+    ],
+    outputs: [
+      { name: "Bias detection", portType: "state", key: "bias_detection" },
+      { name: "Decision clarity", portType: "state", key: "decision_clarity" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual" },
+    ],
     tenets: [
       "System 1 (fast): automatic, effortless, associative, emotional. Runs most of your daily decisions. Subject to systematic biases. Cannot be turned off.",
       "System 2 (slow): deliberate, effortful, logical, serial. Activated for novel or complex tasks. Accurate but costly — it fatigues, and it's lazy by default.",
@@ -1545,6 +1748,14 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["body", "people", "purpose"],
     description:
       "Abraham Maslow's observation that human needs follow a rough hierarchy: physiological survival → safety and security → belonging and love → esteem and recognition → self-actualization. You cannot sustainably focus on purpose when you're worried about rent. You can't build deep relationships when you feel physically unsafe. This connects to Regrarians (address things in order of permanence) but applied specifically to human psychology and motivation.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Honesty", portType: "capacity", key: "honesty" },
+    ],
+    outputs: [
+      { name: "Needs awareness", portType: "state", key: "needs_awareness" },
+      { name: "Priority clarity", portType: "state", key: "priority_clarity" },
+    ],
     tenets: [
       "Physiological needs come first: food, water, shelter, sleep, warmth. These are non-negotiable prerequisites. Neglecting them undermines everything above.",
       "Safety and security: physical safety, financial stability, health security, predictability. Without a baseline of safety, higher-level pursuits are anxious and unsustainable.",
@@ -1616,6 +1827,15 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["meta", "joy", "body"],
     description:
       "The Tao (the Way) is the natural order of reality — the flow that governs all things. Wu Wei is not passivity but action through alignment: doing what is natural, effortless, and appropriate to the moment rather than forcing outcomes through willpower alone. The water that flows around the rock isn't weak — it shaped the Grand Canyon. This challenges the Western productivity framework: sometimes the highest-leverage action is non-action. Rest, observation, waiting for the right moment.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Humility", portType: "capacity", key: "humility" },
+    ],
+    outputs: [
+      { name: "Wu wei", portType: "state", key: "wu_wei" },
+      { name: "Acceptance", portType: "state", key: "acceptance" },
+      { name: "Spiritual capital", portType: "capital", key: "spiritual" },
+    ],
     tenets: [
       "The Tao: the fundamental nature of reality cannot be fully named or grasped conceptually. It can be aligned with through attention, not captured through analysis alone.",
       "Wu Wei (non-action / effortless action): not inaction, but action that arises naturally from alignment with conditions. Like water flowing downhill — it doesn't try, it doesn't force, and it's unstoppable.",
@@ -1688,6 +1908,14 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["meta", "identity"],
     description:
       "Not the popular misunderstanding ('karma will get you'). Dharma: your unique purpose — the thing only you can do, your particular contribution to the whole. Karma: action and consequence — every action creates results, and the accumulated results of past actions shape your present conditions. This is another lens on Natural Law's cause and effect, but with the critical addition of dharma — the idea that you have a specific, unique purpose that no one else can fulfill.",
+    inputs: [
+      { name: "Care", portType: "capacity", key: "care" },
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+    ],
+    outputs: [
+      { name: "Dharma clarity", portType: "state", key: "dharma_clarity" },
+      { name: "Spiritual capital", portType: "capital", key: "spiritual" },
+    ],
     tenets: [
       "Dharma (righteous duty / unique purpose): each person has a specific nature and a specific contribution to make. Living in alignment with your dharma produces fulfillment; living against it produces suffering, regardless of material success.",
       "Karma (action and consequence): not cosmic punishment or reward, but the straightforward principle that every action has consequences that shape future conditions. Your present life is partly the accumulated consequence of past actions. Your future life will be shaped by what you do now.",
@@ -1756,6 +1984,14 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["joy", "body", "purpose"],
     description:
       "Time as circular, not linear. Seasons return. Life stages cycle. Growth and decay are partners, not enemies. Western culture treats time as an arrow — progress, growth, forward, never back. Indigenous frameworks across cultures recognize the wheel: planting follows harvesting follows fallow follows planting. This is foundational to HUMA's seasonal rhythm concept and directly challenges the 'linear graduation' model (0→100 score) that contradicts biological and ecological reality.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Humility", portType: "capacity", key: "humility" },
+    ],
+    outputs: [
+      { name: "Cyclical awareness", portType: "state", key: "cyclical_awareness" },
+      { name: "Timing sense", portType: "state", key: "timing_sense" },
+    ],
     tenets: [
       "Time is a wheel, not an arrow: seasons return, life stages recur, themes revisit at deeper levels. 'Progress' is not linear advancement but deepening spiral.",
       "The Great Cycles: many indigenous traditions recognize nested cycles — daily (sunrise/sunset), monthly (lunar), seasonal (solar), generational, and cosmic. Living well means aligning with the appropriate cycle for each activity.",
@@ -1830,6 +2066,15 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["meta", "identity"],
     description:
       "Marshall Rosenberg's complete framework for communication without coercion, manipulation, or guilt. Four components: (1) observation vs. evaluation, (2) feelings vs. thoughts, (3) needs vs. strategies, (4) requests vs. demands. This is a framework, not a practice — it produces hundreds of specific practices for every relationship conversation. It changes how you hear others and how you express yourself.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Care", portType: "capacity", key: "care" },
+    ],
+    outputs: [
+      { name: "Needs literacy", portType: "state", key: "needs_literacy" },
+      { name: "Empathic accuracy", portType: "state", key: "empathic_accuracy" },
+      { name: "Social capital", portType: "capital", key: "social" },
+    ],
     tenets: [
       "Observation vs. evaluation: separate what actually happened ('You arrived at 9:15') from your judgment about it ('You're always late'). Evaluations trigger defensiveness. Observations create space for dialogue.",
       "Feelings vs. thoughts: 'I feel angry' is a feeling. 'I feel like you don't care' is a thought disguised as a feeling. Identify the actual emotion, not the story about the other person.",
@@ -1901,6 +2146,15 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["growth", "identity"],
     description:
       "Alfred Korzybski's foundational insight: 'The map is not the territory.' Your mental model of reality is not reality. Your context model in HUMA is not your life — it's a map. People confuse their story about their life with their actual life. The word is not the thing. 'I'm a failure' is a map, not territory. This framework trains the critical distinction between the thing itself and your representation of it — the single most important epistemological skill.",
+    inputs: [
+      { name: "Honesty", portType: "capacity", key: "honesty" },
+      { name: "Humility", portType: "capacity", key: "humility" },
+    ],
+    outputs: [
+      { name: "Semantic precision", portType: "state", key: "semantic_precision" },
+      { name: "Map-territory awareness", portType: "state", key: "map_territory_awareness" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual" },
+    ],
     tenets: [
       "'The map is not the territory': every description, model, label, and category is an abstraction — a map. Reality (the territory) is always richer, more complex, and more nuanced than any map of it.",
       "'The word is not the thing': language shapes perception. When you label yourself ('I'm lazy'), you confuse a description with a reality. The description is a map; you are the territory.",
@@ -1969,6 +2223,14 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["meta", "identity"],
     description:
       "Your genes are not your destiny. Epigenetics — the study of changes in gene expression that don't alter the DNA sequence itself — demonstrates that your environment, behavior, nutrition, stress, and choices change WHICH genes are expressed and which are silenced. You are not trapped by your genetics. Your daily patterns literally rewrite your gene expression profile. This is scientifically established and profoundly empowering.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Agency", portType: "capacity", key: "agency" },
+    ],
+    outputs: [
+      { name: "Gene expression awareness", portType: "state", key: "gene_expression_awareness" },
+      { name: "Living capital", portType: "capital", key: "living" },
+    ],
     tenets: [
       "Gene expression is modifiable: DNA methylation, histone modification, and non-coding RNA regulate which genes are active. These are influenced by environment, diet, stress, sleep, exercise, and toxin exposure.",
       "Your choices shape your biology: exercise upregulates genes for mitochondrial biogenesis, anti-inflammatory pathways, and neuroplasticity. Chronic stress upregulates inflammatory genes. Sleep deprivation alters hundreds of gene expression profiles.",
@@ -2036,6 +2298,14 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["meta", "money"],
     description:
       "Ecosystems develop through predictable stages: bare ground → pioneer species (fast, fragile, opportunistic) → intermediate communities (more diverse, more resilient) → climax ecosystem (complex, stable, self-sustaining). Each stage has different rules, different species, and different strategies. You cannot skip stages. Applied to life: starting a new habit, building a business, entering a relationship, developing a skill — all follow succession. The rules that work in the pioneer stage fail in the climax stage, and vice versa.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Humility", portType: "capacity", key: "humility" },
+    ],
+    outputs: [
+      { name: "Succession awareness", portType: "state", key: "succession_awareness" },
+      { name: "Patience", portType: "state", key: "patience" },
+    ],
     tenets: [
       "Stages are sequential: pioneer → intermediate → climax. Each creates the conditions for the next. Pioneer species change the environment (build soil, provide shade) so that intermediate species can establish.",
       "Each stage has different rules: pioneer species are fast-growing, sun-loving opportunists. Climax species are slow-growing, shade-tolerant specialists. The strategies that succeed at each stage are fundamentally different.",
@@ -2106,6 +2376,14 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["home", "growth"],
     description:
       "Nature has 3.8 billion years of R&D. Every design problem you face — time management, resilience, energy efficiency, communication, waste processing, structural integrity — has been solved repeatedly in biological systems. Biomimicry is the practice of looking to nature's solutions as models for human design challenges. Not metaphor — direct functional analogy. How does a forest manage energy? How does a coral reef build resilience? How does a mycelial network distribute resources? These answers apply to your life.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Care", portType: "capacity", key: "care" },
+    ],
+    outputs: [
+      { name: "Natural pattern recognition", portType: "state", key: "natural_pattern_recognition" },
+      { name: "Design coherence", portType: "state", key: "design_coherence" },
+    ],
     tenets: [
       "Nature as model: biological organisms and ecosystems have solved the same fundamental problems (energy management, waste, resilience, communication, adaptation) through billions of years of selection. These solutions are tested at scale.",
       "Nature as measure: what survives in nature is what works sustainably. If your life design can't sustain itself without constant heroic effort, it's a design problem — nature doesn't require heroism to function.",
@@ -2174,6 +2452,14 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["meta", "purpose"],
     description:
       "The Austrian school's core insights applied to life design: subjective value (things are worth what they're worth TO YOU, not what 'the market' or society says), time preference (how much you value the future relative to the present shapes every decision), and spontaneous order (complex systems self-organize through individual action without central planning). These challenge mainstream economics that treats humans as rational calculators responding to objective value.",
+    inputs: [
+      { name: "Agency", portType: "capacity", key: "agency" },
+      { name: "Honesty", portType: "capacity", key: "honesty" },
+    ],
+    outputs: [
+      { name: "Economic reasoning", portType: "state", key: "economic_reasoning" },
+      { name: "Financial capital", portType: "capital", key: "financial" },
+    ],
     tenets: [
       "Subjective value: value is not inherent in objects — it is assigned by the individual based on their specific needs, context, and preferences. A glass of water is worth almost nothing to someone near a river and almost everything to someone in a desert. You decide what things are worth to YOU.",
       "Time preference: every choice involves a trade-off between present and future satisfaction. Low time preference (willingness to delay gratification for better future outcomes) is the foundation of capital accumulation, skill development, and health. High time preference (immediate gratification) depletes resources.",
@@ -2243,6 +2529,15 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["identity", "growth"],
     description:
       "Your attachment style — formed in your earliest relationships and operating largely unconsciously — shapes every close relationship you have: romantic, friendship, parental, professional. Under relational stress, your attachment system activates a default strategy: secure (stay present, communicate needs), anxious (cling, protest, seek reassurance), avoidant (withdraw, minimize needs, self-rely), or disorganized (oscillate between clinging and withdrawing). Understanding your attachment style is the structural equivalent of circadian biology for the body — the deep mechanism beneath the surface behaviors.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Honesty", portType: "capacity", key: "honesty" },
+    ],
+    outputs: [
+      { name: "Attachment awareness", portType: "state", key: "attachment_awareness" },
+      { name: "Relational security", portType: "state", key: "relational_security" },
+      { name: "Social capital", portType: "capital", key: "social" },
+    ],
     tenets: [
       "Attachment is an evolved survival system: infants who maintained proximity to caregivers survived. The strategies that kept you safe as a child become your default relational patterns as an adult.",
       "Four attachment styles: Secure (comfortable with intimacy and autonomy), Anxious-preoccupied (hyperactivated attachment — seeks closeness, fears abandonment, protests distance), Avoidant-dismissive (deactivated attachment — values independence, minimizes emotional needs, withdraws under pressure), Disorganized/Fearful-avoidant (no coherent strategy — wants closeness but fears it, oscillates between approach and withdrawal).",
@@ -2318,6 +2613,15 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["meta", "money"],
     description:
       "The mathematics of strategic interaction — every situation where your outcome depends on what other people choose. Not 'games' in the trivial sense but the formal structure of cooperation, competition, trust, betrayal, coordination, and negotiation. Understanding game theory changes how you see every relationship, negotiation, and social situation: the prisoner's dilemma explains why cooperation fails even when everyone wants it, tit-for-tat explains why reciprocity works, and coordination games explain why couples fight about restaurants.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Agency", portType: "capacity", key: "agency" },
+    ],
+    outputs: [
+      { name: "Strategic thinking", portType: "state", key: "strategic_thinking" },
+      { name: "Cooperation awareness", portType: "state", key: "cooperation_awareness" },
+      { name: "Social capital", portType: "capital", key: "social" },
+    ],
     tenets: [
       "Strategic interdependence: in any interaction involving other people, your outcome depends not just on your choice but on their choice too. Optimizing in isolation is meaningless — you must consider the other player's likely moves.",
       "The Prisoner's Dilemma: two players both benefit from cooperating, but each has an individual incentive to defect. This single model explains: arms races, environmental tragedy of the commons, broken trust in relationships, workplace politics, and why 'just cooperate' doesn't work without structure.",
@@ -2393,6 +2697,15 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["meta", "money", "growth"],
     description:
       "Your life IS a network — social connections, skills, knowledge, habits, information sources — all form interconnected graphs with measurable properties. Understanding network structure changes how you invest in relationships, seek information, build resilience, and create opportunity. For a system whose core promise is showing 'how parts of your life connect,' the mathematics of connection is foundational.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Care", portType: "capacity", key: "care" },
+    ],
+    outputs: [
+      { name: "Network awareness", portType: "state", key: "network_awareness" },
+      { name: "Connectivity thinking", portType: "state", key: "connectivity_thinking" },
+      { name: "Social capital", portType: "capital", key: "social" },
+    ],
     tenets: [
       "Strength of weak ties (Granovetter): your closest friends know what you know. Novel information, job opportunities, and perspective shifts come through weak ties — acquaintances, friends-of-friends, people in adjacent circles. Investing ONLY in strong ties creates an echo chamber.",
       "Hub-and-spoke vs. distributed networks: networks with a few central hubs are efficient but fragile (lose the hub, lose the network). Distributed networks are slower but resilient. Your social network, income sources, and skill set should tend toward distributed.",
@@ -2465,6 +2778,15 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["people", "meta", "identity"],
     description:
       "Stephen Porges' framework for understanding the autonomic nervous system as a hierarchy of three states: ventral vagal (safe, social, creative), sympathetic (fight/flight, mobilized), and dorsal vagal (shutdown, freeze, collapse). The critical insight for life design: you cannot access your best thinking, your relationships, or your creativity from a dysregulated nervous system. Stoicism says 'I am my response, not my circumstances.' Polyvagal theory explains the biological prerequisite for being ABLE to choose your response at all. This is the body-mind bridge.",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Care", portType: "capacity", key: "care" },
+    ],
+    outputs: [
+      { name: "Nervous system awareness", portType: "state", key: "nervous_system_awareness" },
+      { name: "Co-regulation", portType: "state", key: "co_regulation" },
+      { name: "Living capital", portType: "capital", key: "living" },
+    ],
     tenets: [
       "Three-state hierarchy: Ventral vagal (safe — social engagement, creative thinking, connection, calm alertness) → Sympathetic (threat — fight or flight, mobilization, anxiety, anger, hypervigilance) → Dorsal vagal (life-threat — shutdown, collapse, dissociation, numbness, depression). States are hierarchical: you descend under increasing threat.",
       "Neuroception: your nervous system evaluates safety/threat below conscious awareness. You don't DECIDE to feel unsafe — your body decides before your mind catches up. This is why 'just think positive' fails when the nervous system reads danger.",
@@ -2549,6 +2871,15 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["body", "people", "joy", "identity"],
     description:
       "Your brain and body were designed by natural selection for a radically different environment than the one you live in. Anxiety is an evolved threat-detection system running in a world with no predators but infinite social media triggers. Obesity is a calorie-storage system optimized for scarcity operating in unprecedented abundance. Loneliness is a tribal-bonding drive in an atomized society. This is the meta-explanation for why modern life is hard — not because you're broken, but because the environment changed faster than the biology. Every health, relationship, and psychological challenge in the modern world is illuminated by asking: 'What was this system designed for, and how does the current environment mismatch?'",
+    inputs: [
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+      { name: "Humility", portType: "capacity", key: "humility" },
+    ],
+    outputs: [
+      { name: "Mismatch awareness", portType: "state", key: "mismatch_awareness" },
+      { name: "Environment design", portType: "state", key: "environment_design" },
+      { name: "Living capital", portType: "capital", key: "living" },
+    ],
     tenets: [
       "Environment of Evolutionary Adaptedness (EEA): human psychology and physiology were shaped over ~2 million years in small-group, hunter-gatherer conditions. Agriculture is ~10,000 years old. Industrial civilization is ~250 years old. The smartphone is ~15 years old. Your biology hasn't caught up.",
       "Supernormal stimuli: evolution designed your reward systems for scarce, hard-to-obtain rewards (sugar, fat, social approval, sexual signals). Modern technology provides supernormal versions of these stimuli (processed food, social media, pornography) that hijack evolved circuits.",
@@ -2632,6 +2963,15 @@ export const frameworkSeeds: RpplSeed[] = [
     domains: ["body", "growth", "money"],
     description:
       "Beyond resilience. Nassim Taleb's central insight: some systems don't just survive stress — they get STRONGER from it. Your muscles grow from strain. Your immune system strengthens from exposure. Your problem-solving improves from difficulty. Your children develop competence from age-appropriate challenge. The opposite of fragile is not robust (withstands stress) — it is antifragile (benefits from stress). Overprotection — of yourself, your children, your portfolio, your comfort — produces fragility. Appropriate stressors produce strength.",
+    inputs: [
+      { name: "Agency", portType: "capacity", key: "agency" },
+      { name: "Awareness", portType: "capacity", key: "awareness" },
+    ],
+    outputs: [
+      { name: "Antifragile design", portType: "state", key: "antifragile_design" },
+      { name: "Stress tolerance", portType: "state", key: "stress_tolerance" },
+      { name: "Living capital", portType: "capital", key: "living" },
+    ],
     tenets: [
       "The triad: Fragile (breaks under stress — glass, rigid plans, monocultures) → Robust (withstands stress — concrete, savings accounts, stoic indifference) → Antifragile (benefits from stress — muscles, immune system, reputation through survived scandal, entrepreneurial learning through failure)",
       "Hormesis: small doses of stress produce beneficial adaptation. Exercise, fasting, cold exposure, intellectual challenge, social friction — all produce antifragile responses when dosed appropriately. The dose makes the poison AND the medicine.",

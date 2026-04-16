@@ -4,8 +4,13 @@
 // and streams the response.
 
 import type { HumaContext } from "@/types/context";
+import type { Aspiration, Pattern } from "@/types/v2";
+import type { CapitalScore } from "@/engine/canvas-types";
 import { createEmptyContext } from "@/types/context";
 import { contextForPrompt, completenessHint, contextCompleteness } from "@/lib/context-model";
+import { encodeLifeGraph, type EncodingInput } from "@/lib/context-encoding";
+import { verifyLifeGraph, verificationSummary } from "@/lib/graph-verification";
+import type { RpplSeed } from "@/data/rppl-seeds/types";
 
 // ─── Base Identity ─────────────────────────────────────────────────────────
 const BASE_IDENTITY = `You are HUMA. You help people run their lives as one connected system.
@@ -72,6 +77,13 @@ RULES:
   Not generic questions. Questions whose answers change the plan.
 - When extracting financial context, structure it under the money dimension:
   [[CONTEXT:{"money":{"income":"$85k combined","constraints":["$400/month food budget"]}}]]
+
+CAPACITY ASSESSMENT:
+Five capacities determine what frameworks can take root for this person:
+awareness, honesty, care, agency, humility. Levels: undeveloped/emerging/developing/strong.
+When you observe capacity signals (language patterns, self-report accuracy, engagement),
+update via: [[CONTEXT:{"capacityState":{"awareness":"developing","agency":"emerging",...}}]]
+Only include capacities you have evidence for. Don't assess all five at once.
 
 WHAT MAKES THIS WORK:
 Every message you receive teaches you something. A person who says "my wife works
@@ -149,6 +161,13 @@ CRITICAL RULES:
 - When the user says something that implies an aspiration ("I want to...",
   "I'm trying to...", "I need to..."), acknowledge it naturally and offer to plan:
   [[OPTIONS:["Yes, let's plan it","Not yet, just thinking out loud"]]]
+
+CAPACITY ASSESSMENT:
+Five capacities determine what frameworks can take root for this person:
+awareness, honesty, care, agency, humility. Levels: undeveloped/emerging/developing/strong.
+When you observe capacity signals (language patterns, self-report accuracy, engagement),
+update via: [[CONTEXT:{"capacityState":{"awareness":"developing","agency":"emerging",...}}]]
+Only include capacities you have evidence for. Don't assess all five at once.
 
 WHAT MAKES THIS WORK:
 Every message you receive teaches you something. A person who says "my wife works
@@ -653,6 +672,12 @@ export interface BuildPromptOptions {
   humaContext?: HumaContext;
   isFirstConversation?: boolean;
   exchangeCount?: number;
+  // Compressed encoding inputs (Phase 2)
+  fullAspirations?: Aspiration[];
+  patterns?: Pattern[];
+  capitalScores?: CapitalScore[];
+  behaviorCounts?: Record<string, { completed: number; total: number }>;
+  rpplSeeds?: RpplSeed[];
 }
 
 // ─── Static Prompt ───────────────────────────────────────────────────────
@@ -698,17 +723,38 @@ export function buildDynamicPrompt(options: Omit<BuildPromptOptions, 'mode'> & {
     mode: explicitMode,
     isFirstConversation,
     exchangeCount,
+    fullAspirations,
+    patterns,
+    capitalScores,
+    behaviorCounts,
+    rpplSeeds,
   } = options;
 
   // Use HumaContext if available, fall back to old format
   const ctx = humaContext || createEmptyContext();
   const hasStructuredContext = !!(humaContext && humaContext._version);
 
-  const contextProse = hasStructuredContext
-    ? contextForPrompt(ctx)
-    : (Object.keys(knownContext).length > 0
+  // Try compressed encoding if we have full aspiration/pattern data
+  const useCompressedEncoding = hasStructuredContext && fullAspirations && fullAspirations.length > 0;
+
+  let contextProse: string;
+  if (useCompressedEncoding) {
+    const encodingInput: EncodingInput = {
+      context: ctx,
+      aspirations: fullAspirations,
+      patterns: patterns || [],
+      capitalScores,
+      dayCount,
+      behaviorCounts,
+    };
+    contextProse = encodeLifeGraph(encodingInput, "folded");
+  } else if (hasStructuredContext) {
+    contextProse = contextForPrompt(ctx);
+  } else {
+    contextProse = Object.keys(knownContext).length > 0
       ? JSON.stringify(knownContext, null, 2)
-      : "No context yet — this is a new conversation.");
+      : "No context yet \u2014 this is a new conversation.";
+  }
 
   const contextHint = hasStructuredContext
     ? completenessHint(ctx)
@@ -935,10 +981,25 @@ relevant — look for connections and dimension overlap.`
     ? `\n\nCONTEXT COMPLETENESS:\n${contextHint}`
     : "";
 
+  // Graph verification (Phase 3) — inject gaps/conflicts when data available
+  let verificationBlock = "";
+  if (useCompressedEncoding && rpplSeeds && rpplSeeds.length > 0) {
+    const verification = verifyLifeGraph(
+      fullAspirations,
+      patterns || [],
+      rpplSeeds,
+      ctx,
+      behaviorCounts,
+    );
+    if (verification.integrity !== "valid" || verification.suggestions.length > 0) {
+      verificationBlock = `\n\n${verificationSummary(verification)}`;
+    }
+  }
+
   return `${phaseOverride}
 
 WHAT YOU KNOW ABOUT THIS PERSON:
-${contextProse}${contextHintBlock}
+${contextProse}${contextHintBlock}${verificationBlock}
 
 ACTIVE ASPIRATIONS:
 ${aspirationStr}${templateBlock}

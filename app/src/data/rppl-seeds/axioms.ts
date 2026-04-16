@@ -15,6 +15,13 @@ export const axiomSeeds: RpplSeed[] = [
     domains: ["purpose", "identity"],
     description:
       "The inherent operating principles of reality — not legislation, but the actual laws of cause and effect, rhythm, polarity, and correspondence that function whether you acknowledge them or not. These are not beliefs to adopt but observations to verify. Aligning your life with Natural Law means working WITH reality rather than against it. Most suffering comes from violating principles that cannot be legislated away — they simply are.",
+    outputs: [
+      { name: "Causation awareness", portType: "state", key: "causation_awareness", description: "Understanding that every action has consequences" },
+      { name: "Rhythm awareness", portType: "state", key: "rhythm_awareness", description: "Recognizing natural cycles in energy, attention, and seasons" },
+      { name: "Polarity awareness", portType: "state", key: "polarity_awareness", description: "Understanding opposites as necessary complements" },
+      { name: "Pattern recognition", portType: "state", key: "pattern_recognition", description: "Seeing correspondence across scales" },
+      { name: "Personal responsibility", portType: "state", key: "personal_responsibility", description: "Linking freedom to responsibility" },
+    ],
     laws: [
       "Cause and Effect: every action produces consequences. You are free to choose your actions, but you are not free to choose their consequences. This operates in health, finance, relationships, and every other domain without exception.",
       "Rhythm: everything flows in cycles — tides, seasons, energy, attention, economies, relationships. No state is permanent. Fighting rhythm is fighting reality.",
@@ -80,6 +87,13 @@ export const axiomSeeds: RpplSeed[] = [
     domains: ["growth", "purpose"],
     description:
       "Seven principles describing how reality operates at every scale, attributed to Hermes Trismegistus and codified in the Hermetic tradition. These are observational, not mystical — each describes a phenomenon that can be verified through direct experience. They provide a unified lens for understanding why patterns repeat, why cycles exist, why opposites are necessary, and why your mental state shapes your experience.",
+    outputs: [
+      { name: "Mental framing awareness", portType: "state", key: "mental_framing", description: "Understanding that perception shapes experience" },
+      { name: "Pattern recognition", portType: "state", key: "pattern_recognition", description: "Seeing correspondence across scales" },
+      { name: "Rhythm awareness", portType: "state", key: "rhythm_awareness", description: "Recognizing pendulum swings in all things" },
+      { name: "Polarity awareness", portType: "state", key: "polarity_awareness", description: "Understanding opposites as degrees of the same thing" },
+      { name: "Causation awareness", portType: "state", key: "causation_awareness", description: "Nothing happens by unrecognized causes" },
+    ],
     laws: [
       "Mentalism: 'The All is Mind; the Universe is Mental.' — Your mental state shapes your perception and experience. What you believe about reality filters what you see and how you respond. This is observably true: framing effects, confirmation bias, and attentional filtering are all Mentalism in action.",
       "Correspondence: 'As above, so below; as below, so above.' — Patterns repeat at every scale. Your circadian rhythm mirrors the solar cycle. Your daily habits mirror your life trajectory. A dysfunctional morning mirrors a dysfunctional year. Understanding one scale reveals the others.",
