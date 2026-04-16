@@ -7,8 +7,7 @@ export { bodyHealthSeeds } from "./body-health";
 export { growthPurposeJoySeeds } from "./growth-purpose-joy";
 export { moneyLivelihoodSeeds } from "./money-livelihood";
 export { homeRelationshipsSeeds } from "./home-relationships";
-// Future practice domains:
-// export { parentingDigitalSeeds } from "./parenting-digital";
+export { parentingDigitalSeeds } from "./parenting-digital";
 
 // Aggregate all seeds (ordered by hierarchy depth)
 import { axiomSeeds } from "./axioms";
@@ -19,6 +18,7 @@ import { bodyHealthSeeds } from "./body-health";
 import { growthPurposeJoySeeds } from "./growth-purpose-joy";
 import { moneyLivelihoodSeeds } from "./money-livelihood";
 import { homeRelationshipsSeeds } from "./home-relationships";
+import { parentingDigitalSeeds } from "./parenting-digital";
 
 export const allSeeds = [
   ...axiomSeeds,
@@ -29,4 +29,5 @@ export const allSeeds = [
   ...growthPurposeJoySeeds,
   ...moneyLivelihoodSeeds,
   ...homeRelationshipsSeeds,
+  ...parentingDigitalSeeds,
 ];
