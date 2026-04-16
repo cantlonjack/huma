@@ -416,6 +416,7 @@ export const frameworkSeeds: RpplSeed[] = [
     outputs: [
       { name: "Priority clarity", portType: "state", key: "priority_clarity" },
       { name: "Permanence awareness", portType: "state", key: "permanence_awareness" },
+      { name: "Material capital", portType: "capital", key: "material", description: "Investment in foundational, durable assets first" },
     ],
     tenets: [
       "Address things in order of permanence — most permanent first, least permanent last",
@@ -624,7 +625,8 @@ export const frameworkSeeds: RpplSeed[] = [
     outputs: [
       { name: "Self-examination", portType: "state", key: "self_examination" },
       { name: "Question quality", portType: "state", key: "question_quality" },
-      { name: "Social capital", portType: "capital", key: "social" },
+      { name: "Social capital", portType: "capital", key: "social", description: "Better dialogue and shared understanding" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual", description: "Clarified thinking through systematic questioning" },
     ],
     tenets: [
       "Begin with intellectual humility: 'I know that I know nothing' — genuine inquiry starts from acknowledging what you don't know",
@@ -861,7 +863,8 @@ export const frameworkSeeds: RpplSeed[] = [
     outputs: [
       { name: "Ethical clarity", portType: "state", key: "ethical_clarity" },
       { name: "Boundary setting", portType: "state", key: "boundary_setting" },
-      { name: "Social capital", portType: "capital", key: "social" },
+      { name: "Social capital", portType: "capital", key: "social", description: "Voluntary, consensual relationships" },
+      { name: "Spiritual capital", portType: "capital", key: "spiritual", description: "Self-sovereignty and ethical alignment" },
     ],
     tenets: [
       "Self-ownership: you own your body, your labor, and the products of your labor. No one else has a higher claim to you than you do.",
@@ -1244,6 +1247,7 @@ export const frameworkSeeds: RpplSeed[] = [
     outputs: [
       { name: "Complexity awareness", portType: "state", key: "complexity_awareness" },
       { name: "Adaptability", portType: "state", key: "adaptability" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual", description: "Understanding of leverage points and cascading effects" },
     ],
     tenets: [
       "Sensitive dependence on initial conditions: tiny differences in starting state produce dramatically different trajectories over time. This is mathematically proven, not speculation.",
@@ -1456,6 +1460,8 @@ export const frameworkSeeds: RpplSeed[] = [
     outputs: [
       { name: "Leverage identification", portType: "state", key: "leverage_identification" },
       { name: "Focus", portType: "state", key: "focus" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual", description: "Strategic clarity from finding vital few" },
+      { name: "Financial capital", portType: "capital", key: "financial", description: "Returns from concentrating effort on highest-yield activities" },
     ],
     tenets: [
       "Power law distribution: inputs and outputs are not equally distributed. A small number of causes produce a disproportionate share of effects. This is empirically observed across domains.",
@@ -1755,6 +1761,7 @@ export const frameworkSeeds: RpplSeed[] = [
     outputs: [
       { name: "Needs awareness", portType: "state", key: "needs_awareness" },
       { name: "Priority clarity", portType: "state", key: "priority_clarity" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual", description: "Diagnostic framework for unmet need at any moment" },
     ],
     tenets: [
       "Physiological needs come first: food, water, shelter, sleep, warmth. These are non-negotiable prerequisites. Neglecting them undermines everything above.",
@@ -1991,6 +1998,7 @@ export const frameworkSeeds: RpplSeed[] = [
     outputs: [
       { name: "Cyclical awareness", portType: "state", key: "cyclical_awareness" },
       { name: "Timing sense", portType: "state", key: "timing_sense" },
+      { name: "Experiential capital", portType: "capital", key: "experiential", description: "Lived attunement to seasons, fallow periods, and natural rhythm" },
     ],
     tenets: [
       "Time is a wheel, not an arrow: seasons return, life stages recur, themes revisit at deeper levels. 'Progress' is not linear advancement but deepening spiral.",
@@ -2305,6 +2313,7 @@ export const frameworkSeeds: RpplSeed[] = [
     outputs: [
       { name: "Succession awareness", portType: "state", key: "succession_awareness" },
       { name: "Patience", portType: "state", key: "patience" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual", description: "Stage-appropriate strategy selection" },
     ],
     tenets: [
       "Stages are sequential: pioneer → intermediate → climax. Each creates the conditions for the next. Pioneer species change the environment (build soil, provide shade) so that intermediate species can establish.",
@@ -2383,6 +2392,7 @@ export const frameworkSeeds: RpplSeed[] = [
     outputs: [
       { name: "Natural pattern recognition", portType: "state", key: "natural_pattern_recognition" },
       { name: "Design coherence", portType: "state", key: "design_coherence" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual", description: "Design solutions inspired by 3.8 billion years of natural R&D" },
     ],
     tenets: [
       "Nature as model: biological organisms and ecosystems have solved the same fundamental problems (energy management, waste, resilience, communication, adaptation) through billions of years of selection. These solutions are tested at scale.",

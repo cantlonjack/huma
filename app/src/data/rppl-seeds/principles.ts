@@ -426,6 +426,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Scale awareness", portType: "state", key: "scale_awareness" },
       { name: "Pattern recognition", portType: "state", key: "pattern_recognition" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual", description: "Cross-scale insight transfer" },
     ],
     principleSource: "derived",
     derivedFrom: [
@@ -484,6 +485,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Synergy design", portType: "state", key: "synergy_design" },
       { name: "Resource efficiency", portType: "state", key: "resource_efficiency" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual", description: "Stacking-functions design thinking" },
     ],
     principleSource: "derived",
     derivedFrom: [
@@ -535,6 +537,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Priority clarity", portType: "state", key: "priority_clarity" },
       { name: "Decision clarity", portType: "state", key: "decision_clarity" },
+      { name: "Material capital", portType: "capital", key: "material", description: "Investment in foundational layers compounds" },
     ],
     principleSource: "derived",
     derivedFrom: ["rppl:framework:regrarians:v1"],
@@ -584,6 +587,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Compositional thinking", portType: "state", key: "compositional_thinking" },
       { name: "Incremental design", portType: "state", key: "incremental_design" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual", description: "Pattern-composition design vocabulary" },
     ],
     principleSource: "derived",
     derivedFrom: [
@@ -631,6 +635,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Rhythm awareness", portType: "state", key: "rhythm_awareness" },
       { name: "Cyclical thinking", portType: "state", key: "cyclical_thinking" },
+      { name: "Living capital", portType: "capital", key: "living", description: "Bodily attunement to natural cycles" },
     ],
     principleSource: "derived",
     derivedFrom: [
@@ -730,6 +735,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Holistic framing", portType: "state", key: "holistic_framing" },
       { name: "Decision clarity", portType: "state", key: "decision_clarity" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual", description: "Whole-system decision quality" },
     ],
     principleSource: "derived",
     derivedFrom: ["rppl:framework:holistic-management:v1"],
@@ -776,6 +782,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Integration thinking", portType: "state", key: "integration_thinking" },
       { name: "Systems awareness", portType: "state", key: "systems_awareness" },
+      { name: "Social capital", portType: "capital", key: "social", description: "Mutually-reinforcing relationships" },
     ],
     principleSource: "derived",
     derivedFrom: [
@@ -832,6 +839,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Energy awareness", portType: "state", key: "energy_awareness" },
       { name: "Resource efficiency", portType: "state", key: "resource_efficiency" },
+      { name: "Financial capital", portType: "capital", key: "financial", description: "Capturing surplus when conditions allow" },
     ],
     principleSource: "derived",
     derivedFrom: [
@@ -878,6 +886,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Diversification thinking", portType: "state", key: "diversification_thinking" },
       { name: "Resilience", portType: "state", key: "resilience" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual", description: "Multi-strategy portfolio thinking" },
     ],
     principleSource: "derived",
     derivedFrom: [
@@ -930,6 +939,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Edge awareness", portType: "state", key: "edge_awareness" },
       { name: "Growth orientation", portType: "state", key: "growth_orientation" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual", description: "Learning at the productive edge of competence" },
     ],
     principleSource: "derived",
     derivedFrom: [
@@ -986,6 +996,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Attention direction", portType: "state", key: "attention_direction" },
       { name: "Care awareness", portType: "state", key: "care_awareness" },
+      { name: "Spiritual capital", portType: "capital", key: "spiritual", description: "What you tend grows; alignment of attention with purpose" },
     ],
     principleSource: "derived",
     derivedFrom: [
@@ -1035,6 +1046,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Responsibility acceptance", portType: "state", key: "responsibility_acceptance" },
       { name: "Causal thinking", portType: "state", key: "causal_thinking" },
+      { name: "Spiritual capital", portType: "capital", key: "spiritual", description: "Self-ownership and alignment with consequences" },
     ],
     principleSource: "derived",
     derivedFrom: [
@@ -1085,6 +1097,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Response ownership", portType: "state", key: "response_ownership" },
       { name: "Emotional regulation", portType: "state", key: "emotional_regulation" },
+      { name: "Spiritual capital", portType: "capital", key: "spiritual", description: "Inner sovereignty independent of circumstance" },
     ],
     principleSource: "derived",
     derivedFrom: ["rppl:framework:stoicism:v1"],
@@ -1129,6 +1142,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Consent awareness", portType: "state", key: "consent_awareness" },
       { name: "Ethical clarity", portType: "state", key: "ethical_clarity" },
+      { name: "Spiritual capital", portType: "capital", key: "spiritual", description: "Power exercised voluntarily, never coercively" },
     ],
     principleSource: "derived",
     derivedFrom: [
@@ -1342,6 +1356,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Entropy awareness", portType: "state", key: "entropy_awareness" },
       { name: "Maintenance thinking", portType: "state", key: "maintenance_thinking" },
+      { name: "Living capital", portType: "capital", key: "living", description: "Sustained order from consistent maintenance against decay" },
     ],
     principleSource: "derived",
     derivedFrom: ["rppl:framework:thermodynamics:v1"],
@@ -1391,6 +1406,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Leverage identification", portType: "state", key: "leverage_identification" },
       { name: "Focus", portType: "state", key: "focus" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual", description: "Strategic clarity from finding cascade points" },
     ],
     principleSource: "derived",
     derivedFrom: [
@@ -1446,6 +1462,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Signal clarity", portType: "state", key: "signal_clarity" },
       { name: "Attention direction", portType: "state", key: "attention_direction" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual", description: "Information literacy from noise-filtering" },
     ],
     principleSource: "derived",
     derivedFrom: ["rppl:framework:information-theory:v1"],
@@ -1489,6 +1506,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Vital few focus", portType: "state", key: "vital_few_focus" },
       { name: "Resource efficiency", portType: "state", key: "resource_efficiency" },
+      { name: "Financial capital", portType: "capital", key: "financial", description: "Disproportionate returns from leverage concentration" },
     ],
     principleSource: "derived",
     derivedFrom: [
@@ -1693,6 +1711,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Needs awareness", portType: "state", key: "needs_awareness" },
       { name: "Priority clarity", portType: "state", key: "priority_clarity" },
+      { name: "Living capital", portType: "capital", key: "living", description: "Foundation health enables higher-level pursuits" },
     ],
     principleSource: "derived",
     derivedFrom: [
@@ -1746,6 +1765,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Non-action awareness", portType: "state", key: "non_action_awareness" },
       { name: "Timing awareness", portType: "state", key: "timing_awareness" },
+      { name: "Spiritual capital", portType: "capital", key: "spiritual", description: "Wu wei — alignment that produces results without forcing" },
     ],
     principleSource: "derived",
     derivedFrom: [
@@ -1846,6 +1866,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Cyclical awareness", portType: "state", key: "cyclical_awareness" },
       { name: "Timing awareness", portType: "state", key: "timing_awareness" },
+      { name: "Experiential capital", portType: "capital", key: "experiential", description: "Lived attunement to seasons and recurrence" },
     ],
     principleSource: "derived",
     derivedFrom: [
@@ -2164,6 +2185,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Attachment awareness", portType: "state", key: "attachment_awareness" },
       { name: "Relational security", portType: "state", key: "relational_security" },
+      { name: "Social capital", portType: "capital", key: "social", description: "Secure-base relationships from understanding attachment" },
     ],
     principleSource: "derived",
     derivedFrom: [
@@ -2437,6 +2459,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Mismatch awareness", portType: "state", key: "mismatch_awareness" },
       { name: "Environment design", portType: "state", key: "environment_design" },
+      { name: "Living capital", portType: "capital", key: "living", description: "Health restored by ancestral-aligned environment" },
     ],
     principleSource: "derived",
     derivedFrom: [
@@ -2552,6 +2575,7 @@ export const principleSeeds: RpplSeed[] = [
     outputs: [
       { name: "Subtraction thinking", portType: "state", key: "subtraction_thinking" },
       { name: "Resource efficiency", portType: "state", key: "resource_efficiency" },
+      { name: "Intellectual capital", portType: "capital", key: "intellectual", description: "Clarity gained by removing rather than adding" },
     ],
     principleSource: "derived",
     derivedFrom: [
