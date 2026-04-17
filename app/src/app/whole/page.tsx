@@ -7,107 +7,17 @@ import ShareworthyInsightCard from "@/components/whole/ShareworthyInsightCard";
 import WhyEvolution from "@/components/whole/WhyEvolution";
 import WeeklyReviewCard, { type WeeklyReviewCardState } from "@/components/whole/WeeklyReviewCard";
 import ArchetypeSelector from "@/components/whole/ArchetypeSelector";
-import AspirationsList from "@/components/whole/AspirationsList";
-import PatternsList from "@/components/whole/PatternsList";
+import WholeCanvas from "@/components/whole/WholeCanvas";
 import ConfirmationSheet from "@/components/whole/ConfirmationSheet";
 import SettingsSheet from "@/components/whole/SettingsSheet";
 import WholeSkeleton from "@/components/whole/WholeSkeleton";
-import CapacityIndicator from "@/components/whole/CapacityIndicator";
 import RpplProvenanceSheet from "@/components/today/RpplProvenanceSheet";
 import { useWhole } from "@/hooks/useWhole";
 import { mapAspirationStatus } from "@/lib/whole-utils";
 import { isShareworthyInsight } from "@/components/whole/ShareworthyInsightCard";
 import { displayName } from "@/lib/display-name";
 import { DIMENSION_LABELS } from "@/types/v2";
-import type { DimensionKey, Aspiration, PathwayStage, Pattern } from "@/types/v2";
-import { ConnectionThreads } from "@/components/shared/ConnectionThreads";
-
-/* ─── Connections section: threaded topology per aspiration ─── */
-
-function ConnectionsList({
-  aspirations,
-  highlight,
-}: {
-  aspirations: Aspiration[];
-  highlight?: { kind: "aspiration" | "dimension"; id: string } | null;
-}) {
-  const visible = aspirations.filter(
-    (a) => a.status !== "archived" && a.status !== "dropped"
-  );
-
-  // Aspirations that span 2+ dimensions are the real connections —
-  // each one ties parts of life together. Sort by span (most dimensions first).
-  const connected = visible
-    .filter((a) => (a.dimensionsTouched || []).length >= 2)
-    .sort(
-      (a, b) =>
-        (b.dimensionsTouched?.length || 0) - (a.dimensionsTouched?.length || 0),
-    );
-
-  if (connected.length === 0) return null;
-
-  // Pull the highlighted aspiration to the front so it anchors the list.
-  const ordered = highlight?.kind === "aspiration"
-    ? [
-        ...connected.filter((a) => a.id === highlight.id),
-        ...connected.filter((a) => a.id !== highlight.id),
-      ]
-    : connected;
-
-  return (
-    <div className="px-5">
-      <h2 className="font-sans font-medium text-[11px] tracking-[0.14em] uppercase text-sage-400 mb-3 m-0">
-        Connections
-      </h2>
-      <p className="font-serif italic text-[13px] text-sage-450 leading-snug mb-4 m-0">
-        Each aspiration threads through multiple parts of your life.
-      </p>
-      <div className="flex flex-col gap-4">
-        {ordered.map((asp) => {
-          const dims = (asp.dimensionsTouched || []) as DimensionKey[];
-          const name = displayName(asp.title || asp.clarifiedText || asp.rawText);
-          const isHighlighted =
-            (highlight?.kind === "aspiration" && highlight.id === asp.id) ||
-            (highlight?.kind === "dimension" && dims.includes(highlight.id as DimensionKey));
-          return (
-            <div
-              key={asp.id}
-              className={`flex items-center gap-3 rounded-xl transition-all duration-300 ${
-                isHighlighted
-                  ? "bg-amber-50 border border-amber-300 px-3 py-2 -mx-1 shadow-[0_0_0_3px_rgba(232,147,90,0.12)]"
-                  : ""
-              }`}
-              data-testid={isHighlighted ? "weekly-highlight" : undefined}
-            >
-              <div className="flex-shrink-0">
-                <ConnectionThreads
-                  activeDimensions={dims}
-                  size="badge"
-                  animate
-                />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="font-sans text-[13px] font-medium text-earth-500 m-0">
-                    {name}
-                  </p>
-                  {isHighlighted && (
-                    <span className="font-sans text-[9px] tracking-[0.16em] uppercase text-amber-600">
-                      This week
-                    </span>
-                  )}
-                </div>
-                <p className="font-serif text-[12px] text-sage-450 leading-snug mt-0.5 m-0">
-                  {dims.map((d) => DIMENSION_LABELS[d]).join(" · ")}
-                </p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+import type { DimensionKey, Pattern } from "@/types/v2";
 
 export default function WholePage() {
   const w = useWhole();
@@ -169,7 +79,7 @@ export default function WholePage() {
         dayCount: w.dayNum,
       }}
     >
-      <div className="min-h-dvh bg-sand-50 flex flex-col pb-20">
+      <div className="min-h-dvh bg-sand-50 flex flex-col pb-20 lg:max-w-6xl lg:mx-auto lg:w-full lg:px-6">
         <h1 className="sr-only">Whole</h1>
 
         {/* Header */}
@@ -234,69 +144,20 @@ export default function WholePage() {
               </div>
             )}
 
-            {/* Capacity — the soil your frameworks grow in */}
-            {w.humaContext?.capacityState && (
-              <div className="mt-5">
-                <CapacityIndicator capacityState={w.humaContext.capacityState} />
-              </div>
-            )}
-
-            {/* ─── Single Life Design View ─── */}
-            <div className="mt-5 flex flex-col gap-6">
-              {/* 1. Desires — aspirations as sentences */}
-              <AspirationsList aspirations={w.aspirations} unconnectedIds={unconnectedIds} />
-
-              {/* 2. Pathway — staged plan (forward-looking, renders when data exists) */}
-              {w.pathway && (
-                <div className="mx-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="font-sans text-[10px] font-semibold tracking-[0.22em] text-ink-300 uppercase">
-                      Your pathway
-                    </span>
-                    <div className="flex-1 h-px bg-sand-200" />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    {w.pathway.stages.map((stage: PathwayStage, idx: number) => (
-                      <div
-                        key={idx}
-                        className={`flex items-start gap-2.5 ${stage.status === "active" ? "opacity-100" : "opacity-50"}`}
-                      >
-                        <span className={`mt-1.5 shrink-0 w-2 h-2 rounded-full ${
-                          stage.status === "completed" ? "bg-sage-500" :
-                          stage.status === "active" ? "bg-amber-500" :
-                          "bg-sand-300"
-                        }`} />
-                        <div>
-                          <span className="font-sans text-[13px] font-medium text-earth-500">{stage.name}</span>
-                          <p className="font-serif text-[13px] text-sage-450 leading-snug mt-0.5 m-0">{stage.description}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 3. Chosen Patterns — with evidence status */}
-              <PatternsList patterns={w.allPatterns} onShowProvenance={handleShowProvenance} />
-
-              {/* 3. Connections — dimension overlaps (with weekly highlight if active) */}
-              <ConnectionsList
+            {/* ─── Unified canvas — one spatial instrument, lenses, zoom ─── */}
+            <div className="mt-5 mx-auto w-full max-w-[720px] lg:max-w-[860px]">
+              <WholeCanvas
                 aspirations={w.aspirations}
-                highlight={w.weeklyReview?.graphHighlight ?? null}
+                patterns={w.allPatterns}
+                unconnectedIds={unconnectedIds}
+                capacityState={w.humaContext?.capacityState}
+                weeklyHighlight={w.weeklyReview?.graphHighlight ?? null}
+                onAddAspiration={() => {
+                  w.setChatShellMode("new-aspiration");
+                  w.setChatShellOpen(true);
+                }}
+                onShowProvenance={handleShowProvenance}
               />
-
-              {/* Add aspiration */}
-              <div className="text-center px-6">
-                <button
-                  onClick={() => { w.setChatShellMode("new-aspiration"); w.setChatShellOpen(true); }}
-                  className="font-sans cursor-pointer inline-flex items-center gap-1.5 text-[13px] text-sage-500 bg-transparent border border-dashed border-[#C8D5C9] rounded-[20px] px-4 py-2 min-h-9"
-                >
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M6 1.5v9M1.5 6h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                  Add aspiration
-                </button>
-              </div>
             </div>
 
             {/* Insight card */}
