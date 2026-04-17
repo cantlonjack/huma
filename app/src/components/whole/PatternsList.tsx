@@ -5,12 +5,20 @@ import type { Pattern } from "@/types/v2";
 
 interface PatternsListProps {
   patterns: Pattern[];
+  onShowProvenance?: (pattern: Pattern) => void;
 }
 
-function PatternRow({ pattern }: { pattern: Pattern }) {
+function PatternRow({
+  pattern,
+  onShowProvenance,
+}: {
+  pattern: Pattern;
+  onShowProvenance?: (pattern: Pattern) => void;
+}) {
   const progress = pattern.validationTarget > 0
     ? Math.round((pattern.validationCount / pattern.validationTarget) * 100)
     : 0;
+  const hasRpplProvenance = !!pattern.provenance?.rpplId;
 
   return (
     <div className="py-2.5">
@@ -29,6 +37,15 @@ function PatternRow({ pattern }: { pattern: Pattern }) {
         <p className="font-sans text-[12px] text-sage-400 mt-0.5 m-0">
           Trigger: {pattern.trigger}
         </p>
+      )}
+
+      {hasRpplProvenance && onShowProvenance && (
+        <button
+          onClick={() => onShowProvenance(pattern)}
+          className="font-sans cursor-pointer text-[11px] italic text-sage-500 bg-transparent border-none p-0 mt-1 underline decoration-dotted underline-offset-2"
+        >
+          Where this comes from
+        </button>
       )}
 
       {/* Validation progress bar */}
@@ -51,7 +68,7 @@ function PatternRow({ pattern }: { pattern: Pattern }) {
 
 const MemoizedPatternRow = memo(PatternRow);
 
-export default function PatternsList({ patterns }: PatternsListProps) {
+export default function PatternsList({ patterns, onShowProvenance }: PatternsListProps) {
   // Only show validated and working patterns
   const validated = patterns.filter((p) => p.status === "validated");
   const working = patterns.filter((p) => p.status === "working");
@@ -67,7 +84,7 @@ export default function PatternsList({ patterns }: PatternsListProps) {
       {validated.length > 0 && (
         <div className="divide-y divide-sand-200">
           {validated.map((p) => (
-            <MemoizedPatternRow key={p.id} pattern={p} />
+            <MemoizedPatternRow key={p.id} pattern={p} onShowProvenance={onShowProvenance} />
           ))}
         </div>
       )}
@@ -81,7 +98,7 @@ export default function PatternsList({ patterns }: PatternsListProps) {
           )}
           <div className="divide-y divide-sand-200">
             {working.map((p) => (
-              <MemoizedPatternRow key={p.id} pattern={p} />
+              <MemoizedPatternRow key={p.id} pattern={p} onShowProvenance={onShowProvenance} />
             ))}
           </div>
         </>

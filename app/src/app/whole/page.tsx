@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import TabShell from "@/components/shared/TabShell";
 import InsightCard from "@/components/whole/InsightCard";
 import ShareworthyInsightCard from "@/components/whole/ShareworthyInsightCard";
@@ -12,12 +12,13 @@ import ConfirmationSheet from "@/components/whole/ConfirmationSheet";
 import SettingsSheet from "@/components/whole/SettingsSheet";
 import WholeSkeleton from "@/components/whole/WholeSkeleton";
 import CapacityIndicator from "@/components/whole/CapacityIndicator";
+import RpplProvenanceSheet from "@/components/today/RpplProvenanceSheet";
 import { useWhole } from "@/hooks/useWhole";
 import { mapAspirationStatus } from "@/lib/whole-utils";
 import { isShareworthyInsight } from "@/components/whole/ShareworthyInsightCard";
 import { displayName } from "@/lib/display-name";
 import { DIMENSION_LABELS, DIMENSION_COLORS } from "@/types/v2";
-import type { DimensionKey, Aspiration, PathwayStage } from "@/types/v2";
+import type { DimensionKey, Aspiration, PathwayStage, Pattern } from "@/types/v2";
 
 /* ─── Connections section: dimension-grouped aspiration overlaps ─── */
 
@@ -77,6 +78,13 @@ function ConnectionsList({ aspirations }: { aspirations: Aspiration[] }) {
 
 export default function WholePage() {
   const w = useWhole();
+  const [provenancePattern, setProvenancePattern] = useState<Pattern | null>(null);
+  const handleShowProvenance = useCallback((pattern: Pattern) => {
+    setProvenancePattern(pattern);
+  }, []);
+  const provenanceAspirationId = provenancePattern?.aspirationId;
+  const provenanceBehaviorKey = provenancePattern?.steps.find(s => s.isTrigger)?.behaviorKey
+    ?? provenancePattern?.steps[0]?.behaviorKey;
 
   // Unconnected aspirations — active aspirations with no behaviors defined.
   // Matches verifyLifeGraph's "unconnectedAspirations" definition by ID.
@@ -212,7 +220,7 @@ export default function WholePage() {
               )}
 
               {/* 3. Chosen Patterns — with evidence status */}
-              <PatternsList patterns={w.allPatterns} />
+              <PatternsList patterns={w.allPatterns} onShowProvenance={handleShowProvenance} />
 
               {/* 3. Connections — dimension overlaps */}
               <ConnectionsList aspirations={w.aspirations} />
@@ -298,6 +306,16 @@ export default function WholePage() {
         whyStatement={w.whyStatement}
         onArchetypeTap={() => { w.setSettingsOpen(false); w.setArchetypeSelectorOpen(true); }}
         onWhySave={w.handleWhySave}
+      />
+
+      {/* RPPL Provenance Sheet — opened from any Pattern with provenance.rpplId */}
+      <RpplProvenanceSheet
+        open={!!provenancePattern}
+        onClose={() => setProvenancePattern(null)}
+        aspirationId={provenanceAspirationId}
+        behaviorKey={provenanceBehaviorKey}
+        patterns={w.allPatterns}
+        behaviorText={provenancePattern ? displayName(provenancePattern.name) : undefined}
       />
 
       {/* Archive undo toast */}

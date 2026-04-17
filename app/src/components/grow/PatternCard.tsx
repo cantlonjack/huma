@@ -63,6 +63,7 @@ const PatternCard = memo(function PatternCard({
   onUpdate,
   onArchive,
   onRemove,
+  onShowProvenance,
   displayMode = "default",
   behaviorCounts,
 }: {
@@ -80,6 +81,8 @@ const PatternCard = memo(function PatternCard({
   onUpdate?: (patternId: string, updates: Partial<Pick<Pattern, "name" | "trigger" | "steps" | "timeWindow">>) => void;
   onArchive?: (patternId: string) => void;
   onRemove?: (patternId: string) => void;
+  /** Called when operator taps "Where this comes from" — opens RpplProvenanceSheet */
+  onShowProvenance?: (pattern: Pattern) => void;
   displayMode?: "default" | "evidence";
   behaviorCounts?: Record<string, { completed: number; total: number }>;
 }) {
@@ -336,6 +339,17 @@ const PatternCard = memo(function PatternCard({
           {(() => {
             const label = getProvenanceLabel(pattern);
             if (!label) return null;
+            const canOpenSheet = !!pattern.provenance?.rpplId && !!onShowProvenance;
+            if (canOpenSheet) {
+              return (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onShowProvenance!(pattern); }}
+                  className="font-sans cursor-pointer text-[11px] text-sage-500 italic mt-2 bg-transparent border-none p-0 underline decoration-dotted underline-offset-2"
+                >
+                  {label} &rarr; Where this comes from
+                </button>
+              );
+            }
             return (
               <p className="font-sans text-[11px] text-sage-400 italic mt-2 m-0">
                 {label}
@@ -621,10 +635,18 @@ const PatternCard = memo(function PatternCard({
 
       {/* Aspiration provenance */}
       {aspirationName && (
-        <div className="px-4 pt-2 pb-3 border-t border-sand-200/80">
+        <div className="px-4 pt-2 pb-3 border-t border-sand-200/80 flex items-center justify-between gap-3">
           <span className="font-sans text-[11px] italic text-sage-400">
             From: {aspirationName}
           </span>
+          {pattern.provenance?.rpplId && onShowProvenance && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onShowProvenance(pattern); }}
+              className="font-sans cursor-pointer text-[11px] text-sage-500 italic bg-transparent border-none p-0 underline decoration-dotted underline-offset-2"
+            >
+              Where this comes from
+            </button>
+          )}
         </div>
       )}
 

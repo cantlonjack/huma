@@ -56,6 +56,7 @@ function DimensionFold({
   onUpdate,
   onArchive,
   onRemove,
+  onShowProvenance,
   displayMode,
   behaviorCounts,
 }: {
@@ -74,6 +75,7 @@ function DimensionFold({
   onUpdate?: (patternId: string, updates: Partial<Pick<Pattern, "name" | "trigger" | "steps" | "timeWindow">>) => void;
   onArchive?: (patternId: string) => void;
   onRemove?: (patternId: string) => void;
+  onShowProvenance?: (pattern: Pattern) => void;
   displayMode?: "default" | "evidence";
   behaviorCounts?: Record<string, { completed: number; total: number }>;
 }) {
@@ -139,6 +141,7 @@ function DimensionFold({
             onUpdate={onUpdate}
             onArchive={onArchive}
             onRemove={onRemove}
+            onShowProvenance={onShowProvenance}
             displayMode={displayMode}
             behaviorCounts={behaviorCounts}
           />
@@ -167,6 +170,7 @@ export default function PatternSection({
   onUpdate,
   onArchive,
   onRemove,
+  onShowProvenance,
   displayMode,
   behaviorCounts,
 }: {
@@ -186,6 +190,7 @@ export default function PatternSection({
   onUpdate?: (patternId: string, updates: Partial<Pick<Pattern, "name" | "trigger" | "steps" | "timeWindow">>) => void;
   onArchive?: (patternId: string) => void;
   onRemove?: (patternId: string) => void;
+  onShowProvenance?: (pattern: Pattern) => void;
   displayMode?: "default" | "evidence";
   behaviorCounts?: Record<string, { completed: number; total: number }>;
 }) {
@@ -226,6 +231,7 @@ export default function PatternSection({
           onUpdate={onUpdate}
           onArchive={onArchive}
           onRemove={onRemove}
+          onShowProvenance={onShowProvenance}
           displayMode={displayMode}
           behaviorCounts={behaviorCounts}
         />
@@ -255,6 +261,7 @@ export default function PatternSection({
               onUpdate={onUpdate}
               onArchive={onArchive}
               onRemove={onRemove}
+              onShowProvenance={onShowProvenance}
               displayMode={displayMode}
               behaviorCounts={behaviorCounts}
             />

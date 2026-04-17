@@ -34,6 +34,17 @@ export interface ParsedRef {
   slug: string;
 }
 
+/**
+ * Provenance that Claude attaches when the decomposition draws on a seeded RPPL.
+ * Consumed by the Pattern creation path to populate `pattern.provenance`.
+ */
+export interface ParsedPractice {
+  rpplId: string;
+  sourceTradition?: string;
+  keyReference?: string;
+  originalContext?: string;
+}
+
 export interface ParsedMarkers {
   cleanText: string;
   parsedOptions: string[] | null;
@@ -45,10 +56,11 @@ export interface ParsedMarkers {
   parsedReorganization: ReorganizationPlan | null;
   parsedReplaceAspiration: string | null;
   parsedDecision: ParsedDecision | null;
+  parsedPractice: ParsedPractice | null;
   parsedRefs: ParsedRef[];
 }
 
-const MARKER_TYPES = ["OPTIONS", "BEHAVIORS", "ACTIONS", "CONTEXT", "ASPIRATION_NAME", "DECOMPOSITION", "REORGANIZATION", "DECISION"] as const;
+const MARKER_TYPES = ["OPTIONS", "BEHAVIORS", "ACTIONS", "CONTEXT", "ASPIRATION_NAME", "DECOMPOSITION", "REORGANIZATION", "DECISION", "PRACTICE"] as const;
 
 /**
  * Extract a single marker from text by finding [[TYPE: then scanning forward
@@ -134,6 +146,7 @@ export function parseMarkersV2(text: string): ParsedMarkers {
   let parsedReorganization: ReorganizationPlan | null = null;
   let parsedReplaceAspiration: string | null = null;
   let parsedDecision: ParsedDecision | null = null;
+  let parsedPractice: ParsedPractice | null = null;
 
   let cleanText = text;
 
@@ -177,6 +190,18 @@ export function parseMarkersV2(text: string): ParsedMarkers {
         case "DECISION":
           parsedDecision = result.json as ParsedDecision;
           break;
+        case "PRACTICE": {
+          const raw = result.json as Partial<ParsedPractice> | null;
+          if (raw && typeof raw.rpplId === "string" && raw.rpplId.length > 0) {
+            parsedPractice = {
+              rpplId: raw.rpplId,
+              sourceTradition: raw.sourceTradition,
+              keyReference: raw.keyReference,
+              originalContext: raw.originalContext,
+            };
+          }
+          break;
+        }
       }
       cleanText = cleanText.replace(result.fullMatch, "");
     }
@@ -213,8 +238,8 @@ export function parseMarkersV2(text: string): ParsedMarkers {
 
   // Strip incomplete markers at end of stream
   cleanText = cleanText
-    .replace(/\[\[(?:OPTIONS|BEHAVIORS|ACTIONS|CONTEXT|ASPIRATION_NAME|DECOMPOSITION|REORGANIZATION|REPLACE_ASPIRATION|DECISION|REF):?[\s\S]*$/g, "")
+    .replace(/\[\[(?:OPTIONS|BEHAVIORS|ACTIONS|CONTEXT|ASPIRATION_NAME|DECOMPOSITION|REORGANIZATION|REPLACE_ASPIRATION|DECISION|PRACTICE|REF):?[\s\S]*$/g, "")
     .trim();
 
-  return { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName, parsedDecomposition, parsedReorganization, parsedReplaceAspiration, parsedDecision, parsedRefs };
+  return { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName, parsedDecomposition, parsedReorganization, parsedReplaceAspiration, parsedDecision, parsedPractice, parsedRefs };
 }

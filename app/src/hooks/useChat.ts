@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import type { ChatMessage, Behavior, Aspiration } from "@/types/v2";
+import type { ChatMessage, Behavior, Aspiration, Pattern } from "@/types/v2";
 import { parseMarkersV2 as parseMarkers } from "@/lib/parse-markers-v2";
 import { useAuth } from "@/components/shared/AuthProvider";
 import {
@@ -12,8 +12,10 @@ import {
   storeWriteLocalMessages,
   storeSaveAspiration,
   storeSaveContext,
+  storeSavePattern,
   clearTodaySheetCache,
 } from "@/lib/db/store";
+import { extractPatternFromAspiration } from "@/lib/pattern-extraction";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -226,7 +228,7 @@ export function useChat(): UseChatReturn {
         });
       }
 
-      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedDecomposition } = parseMarkers(fullResponse);
+      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedDecomposition, parsedPractice } = parseMarkers(fullResponse);
 
       const finalHumaMsg: ChatMessage = { ...humaMsg, content: cleanText, contextExtracted: parsedContext || undefined };
       storeSaveChatMessage(user?.id ?? null, finalHumaMsg, "chat").catch(() => {});
@@ -261,6 +263,33 @@ export function useChat(): UseChatReturn {
         const updatedAsps = [...aspirations, newAspiration];
         setAspirations(updatedAsps);
         storeSaveAspiration(user?.id ?? null, newAspiration).catch(() => {});
+
+        // If the aspiration has a trigger, extract a Pattern now so the
+        // [[PRACTICE]] marker's rpplId flows into provenance. Without this,
+        // patterns are materialized lazily in fetchPatterns and lose the
+        // provenance that Claude emitted.
+        const extracted = extractPatternFromAspiration(newAspiration);
+        if (extracted) {
+          const withProvenance: Pattern = parsedPractice
+            ? {
+                ...extracted,
+                provenance: {
+                  source: extracted.provenance?.source ?? "conversation",
+                  rpplId: parsedPractice.rpplId,
+                  ...(parsedPractice.sourceTradition
+                    ? { sourceTradition: parsedPractice.sourceTradition }
+                    : {}),
+                  ...(parsedPractice.keyReference
+                    ? { keyReference: parsedPractice.keyReference }
+                    : {}),
+                  ...(parsedPractice.originalContext
+                    ? { originalContext: parsedPractice.originalContext }
+                    : {}),
+                },
+              }
+            : extracted;
+          storeSavePattern(user?.id ?? null, withProvenance).catch(() => {});
+        }
       }
 
       setMessages(prev => {

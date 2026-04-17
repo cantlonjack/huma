@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { PaletteConcept, ChatMessage, Behavior, DimensionKey } from "@/types/v2";
-import { parseMarkersV2 as parseMarkers, type DecompositionData } from "@/lib/parse-markers-v2";
+import { parseMarkersV2 as parseMarkers, type DecompositionData, type ParsedPractice } from "@/lib/parse-markers-v2";
 import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import { migrateLocalStorageToSupabase } from "@/lib/supabase-v2";
@@ -119,6 +119,7 @@ export function useStart(): UseStartReturn {
   const [decomposedBehaviors, setDecomposedBehaviors] = useState<Behavior[]>([]);
   const [decompositionData, setDecompositionData] = useState<DecompositionData | null>(null);
   const [aspirationName, setAspirationName] = useState<string | null>(null);
+  const [practiceProvenance, setPracticeProvenance] = useState<ParsedPractice | null>(null);
   const [showPaletteMobile, setShowPaletteMobile] = useState(false);
   const [showTransition, setShowTransition] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -309,7 +310,11 @@ export function useStart(): UseStartReturn {
       }
 
       // Final parse with all markers
-      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName, parsedDecomposition, parsedReplaceAspiration } = parseMarkers(fullResponse);
+      const { cleanText, parsedOptions, parsedBehaviors, parsedActions, parsedContext, parsedAspirationName, parsedDecomposition, parsedReplaceAspiration, parsedPractice } = parseMarkers(fullResponse);
+
+      if (parsedPractice) {
+        setPracticeProvenance(parsedPractice);
+      }
 
       if (parsedContext) {
         setKnownContext(prev => ({ ...prev, ...parsedContext }));
@@ -449,8 +454,29 @@ export function useStart(): UseStartReturn {
       behavior_count: behaviorsToSave.length,
     });
 
-    // Extract patterns from aspirations that have a trigger behavior
-    const patterns = extractPatternsFromAspirations(aspirations);
+    // Extract patterns from aspirations that have a trigger behavior.
+    // If Claude emitted a [[PRACTICE:{rpplId:"..."}]] marker, stamp its
+    // provenance onto the patterns so /grow and /whole can show "Where
+    // this comes from" with real content.
+    const extractedPatterns = extractPatternsFromAspirations(aspirations);
+    const patterns = practiceProvenance
+      ? extractedPatterns.map(p => ({
+          ...p,
+          provenance: {
+            ...p.provenance,
+            rpplId: practiceProvenance.rpplId,
+            ...(practiceProvenance.sourceTradition
+              ? { sourceTradition: practiceProvenance.sourceTradition }
+              : {}),
+            ...(practiceProvenance.keyReference
+              ? { keyReference: practiceProvenance.keyReference }
+              : {}),
+            ...(practiceProvenance.originalContext
+              ? { originalContext: practiceProvenance.originalContext }
+              : {}),
+          },
+        }))
+      : extractedPatterns;
     if (patterns.length > 0) {
       localStorage.setItem("huma-v2-patterns", JSON.stringify(patterns));
     }
@@ -473,7 +499,7 @@ export function useStart(): UseStartReturn {
       setPendingAspiration({ rawText, clarifiedText });
       setShowAuthModal(true);
     }
-  }, [messages, decomposedBehaviors, decompositionData, knownContext, aspirationName, user, router]);
+  }, [messages, decomposedBehaviors, decompositionData, knownContext, aspirationName, practiceProvenance, user, router]);
 
   // Called when auth completes (from AuthModal or magic link return)
   const handleAuthenticated = useCallback(async () => {

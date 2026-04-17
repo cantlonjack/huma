@@ -249,6 +249,12 @@ const DECOMPOSITION_PHASE_PROMPT = `The operator confirmed their context. Now de
 First, output the aspiration name:
 [[ASPIRATION_NAME:"Short 2-5 word label"]]
 
+If this decomposition draws on a seeded RPPL from the RPPL LIBRARY (listed below
+the context), emit a PRACTICE marker naming the canonical id BEFORE the
+DECOMPOSITION marker. Only emit this when you genuinely used one of the listed
+ids — never fabricate an rpplId:
+[[PRACTICE:{"rpplId":"rppl:framework:stoicism:v1","sourceTradition":"optional label","keyReference":"optional book or practitioner"}]]
+
 Then output the FULL DECOMPOSITION as a JSON marker:
 [[DECOMPOSITION:{
   "aspiration_title": "Short name (3-5 words)",
@@ -430,6 +436,38 @@ can render evidence inline:
   [[REF:pattern:morning-walk]] — references a pattern by its key
 Use the aspiration's clarifiedText slug (lowercased, hyphenated). Only reference
 things the user actually has — never fabricate references.`;
+
+// ─── RPPL Catalog Builder ────────────────────────────────────────────────
+// Compact listing of seeded RPPLs for Claude to reference by canonical id.
+// Grouped by type; each entry is `rpplId — name [domain]`.
+// Kept tight — one line per seed, no descriptions, no ports.
+export function buildRpplCatalog(seeds: RpplSeed[] | undefined): string {
+  if (!seeds || seeds.length === 0) return "";
+
+  const groups: Record<string, string[]> = {
+    framework: [],
+    principle: [],
+    practice: [],
+    capacity: [],
+    axiom: [],
+  };
+
+  for (const s of seeds) {
+    const line = `${s.rpplId} — ${s.name} [${s.domain}]`;
+    (groups[s.type] ||= []).push(line);
+  }
+
+  const sections: string[] = [];
+  for (const type of ["framework", "principle", "practice", "capacity", "axiom"] as const) {
+    const lines = groups[type];
+    if (!lines || lines.length === 0) continue;
+    sections.push(`${type.toUpperCase()}S (${lines.length}):\n${lines.join("\n")}`);
+  }
+
+  return sections.length > 0
+    ? `\n\nRPPL LIBRARY — use these canonical ids when emitting [[PRACTICE:{"rpplId":"..."}]].\nOnly cite an id whose meaning matches what you're recommending; if nothing fits, omit the marker.\n\n${sections.join("\n\n")}`
+    : "";
+}
 
 // ─── Behavioral Context Builder ──────────────────────────────────────────
 export function buildBehavioralContext(
@@ -1000,6 +1038,12 @@ relevant — look for connections and dimension overlap.`
     ? `\n\nCONTEXT COMPLETENESS:\n${contextHint}`
     : "";
 
+  // RPPL catalog — only inject when decomposition is likely (focus mode or
+  // reorganization with revise behaviors). Keeps chat/open mode prompts lean.
+  const injectCatalog = !!rpplSeeds && rpplSeeds.length > 0 &&
+    (mode === "focus" || isReorganization);
+  const rpplCatalogBlock = injectCatalog ? buildRpplCatalog(rpplSeeds) : "";
+
   // Graph verification (Phase 3) — inject gaps/conflicts when data available
   let verificationBlock = "";
   if (useCompressedEncoding && rpplSeeds && rpplSeeds.length > 0) {
@@ -1024,7 +1068,7 @@ ACTIVE ASPIRATIONS:
 ${aspirationStr}${templateBlock}
 
 TODAY'S DATE: ${today}
-${messageCountRule}${tabContextBlock}${behavioralContextBlock}${depthNote}${newAspirationBlock}${decisionFollowUpBlock}`;
+${messageCountRule}${tabContextBlock}${behavioralContextBlock}${depthNote}${newAspirationBlock}${decisionFollowUpBlock}${rpplCatalogBlock}`;
 }
 
 // ─── Build System Prompt (backward compatible) ───────────────────────────

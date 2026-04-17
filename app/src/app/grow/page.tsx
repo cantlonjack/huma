@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
+import type { Pattern } from "@/types/v2";
 import { useGrow } from "@/hooks/useGrow";
 import { displayName } from "@/lib/display-name";
 import TabShell from "@/components/shared/TabShell";
@@ -12,6 +13,8 @@ import CompletionStats from "@/components/grow/CompletionStats";
 import BehaviorFrequency from "@/components/grow/BehaviorFrequency";
 import CorrelationCards from "@/components/grow/CorrelationCards";
 import { GapSection } from "@/components/grow/GapCard";
+import { PrereqSignal } from "@/components/grow/PrereqSignal";
+import RpplProvenanceSheet from "@/components/today/RpplProvenanceSheet";
 
 // ── Inlined: EmptyState ──
 function EmptyState({ onAddAspiration }: { onAddAspiration: () => void }) {
@@ -104,6 +107,15 @@ const STAGE_HEADLINES: Record<string, string> = {
 
 export default function GrowPage() {
   const g = useGrow();
+  const [provenancePattern, setProvenancePattern] = useState<Pattern | null>(null);
+
+  const handleShowProvenance = useCallback((pattern: Pattern) => {
+    setProvenancePattern(pattern);
+  }, []);
+
+  const provenanceAspirationId = provenancePattern?.aspirationId;
+  const provenanceBehaviorKey = provenancePattern?.steps.find(s => s.isTrigger)?.behaviorKey
+    ?? provenancePattern?.steps[0]?.behaviorKey;
 
   const handlePlanAspiration = useCallback(() => {
     // Open the chat in new-aspiration mode. The aspiration context for
@@ -151,6 +163,11 @@ export default function GrowPage() {
             dormantCapitalCount={g.verification?.dormantCapitals.length ?? 0}
             onPlan={handlePlanAspiration}
           />
+        )}
+
+        {/* Prereq signal — unsatisfied capacity inputs from verifyLifeGraph */}
+        {!g.loading && g.verification && g.verification.unsatisfiedInputs.length > 0 && (
+          <PrereqSignal unsatisfied={g.verification.unsatisfiedInputs} />
         )}
 
         {/* Content — progressive disclosure by stage */}
@@ -210,6 +227,7 @@ export default function GrowPage() {
                 onUpdate={g.handlePatternUpdate}
                 onArchive={g.handlePatternArchive}
                 onRemove={g.handlePatternRemove}
+                onShowProvenance={handleShowProvenance}
                 behaviorCounts={g.behaviorCounts}
               />
             )}
@@ -233,6 +251,7 @@ export default function GrowPage() {
                 onUpdate={g.handlePatternUpdate}
                 onArchive={g.handlePatternArchive}
                 onRemove={g.handlePatternRemove}
+                onShowProvenance={handleShowProvenance}
                 behaviorCounts={g.behaviorCounts}
               />
             )}
@@ -256,6 +275,7 @@ export default function GrowPage() {
                 onUpdate={g.handlePatternUpdate}
                 onArchive={g.handlePatternArchive}
                 onRemove={g.handlePatternRemove}
+                onShowProvenance={handleShowProvenance}
                 behaviorCounts={g.behaviorCounts}
               />
             )}
@@ -292,6 +312,16 @@ export default function GrowPage() {
         cancelLabel="Keep it"
         onConfirm={g.confirmPatternRemove}
         onCancel={() => g.setConfirmRemoveId(null)}
+      />
+
+      {/* RPPL Provenance Sheet — opened from any Pattern card with provenance.rpplId */}
+      <RpplProvenanceSheet
+        open={!!provenancePattern}
+        onClose={() => setProvenancePattern(null)}
+        aspirationId={provenanceAspirationId}
+        behaviorKey={provenanceBehaviorKey}
+        patterns={g.patterns}
+        behaviorText={provenancePattern ? displayName(provenancePattern.name) : undefined}
       />
 
       {/* Archive undo toast */}
