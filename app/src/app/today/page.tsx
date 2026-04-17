@@ -32,6 +32,7 @@ import {
   dimensionKeysFromLabels,
 } from "@/components/shared/ConnectionThreads";
 import type { PulseState } from "@/components/shared/ConnectionThreads";
+import { ThemeToggleIcon } from "@/components/shared/ThemeToggle";
 
 // ── Inlined: NudgeCard ──
 const TYPE_LABELS: Record<string, string> = {
@@ -264,9 +265,12 @@ export default function TodayPage() {
           <span className="font-sans font-medium text-sage-500 text-[11px] tracking-[0.4em] leading-none">
             H U M A
           </span>
-          <span className="font-sans text-sage-400 text-[11px]">
-            Day {t.dayCount}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="font-sans text-sage-400 text-[11px]">
+              Day {t.dayCount}
+            </span>
+            <ThemeToggleIcon className="size-7 -mr-1.5" />
+          </div>
         </div>
 
         {/* Loading state */}

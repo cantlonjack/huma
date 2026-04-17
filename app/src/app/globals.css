@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme inline {
+@theme {
   /* ── Sand ── */
   --color-sand-50: #FAF8F3;
   --color-sand-100: #F6F1E9;
@@ -65,6 +65,9 @@
   --color-lilac: #6B5A7A;
   --color-lilac-light: #EDE8F2;
 
+  /* Elevated surface for cards that used bg-white in light mode. */
+  --color-card: #FFFFFF;
+
   /* ── Typography ── */
   --font-serif: var(--font-cormorant, "Cormorant Garamond"), Georgia, serif;
   --font-sans: var(--font-source-sans, "Source Sans 3"), system-ui, -apple-system, sans-serif;
@@ -72,12 +75,201 @@
 
 :root {
   --huma-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  color-scheme: light;
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   Dark Mode — "confession booth" palette. Token names are preserved so
+   existing Tailwind utilities resolve to the correct values per theme
+   without app-wide churn. See docs/HUMA_DESIGN_SYSTEM.md §08.
+   ─────────────────────────────────────────────────────────────────────── */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --color-sand-50: #141210;
+    --color-sand-100: #1E1B18;
+    --color-sand-200: #2A2622;
+    --color-sand-250: #332E28;
+    --color-sand-300: #3D3830;
+    --color-sand-350: #4A4338;
+    --color-sand-400: #544D42;
+
+    --color-sage-50: #1A2920;
+    --color-sage-100: #1E3624;
+    --color-sage-200: #2A4A30;
+    --color-sage-300: #8BAF8E;
+    --color-sage-400: #A8C4AA;
+    --color-sage-450: #B3CEB5;
+    --color-sage-500: #BED3C0;
+    --color-sage-600: #C4D9C6;
+    --color-sage-700: #D6E5D8;
+    --color-sage-800: #E0EDE1;
+    --color-sage-900: #EBF3EC;
+
+    --color-amber-100: #2A1F14;
+    --color-amber-200: #3D2A16;
+    --color-amber-300: #553A1E;
+    --color-amber-350: #7D5828;
+    --color-amber-400: #E8935A;
+    --color-amber-500: #EFA470;
+    --color-amber-600: #F0B88A;
+    --color-amber-700: #F5C9A0;
+
+    --color-earth-200: #544D42;
+    --color-earth-300: #6B6358;
+    --color-earth-350: #7D7568;
+    --color-earth-400: #8C8274;
+    --color-earth-500: #A89E90;
+    --color-earth-600: #BDB4A4;
+    --color-earth-650: #C8BFB0;
+    --color-earth-700: #D4CBBC;
+    --color-earth-800: #E4DDD0;
+    --color-earth-900: #F2EDE5;
+
+    --color-ink-200: #544D42;
+    --color-ink-300: #6B6358;
+    --color-ink-400: #8C8274;
+    --color-ink-500: #A89E90;
+    --color-ink-600: #BDB4A4;
+    --color-ink-700: #D4CBBC;
+    --color-ink-800: #E4DDD0;
+    --color-ink-900: #F2EDE5;
+
+    --color-sky: #6FA3C0;
+    --color-sky-light: #1E3440;
+    --color-rose: #C87878;
+    --color-rose-light: #3E1E1E;
+    --color-gold: #D4B870;
+    --color-gold-light: #2E2818;
+    --color-lilac: #A494B0;
+    --color-lilac-light: #2A2330;
+
+    --color-card: #1E1B18;
+  }
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-sand-50: #141210;
+  --color-sand-100: #1E1B18;
+  --color-sand-200: #2A2622;
+  --color-sand-250: #332E28;
+  --color-sand-300: #3D3830;
+  --color-sand-350: #4A4338;
+  --color-sand-400: #544D42;
+
+  --color-sage-50: #1A2920;
+  --color-sage-100: #1E3624;
+  --color-sage-200: #2A4A30;
+  --color-sage-300: #8BAF8E;
+  --color-sage-400: #A8C4AA;
+  --color-sage-450: #B3CEB5;
+  --color-sage-500: #BED3C0;
+  --color-sage-600: #C4D9C6;
+  --color-sage-700: #D6E5D8;
+  --color-sage-800: #E0EDE1;
+  --color-sage-900: #EBF3EC;
+
+  --color-amber-100: #2A1F14;
+  --color-amber-200: #3D2A16;
+  --color-amber-300: #553A1E;
+  --color-amber-350: #7D5828;
+  --color-amber-400: #E8935A;
+  --color-amber-500: #EFA470;
+  --color-amber-600: #F0B88A;
+  --color-amber-700: #F5C9A0;
+
+  --color-earth-200: #544D42;
+  --color-earth-300: #6B6358;
+  --color-earth-350: #7D7568;
+  --color-earth-400: #8C8274;
+  --color-earth-500: #A89E90;
+  --color-earth-600: #BDB4A4;
+  --color-earth-650: #C8BFB0;
+  --color-earth-700: #D4CBBC;
+  --color-earth-800: #E4DDD0;
+  --color-earth-900: #F2EDE5;
+
+  --color-ink-200: #544D42;
+  --color-ink-300: #6B6358;
+  --color-ink-400: #8C8274;
+  --color-ink-500: #A89E90;
+  --color-ink-600: #BDB4A4;
+  --color-ink-700: #D4CBBC;
+  --color-ink-800: #E4DDD0;
+  --color-ink-900: #F2EDE5;
+
+  --color-sky: #6FA3C0;
+  --color-sky-light: #1E3440;
+  --color-rose: #C87878;
+  --color-rose-light: #3E1E1E;
+  --color-gold: #D4B870;
+  --color-gold-light: #2E2818;
+  --color-lilac: #A494B0;
+  --color-lilac-light: #2A2330;
+
+  --color-card: #1E1B18;
 }
 
 html, body {
   background: var(--color-sand-50);
   color: var(--color-earth-800);
   font-family: var(--font-sans);
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   Dark-mode reanchoring — utilities whose semantic intent doesn't
+   survive a flat scale flip. Keep filled buttons/toasts dark even when
+   text-sage-700 needs to be light, and flip bg-white to the night card.
+   ─────────────────────────────────────────────────────────────────────── */
+
+[data-theme="dark"] .bg-white {
+  background-color: var(--color-card);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .bg-white {
+    background-color: var(--color-card);
+  }
+}
+
+[data-theme="dark"] .bg-sage-600,
+[data-theme="dark"] .bg-sage-700,
+[data-theme="dark"] .bg-sage-800,
+[data-theme="dark"] .bg-sage-900 {
+  background-color: #2A4A30;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .bg-sage-600,
+  :root:not([data-theme="light"]) .bg-sage-700,
+  :root:not([data-theme="light"]) .bg-sage-800,
+  :root:not([data-theme="light"]) .bg-sage-900 {
+    background-color: #2A4A30;
+  }
+}
+
+[data-theme="dark"] .bg-amber-600,
+[data-theme="dark"] .bg-amber-500,
+[data-theme="dark"] .bg-amber-700 {
+  background-color: #B5621E;
+}
+[data-theme="dark"] .hover\:bg-amber-500:hover {
+  background-color: #C87A3A;
+}
+[data-theme="dark"] .hover\:bg-amber-700:hover {
+  background-color: #8B4513;
+}
+[data-theme="dark"] .active\:bg-amber-700:active {
+  background-color: #8B4513;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .bg-amber-600,
+  :root:not([data-theme="light"]) .bg-amber-500,
+  :root:not([data-theme="light"]) .bg-amber-700 {
+    background-color: #B5621E;
+  }
 }
 
 /* ─── Typography Scale ─── */

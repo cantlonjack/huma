@@ -6,6 +6,7 @@ import QueryProvider from "@/components/shared/QueryProvider";
 import BottomNav from "@/components/shared/BottomNav";
 import SyncStatus from "@/components/shared/SyncStatus";
 import SessionTracker from "@/components/shared/SessionTracker";
+import { ThemeProvider, themeInitScript } from "@/components/shared/ThemeProvider";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -57,17 +58,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className={`${cormorant.variable} ${sourceSans.variable} font-sans antialiased`}>
-        <QueryProvider>
-        <AuthProvider>
-          <a href="#main-content" className="skip-nav">Skip to main content</a>
-          <main id="main-content">
-          {children}
-          </main>
-          <BottomNav />
-          <SyncStatus />
-        </AuthProvider>
-        </QueryProvider>
+        <ThemeProvider>
+          <QueryProvider>
+            <AuthProvider>
+              <a href="#main-content" className="skip-nav">Skip to main content</a>
+              <main id="main-content">
+                {children}
+              </main>
+              <BottomNav />
+              <SyncStatus />
+            </AuthProvider>
+          </QueryProvider>
+        </ThemeProvider>
         <Analytics />
         <SessionTracker />
       </body>

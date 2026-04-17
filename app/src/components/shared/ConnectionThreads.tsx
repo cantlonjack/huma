@@ -4,6 +4,7 @@ import { memo, useMemo, useState, useEffect } from "react";
 import type { DimensionKey } from "@/types/v2";
 import { DIMENSION_COLORS, DIMENSION_LABELS } from "@/types/v2";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { useTheme } from "@/components/shared/ThemeProvider";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    ConnectionThreads — HUMA's signature visual primitive.
@@ -277,6 +278,7 @@ function injectCSS() {
 
 export const ConnectionThreads = memo(function ConnectionThreads(props: ConnectionThreadsProps) {
   const reduced = useReducedMotion();
+  const { theme } = useTheme();
   const shouldAnimate = props.animate !== false && !reduced;
 
   useEffect(() => { injectCSS(); }, []);
@@ -286,7 +288,11 @@ export const ConnectionThreads = memo(function ConnectionThreads(props: Connecti
     [props.connections, props.activeDimensions],
   );
 
-  return <Ring {...props} conns={conns} anim={shouldAnimate} />;
+  // `darkMode` prop — when unset, follow the app theme so inactive-dot and
+  // label treatments pick the right contrast without per-site wiring.
+  const darkMode = props.darkMode ?? theme === "dark";
+
+  return <Ring {...props} darkMode={darkMode} conns={conns} anim={shouldAnimate} />;
 });
 
 // ── Unified Ring (all seven sizes) ──────────────────────────────────────
@@ -392,7 +398,12 @@ function Ring({
 
       {/* ── Dark background for signature ── */}
       {useDarkBg && (
-        <rect width={sz} height={sz} fill="#1A1714" rx={isSignature ? 8 : 0} />
+        <rect
+          width={sz}
+          height={sz}
+          fill={darkMode && !isSignature ? "transparent" : "#1A1714"}
+          rx={isSignature ? 8 : 0}
+        />
       )}
 
       {/* ── Filled shape: "the shape of your life" ── */}

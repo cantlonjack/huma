@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { ThemePreferenceControl } from "@/components/shared/ThemeToggle";
 
 type ResetOption = "clear-chat" | "clear-context" | "start-fresh";
 type SettingsTab = "profile" | "data";
@@ -292,8 +293,19 @@ export default function SettingsSheet({
                 </div>
               </div>
             ) : (
-              /* Data tab — existing reset options */
-              <div className="flex flex-col gap-2">
+              /* Data tab — appearance + reset options */
+              <div className="flex flex-col gap-4">
+                {/* Appearance */}
+                <div className="bg-sand-100 rounded-xl p-4">
+                  <span className="font-sans text-[11px] tracking-[0.12em] uppercase text-sage-400 block mb-2">
+                    Appearance
+                  </span>
+                  <ThemePreferenceControl />
+                  <p className="font-sans text-[12px] text-earth-400 leading-snug mt-2">
+                    System follows your device&rsquo;s light / dark setting.
+                  </p>
+                </div>
+
                 {RESET_OPTIONS.map((opt) => (
                   <button
                     key={opt.key}
