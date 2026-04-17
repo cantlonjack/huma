@@ -25,8 +25,11 @@ import {
 import { ValidationCard } from "@/components/today/ValidationCard";
 import WeekRhythm from "@/components/today/WeekRhythm";
 import type { Nudge, DimensionKey, SheetEntry } from "@/types/v2";
-import { DIMENSION_LABELS } from "@/types/v2";
-import { ConnectionThreads } from "@/components/shared/ConnectionThreads";
+import { DIMENSION_LABELS, DIMENSION_COLORS } from "@/types/v2";
+import {
+  ConnectionThreads,
+  dimensionKeysFromLabels,
+} from "@/components/shared/ConnectionThreads";
 import type { PulseState } from "@/components/shared/ConnectionThreads";
 
 // ── Inlined: NudgeCard ──
@@ -192,6 +195,28 @@ export default function TodayPage() {
   // First structural insight for Day 1 empty state
   const firstStructuralInsight = t.structuralInsights.length > 0 ? t.structuralInsights[0] : null;
 
+  // Through-line thread color — blended from the keystone entry's dimensions,
+  // so the through-line visually links to the behavior row it points toward.
+  const keystoneDims = t.keystoneEntry?.dimensions
+    ? dimensionKeysFromLabels(t.keystoneEntry.dimensions)
+    : [];
+  const threadColor = keystoneDims.length > 0
+    ? (() => {
+        // Simple hex average of the keystone's dimension colors.
+        const hexes = keystoneDims.map(d => DIMENSION_COLORS[d]).filter(Boolean);
+        if (hexes.length === 0) return null;
+        const rgb = hexes.reduce((acc, h) => {
+          const r = parseInt(h.slice(1, 3), 16);
+          const g = parseInt(h.slice(3, 5), 16);
+          const b = parseInt(h.slice(5, 7), 16);
+          return [acc[0] + r, acc[1] + g, acc[2] + b];
+        }, [0, 0, 0]);
+        const n = hexes.length;
+        const toHex = (v: number) => Math.round(v / n).toString(16).padStart(2, "0");
+        return `#${toHex(rgb[0])}${toHex(rgb[1])}${toHex(rgb[2])}`;
+      })()
+    : null;
+
   // Aggregate rhythm data for WeekRhythm in footer
   const aggregateRhythm = (() => {
     const agg: Record<number, number> = {};
@@ -301,9 +326,14 @@ export default function TodayPage() {
                   </p>
                 )}
 
-                {/* Through-line — the thread connecting today's actions */}
+                {/* Through-line — the thread connecting today's actions.
+                    Stroke color is blended from the keystone's dimensions so
+                    the through-line visually links to the behavior it points at. */}
                 {t.throughLine && !t.sheetCompiling && (
-                  <div className="border-l-2 border-l-amber-400 pl-3.5 py-0.5 mb-2">
+                  <div
+                    className="border-l-2 pl-3.5 py-0.5 mb-2"
+                    style={{ borderLeftColor: threadColor ?? "#E4B862" }}
+                  >
                     <p className="font-serif italic text-[15px] leading-snug text-ink-600">
                       {t.throughLine}
                     </p>
@@ -356,6 +386,7 @@ export default function TodayPage() {
                           entry={entry}
                           isChecked={isChecked}
                           isKeystone={isKeystone}
+                          keystoneAccentColor={t.throughLine ? threadColor : null}
                           onToggle={() =>
                             t.handleToggleStep(entry.aspirationId, entry.behaviorKey, !isChecked)
                           }

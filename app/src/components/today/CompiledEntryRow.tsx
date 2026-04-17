@@ -9,12 +9,16 @@ export function CompiledEntryRow({
   entry,
   isChecked,
   isKeystone,
+  keystoneAccentColor,
   onToggle,
   onShowProvenance,
 }: {
   entry: SheetEntry;
   isChecked: boolean;
   isKeystone: boolean;
+  /** Overrides the default amber keystone accent — used to color-link the
+      through-line to the row it references. */
+  keystoneAccentColor?: string | null;
   onToggle: () => void;
   onShowProvenance?: (entry: SheetEntry) => void;
 }) {
@@ -39,9 +43,15 @@ export function CompiledEntryRow({
     <div
       className={`relative transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isChecked ? "opacity-60" : "opacity-100"}`}
     >
-      {/* Keystone left accent */}
+      {/* Keystone left accent — threads the color from the through-line
+          into the row the through-line points at. */}
       {isKeystone && (
-        <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-full bg-amber-500/60" />
+        <div
+          className="absolute left-0 top-0 bottom-0 w-[3px] rounded-full"
+          style={{
+            backgroundColor: keystoneAccentColor ?? "rgba(245, 158, 11, 0.6)",
+          }}
+        />
       )}
 
       <div className={`flex items-start gap-3 ${isKeystone ? "pl-4" : "pl-0"}`}>

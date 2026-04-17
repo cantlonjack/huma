@@ -17,31 +17,25 @@ import { useWhole } from "@/hooks/useWhole";
 import { mapAspirationStatus } from "@/lib/whole-utils";
 import { isShareworthyInsight } from "@/components/whole/ShareworthyInsightCard";
 import { displayName } from "@/lib/display-name";
-import { DIMENSION_LABELS, DIMENSION_COLORS } from "@/types/v2";
+import { DIMENSION_LABELS } from "@/types/v2";
 import type { DimensionKey, Aspiration, PathwayStage, Pattern } from "@/types/v2";
+import { ConnectionThreads } from "@/components/shared/ConnectionThreads";
 
-/* ─── Connections section: dimension-grouped aspiration overlaps ─── */
+/* ─── Connections section: threaded topology per aspiration ─── */
 
 function ConnectionsList({ aspirations }: { aspirations: Aspiration[] }) {
   const visible = aspirations.filter(
     (a) => a.status !== "archived" && a.status !== "dropped"
   );
 
-  // Group aspirations by dimension
-  const dimMap = new Map<string, { id: string; name: string }[]>();
-  for (const a of visible) {
-    const dims = a.dimensionsTouched || [];
-    const name = displayName(a.title || a.clarifiedText || a.rawText);
-    for (const d of dims) {
-      if (!dimMap.has(d)) dimMap.set(d, []);
-      dimMap.get(d)!.push({ id: a.id, name });
-    }
-  }
-
-  // Only show dimensions that connect 2+ aspirations
-  const connected = Array.from(dimMap.entries())
-    .filter(([, asps]) => asps.length >= 2)
-    .sort((a, b) => b[1].length - a[1].length);
+  // Aspirations that span 2+ dimensions are the real connections —
+  // each one ties parts of life together. Sort by span (most dimensions first).
+  const connected = visible
+    .filter((a) => (a.dimensionsTouched || []).length >= 2)
+    .sort(
+      (a, b) =>
+        (b.dimensionsTouched?.length || 0) - (a.dimensionsTouched?.length || 0),
+    );
 
   if (connected.length === 0) return null;
 
@@ -50,22 +44,28 @@ function ConnectionsList({ aspirations }: { aspirations: Aspiration[] }) {
       <h2 className="font-sans font-medium text-[11px] tracking-[0.14em] uppercase text-sage-400 mb-3 m-0">
         Connections
       </h2>
-      <div className="flex flex-col gap-3">
-        {connected.map(([dim, asps]) => {
-          const label = DIMENSION_LABELS[dim as DimensionKey] || dim;
-          const color = DIMENSION_COLORS[dim as DimensionKey] || "#A8C4AA";
+      <p className="font-serif italic text-[13px] text-sage-450 leading-snug mb-4 m-0">
+        Each aspiration threads through multiple parts of your life.
+      </p>
+      <div className="flex flex-col gap-4">
+        {connected.map((asp) => {
+          const dims = (asp.dimensionsTouched || []) as DimensionKey[];
+          const name = displayName(asp.title || asp.clarifiedText || asp.rawText);
           return (
-            <div key={dim} className="flex items-start gap-2.5">
-              <span
-                className="mt-1.5 shrink-0 w-2 h-2 rounded-full"
-                style={{ backgroundColor: color }}
-              />
-              <div>
-                <span className="font-sans text-[13px] font-medium text-earth-500">
-                  {label}
-                </span>
-                <p className="font-serif text-[13px] text-sage-450 leading-snug mt-0.5 m-0">
-                  {asps.map((a) => a.name).join(", ")}
+            <div key={asp.id} className="flex items-center gap-3">
+              <div className="flex-shrink-0">
+                <ConnectionThreads
+                  activeDimensions={dims}
+                  size="badge"
+                  animate
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-sans text-[13px] font-medium text-earth-500 m-0">
+                  {name}
+                </p>
+                <p className="font-serif text-[12px] text-sage-450 leading-snug mt-0.5 m-0">
+                  {dims.map((d) => DIMENSION_LABELS[d]).join(" · ")}
                 </p>
               </div>
             </div>

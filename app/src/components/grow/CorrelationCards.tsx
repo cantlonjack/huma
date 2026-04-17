@@ -1,6 +1,12 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
+import type { Aspiration, DimensionKey } from "@/types/v2";
+import { getEffectiveDimensions } from "@/types/v2";
+import {
+  ConnectionThreads,
+  type DimensionConnection,
+} from "@/components/shared/ConnectionThreads";
 
 interface Correlation {
   behaviorA: string;
@@ -18,6 +24,24 @@ interface CorrelationCardsProps {
     totalDays: number;
   }>;
   dayCount: number;
+  aspirations?: Aspiration[];
+}
+
+/** Look up a behavior's dimensions by its displayed name. */
+function getBehaviorDimensions(
+  behaviorName: string,
+  aspirations: Aspiration[],
+): DimensionKey[] {
+  if (!behaviorName) return [];
+  const lower = behaviorName.toLowerCase().trim();
+  for (const asp of aspirations) {
+    for (const beh of asp.behaviors || []) {
+      if ((beh.text || "").toLowerCase().trim() === lower) {
+        return getEffectiveDimensions(beh).map((d) => d.dimension);
+      }
+    }
+  }
+  return [];
 }
 
 /**
@@ -29,9 +53,51 @@ const CorrelationCards = memo(function CorrelationCards({
   correlations,
   frequencies,
   dayCount,
+  aspirations = [],
 }: CorrelationCardsProps) {
   const hasCorrelations = correlations.length > 0;
   const hasFrequencies = frequencies.length > 0;
+
+  // Derive threaded topology: each correlation becomes one or more
+  // cross-dimension threads, weighted by coRate.
+  const { topologyActive, topologyConns, perCard } = useMemo(() => {
+    const active = new Set<DimensionKey>();
+    const connMap = new Map<string, DimensionConnection>();
+    const per: Array<{ dims: DimensionKey[]; from: DimensionKey[]; to: DimensionKey[] }> = [];
+
+    for (const c of correlations) {
+      const dimsA = getBehaviorDimensions(c.behaviorA, aspirations);
+      const dimsB = getBehaviorDimensions(c.behaviorB, aspirations);
+      dimsA.forEach((d) => active.add(d));
+      dimsB.forEach((d) => active.add(d));
+
+      const strength = Math.max(0, Math.min(1, c.coRate / 100));
+      for (const dA of dimsA) {
+        for (const dB of dimsB) {
+          if (dA === dB) continue;
+          const key = dA < dB ? `${dA}-${dB}` : `${dB}-${dA}`;
+          const existing = connMap.get(key);
+          if (!existing || existing.strength < strength) {
+            connMap.set(key, { from: dA, to: dB, strength });
+          }
+        }
+      }
+
+      per.push({
+        dims: Array.from(new Set([...dimsA, ...dimsB])),
+        from: dimsA,
+        to: dimsB,
+      });
+    }
+
+    return {
+      topologyActive: Array.from(active),
+      topologyConns: Array.from(connMap.values()),
+      perCard: per,
+    };
+  }, [correlations, aspirations]);
+
+  const showTopology = hasCorrelations && topologyActive.length >= 2;
 
   return (
     <div className="px-4">
@@ -47,20 +113,53 @@ const CorrelationCards = memo(function CorrelationCards({
             </p>
           </div>
 
-          {correlations.slice(0, 4).map((c, i) => (
-            <div
-              key={i}
-              className="bg-white border border-sand-300 rounded-2xl px-4 py-4 mb-3"
-            >
-              <p className="font-serif text-sage-700 text-[15px] leading-[1.4] mb-2">
-                When you {c.behaviorA.toLowerCase()}, you {c.behaviorB.toLowerCase()}{" "}
-                <span className="font-semibold">{c.coRate}%</span> of the time.
-              </p>
-              <p className="font-sans text-sage-400 text-[13px] leading-[1.4]">
-                When you skip it, that drops to {c.withoutRate}%.
+          {/* Threaded topology: the main spatial view of these connections. */}
+          {showTopology && (
+            <div className="bg-white border border-sand-300 rounded-2xl px-4 py-5 mb-3 flex flex-col items-center">
+              <ConnectionThreads
+                activeDimensions={topologyActive}
+                connections={topologyConns}
+                size="compact"
+                animate
+              />
+              <p className="font-sans text-sage-400 text-[11px] text-center mt-2 max-w-[220px] leading-[1.4]">
+                Each thread is a correlation. Thicker threads mean stronger co-occurrence.
               </p>
             </div>
-          ))}
+          )}
+
+          {correlations.slice(0, 4).map((c, i) => {
+            const card = perCard[i];
+            const cardDims = card?.dims ?? [];
+            return (
+              <div
+                key={i}
+                className="bg-white border border-sand-300 rounded-2xl px-4 py-4 mb-3"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-serif text-sage-700 text-[15px] leading-[1.4] mb-2">
+                      When you {c.behaviorA.toLowerCase()}, you{" "}
+                      {c.behaviorB.toLowerCase()}{" "}
+                      <span className="font-semibold">{c.coRate}%</span> of the time.
+                    </p>
+                    <p className="font-sans text-sage-400 text-[13px] leading-[1.4]">
+                      When you skip it, that drops to {c.withoutRate}%.
+                    </p>
+                  </div>
+                  {cardDims.length >= 2 && (
+                    <div className="flex-shrink-0 mt-0.5">
+                      <ConnectionThreads
+                        activeDimensions={cardDims}
+                        size="badge"
+                        animate
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 

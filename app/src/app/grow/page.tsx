@@ -192,6 +192,7 @@ export default function GrowPage() {
             correlations={g.behaviorCorrelations}
             frequencies={g.behaviorFrequencies}
             dayCount={g.dayCount}
+            aspirations={g.aspirations}
           />
         ) : g.patterns.length === 0 && g.emergingBehaviors.length === 0 ? (
           <EmptyState onAddAspiration={() => g.setNewAspirationOpen(true)} />
