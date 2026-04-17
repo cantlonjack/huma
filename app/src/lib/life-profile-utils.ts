@@ -125,22 +125,31 @@ function buildPeopleProse(ctx: HumaContext): ProseLine[] {
   const p = ctx.people;
   if (!p) return lines;
 
-  if (p.household?.length) {
+  // Claude's markers sometimes emit household/community/professional as a single
+  // string (e.g. "solo") rather than a Person[] — guard against string inputs so
+  // the whole profile panel doesn't crash on .forEach.
+  if (Array.isArray(p.household) && p.household.length > 0) {
     p.household.forEach((person, i) => {
       lines.push({ text: formatPerson(person), field: `people.household[${i}].name`, editable: true });
     });
+  } else if (typeof p.household === "string" && p.household) {
+    lines.push({ text: p.household, field: "people.household", editable: true });
   }
 
-  if (p.community?.length) {
+  if (Array.isArray(p.community) && p.community.length > 0) {
     p.community.forEach((person, i) => {
       lines.push({ text: formatPerson(person), field: `people.community[${i}].name`, editable: true });
     });
+  } else if (typeof p.community === "string" && p.community) {
+    lines.push({ text: p.community, field: "people.community", editable: true });
   }
 
-  if (p.professional?.length) {
+  if (Array.isArray(p.professional) && p.professional.length > 0) {
     p.professional.forEach((person, i) => {
       lines.push({ text: formatPerson(person), field: `people.professional[${i}].name`, editable: true });
     });
+  } else if (typeof p.professional === "string" && p.professional) {
+    lines.push({ text: p.professional, field: "people.professional", editable: true });
   }
 
   return lines;

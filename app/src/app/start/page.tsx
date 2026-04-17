@@ -86,6 +86,17 @@ function UnderstandingMoment({
   );
 }
 
+// Fence-post-neighbor phrasing for onboarding progress. No bar, no counter.
+// The ConnectionThreads dots carry the visual — the line adds just enough
+// voice for the user to feel where they are without a percentage.
+function progressPhrase(filled: number): string {
+  if (filled <= 0) return "";
+  if (filled === 1) return "Getting the shape of it.";
+  if (filled === 2) return "Picture's coming together.";
+  if (filled === 3) return "Enough shape to work with.";
+  return "I can see your week now.";
+}
+
 // ─── Collapsible Conversation Thread ────────────────────────────────────────
 // Shows only the last 4 messages (2 exchanges) by default.
 // Older messages collapse into a tappable "N earlier messages" pill.
@@ -242,7 +253,7 @@ function ProfileMiniBar({
           <span className="font-sans text-xs text-earth-500 truncate">
             {completeness.filled === 0
               ? "Your life \u2014 building as we talk"
-              : `${completeness.filled} of ${completeness.total} sections`}
+              : progressPhrase(completeness.filled)}
           </span>
         </div>
         <svg
@@ -387,20 +398,9 @@ export default function StartPage() {
           <div className="flex items-center justify-between">
             <h1 className="font-serif text-sage-700 text-lg tracking-wide">HUMA</h1>
             {hasMessages && completeness.filled > 0 && (
-              <div className="flex items-center gap-2 animate-[fade-in_500ms_ease-out]">
-                <div className="w-20 h-1 bg-sand-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-sage-500 rounded-full transition-all duration-700 ease-out"
-                    style={{ width: `${(completeness.filled / completeness.total) * 100}%` }}
-                  />
-                </div>
-                <span className="font-sans text-[10px] text-earth-400 tracking-wide">
-                  {completeness.filled} of {completeness.total} sections
-                  {isFirstConversation && completeness.filled >= 1 && (
-                    <span className="ml-2 text-sage-500">Almost ready for your first letter</span>
-                  )}
-                </span>
-              </div>
+              <span className="font-sans text-[11px] italic text-earth-400 tracking-wide animate-[fade-in_500ms_ease-out]">
+                {progressPhrase(completeness.filled)}
+              </span>
             )}
           </div>
 
@@ -456,13 +456,17 @@ export default function StartPage() {
             )}
           </div>
 
-          {/* Quick Start affordance — escape hatch to move to planning */}
+          {/* Quick Start affordance — closes discovery, kicks decomposition.
+              Sends "Yes, let's plan it" — the exact signal detectMode() and
+              the Quick Start prompt both recognize as the planning trigger. */}
           {isFirstConversation && exchangeCount >= 2 && completeness.filled >= 1 && (
             <button
-              onClick={() => sendMessage("Let's make a plan for this week")}
-              className="mt-2 font-sans text-xs text-sage-500 hover:text-sage-600 transition-colors duration-200 cursor-pointer"
+              onClick={() => sendMessage("Yes, let's plan it")}
+              disabled={streaming}
+              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-sage-50 border border-sage-200 text-sage-700 font-sans text-sm hover:bg-sage-100 hover:border-sage-300 active:bg-sage-200 disabled:opacity-50 transition-all duration-200 cursor-pointer"
             >
-              Ready to build your first day? &rarr;
+              Ready to build your first day?
+              <span aria-hidden="true">&rarr;</span>
             </button>
           )}
 

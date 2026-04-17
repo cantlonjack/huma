@@ -733,17 +733,30 @@ export function useStart(): UseStartReturn {
   // Exchange count = number of user messages sent so far
   const exchangeCount = messages.filter(m => m.role === "user").length;
 
-  // First conversation = no existing aspirations and no prior structured context
-  const isFirstConversation = (() => {
-    try {
-      const existingAspirations = localStorage.getItem("huma-v2-aspirations");
-      if (existingAspirations) {
-        const parsed = JSON.parse(existingAspirations);
-        if (Array.isArray(parsed) && parsed.length > 0) return false;
-      }
-    } catch { /* treat as first conversation */ }
-    return !humaContext._version;
-  })();
+  // First conversation = no existing aspirations and no prior stored context at mount.
+  // Captured ONCE via ref so it stays true throughout the session even as humaContext
+  // accumulates `_sources` from ongoing extractions. Flipping mid-session would pull
+  // the user out of Quick Start Mode the moment context started extracting.
+  const isFirstConversationRef = useRef<boolean | null>(null);
+  if (isFirstConversationRef.current === null) {
+    isFirstConversationRef.current = (() => {
+      if (typeof window === "undefined") return true;
+      try {
+        const existingAspirations = localStorage.getItem("huma-v2-aspirations");
+        if (existingAspirations) {
+          const parsed = JSON.parse(existingAspirations);
+          if (Array.isArray(parsed) && parsed.length > 0) return false;
+        }
+        const priorContext = localStorage.getItem("huma-v2-huma-context");
+        if (priorContext) {
+          const parsed = JSON.parse(priorContext);
+          if ((parsed?._sources?.length ?? 0) > 0) return false;
+        }
+      } catch { /* treat as first conversation */ }
+      return true;
+    })();
+  }
+  const isFirstConversation = isFirstConversationRef.current;
 
   // Auto-send prefill message from landing page entry (?msg=...)
   useEffect(() => {
