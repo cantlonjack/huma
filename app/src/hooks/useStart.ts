@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { PaletteConcept, ChatMessage, Behavior, DimensionKey } from "@/types/v2";
+import type { SheetPreviewEntry } from "@/components/onboarding/SheetPreview";
 import { parseMarkersV2 as parseMarkers, type DecompositionData, type ParsedPractice } from "@/lib/parse-markers-v2";
 import { useAuth } from "@/components/shared/AuthProvider";
 import { createClient } from "@/lib/supabase";
@@ -97,6 +98,64 @@ export interface UseStartReturn {
   ) => void;
   handleArchetypeContinueBlank: (selected: { domains: string[]; orientations: string[] }) => void;
   handleArchetypeSkip: () => void;
+
+  // Sheet preview (time-to-value — shows a sample of tomorrow's sheet
+  // once enough context has been gathered; read-only, non-committal)
+  sheetPreviewEntries: SheetPreviewEntry[] | null;
+  sheetPreviewSource: "decomposition" | "template";
+  refreshSheetPreview: () => void;
+}
+
+// ---- Sheet Preview helpers --------------------------------------------------
+
+/** Pick up to `count` entries from `pool`, rotated by `seed`. */
+function pickEntries<T>(pool: T[], count: number, seed: number): T[] {
+  if (pool.length <= count) return pool.slice();
+  // Deterministic rotation so repeated renders at same seed match,
+  // but refresh (seed++) produces a visibly different subset.
+  const offset = seed % pool.length;
+  const rotated = [...pool.slice(offset), ...pool.slice(0, offset)];
+  return rotated.slice(0, count);
+}
+
+/** Read template-sourced aspirations stored from archetype pre-population. */
+function readTemplateBehaviorsFromStorage(): Behavior[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem("huma-v2-aspirations");
+    if (!raw) return [];
+    const aspirations = JSON.parse(raw) as Array<{
+      source?: string;
+      behaviors?: Behavior[];
+    }>;
+    const out: Behavior[] = [];
+    for (const asp of aspirations) {
+      if (asp.source !== "template") continue;
+      for (const b of asp.behaviors || []) {
+        if (b.enabled === false) continue;
+        out.push(b);
+      }
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
+function behaviorToPreviewEntry(b: Behavior): SheetPreviewEntry {
+  const dims = Array.isArray(b.dimensions)
+    ? b.dimensions
+        .map((d) => (d && typeof d === "object" && "dimension" in d
+          ? (d as { dimension: DimensionKey }).dimension
+          : null))
+        .filter((d): d is DimensionKey => !!d)
+    : [];
+  return {
+    key: b.key,
+    text: b.text,
+    detail: b.detail,
+    dimensions: dims,
+  };
 }
 
 // ---- Hook -------------------------------------------------------------------
@@ -130,6 +189,12 @@ export function useStart(): UseStartReturn {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const prefillSentRef = useRef(false);
+
+  // Sheet preview state — latches on once the threshold is first met so the
+  // preview doesn't flicker out if template behaviors change underneath it.
+  const [previewTriggered, setPreviewTriggered] = useState(false);
+  const [previewSeed, setPreviewSeed] = useState(0);
+  const [previewStorageVersion, setPreviewStorageVersion] = useState(0);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -612,6 +677,8 @@ export function useStart(): UseStartReturn {
           } catch { return []; }
         })();
         localStorage.setItem("huma-v2-aspirations", JSON.stringify([...existing, ...aspirations]));
+        // Signal preview derivation that the template pool changed
+        setPreviewStorageVersion((v) => v + 1);
       }
       if (patterns.length > 0) {
         localStorage.setItem("huma-v2-patterns", JSON.stringify(patterns));
@@ -693,6 +760,51 @@ export function useStart(): UseStartReturn {
   // for future use when AuthModal needs pre-fill data
   void pendingAspiration;
 
+  // ── Sheet Preview derivation ─────────────────────────────────────────────
+  // Threshold: either the first decomposition has landed (highest signal), or
+  // we have ≥2 exchanges AND archetype templates have seeded ≥3 behaviors.
+  // Once triggered, stays on so the preview doesn't flicker if the source
+  // pool shrinks (e.g. user unchecks behaviors). Refresh cycles the subset.
+  const templatePool = useMemo(
+    () => readTemplateBehaviorsFromStorage(),
+    // previewStorageVersion is incremented when archetype handlers write to
+    // localStorage, so the pool refreshes without a global listener.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [previewStorageVersion],
+  );
+
+  const previewSourceBehaviors = useMemo<Behavior[]>(() => {
+    if (decomposedBehaviors.length >= 3) return decomposedBehaviors;
+    return templatePool;
+  }, [decomposedBehaviors, templatePool]);
+
+  const previewSource: "decomposition" | "template" =
+    decomposedBehaviors.length >= 3 ? "decomposition" : "template";
+
+  // Latch trigger once threshold is met
+  useEffect(() => {
+    if (previewTriggered) return;
+    const exchanges = messages.filter((m) => m.role === "user").length;
+    const decompReady = decomposedBehaviors.length >= 3;
+    const templateReady = exchanges >= 2 && templatePool.length >= 3;
+    if (decompReady || templateReady) {
+      setPreviewTriggered(true);
+    }
+  }, [previewTriggered, messages, decomposedBehaviors.length, templatePool.length]);
+
+  const sheetPreviewEntries = useMemo<SheetPreviewEntry[] | null>(() => {
+    if (!previewTriggered) return null;
+    if (previewSourceBehaviors.length === 0) return null;
+    const picked = pickEntries(previewSourceBehaviors, 4, previewSeed);
+    return picked.map(behaviorToPreviewEntry);
+  }, [previewTriggered, previewSourceBehaviors, previewSeed]);
+
+  const refreshSheetPreview = useCallback(() => {
+    // Also re-read storage in case archetype pool changed
+    setPreviewStorageVersion((v) => v + 1);
+    setPreviewSeed((s) => s + 1);
+  }, []);
+
   return {
     onboardingStep,
     transitioning,
@@ -726,5 +838,8 @@ export function useStart(): UseStartReturn {
     handleArchetypeContinueWithTemplate,
     handleArchetypeContinueBlank,
     handleArchetypeSkip,
+    sheetPreviewEntries,
+    sheetPreviewSource: previewSource,
+    refreshSheetPreview,
   };
 }

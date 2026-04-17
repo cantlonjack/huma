@@ -6,6 +6,7 @@ import AuthModal from "@/components/shared/AuthModal";
 import ArchetypeSelectionScreen from "@/components/onboarding/ArchetypeSelectionScreen";
 import MessageBubble from "@/components/onboarding/MessageBubble";
 import ContextAssemblyPanel from "@/components/onboarding/ContextAssemblyPanel";
+import { SheetPreview, type SheetPreviewEntry } from "@/components/onboarding/SheetPreview";
 import { profileCompleteness } from "@/lib/life-profile-utils";
 import { ConnectionThreads, dimensionKeysFromLabels } from "@/components/shared/ConnectionThreads";
 import type { StartMessage } from "@/hooks/useStart";
@@ -99,6 +100,9 @@ function ConversationThread({
   onOptionTap,
   onConfirmBehaviors,
   hasMessages,
+  sheetPreviewEntries,
+  sheetPreviewSource,
+  onRefreshSheetPreview,
 }: {
   scrollRef: React.RefObject<HTMLDivElement | null>;
   messages: StartMessage[];
@@ -106,6 +110,9 @@ function ConversationThread({
   onOptionTap: (option: string) => void;
   onConfirmBehaviors: (behaviors: Behavior[]) => void;
   hasMessages: boolean;
+  sheetPreviewEntries: SheetPreviewEntry[] | null;
+  sheetPreviewSource: "decomposition" | "template";
+  onRefreshSheetPreview: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -170,6 +177,14 @@ function ConversationThread({
             onConfirmBehaviors={onConfirmBehaviors}
           />
         )
+      )}
+
+      {sheetPreviewEntries && sheetPreviewEntries.length > 0 && !streaming && (
+        <SheetPreview
+          entries={sheetPreviewEntries}
+          source={sheetPreviewSource}
+          onRefresh={onRefreshSheetPreview}
+        />
       )}
 
       {streaming && messages[messages.length - 1]?.content === "" && (
@@ -272,6 +287,7 @@ export default function StartPage() {
     handleAuthenticated, handleArchetypeContinueWithTemplate,
     handleArchetypeContinueBlank, handleArchetypeSkip,
     humaContext, exchangeCount, isFirstConversation,
+    sheetPreviewEntries, sheetPreviewSource, refreshSheetPreview,
   } = useStart();
 
   const [rightPanelTab, setRightPanelTab] = useState<"suggestions" | "profile">("suggestions");
@@ -408,6 +424,9 @@ export default function StartPage() {
           onOptionTap={handleOptionTap}
           onConfirmBehaviors={handleConfirmBehaviors}
           hasMessages={hasMessages}
+          sheetPreviewEntries={sheetPreviewEntries}
+          sheetPreviewSource={sheetPreviewSource}
+          onRefreshSheetPreview={refreshSheetPreview}
         />
 
         {/* Input */}
