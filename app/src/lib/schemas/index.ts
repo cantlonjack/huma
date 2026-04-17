@@ -126,6 +126,31 @@ export const sheetCompileSchema = z.object({
 
 export type SheetCompileRequest = z.infer<typeof sheetCompileSchema>;
 
+// ─── /api/sheet/share ───────────────────────────────────────────────────────
+
+const sharedEntrySchema = z.object({
+  behaviorKey: z.string(),
+  headline: z.string(),
+  detailText: z.string().optional().default(""),
+  dimensions: z.array(z.string()).default([]),
+  timeOfDay: z.string().optional().default("morning"),
+  connectionNote: z.string().optional(),
+  because: z.string().optional(),
+});
+
+export const sheetShareSchema = z.object({
+  date: z.string().min(1),
+  operatorName: z.string().optional().default(""),
+  opening: z.string().optional().default(""),
+  throughLine: z.string().optional().default(""),
+  stateSentence: z.string().optional().default(""),
+  entries: z.array(sharedEntrySchema).min(1).max(20),
+  movedDimensions: z.array(z.string()).optional().default([]),
+  dayCount: z.number().int().positive().optional(),
+});
+
+export type SheetShareRequest = z.infer<typeof sheetShareSchema>;
+
 // ─── /api/sheet/check ───────────────────────────────────────────────────────
 
 export const sheetCheckSchema = z.object({

@@ -11,6 +11,7 @@ import { useToday, formatBriefingDate, getBehaviorChain } from "@/hooks/useToday
 import { PatternRouteCard } from "@/components/today/PatternRouteCard";
 import { CompiledEntryRow } from "@/components/today/CompiledEntryRow";
 import RpplProvenanceSheet from "@/components/today/RpplProvenanceSheet";
+import ShareSheetButton from "@/components/today/ShareSheetButton";
 import { queryKeys, fetchPatterns } from "@/lib/queries";
 import {
   AspirationQuickLook,
@@ -305,11 +306,22 @@ export default function TodayPage() {
                   <p className="font-sans text-earth-400 text-[11px] tracking-wide">
                     {formatBriefingDate(t.date)}
                   </p>
-                  <BriefingPulse
-                    compiledDimensions={compiledDimensions}
-                    movedDimensions={t.capitalPulse?.movedDimensions}
-                    dormantDimensions={t.capitalPulse?.dormantDimensions}
-                  />
+                  <div className="flex items-center gap-4">
+                    <ShareSheetButton
+                      date={t.date}
+                      opening={t.opening}
+                      throughLine={t.throughLine}
+                      stateSentence={t.stateSentence}
+                      entries={t.compiledEntries}
+                      movedDimensions={t.capitalPulse?.movedDimensions ?? []}
+                      dayCount={t.dayCount}
+                    />
+                    <BriefingPulse
+                      compiledDimensions={compiledDimensions}
+                      movedDimensions={t.capitalPulse?.movedDimensions}
+                      dormantDimensions={t.capitalPulse?.dormantDimensions}
+                    />
+                  </div>
                 </div>
 
                 {/* Opening — letter greeting, the hero element */}
