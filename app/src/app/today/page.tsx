@@ -300,7 +300,8 @@ export default function TodayPage() {
             </button>
           </div>
         ) : (
-          <>
+          <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-10 lg:max-w-6xl lg:w-full lg:mx-auto lg:px-4 lg:pt-4 lg:items-start">
+            <div className="flex flex-col lg:min-w-0">
             {/* ═══ 1. BRIEFING HEADER — "State of Your System" ═══ */}
 
             {t.compiledEntries.length > 0 || t.sheetCompiling ? (
@@ -468,11 +469,14 @@ export default function TodayPage() {
               </div>
             ) : null}
 
+            </div>
+
+            <div className="flex flex-col lg:min-w-0 lg:border-l lg:border-sand-200 lg:pl-6 lg:pt-2">
             {/* ═══ BELOW THE BRIEFING — supporting material ═══ */}
 
-            {/* Divider before supporting content */}
+            {/* Divider before supporting content (mobile only; desktop uses column border) */}
             {(t.watchingSignal || hasRhythmData) && (
-              <div className="mx-5 my-4 border-t border-sand-200" />
+              <div className="mx-5 my-4 border-t border-sand-200 lg:hidden" />
             )}
 
             {/* Aspiration Ribbon — navigation, not story */}
@@ -655,7 +659,8 @@ export default function TodayPage() {
                 </button>
               </div>
             )}
-          </>
+            </div>
+          </div>
         )}
 
         {/* Bottom Prompt Bar */}

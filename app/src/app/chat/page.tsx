@@ -141,7 +141,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="min-h-dvh bg-sand-50 flex flex-col pb-40">
+    <div className="min-h-dvh bg-sand-50 flex flex-col pb-40 lg:max-w-6xl lg:mx-auto lg:w-full">
       {/* Header */}
       <div className="px-6 pt-5">
         <span className="font-sans font-medium text-sage-500 text-[11px] tracking-[0.4em] leading-none">
@@ -167,7 +167,7 @@ export default function ChatPage() {
         ) : conversations.length === 0 ? (
           <SessionEntryPoints onSelect={handleSessionEntry} />
         ) : (
-          <>
+          <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-x-6 lg:items-start lg:px-2">
             {/* Latest conversation (fully expanded) */}
             {latestConversation && (
               <div className="mx-6 mb-6">
@@ -236,14 +236,14 @@ export default function ChatPage() {
 
             {/* Past conversations (collapsed) */}
             {pastConversations.length > 0 && (
-              <div className="mt-2">
-                <p className="mx-6 mb-2 font-sans text-ink-300 text-[11px] font-semibold tracking-[0.18em]">EARLIER</p>
+              <aside className="mt-2 lg:mt-0 lg:border-l lg:border-sand-200 lg:pl-6 lg:min-w-0">
+                <p className="mx-6 lg:mx-0 mb-2 font-sans text-ink-300 text-[11px] font-semibold tracking-[0.18em]">EARLIER</p>
                 {pastConversations.map((group) => (
                   <PastConversation key={group.id} group={group} />
                 ))}
-              </div>
+              </aside>
             )}
-          </>
+          </div>
         )}
       </div>
 

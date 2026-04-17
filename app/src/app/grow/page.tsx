@@ -134,7 +134,7 @@ export default function GrowPage() {
       initialMessage={g.investigateMessage}
       chatMode={g.newAspirationOpen ? "new-aspiration" : "default"}
     >
-      <div className="min-h-dvh bg-sand-50 pt-6 pb-[100px]">
+      <div className="min-h-dvh bg-sand-50 pt-6 pb-[100px] lg:max-w-6xl lg:mx-auto lg:w-full lg:px-4">
         {/* Page header */}
         <div className="px-4 pb-6">
           <p className="font-sans text-[11px] font-semibold tracking-[0.14em] uppercase text-sage-400 mb-1">
@@ -208,6 +208,8 @@ export default function GrowPage() {
               />
             )}
 
+            {/* Pattern sections — evidence columns on desktop */}
+            <div className="lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-x-6 lg:items-start">
             {/* Validated patterns */}
             {g.validated.length > 0 && (
               <PatternSection
@@ -280,6 +282,7 @@ export default function GrowPage() {
                 behaviorCounts={g.behaviorCounts}
               />
             )}
+            </div>
 
             {/* Monthly review — previous month's behavior grid */}
             {g.monthlyReview && (
