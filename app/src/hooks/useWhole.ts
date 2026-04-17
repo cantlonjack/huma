@@ -52,6 +52,13 @@ import {
 } from "@/lib/queries";
 import { storeSaveHumaContext } from "@/lib/db/store";
 import { mergeContext } from "@/lib/context-model";
+import {
+  getIsoWeekKey,
+  getWeekStart,
+  type WeeklyReviewResult,
+  type BehaviorDay,
+} from "@/lib/weekly-review";
+import { getLocalDateOffset } from "@/lib/date-utils";
 
 // ─── Return type ────────────────────────────────────────────────────────────
 
@@ -100,6 +107,15 @@ export interface UseWholeReturn {
   selectedAspirationPatterns: Pattern[];
   containerRef: React.RefObject<HTMLDivElement | null>;
   shapeWidth: number;
+
+  // Weekly review
+  weeklyReview: WeeklyReviewResult | null;
+  weeklyReviewPrompt: boolean;
+  weeklyReviewLoading: boolean;
+  weeklyReviewError: string | null;
+  handleStartWeeklyReview: () => Promise<void>;
+  handleDismissWeeklyReview: () => void;
+  handleClearWeeklyHighlight: () => void;
 
   // Derived values
   dayNum: number;
@@ -180,6 +196,13 @@ export function useWhole(): UseWholeReturn {
   } | null>(null);
   const [archiveToast, setArchiveToast] = useState<{ id: string; label: string } | null>(null);
   const [selectedAspirationPatterns, setSelectedAspirationPatterns] = useState<Pattern[]>([]);
+
+  // ─── Weekly review state ─────────────────────────────────────────────────
+  const [weeklyReview, setWeeklyReview] = useState<WeeklyReviewResult | null>(null);
+  const [weeklyReviewPrompt, setWeeklyReviewPrompt] = useState(false);
+  const [weeklyReviewLoading, setWeeklyReviewLoading] = useState(false);
+  const [weeklyReviewError, setWeeklyReviewError] = useState<string | null>(null);
+
   const archivedAspirationRef = useRef<Aspiration | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [shapeWidth, setShapeWidth] = useState(340);
@@ -417,6 +440,138 @@ export function useWhole(): UseWholeReturn {
       }
     })();
   }, [loaded, user, whyStatement, whyDate, aspirations, rawContext]);
+
+  // ─── Weekly review: detect day, load cached, prompt or show result ───
+  const weeklyReviewInitRef = useRef(false);
+  useEffect(() => {
+    if (!loaded || weeklyReviewInitRef.current) return;
+    weeklyReviewInitRef.current = true;
+
+    try {
+      const weekKey = getIsoWeekKey();
+      const cacheKey = `huma-v2-weekly-review-${weekKey}`;
+      const dismissKey = `huma-v2-weekly-review-dismissed-${weekKey}`;
+
+      // 1. Already generated this week? Show the result.
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached) as WeeklyReviewResult;
+          setWeeklyReview(parsed);
+          return;
+        } catch { /* corrupted — fall through */ }
+      }
+
+      // 2. Dismissed this week? Don't prompt again.
+      if (localStorage.getItem(dismissKey)) return;
+
+      // 3. Is today a review day?
+      const reviewDay = Number(localStorage.getItem("huma-v2-review-day") ?? "6"); // 0=Sun, 6=Sat
+      const today = new Date().getDay();
+      if (today !== reviewDay && today !== (reviewDay + 1) % 7) return; // review day or day after
+
+      // 4. Only prompt if there's actually something to review.
+      if (aspirations.length === 0) return;
+
+      setWeeklyReviewPrompt(true);
+    } catch { /* localStorage access denied — silent */ }
+  }, [loaded, aspirations.length]);
+
+  const handleStartWeeklyReview = useCallback(async () => {
+    setWeeklyReviewLoading(true);
+    setWeeklyReviewError(null);
+    setWeeklyReviewPrompt(false);
+
+    try {
+      // Gather past 7 days of behavior data.
+      const behaviorDays: BehaviorDay[] = [];
+      const start = getLocalDateOffset(6);
+
+      if (user) {
+        const sb = createClient();
+        if (sb) {
+          const { data } = await sb
+            .from("behavior_log")
+            .select("behavior_key, date, completed")
+            .eq("user_id", user.id)
+            .gte("date", start);
+          if (data) {
+            for (const row of data) {
+              behaviorDays.push({
+                date: row.date as string,
+                behaviorKey: row.behavior_key as string,
+                completed: Boolean(row.completed),
+              });
+            }
+          }
+        }
+      } else {
+        // Anon: pull whatever compiled-sheet snapshots sit in localStorage
+        // (only today's is normally present — anon users don't have real history).
+        for (let i = 0; i < 7; i++) {
+          const date = getLocalDateOffset(i);
+          const cached = localStorage.getItem(`huma-v2-compiled-sheet-${date}`);
+          if (!cached) continue;
+          try {
+            const sheet = JSON.parse(cached) as { entries?: { behaviorKey: string; checked?: boolean }[] };
+            for (const entry of sheet.entries || []) {
+              if (!entry.behaviorKey) continue;
+              behaviorDays.push({
+                date,
+                behaviorKey: entry.behaviorKey,
+                completed: Boolean(entry.checked),
+              });
+            }
+          } catch { /* skip malformed */ }
+        }
+      }
+
+      const res = await fetch("/api/weekly-review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          operatorName,
+          aspirations,
+          behaviorDays,
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error || "Review failed");
+      }
+
+      const { review } = (await res.json()) as { review: WeeklyReviewResult };
+      setWeeklyReview(review);
+
+      const cacheKey = `huma-v2-weekly-review-${review.weekKey}`;
+      localStorage.setItem(cacheKey, JSON.stringify(review));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Couldn't read the week.";
+      setWeeklyReviewError(msg);
+    } finally {
+      setWeeklyReviewLoading(false);
+    }
+  }, [user, aspirations, operatorName]);
+
+  const handleDismissWeeklyReview = useCallback(() => {
+    setWeeklyReviewPrompt(false);
+    try {
+      const weekKey = getIsoWeekKey();
+      localStorage.setItem(`huma-v2-weekly-review-dismissed-${weekKey}`, "1");
+    } catch { /* */ }
+  }, []);
+
+  const handleClearWeeklyHighlight = useCallback(() => {
+    setWeeklyReview((prev) => (prev ? { ...prev, graphHighlight: null } : prev));
+    try {
+      if (weeklyReview) {
+        const cacheKey = `huma-v2-weekly-review-${weeklyReview.weekKey}`;
+        const updated = { ...weeklyReview, graphHighlight: null };
+        localStorage.setItem(cacheKey, JSON.stringify(updated));
+      }
+    } catch { /* */ }
+  }, [weeklyReview]);
 
   // Day number
   const dayNum = (() => {
@@ -837,5 +992,12 @@ export function useWhole(): UseWholeReturn {
     setRegeneratedCanvas,
     setSettingsOpen,
     setConfirmAction,
+    weeklyReview,
+    weeklyReviewPrompt,
+    weeklyReviewLoading,
+    weeklyReviewError,
+    handleStartWeeklyReview,
+    handleDismissWeeklyReview,
+    handleClearWeeklyHighlight,
   };
 }

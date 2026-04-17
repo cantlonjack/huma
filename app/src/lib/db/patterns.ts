@@ -127,9 +127,45 @@ export async function deletePattern(
 // ─── Cross-Aspiration Merge ─────────────────────────────────────────────────
 
 /**
+ * Build a short evidence citation for a merge suggestion. Returns a line
+ * like "Both with signal (+28% / +22% over 22 days)" when both patterns
+ * have real correlation data, or a weaker variant when only one does.
+ * Null when no pattern has a real sample yet.
+ */
+function buildEvidenceNote(self: Pattern, other: Pattern): string | undefined {
+  const MIN_SAMPLE = 14;
+  const strong = (p: Pattern) => {
+    const ev = p.evidence;
+    if (!ev || typeof ev.strength !== "number") return null;
+    if ((ev.sampleSize ?? 0) < MIN_SAMPLE) return null;
+    return { strength: ev.strength, sample: ev.sampleSize ?? 0 };
+  };
+  const a = strong(self);
+  const b = strong(other);
+
+  const fmt = (s: number) => {
+    const pct = Math.round(s * 100);
+    return `${pct >= 0 ? "+" : ""}${pct}%`;
+  };
+
+  if (a && b) {
+    const minSample = Math.min(a.sample, b.sample);
+    return `Both carry signal (${fmt(a.strength)} and ${fmt(b.strength)} lift over ${minSample}+ days).`;
+  }
+  if (a) {
+    return `Yours shows ${fmt(a.strength)} lift over ${a.sample} days \u2014 theirs is still forming.`;
+  }
+  if (b) {
+    return `Theirs shows ${fmt(b.strength)} lift over ${b.sample} days \u2014 yours is still forming.`;
+  }
+  return undefined;
+}
+
+/**
  * Detect pairs of patterns from different aspirations that share behaviors.
  * Compares all step texts (case-insensitive). Returns at most one suggestion
- * per pattern (the strongest overlap).
+ * per pattern (the strongest overlap). When both patterns carry real
+ * correlation evidence, the suggestion includes an evidenceNote citation.
  */
 export function detectMergeCandidates(patterns: Pattern[]): MergeSuggestion[] {
   const suggestions: MergeSuggestion[] = [];
@@ -169,12 +205,14 @@ export function detectMergeCandidates(patterns: Pattern[]): MergeSuggestion[] {
         otherPatternId: b.id,
         otherPatternName: b.name,
         sharedBehaviors: sharedOriginal,
+        evidenceNote: buildEvidenceNote(a, b),
       });
       suggestions.push({
         patternId: b.id,
         otherPatternId: a.id,
         otherPatternName: a.name,
         sharedBehaviors: sharedOriginal,
+        evidenceNote: buildEvidenceNote(b, a),
       });
       claimed.add(a.id);
       claimed.add(b.id);

@@ -1,6 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Aspiration, Pattern, SparklineData, SparklinePoint, EmergingBehavior, DimensionKey } from "@/types/v2";
+import type { Aspiration, Pattern, SparklineData, SparklinePoint, EmergingBehavior, DimensionKey, PatternEvidence } from "@/types/v2";
 import { getLocalDate, getLocalDateOffset } from "@/lib/date-utils";
+import {
+  computePatternEvidence,
+  deriveContextTags,
+  EVIDENCE_DEFAULT_WINDOW_DAYS,
+  type BehaviorLogRow,
+  type EvidenceComputation,
+} from "@/lib/pattern-extraction";
 
 // ─── Behavior Log (check-off tracking) ──────────────────────────────────────
 
@@ -182,6 +189,90 @@ export async function getPatternSparklines(
   }
 
   return results;
+}
+
+// ─── Pattern Correlation Evidence ───────────────────────────────────────────
+
+/**
+ * Compute correlation-based evidence for every pattern: for each pattern,
+ * the lift in pathway-completion rate when the trigger fires vs. when it
+ * doesn't, over a rolling observation window.
+ *
+ * Single DB query — all relevant behavior keys in one shot. Math runs in
+ * pattern-extraction.ts (pure, testable).
+ */
+export async function getPatternEvidence(
+  supabase: SupabaseClient,
+  userId: string,
+  patterns: Pattern[],
+  aspirations: Aspiration[] = [],
+  windowDays: number = EVIDENCE_DEFAULT_WINDOW_DAYS,
+): Promise<Map<string, EvidenceComputation>> {
+  const out = new Map<string, EvidenceComputation>();
+  if (patterns.length === 0) return out;
+
+  const startStr = getLocalDateOffset(windowDays - 1);
+  const todayStr = getLocalDate();
+
+  const allKeys = new Set<string>();
+  for (const p of patterns) {
+    for (const step of p.steps) allKeys.add(step.behaviorKey);
+  }
+  if (allKeys.size === 0) {
+    for (const p of patterns) {
+      out.set(p.id, computePatternEvidence(p, [], {
+        windowDays,
+        contextTags: deriveContextTags(p, aspirations.find(a => a.id === p.aspirationId)),
+      }));
+    }
+    return out;
+  }
+
+  const { data } = await supabase
+    .from("behavior_log")
+    .select("behavior_key, date, completed")
+    .eq("user_id", userId)
+    .gte("date", startStr)
+    .lte("date", todayStr)
+    .in("behavior_key", Array.from(allKeys));
+
+  const rows: BehaviorLogRow[] = (data ?? []).map(r => ({
+    behavior_key: r.behavior_key as string,
+    date: r.date as string,
+    completed: Boolean(r.completed),
+  }));
+
+  // Group rows by behavior_key for fast lookup when computing per-pattern.
+  const rowsByKey = new Map<string, BehaviorLogRow[]>();
+  for (const row of rows) {
+    let bucket = rowsByKey.get(row.behavior_key);
+    if (!bucket) {
+      bucket = [];
+      rowsByKey.set(row.behavior_key, bucket);
+    }
+    bucket.push(row);
+  }
+
+  for (const pattern of patterns) {
+    const patternKeys = new Set<string>();
+    for (const step of pattern.steps) patternKeys.add(step.behaviorKey);
+
+    const patternRows: BehaviorLogRow[] = [];
+    for (const key of patternKeys) {
+      const bucket = rowsByKey.get(key);
+      if (bucket) patternRows.push(...bucket);
+    }
+
+    const asp = aspirations.find(a => a.id === pattern.aspirationId);
+    const contextTags = deriveContextTags(pattern, asp);
+
+    out.set(pattern.id, computePatternEvidence(pattern, patternRows, {
+      windowDays,
+      contextTags,
+    }));
+  }
+
+  return out;
 }
 
 // ─── Emerging Behavior Detection ────────────────────────────────────────────

@@ -51,6 +51,7 @@ export { getBehavioralSummary } from "./behaviors";
 export { getTodayCompletionStats } from "./behaviors";
 export { getBehaviorFrequencies } from "./behaviors";
 export { getBehaviorCorrelations } from "./behaviors";
+export { getPatternEvidence } from "./behaviors";
 export type { BehavioralSummary } from "./behaviors";
 
 // ─── Patterns ───────────────────────────────────────────────────────────────

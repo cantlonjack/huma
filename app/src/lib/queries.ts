@@ -34,7 +34,9 @@ import {
   getTodayCompletionStats,
   getBehaviorFrequencies,
   getBehaviorCorrelations,
+  getPatternEvidence,
 } from "@/lib/supabase-v2";
+import type { EvidenceComputation } from "@/lib/pattern-extraction";
 import { getLocalDate, getLocalDateOffset } from "@/lib/date-utils";
 import { extractPatternsFromAspirations } from "@/lib/pattern-extraction";
 
@@ -62,6 +64,7 @@ export const queryKeys = {
   completionStats: (userId: string) => ["completionStats", userId] as const,
   behaviorFrequencies: (userId: string, days: number) => ["behaviorFrequencies", userId, days] as const,
   behaviorCorrelations: (userId: string) => ["behaviorCorrelations", userId] as const,
+  patternEvidence: (userId: string) => ["patternEvidence", userId] as const,
 
   // Whole-specific
   whyStatement: (userId: string) => ["whyStatement", userId] as const,
@@ -287,6 +290,23 @@ export async function fetchPatterns(
     : loadedPatterns;
 
   return { patterns, aspirations: loadedAspirations };
+}
+
+/** Correlation-based pattern evidence (lift + sample size). */
+export async function fetchPatternEvidence(
+  userId: string,
+  patterns: Pattern[],
+  aspirations: Aspiration[],
+): Promise<Map<string, EvidenceComputation>> {
+  if (patterns.length === 0) return new Map();
+  const sb = getSupabase(userId);
+  if (!sb) return new Map();
+
+  try {
+    return await getPatternEvidence(sb, userId, patterns, aspirations);
+  } catch {
+    return new Map();
+  }
 }
 
 /** Pattern sparklines. */

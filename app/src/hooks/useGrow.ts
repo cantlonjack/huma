@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Pattern, Aspiration, DimensionKey, SparklineData, EmergingBehavior, MergeSuggestion, MonthlyReviewData } from "@/types/v2";
+import type { EvidenceComputation } from "@/lib/pattern-extraction";
 import { verifyLifeGraph, type GraphVerification } from "@/lib/graph-verification";
 import { allSeeds } from "@/data/rppl-seeds";
 import { createEmptyContext } from "@/types/context";
@@ -29,6 +30,7 @@ import {
   fetchCompletionStats,
   fetchBehaviorFrequencies,
   fetchBehaviorCorrelations,
+  fetchPatternEvidence,
 } from "@/lib/queries";
 
 // Re-export helpers from their canonical location for backwards compatibility
@@ -71,6 +73,9 @@ export interface UseGrowReturn {
   verification: GraphVerification | null;
   unconnectedAspirations: Aspiration[];
   behaviorCounts: Record<string, { completed: number; total: number }>;
+
+  // Per-pattern correlation evidence (lift + sample size)
+  evidenceMap: Map<string, EvidenceComputation>;
 
   // Derived
   dayCount: number;
@@ -131,8 +136,38 @@ export function useGrow(): UseGrowReturn {
   });
 
   const serverPatterns = patternData?.patterns ?? [];
-  const patterns = localPatterns ?? serverPatterns;
+  const rawPatterns = localPatterns ?? serverPatterns;
   const aspirations = patternData?.aspirations ?? [];
+
+  // ─── Correlation-based pattern evidence ─────────────────────────────────
+  // Computes directional lift for each pattern from behavior_log. Replaces
+  // the old "is_trigger + count>=2" heuristic as the source of confidence.
+  const { data: evidenceMap = new Map<string, EvidenceComputation>() } = useQuery({
+    queryKey: queryKeys.patternEvidence(userId ?? "__anon"),
+    queryFn: () => fetchPatternEvidence(userId!, rawPatterns, aspirations),
+    enabled: enabled && !!userId && rawPatterns.length > 0,
+  });
+
+  // Merge computed evidence onto each pattern. Read-only for render —
+  // handler code continues to operate on rawPatterns via local state.
+  const patterns = useMemo<Pattern[]>(() => {
+    if (!evidenceMap || evidenceMap.size === 0) return rawPatterns;
+    return rawPatterns.map(p => {
+      const ev = evidenceMap.get(p.id);
+      return ev ? { ...p, evidence: ev } : p;
+    });
+  }, [rawPatterns, evidenceMap]);
+
+  // Persist fresh evidence back to Supabase (once per pattern per session).
+  const persistedEvidenceRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!userId || !evidenceMap || evidenceMap.size === 0) return;
+    for (const [patternId, ev] of evidenceMap) {
+      if (persistedEvidenceRef.current.has(patternId)) continue;
+      persistedEvidenceRef.current.add(patternId);
+      storeUpdatePattern(userId, patternId, { evidence: ev }).catch(() => {});
+    }
+  }, [userId, evidenceMap]);
 
   const { data: ctxData } = useQuery({
     queryKey: queryKeys.knownContext(userId),
@@ -504,6 +539,7 @@ export function useGrow(): UseGrowReturn {
     verification,
     unconnectedAspirations,
     behaviorCounts,
+    evidenceMap,
     setNewAspirationOpen,
     setConfirmRemoveId,
     handleToggleExpand,

@@ -181,6 +181,15 @@ export interface PatternEvidence {
   confidence: PatternConfidence;
   contextTags: string[];          // Life situation tags (e.g., "single-parent", "urban", "tight-budget")
   validationNotes?: string;       // Qualitative note on how validation went
+  // ─── Computed correlation (Session 7) ───
+  // These are derived from behavior_log: the delta in pathway-completion rate
+  // when the trigger fires vs when it doesn't, over a rolling observation window.
+  strength?: number;              // Lift in pathway completion rate, range [-1, 1]. null-ish → insufficient data.
+  sampleSize?: number;            // Total observed days used to compute strength
+  triggerDays?: number;           // Days (in sample) where trigger was completed
+  noTriggerDays?: number;         // Days (in sample) where trigger was not completed
+  windowDays?: number;            // Size of the observation window (e.g. 28)
+  computedAt?: string;            // ISO timestamp of last computation
 }
 
 export interface Pattern {
@@ -232,6 +241,7 @@ export interface MergeSuggestion {
   otherPatternId: string;       // The pattern it could merge with
   otherPatternName: string;     // Display name of the other pattern
   sharedBehaviors: string[];    // Behavior texts that overlap
+  evidenceNote?: string;        // Evidence citation (e.g., "both +28% lift over 22 days")
 }
 
 // ─── Emerging Behaviors ────────────────────────────────────────────────────

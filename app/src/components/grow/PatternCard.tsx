@@ -22,16 +22,63 @@ import {
 
 // ─── Evidence helpers ─────────────────────────────────────────────────────
 
+const MIN_OBSERVED_DAYS_FOR_CLAIM = 14;
+const MIN_TRIGGER_DAYS_FOR_CLAIM = 3;
+const MIN_NO_TRIGGER_DAYS_FOR_CLAIM = 3;
+
+/** True when computed evidence has enough sample to make a claim. */
+function hasEnoughEvidenceSample(pattern: Pattern): boolean {
+  const ev = pattern.evidence;
+  if (!ev || typeof ev.strength !== "number") return false;
+  const sample = ev.sampleSize ?? 0;
+  const tDays = ev.triggerDays ?? 0;
+  const nDays = ev.noTriggerDays ?? 0;
+  return (
+    sample >= MIN_OBSERVED_DAYS_FOR_CLAIM &&
+    tDays >= MIN_TRIGGER_DAYS_FOR_CLAIM &&
+    nDays >= MIN_NO_TRIGGER_DAYS_FOR_CLAIM
+  );
+}
+
+/**
+ * Primary evidence statement. When we have a real correlation sample, cite
+ * the numeric lift + sample size. When we don't, show an honest low-data
+ * state — the old validationCount/target number is a proxy, not proof.
+ */
 function getEvidenceStatement(pattern: Pattern): string {
   const name = displayName(pattern.name);
-  const count = pattern.validationCount;
-  const target = pattern.validationTarget;
-  if (pattern.status === "validated") {
-    return `Your ${name} is confirmed \u2014 ${count} of ${target} days.`;
-  } else if (pattern.status === "working") {
-    return `Your ${name} is building \u2014 ${count} of ${target} days.`;
+  const ev = pattern.evidence;
+
+  if (hasEnoughEvidenceSample(pattern) && ev && typeof ev.strength === "number") {
+    const lift = Math.round(ev.strength * 100);
+    const sample = ev.sampleSize ?? 0;
+    if (lift >= 10) {
+      return `When your ${name} trigger fires, the pathway is ${lift}% more likely to follow \u2014 over ${sample} observed days.`;
+    }
+    if (lift <= -10) {
+      return `Over ${sample} observed days, the trigger hasn\u2019t predicted the pathway for your ${name}.`;
+    }
+    return `Over ${sample} observed days, your ${name} trigger and pathway move together weakly (${lift >= 0 ? "+" : ""}${lift}%).`;
   }
-  return `Watching your ${name} \u2014 ${count} of ${target} days so far.`;
+
+  const sample = ev?.sampleSize ?? 0;
+  const needed = Math.max(MIN_OBSERVED_DAYS_FOR_CLAIM - sample, 1);
+  return `Not enough data yet to show correlation for your ${name} \u2014 ${needed} more day${needed === 1 ? "" : "s"} of tracking to go.`;
+}
+
+/** Subtle second line: confidence tier + raw count, when sample is real. */
+function getEvidenceSubline(pattern: Pattern): string | null {
+  const ev = pattern.evidence;
+  if (!hasEnoughEvidenceSample(pattern) || !ev) return null;
+  const tier = ev.confidence;
+  const tDays = ev.triggerDays ?? 0;
+  const nDays = ev.noTriggerDays ?? 0;
+  const tierLabel =
+    tier === "proven" ? "Proven" :
+    tier === "validated" ? "Validated" :
+    tier === "emerging" ? "Emerging" :
+    "Forming";
+  return `${tierLabel} \u00B7 ${tDays} trigger day${tDays === 1 ? "" : "s"} vs ${nDays} without`;
 }
 
 function getProvenanceLabel(pattern: Pattern): string | null {
@@ -321,6 +368,16 @@ const PatternCard = memo(function PatternCard({
           <p className="font-serif text-[16px] text-sage-700 leading-[1.45] m-0">
             {getEvidenceStatement(pattern)}
           </p>
+          {/* Evidence subline — confidence tier + raw trigger/no-trigger days */}
+          {(() => {
+            const subline = getEvidenceSubline(pattern);
+            if (!subline) return null;
+            return (
+              <p className="font-sans text-[11px] text-sage-400 mt-1 m-0">
+                {subline}
+              </p>
+            );
+          })()}
           {/* Sparkline trend note */}
           {sparkline?.trend === "rising" && (
             <p className="font-serif text-[13px] italic text-sage-500 mt-1.5 m-0">
@@ -656,12 +713,17 @@ const PatternCard = memo(function PatternCard({
           onClick={(e) => e.stopPropagation()}
           className="px-4 py-3 border-t border-sand-200/80 bg-[#FDFAF5]"
         >
-          <p className="font-serif text-[13px] italic text-sage-600 leading-[1.4] mb-2">
+          <p className="font-serif text-[13px] italic text-sage-600 leading-[1.4] mb-1">
             {mergeSuggestion.sharedBehaviors.length === 1
               ? `\u201c${mergeSuggestion.sharedBehaviors[0]}\u201d also lives in ${displayName(mergeSuggestion.otherPatternName)}.`
               : `${mergeSuggestion.sharedBehaviors.length} shared behaviors with ${displayName(mergeSuggestion.otherPatternName)}.`
             }
           </p>
+          {mergeSuggestion.evidenceNote && (
+            <p className="font-sans text-[11px] text-sage-500 leading-[1.4] mb-2">
+              {mergeSuggestion.evidenceNote}
+            </p>
+          )}
           <div className="flex gap-3">
             <button
               onClick={() => onMerge?.(pattern.id, mergeSuggestion.otherPatternId)}

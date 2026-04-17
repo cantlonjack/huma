@@ -5,6 +5,7 @@ import TabShell from "@/components/shared/TabShell";
 import InsightCard from "@/components/whole/InsightCard";
 import ShareworthyInsightCard from "@/components/whole/ShareworthyInsightCard";
 import WhyEvolution from "@/components/whole/WhyEvolution";
+import WeeklyReviewCard, { type WeeklyReviewCardState } from "@/components/whole/WeeklyReviewCard";
 import ArchetypeSelector from "@/components/whole/ArchetypeSelector";
 import AspirationsList from "@/components/whole/AspirationsList";
 import PatternsList from "@/components/whole/PatternsList";
@@ -23,7 +24,13 @@ import { ConnectionThreads } from "@/components/shared/ConnectionThreads";
 
 /* ─── Connections section: threaded topology per aspiration ─── */
 
-function ConnectionsList({ aspirations }: { aspirations: Aspiration[] }) {
+function ConnectionsList({
+  aspirations,
+  highlight,
+}: {
+  aspirations: Aspiration[];
+  highlight?: { kind: "aspiration" | "dimension"; id: string } | null;
+}) {
   const visible = aspirations.filter(
     (a) => a.status !== "archived" && a.status !== "dropped"
   );
@@ -39,6 +46,14 @@ function ConnectionsList({ aspirations }: { aspirations: Aspiration[] }) {
 
   if (connected.length === 0) return null;
 
+  // Pull the highlighted aspiration to the front so it anchors the list.
+  const ordered = highlight?.kind === "aspiration"
+    ? [
+        ...connected.filter((a) => a.id === highlight.id),
+        ...connected.filter((a) => a.id !== highlight.id),
+      ]
+    : connected;
+
   return (
     <div className="px-5">
       <h2 className="font-sans font-medium text-[11px] tracking-[0.14em] uppercase text-sage-400 mb-3 m-0">
@@ -48,11 +63,22 @@ function ConnectionsList({ aspirations }: { aspirations: Aspiration[] }) {
         Each aspiration threads through multiple parts of your life.
       </p>
       <div className="flex flex-col gap-4">
-        {connected.map((asp) => {
+        {ordered.map((asp) => {
           const dims = (asp.dimensionsTouched || []) as DimensionKey[];
           const name = displayName(asp.title || asp.clarifiedText || asp.rawText);
+          const isHighlighted =
+            (highlight?.kind === "aspiration" && highlight.id === asp.id) ||
+            (highlight?.kind === "dimension" && dims.includes(highlight.id as DimensionKey));
           return (
-            <div key={asp.id} className="flex items-center gap-3">
+            <div
+              key={asp.id}
+              className={`flex items-center gap-3 rounded-xl transition-all duration-300 ${
+                isHighlighted
+                  ? "bg-amber-50 border border-amber-300 px-3 py-2 -mx-1 shadow-[0_0_0_3px_rgba(232,147,90,0.12)]"
+                  : ""
+              }`}
+              data-testid={isHighlighted ? "weekly-highlight" : undefined}
+            >
               <div className="flex-shrink-0">
                 <ConnectionThreads
                   activeDimensions={dims}
@@ -61,9 +87,16 @@ function ConnectionsList({ aspirations }: { aspirations: Aspiration[] }) {
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-sans text-[13px] font-medium text-earth-500 m-0">
-                  {name}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="font-sans text-[13px] font-medium text-earth-500 m-0">
+                    {name}
+                  </p>
+                  {isHighlighted && (
+                    <span className="font-sans text-[9px] tracking-[0.16em] uppercase text-amber-600">
+                      This week
+                    </span>
+                  )}
+                </div>
                 <p className="font-serif text-[12px] text-sage-450 leading-snug mt-0.5 m-0">
                   {dims.map((d) => DIMENSION_LABELS[d]).join(" · ")}
                 </p>
@@ -79,6 +112,18 @@ function ConnectionsList({ aspirations }: { aspirations: Aspiration[] }) {
 export default function WholePage() {
   const w = useWhole();
   const [provenancePattern, setProvenancePattern] = useState<Pattern | null>(null);
+
+  // Derive a single card state from the hook's review flags.
+  const weeklyReviewCard: WeeklyReviewCardState | null =
+    w.weeklyReviewLoading
+      ? { kind: "loading" }
+      : w.weeklyReviewError
+        ? { kind: "error", message: w.weeklyReviewError }
+        : w.weeklyReview
+          ? { kind: "ready", review: w.weeklyReview }
+          : w.weeklyReviewPrompt
+            ? { kind: "prompt" }
+            : null;
   const handleShowProvenance = useCallback((pattern: Pattern) => {
     setProvenancePattern(pattern);
   }, []);
@@ -177,6 +222,18 @@ export default function WholePage() {
               </div>
             )}
 
+            {/* Weekly review ritual */}
+            {weeklyReviewCard && (
+              <div className="mt-4">
+                <WeeklyReviewCard
+                  state={weeklyReviewCard}
+                  onStart={w.handleStartWeeklyReview}
+                  onDismiss={w.handleDismissWeeklyReview}
+                  onClear={w.handleClearWeeklyHighlight}
+                />
+              </div>
+            )}
+
             {/* Capacity — the soil your frameworks grow in */}
             {w.humaContext?.capacityState && (
               <div className="mt-5">
@@ -222,8 +279,11 @@ export default function WholePage() {
               {/* 3. Chosen Patterns — with evidence status */}
               <PatternsList patterns={w.allPatterns} onShowProvenance={handleShowProvenance} />
 
-              {/* 3. Connections — dimension overlaps */}
-              <ConnectionsList aspirations={w.aspirations} />
+              {/* 3. Connections — dimension overlaps (with weekly highlight if active) */}
+              <ConnectionsList
+                aspirations={w.aspirations}
+                highlight={w.weeklyReview?.graphHighlight ?? null}
+              />
 
               {/* Add aspiration */}
               <div className="text-center px-6">
