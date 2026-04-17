@@ -18,6 +18,7 @@ export default function InsightCard({ insight, onDismiss, shareworthy, onShare }
   // When shareworthy becomes true, pulse the badge once
   useEffect(() => {
     if (shareworthy) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot animation trigger on prop change; state resets via the timer
       setShowSharePulse(true);
       const timer = setTimeout(() => setShowSharePulse(false), 1200);
       return () => clearTimeout(timer);

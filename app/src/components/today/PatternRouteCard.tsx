@@ -47,6 +47,7 @@ export function PatternRouteCard({
       const timer = setTimeout(() => setShowCompletion(true), 300);
       return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset completion when user unchecks a step (cannot be derived because the "true" side is delayed)
     setShowCompletion(false);
   }, [allChecked, steps.length]);
 

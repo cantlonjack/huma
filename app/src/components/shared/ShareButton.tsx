@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import type { CanvasData } from "@/engine/canvas-types";
 import { trackEvent } from "@/lib/analytics";
+
+const ShareCard = lazy(() => import("@/components/shared/ShareCard"));
 
 interface ShareButtonProps {
   className?: string;
@@ -144,11 +146,6 @@ export default function ShareButton({ className = "", canvasData }: ShareButtonP
 
   const hasNativeShare = typeof navigator !== "undefined" && !!navigator.share;
 
-  // Lazy-load ShareCard only when needed
-  const ShareCardLazy = showCard
-    ? require("@/components/shared/ShareCard").default
-    : null;
-
   return (
     <>
       <div ref={ref} className={`relative ${className}`}>
@@ -283,11 +280,13 @@ export default function ShareButton({ className = "", canvasData }: ShareButtonP
       )}
 
       {/* ShareCard modal — portalled to body to escape backdrop-blur containing block */}
-      {showCard && canvasData && ShareCardLazy && createPortal(
-        <ShareCardLazy
-          data={canvasData}
-          onClose={() => setShowCard(false)}
-        />,
+      {showCard && canvasData && createPortal(
+        <Suspense fallback={null}>
+          <ShareCard
+            data={canvasData}
+            onClose={() => setShowCard(false)}
+          />
+        </Suspense>,
         document.body
       )}
     </>

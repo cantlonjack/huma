@@ -166,10 +166,13 @@ export function useToday(): UseTodayReturn {
   const checkedEntries = localChecked ?? checkedData?.checked ?? new Set<string>();
   const standaloneEntries = checkedData?.standaloneEntries ?? [];
 
-  // Reset local overrides when server data arrives
-  useEffect(() => {
+  // Reset local overrides when server data arrives. Using the React "store
+  // previous prop" pattern instead of useEffect avoids the extra render.
+  const [prevCheckedData, setPrevCheckedData] = useState(checkedData);
+  if (prevCheckedData !== checkedData) {
+    setPrevCheckedData(checkedData);
     if (checkedData) setLocalChecked(null);
-  }, [checkedData]);
+  }
 
   const { data: weekCounts = {} } = useQuery({
     queryKey: queryKeys.weekCounts(userId ?? "__anon"),
@@ -212,6 +215,7 @@ export function useToday(): UseTodayReturn {
       }
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- insight is stateful (user can dismiss via dismissInsight); derivation happens on prop/query change
     setInsight(insightData);
 
     // Mark insight as shown
@@ -271,6 +275,7 @@ export function useToday(): UseTodayReturn {
       if (cached) {
         const parsed = JSON.parse(cached) as CompiledSheet;
         if (parsed.entries?.length > 0) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate cached sheet from localStorage on mount; gated by sheetCompiledRef so it runs once
           setCompiledEntries(parsed.entries.slice(0, 5).map(e => ({
             id: e.id || `${e.behaviorKey}-${date}`,
             aspirationId: e.aspirationId || "",
@@ -368,6 +373,7 @@ export function useToday(): UseTodayReturn {
       if (cached) {
         const parsed = JSON.parse(cached) as Nudge[];
         if (parsed.length >= 0) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate cached nudges from localStorage; gated by nudgeFetchedRef
           setNudges(parsed);
           nudgeFetchedRef.current = true;
           return;
@@ -503,8 +509,9 @@ export function useToday(): UseTodayReturn {
   }, []);
 
   // ─── Check-off handler ──────────────────────────────────────────────────
-  const handleToggleStep = useCallback(
-    (aspirationId: string, stepText: string, checked: boolean) => {
+  // Memoization handled by React Compiler — manual useCallback here produces
+  // different inferred dependencies (preserve-manual-memoization rule).
+  const handleToggleStep = (aspirationId: string, stepText: string, checked: boolean) => {
       const key = `${aspirationId}:${stepText}`;
 
       // Invalidate sheet cache so next compilation reflects the check-off
@@ -565,13 +572,10 @@ export function useToday(): UseTodayReturn {
             .catch(() => {});
         }
       }
-    },
-    [user, date, checkedData, queryClient]
-  );
+    };
 
   // ─── Standalone toggle ──────────────────────────────────────────────────
-  const handleToggleStandalone = useCallback(
-    (behaviorText: string) => {
+  const handleToggleStandalone = (behaviorText: string) => {
       const key = `:${behaviorText}`;
       const currentChecked = localChecked ?? checkedData?.checked ?? new Set<string>();
       const wasChecked = currentChecked.has(key);
@@ -597,9 +601,7 @@ export function useToday(): UseTodayReturn {
           }
         }
       }
-    },
-    [user, date, localChecked, checkedData]
-  );
+    };
 
   // ─── Chat open handler ─────────────────────────────────────────────────
   const openChatWithContext = useCallback((context: string | null) => {

@@ -255,7 +255,7 @@ export async function GET(request: Request) {
         if (uniqueDates.size >= 7) {
           try {
             // Check for existing undelivered insight first
-            let insight: Insight | null = await getUndeliveredInsight(supabase, userId);
+            const insight: Insight | null = await getUndeliveredInsight(supabase, userId);
 
             if (insight) {
               // Use existing undelivered insight — mark as delivered

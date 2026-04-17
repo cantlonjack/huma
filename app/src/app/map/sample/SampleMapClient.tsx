@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import MapDocument from "@/components/canvas/MapDocument";
 import LivingCanvas from "@/components/canvas/LivingCanvas";
 import { SAMPLE_MAP_MARKDOWN, SAMPLE_CANVAS_DATA } from "@/data/sample-maps/sample-map";
@@ -71,13 +72,13 @@ export default function SampleMapClient() {
         </span>
 
         <ShareButton canvasData={current.canvas} />
-        <a
+        <Link
           href="/"
           className="px-4 sm:px-5 py-2 text-sm bg-amber-600 text-white rounded-full hover:bg-amber-700 transition-all font-medium whitespace-nowrap"
         >
           <span className="hidden sm:inline">Start Your Own Map</span>
           <span className="sm:hidden">Start Map</span>
-        </a>
+        </Link>
       </MapToolbar>
 
       {view === "canvas" ? (

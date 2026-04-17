@@ -315,6 +315,7 @@ export default function StartPage() {
   const prevFilledRef = useRef(completeness.filled);
   useEffect(() => {
     if (completeness.filled > prevFilledRef.current) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- animation trigger on delta; value resets via timer
       setProfilePulse(true);
       const timer = setTimeout(() => setProfilePulse(false), 1500);
       prevFilledRef.current = completeness.filled;

@@ -20,9 +20,13 @@ export default function SyncStatus() {
     });
   }, []);
 
-  // Show when pending/syncing/error, auto-hide 2s after synced
+  // Show when pending/syncing/error, auto-hide 2s after synced.
+  // setState here drives timed visibility transitions; these are the
+  // animation-timer cascades the rule warns about, but they model an
+  // external sync lifecycle that can't be derived from current state alone.
   useEffect(() => {
     if (state === "pending" || state === "syncing" || state === "error") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- show on external state change
       setVisible(true);
       setFadingOut(false);
     } else if (state === "synced" && visible) {

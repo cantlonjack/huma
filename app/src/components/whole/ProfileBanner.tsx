@@ -24,21 +24,20 @@ export default function ProfileBanner({
   hasContext,
 }: ProfileBannerProps) {
   const [editingWhy, setEditingWhy] = useState(false);
-  const [whyDraft, setWhyDraft] = useState(whyStatement || "");
+  const [draftOverride, setDraftOverride] = useState<string | null>(null);
+  const whyDraft = draftOverride ?? (whyStatement || "");
   const whyInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (editingWhy && whyInputRef.current) whyInputRef.current.focus();
   }, [editingWhy]);
 
-  useEffect(() => {
-    setWhyDraft(whyStatement || "");
-  }, [whyStatement]);
-
   const handleWhySave = () => {
+    const trimmed = whyDraft.trim();
     setEditingWhy(false);
-    if (whyDraft.trim() && whyDraft.trim() !== (whyStatement || "")) {
-      onWhySave(whyDraft.trim());
+    setDraftOverride(null);
+    if (trimmed && trimmed !== (whyStatement || "")) {
+      onWhySave(trimmed);
     }
   };
 
@@ -86,9 +85,9 @@ export default function ProfileBanner({
               ref={whyInputRef}
               type="text"
               value={whyDraft}
-              onChange={(e) => setWhyDraft(e.target.value)}
+              onChange={(e) => setDraftOverride(e.target.value)}
               onBlur={handleWhySave}
-              onKeyDown={(e) => { if (e.key === "Enter") handleWhySave(); if (e.key === "Escape") setEditingWhy(false); }}
+              onKeyDown={(e) => { if (e.key === "Enter") handleWhySave(); if (e.key === "Escape") { setEditingWhy(false); setDraftOverride(null); } }}
               aria-label="WHY statement"
               className="font-serif w-full text-center text-[15px] italic text-sage-700 bg-white border border-sage-450 rounded-lg py-2 px-3 outline-none"
             />
@@ -107,7 +106,7 @@ export default function ProfileBanner({
               {whyStatement}
             </p>
             <button
-              onClick={() => { setWhyDraft(whyStatement); setEditingWhy(true); }}
+              onClick={() => { setDraftOverride(whyStatement); setEditingWhy(true); }}
               className="font-sans cursor-pointer block mx-auto mt-0.5 bg-transparent border-none p-0 text-xs text-sage-300"
             >
               Refine &rarr;

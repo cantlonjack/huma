@@ -14,10 +14,15 @@ export function usePush(userId: string | null) {
   const [state, setState] = useState<PushState>("unsupported");
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
 
-  // Register service worker + check current permission state
+  // Register service worker + check current permission state.
+  // The setState calls inside this effect are mount-time initialization driven by
+  // platform APIs (navigator, Notification.permission). They run once per mount
+  // and cannot be expressed as derived state, so the set-state-in-effect rule's
+  // guidance doesn't apply here.
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- feature detection on mount; no cascade
       setState("unsupported");
       return;
     }

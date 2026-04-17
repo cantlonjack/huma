@@ -509,13 +509,22 @@ export default function AspirationDetailPanel({
   const [dirty, setDirty] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Sync when aspiration prop changes
-  useEffect(() => {
+  // Reset local edit state when the aspiration prop changes. Setting state
+  // during render (the canonical React pattern for "resetting state when a
+  // prop changes") avoids the extra render a useEffect would produce.
+  const [prevAspiration, setPrevAspiration] = useState(aspiration);
+  if (
+    prevAspiration.id !== aspiration.id ||
+    prevAspiration.behaviors !== aspiration.behaviors ||
+    prevAspiration.comingUp !== aspiration.comingUp ||
+    prevAspiration.longerArc !== aspiration.longerArc
+  ) {
+    setPrevAspiration(aspiration);
     setBehaviors(aspiration.behaviors || []);
     setComingUp(aspiration.comingUp || []);
     setLongerArc(aspiration.longerArc || []);
     setDirty(false);
-  }, [aspiration.id, aspiration.behaviors, aspiration.comingUp, aspiration.longerArc]);
+  }
 
   // Find the trigger behavior (first one marked, or first behavior)
   const triggerKey = aspiration.triggerData?.behavior || behaviors[0]?.key || "";

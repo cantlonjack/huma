@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import MapDocument from "@/components/canvas/MapDocument";
 import LivingCanvas from "@/components/canvas/LivingCanvas";
 import type { CanvasData } from "@/engine/canvas-types";
@@ -80,12 +81,12 @@ export default function MapClient({ id }: MapClientProps) {
           <p className="text-earth-600 mb-6">
             This map may no longer be available. Maps are stored for 90 days.
           </p>
-          <a
+          <Link
             href="/"
             className="px-6 py-3 bg-amber-600 text-white rounded-full hover:bg-amber-700 transition-all"
           >
             Create a new map
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -112,13 +113,13 @@ export default function MapClient({ id }: MapClientProps) {
         onPrint={() => window.print()}
       >
         <ShareButton canvasData={canvasData} />
-        <a
+        <Link
           href="/"
           className="px-4 sm:px-5 py-2 text-sm bg-amber-600 text-white rounded-full hover:bg-amber-700 transition-all font-medium whitespace-nowrap"
         >
           <span className="hidden sm:inline">Start Your Own Map</span>
           <span className="sm:hidden">New Map</span>
-        </a>
+        </Link>
       </MapToolbar>
 
       {view === "canvas" && canvasData ? (

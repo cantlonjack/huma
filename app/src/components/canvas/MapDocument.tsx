@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -24,7 +25,7 @@ function extractTableRows(node: React.ReactNode): string[][] {
     if (Array.isArray(n)) { n.forEach(walkForRows); return; }
     if (typeof n === "object" && "props" in n) {
       const el = n as React.ReactElement<{ children?: React.ReactNode }>;
-      const type = (el as { type?: string | Function }).type;
+      const type = (el as { type?: string | React.ComponentType<unknown> }).type;
       const typeName = typeof type === "string" ? type : typeof type === "function" ? type.name || "" : "";
 
       // If this is a tr, extract its cells
@@ -35,7 +36,7 @@ function extractTableRows(node: React.ReactNode): string[][] {
           if (Array.isArray(c)) { c.forEach(walkForCells); return; }
           if (typeof c === "object" && "props" in c) {
             const cel = c as React.ReactElement<{ children?: React.ReactNode }>;
-            const ct = (cel as { type?: string | Function }).type;
+            const ct = (cel as { type?: string | React.ComponentType<unknown> }).type;
             const cn = typeof ct === "string" ? ct : typeof ct === "function" ? ct.name || "" : "";
             if (cn === "td" || cn === "th") {
               cells.push(extractText(cel.props.children));
@@ -108,8 +109,27 @@ function isEnterpriseHeader(text: string): boolean {
 }
 
 export default function MapDocument({ markdown, shapeScores, operatorName }: MapDocumentProps) {
-  // Track whether we're inside the enterprise stack section
-  let inEnterpriseSection = false;
+  // Pre-compute which h3 header texts fall within the enterprise stack section,
+  // so the render callbacks don't have to mutate shared state during render.
+  const enterpriseH3Texts = useMemo(() => {
+    const set = new Set<string>();
+    let inEnterprise = false;
+    for (const rawLine of markdown.split("\n")) {
+      const line = rawLine.trim();
+      if (line.startsWith("## ")) {
+        const text = line.slice(3).toLowerCase();
+        const cls = sectionClass(text);
+        if (text.includes("enterprise") && text.includes("stack")) {
+          inEnterprise = true;
+        } else if (cls && !cls.includes("enterprises")) {
+          inEnterprise = false;
+        }
+      } else if (line.startsWith("### ") && inEnterprise) {
+        set.add(line.slice(4).trim());
+      }
+    }
+    return set;
+  }, [markdown]);
 
   const components: Components = {
     h1: ({ children }) => (
@@ -120,11 +140,6 @@ export default function MapDocument({ markdown, shapeScores, operatorName }: Map
     h2: ({ children }) => {
       const text = extractText(children);
       const cls = sectionClass(text);
-      if (text.toLowerCase().includes("enterprise") && text.toLowerCase().includes("stack")) {
-        inEnterpriseSection = true;
-      } else if (cls && !cls.includes("enterprises")) {
-        inEnterpriseSection = false;
-      }
       return (
         <h2 className={`font-serif text-2xl text-sage-700 mt-12 mb-4 pb-2 border-b border-sand-200 ${cls}`}>
           {children}
@@ -133,7 +148,7 @@ export default function MapDocument({ markdown, shapeScores, operatorName }: Map
     },
     h3: ({ children }) => {
       const text = extractText(children);
-      if (inEnterpriseSection && isEnterpriseHeader(text)) {
+      if (enterpriseH3Texts.has(text.trim()) && isEnterpriseHeader(text)) {
         return (
           <h3 className="font-serif text-xl font-bold text-sage-700 mt-2 mb-1">
             {children}

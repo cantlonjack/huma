@@ -146,6 +146,7 @@ export default function CapitalRadar({
   useEffect(() => {
     prefersReducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReducedMotion.current || !animated) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- jumps to end-of-animation state when motion is disabled or animation is off
       setProgress(1);
       return;
     }

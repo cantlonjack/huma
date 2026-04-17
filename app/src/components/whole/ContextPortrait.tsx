@@ -272,6 +272,21 @@ export default function ContextPortrait({ context, onSave, manageMode, onRemoveF
     return false;
   });
 
+  // ── Removal helpers (staged with undo) ──
+  // Hooks must run on every render, so they're declared before any early
+  // return and before the callback helpers below that close over them.
+
+  const commitRemoval = useCallback(() => {
+    if (pendingRemoval && onRemoveField) {
+      onRemoveField(pendingRemoval.fieldPath);
+    }
+    setPendingRemoval(null);
+  }, [pendingRemoval, onRemoveField]);
+
+  const undoRemoval = useCallback(() => {
+    setPendingRemoval(null);
+  }, []);
+
   if (!hasAnything && !manageMode) return null;
 
   const summary = buildSummary(context);
@@ -294,22 +309,9 @@ export default function ContextPortrait({ context, onSave, manageMode, onRemoveF
     saveField("resources", resources);
   };
 
-  // ── Removal helpers (staged with undo) ──
-
   const stageRemoval = (fieldPath: string, label: string) => {
     setPendingRemoval({ fieldPath, label });
   };
-
-  const commitRemoval = useCallback(() => {
-    if (pendingRemoval && onRemoveField) {
-      onRemoveField(pendingRemoval.fieldPath);
-    }
-    setPendingRemoval(null);
-  }, [pendingRemoval, onRemoveField]);
-
-  const undoRemoval = useCallback(() => {
-    setPendingRemoval(null);
-  }, []);
 
   const handleRemoveField = (fieldPath: string, label?: string) => {
     stageRemoval(fieldPath, label || fieldPath);

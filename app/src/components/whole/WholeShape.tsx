@@ -121,10 +121,19 @@ export default function WholeShape({
   const { positionedNodes, positionedLinks } = useMemo(() => {
     if (nodes.length === 0) return { positionedNodes: [] as SimNode[], positionedLinks: [] as SimLink[] };
 
+    // Deterministic jitter keyed off each node's id so the simulation seed is
+    // stable across renders (Math.random during render is impure — see
+    // react-hooks/purity).
+    const jitter = (seed: string, amp: number) => {
+      let h = 0;
+      for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
+      // Map hash to [-0.5, 0.5], scale by amp
+      return (((h >>> 0) % 1000) / 1000 - 0.5) * amp;
+    };
     const simNodes: SimNode[] = nodes.map((n) => ({
       ...n,
-      x: n.type === "identity" ? cx : cx + (Math.random() - 0.5) * 30,
-      y: n.type === "identity" ? cy : MEMBRANE_VB_HEIGHT * LAYER_Y_PCT[n.layer] + (Math.random() - 0.5) * 10,
+      x: n.type === "identity" ? cx : cx + jitter(n.id + ":x", 30),
+      y: n.type === "identity" ? cy : MEMBRANE_VB_HEIGHT * LAYER_Y_PCT[n.layer] + jitter(n.id + ":y", 10),
       // Fix identity node at center
       fx: n.type === "identity" ? cx : undefined,
       fy: n.type === "identity" ? cy : undefined,

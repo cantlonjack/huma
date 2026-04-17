@@ -144,6 +144,7 @@ function HeroProductDemo({ reduced }: { reduced: boolean }) {
   // Sequence the conversation
   useEffect(() => {
     if (reduced) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- jumps to end-of-sequence when reduced motion is on
       setVisibleMessages([0, 1, 2, 3]);
       setRevealedDims([0, 2, 3, 4]);
       setPhase("briefing");
@@ -163,6 +164,7 @@ function HeroProductDemo({ reduced }: { reduced: boolean }) {
     if (!typing.done || !showMessage || reduced) return;
 
     // Add this message to visible
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- advancing conversation after async typing animation completes
     setVisibleMessages((prev) => {
       if (prev.includes(msgIndex)) return prev;
       return [...prev, msgIndex];
@@ -407,6 +409,7 @@ export default function LandingPage() {
   const setRef = useScrollReveal();
   const [mounted, setMounted] = useState(false);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-gate to defer client-only UI past hydration
   useEffect(() => setMounted(true), []);
 
   const go = () => router.push("/start");

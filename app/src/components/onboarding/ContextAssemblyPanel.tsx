@@ -145,6 +145,7 @@ export default function ContextAssemblyPanel({
     for (const id of currentIds) {
       if (!prevSectionIds.current.has(id)) {
         if (!reducedMotion) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect -- animation trigger for newly-added sections; resets via timer
           setFlashSection(id);
           const timer = setTimeout(() => setFlashSection(null), 600);
           prevSectionIds.current = currentIds;

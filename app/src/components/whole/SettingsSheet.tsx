@@ -116,21 +116,23 @@ export default function SettingsSheet({
   const [selectedOption, setSelectedOption] = useState<ResetOption | null>(null);
   const [tab, setTab] = useState<SettingsTab>("profile");
   const [editingWhy, setEditingWhy] = useState(false);
-  const [whyDraft, setWhyDraft] = useState(whyStatement || "");
+  const [draftOverride, setDraftOverride] = useState<string | null>(null);
+  const whyDraft = draftOverride ?? (whyStatement || "");
   const whyInputRef = useRef<HTMLInputElement>(null);
 
-  // Reset state when sheet opens/closes
-  useEffect(() => {
+  // Reset sheet state when it closes. Setting state during render (from the
+  // canonical "resetting state when a prop changes" React pattern) avoids the
+  // extra render that a useEffect would produce.
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
     if (!open) {
       setSelectedOption(null);
       setTab("profile");
       setEditingWhy(false);
+      setDraftOverride(null);
     }
-  }, [open]);
-
-  useEffect(() => {
-    setWhyDraft(whyStatement || "");
-  }, [whyStatement]);
+  }
 
   useEffect(() => {
     if (editingWhy && whyInputRef.current) whyInputRef.current.focus();
@@ -157,9 +159,11 @@ export default function SettingsSheet({
   if (!open) return null;
 
   const handleWhySave = () => {
+    const trimmed = whyDraft.trim();
     setEditingWhy(false);
-    if (whyDraft.trim() && whyDraft.trim() !== (whyStatement || "") && onWhySave) {
-      onWhySave(whyDraft.trim());
+    setDraftOverride(null);
+    if (trimmed && trimmed !== (whyStatement || "") && onWhySave) {
+      onWhySave(trimmed);
     }
   };
 
@@ -271,18 +275,18 @@ export default function SettingsSheet({
                       ref={whyInputRef}
                       type="text"
                       value={whyDraft}
-                      onChange={(e) => setWhyDraft(e.target.value)}
+                      onChange={(e) => setDraftOverride(e.target.value)}
                       onBlur={handleWhySave}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleWhySave();
-                        if (e.key === "Escape") setEditingWhy(false);
+                        if (e.key === "Escape") { setEditingWhy(false); setDraftOverride(null); }
                       }}
                       aria-label="WHY statement"
                       className="font-serif w-full text-[15px] italic text-sage-700 bg-white border border-sage-450 rounded-lg py-2 px-3 outline-none"
                     />
                   ) : (
                     <button
-                      onClick={() => { setWhyDraft(whyStatement || ""); setEditingWhy(true); }}
+                      onClick={() => { setDraftOverride(whyStatement || ""); setEditingWhy(true); }}
                       className="cursor-pointer bg-transparent border-none p-0 text-left w-full"
                     >
                       <span className={`font-serif text-[15px] italic leading-snug ${whyStatement ? "text-sage-600" : "text-sand-350"}`}>

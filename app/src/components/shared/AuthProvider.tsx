@@ -32,6 +32,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     if (!isSupabaseConfigured()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- unblock render once we know Supabase isn't configured; feature detection on mount
       setLoading(false);
       return;
     }
@@ -59,9 +60,12 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     return () => subscription.unsubscribe();
   }, []);
 
-  // Flush WAL on app focus (network recovery)
+  // Flush WAL on app focus (network recovery). The ref mirrors `user` so the
+  // focus handler (which is attached once) always reads the latest value.
   const userRef = useRef(user);
-  userRef.current = user;
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
   useEffect(() => {
     const handleFocus = () => {
       if (userRef.current && getPendingCount() > 0) {

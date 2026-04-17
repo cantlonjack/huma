@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import ChatSheet from "@/components/chat/ChatSheet";
 import NotificationPrompt from "@/components/today/NotificationPrompt";
 import EveningReflection from "@/components/today/EveningReflection";
@@ -55,16 +55,15 @@ interface TabShellProps {
  * BottomNav is rendered in the root layout — this only adds the chat layer.
  */
 export default function TabShell({ contextPrompt, children, forceOpen, onChatClose, hideBubble, sourceTab, tabContext, initialMessage, chatMode }: TabShellProps) {
-  const [chatOpen, setChatOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const online = useNetworkStatus();
 
-  // Sync forceOpen from parent
-  useEffect(() => {
-    if (forceOpen) setChatOpen(true);
-  }, [forceOpen]);
+  // Chat is open if either the user opened it via the bubble or the parent forced it open.
+  // The parent is responsible for clearing forceOpen in onChatClose.
+  const chatOpen = internalOpen || !!forceOpen;
 
   const handleClose = () => {
-    setChatOpen(false);
+    setInternalOpen(false);
     onChatClose?.();
   };
 
@@ -93,7 +92,7 @@ export default function TabShell({ contextPrompt, children, forceOpen, onChatClo
       {children}
       <NotificationPrompt />
       <EveningReflection />
-      {!hideBubble && <ChatBubble onClick={() => setChatOpen(true)} />}
+      {!hideBubble && <ChatBubble onClick={() => setInternalOpen(true)} />}
       <ChatSheet
         open={chatOpen}
         onClose={handleClose}

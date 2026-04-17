@@ -70,7 +70,7 @@ export default function WhyEvolution({
         {/* Evolved */}
         <div className="mb-3.5">
           <p className="font-sans text-[11px] text-sage-450 mb-0.5">
-            What you're actually building
+            What you&apos;re actually building
           </p>
           <p className="font-serif text-base italic text-sage-700 leading-snug">
             {evolution.evolvedWhy}
