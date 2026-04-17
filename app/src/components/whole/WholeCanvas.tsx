@@ -689,7 +689,7 @@ export default function WholeCanvas({
         </p>
         <button
           onClick={onAddAspiration}
-          className="font-sans cursor-pointer inline-flex items-center gap-1.5 text-[13px] text-sage-500 bg-transparent border border-dashed border-[#C8D5C9] rounded-[20px] px-4 py-2 min-h-9"
+          className="font-sans cursor-pointer inline-flex items-center gap-1.5 text-[13px] text-sage-500 bg-transparent border border-dashed border-sage-200 rounded-[20px] px-4 py-2 min-h-9"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path
@@ -745,7 +745,7 @@ export default function WholeCanvas({
       <div className="text-center px-6 mt-5">
         <button
           onClick={onAddAspiration}
-          className="font-sans cursor-pointer inline-flex items-center gap-1.5 text-[13px] text-sage-500 bg-transparent border border-dashed border-[#C8D5C9] rounded-[20px] px-4 py-2 min-h-9"
+          className="font-sans cursor-pointer inline-flex items-center gap-1.5 text-[13px] text-sage-500 bg-transparent border border-dashed border-sage-200 rounded-[20px] px-4 py-2 min-h-9"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path

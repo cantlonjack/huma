@@ -711,7 +711,7 @@ const PatternCard = memo(function PatternCard({
       {mergeSuggestion && (
         <div
           onClick={(e) => e.stopPropagation()}
-          className="px-4 py-3 border-t border-sand-200/80 bg-[#FDFAF5]"
+          className="px-4 py-3 border-t border-sand-200/80 bg-sand-100"
         >
           <p className="font-serif text-[13px] italic text-sage-600 leading-[1.4] mb-1">
             {mergeSuggestion.sharedBehaviors.length === 1

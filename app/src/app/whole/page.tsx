@@ -89,7 +89,7 @@ export default function WholePage() {
             <span className="font-sans font-medium text-[11px] text-sage-300 tracking-[0.1em]">Day {w.dayNum}</span>
             <button
               onClick={() => w.setSettingsOpen(true)}
-              className="cursor-pointer w-7 h-7 flex items-center justify-center bg-transparent border-none rounded-lg transition-[background] duration-200 hover:bg-[#EDF3ED]"
+              className="cursor-pointer w-7 h-7 flex items-center justify-center bg-transparent border-none rounded-lg transition-[background] duration-200 hover:bg-sage-50"
               aria-label="Settings"
             >
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -242,7 +242,7 @@ export default function WholePage() {
       {/* Archive undo toast */}
       {w.archiveToast && (
         <div
-          className="fixed bottom-[100px] left-1/2 -translate-x-1/2 bg-sand-100 text-earth-500 border-2 border-[#C8D5C9] rounded-2xl px-5 py-3 flex items-center gap-3 z-40 shadow-[0_4px_16px_rgba(0,0,0,0.08)]"
+          className="fixed bottom-[100px] left-1/2 -translate-x-1/2 bg-sand-100 text-earth-500 border-2 border-sage-200 rounded-2xl px-5 py-3 flex items-center gap-3 z-40 shadow-[0_4px_16px_rgba(0,0,0,0.08)]"
           style={{
             animation: "confirmation-slide-up 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
           }}

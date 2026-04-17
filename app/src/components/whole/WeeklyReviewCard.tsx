@@ -26,7 +26,7 @@ export default function WeeklyReviewCard({
     return (
       <Shell eyebrow="This week's picture">
         <p className="font-serif text-[15px] italic text-sage-600 leading-snug m-0 mb-3">
-          End of another week. Let's see its shape before the next one starts.
+          End of another week. Let&rsquo;s see its shape before the next one starts.
         </p>
         <div className="flex gap-2.5">
           <button

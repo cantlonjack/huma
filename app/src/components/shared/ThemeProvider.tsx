@@ -66,9 +66,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Hydrate from storage + system on mount, and reapply the <html>
   // attribute. The inline script in layout.tsx handles the pre-hydration
   // paint; this guards against any hydration pass that cleared it.
+  // The sync setState-in-effect is intentional: SSR has no access to
+  // localStorage / matchMedia, so the first client pass has to pull them
+  // in. A single cascade render is the correct cost to avoid a hydration
+  // mismatch on the <html data-theme> attribute.
   useEffect(() => {
     const p = readStored();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPreferenceState(p);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSystemTheme(readSystem());
     applyDocumentTheme(p);
   }, []);

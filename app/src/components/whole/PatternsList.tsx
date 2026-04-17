@@ -27,7 +27,7 @@ function PatternRow({
           {pattern.name}
         </p>
         {pattern.status === "validated" && (
-          <span className="font-sans text-[10px] font-medium text-sage-500 bg-[#EDF3ED] rounded-full px-2 py-0.5 shrink-0">
+          <span className="font-sans text-[10px] font-medium text-sage-500 bg-sage-50 rounded-full px-2 py-0.5 shrink-0">
             Validated
           </span>
         )}
