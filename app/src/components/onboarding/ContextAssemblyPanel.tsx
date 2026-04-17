@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, useId } from "react";
 import type { HumaContext } from "@/types/context";
 import type { DimensionKey } from "@/types/v2";
 import { ConnectionThreads } from "@/components/shared/ConnectionThreads";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { profileSections, profileCompleteness } from "@/lib/life-profile-utils";
+import { contextCompleteness } from "@/lib/context-model";
 import LifeProfileSection from "@/components/whole/LifeProfileSection";
 
 // ── Gap prompt suggestions — natural questions for missing context ──
@@ -43,6 +44,30 @@ const DIMENSION_SEGMENTS: { key: DimensionKey; label: string; color: string }[] 
   { key: "identity", label: "Identity", color: "#A04040" },
 ];
 
+// ── Dimension legend — what HUMA listens for ──
+// Human-voice one-liners for each of the 9 listening dimensions. The ring shows
+// eight; Time lives in the model and colors the weekly shape, so we include it
+// here for legibility. Copy stays fence-post-neighbor, not schema.
+
+interface LegendDim {
+  key: string; // DimensionKey | "time"
+  label: string;
+  blurb: string;
+  color: string;
+}
+
+const LEGEND_DIMENSIONS: LegendDim[] = [
+  { key: "body",     label: "Body",     blurb: "Energy, sleep, how you\u2019re holding up.",        color: "#5C7A62" },
+  { key: "people",   label: "People",   blurb: "Household, the ones you rely on.",                  color: "#8BAF8E" },
+  { key: "money",    label: "Money",    blurb: "What\u2019s coming in, what\u2019s tight.",         color: "#B5621E" },
+  { key: "home",     label: "Home",     blurb: "Where you live and what\u2019s there.",             color: "#6B6358" },
+  { key: "growth",   label: "Growth",   blurb: "What you\u2019re picking up, where you stretch.",   color: "#2E6B8A" },
+  { key: "joy",      label: "Joy",      blurb: "What feeds you, what drains you.",                  color: "#E8935A" },
+  { key: "purpose",  label: "Purpose",  blurb: "What you\u2019re doing all this for.",              color: "#3A5A40" },
+  { key: "identity", label: "Identity", blurb: "How you see yourself, the roles you carry.",        color: "#A04040" },
+  { key: "time",     label: "Time",     blurb: "The shape of your week.",                           color: "#A89E90" },
+];
+
 interface ContextAssemblyPanelProps {
   humaContext: HumaContext;
   knownDimensionKeys: DimensionKey[];
@@ -68,6 +93,19 @@ export default function ContextAssemblyPanel({
     () => profileCompleteness(humaContext),
     [humaContext],
   );
+
+  // Per-dimension signal map drives the legend's live "picked up / still quiet"
+  // state. Uses contextCompleteness so time (not in ring) is also reflected.
+  const signalMap = useMemo(() => {
+    const map = new Map<string, boolean>();
+    for (const d of contextCompleteness(humaContext).dimensions) {
+      map.set(d.dimension, d.percentage > 0);
+    }
+    return map;
+  }, [humaContext]);
+
+  const [legendOpen, setLegendOpen] = useState(false);
+  const legendId = useId();
 
   const filledSections = sections.filter((s) => !s.isSparse);
   const sparseSections = sections.filter((s) => s.isSparse);
@@ -162,6 +200,69 @@ export default function ContextAssemblyPanel({
         <p className="font-sans text-[11px] text-earth-400">
           {dimensionCount} of {DIMENSION_SEGMENTS.length} dimensions seen
         </p>
+
+        {/* Legend disclosure — what HUMA is listening for, in human voice */}
+        <button
+          type="button"
+          onClick={() => setLegendOpen((v) => !v)}
+          className="mt-2 inline-flex items-center gap-1 font-sans text-[11px] text-sage-500 hover:text-sage-700 bg-transparent border-none p-0 cursor-pointer transition-colors duration-150"
+          aria-expanded={legendOpen}
+          aria-controls={legendId}
+        >
+          <span>What HUMA listens for</span>
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className={`transition-transform duration-200 ${legendOpen ? "rotate-180" : ""}`}
+            aria-hidden="true"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+
+        {legendOpen && (
+          <div
+            id={legendId}
+            className={reducedMotion ? "mt-3" : "mt-3 animate-[fade-in_200ms_ease-out]"}
+          >
+            <ul role="list" className="flex flex-col gap-2 list-none p-0 m-0">
+              {LEGEND_DIMENSIONS.map((dim) => {
+                const hasSignal = signalMap.get(dim.key) ?? false;
+                return (
+                  <li key={dim.key} className="flex items-start gap-2.5 m-0">
+                    <span
+                      className="w-2 h-2 rounded-full flex-shrink-0 mt-[6px]"
+                      style={{
+                        backgroundColor: hasSignal ? dim.color : "transparent",
+                        border: hasSignal ? "none" : `1px solid ${dim.color}55`,
+                      }}
+                      aria-hidden="true"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span className="font-sans text-[12px] font-medium text-earth-700">
+                          {dim.label}
+                        </span>
+                        <span
+                          className={`font-sans text-[10px] italic ${hasSignal ? "text-sage-500" : "text-earth-400"}`}
+                        >
+                          {hasSignal ? "picked up" : "still quiet"}
+                        </span>
+                      </div>
+                      <p className="font-sans text-[12px] text-earth-500 leading-snug m-0">
+                        {dim.blurb}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
       </div>
 
       {/* Filled sections */}
