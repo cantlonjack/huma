@@ -3,6 +3,8 @@
 // and all prompt constants. The route handler calls buildSystemPrompt()
 // and streams the response.
 
+import type Anthropic from "@anthropic-ai/sdk";
+import type { MessageParam, TextBlockParam } from "@anthropic-ai/sdk/resources/messages";
 import type { HumaContext } from "@/types/context";
 import type { Aspiration, Pattern } from "@/types/v2";
 import type { CapitalScore } from "@/engine/canvas-types";
@@ -1089,4 +1091,90 @@ export function buildSystemPrompt(
     isFirstConversation,
     exchangeCount,
   });
+}
+
+// ─── SEC-03: Token Budget (budgetCheck + pickBudget) ─────────────────────────
+// Owned by Plan 01-03. Called BEFORE Plan 02's checkAndIncrement so the
+// quota ledger receives an accurate inputTokens count from the Anthropic
+// free countTokens() API — not a cheap `estChars/4` heuristic that would
+// under-count by ~3x (Blocker 6 of 01-02).
+//
+// Trim strategy: drop msgs[0] (oldest) one at a time until the total fits.
+// `system` (humaContext) is NEVER modified — it is the operator's life data
+// and must be preserved in full.
+//
+// Ceilings (policy, not Anthropic's model context limit):
+//   • Sonnet 4 / 4.6: 80K input tokens
+//   • Haiku 4.5:       150K input tokens
+//
+// Response contract (set by the caller route):
+//   • Success + trimmed: include `X-Huma-Truncated: count=N,reason=budget`
+//   • tooLarge (system alone exceeds): return 413 PAYLOAD_TOO_LARGE
+//
+// Downstream: Plan 05b's coverage meta-test asserts every Anthropic-calling
+// route wrapped by withObservability also calls budgetCheck.
+
+export const BUDGETS = { sonnet: 80_000, haiku: 150_000 } as const;
+
+/**
+ * Pick the per-model budget ceiling. Unknown models default conservatively
+ * to the Sonnet cap so we never accidentally let an unrecognized model
+ * blow past the policy limit.
+ */
+export function pickBudget(model: string): number {
+  const m = model.toLowerCase();
+  if (m.includes("haiku")) return BUDGETS.haiku;
+  if (m.includes("sonnet")) return BUDGETS.sonnet;
+  return BUDGETS.sonnet;
+}
+
+export interface BudgetResult {
+  system: string | TextBlockParam[];
+  messages: MessageParam[];
+  trimmedCount: number;
+  inputTokens: number;
+}
+
+export interface BudgetTooLarge {
+  tooLarge: true;
+}
+
+/**
+ * budgetCheck — run the accurate countTokens() API, tail-trim messages[] if
+ * over budget, and return the final trimmed set + authoritative token count.
+ *
+ * @returns BudgetResult on success. BudgetTooLarge when the system prompt
+ *          alone already exceeds the limit — the route must 413 in that case.
+ *
+ * Caps at 50 trim iterations defensively; anything requiring more trims is
+ * pathological and should bail out as tooLarge rather than spin forever.
+ */
+export async function budgetCheck(opts: {
+  anthropic: Anthropic;
+  model: string;
+  system: string | TextBlockParam[];
+  messages: MessageParam[];
+  limit: number;
+}): Promise<BudgetResult | BudgetTooLarge> {
+  let msgs = [...opts.messages];
+  let trimmed = 0;
+  for (let iter = 0; iter < 50; iter++) {
+    const { input_tokens } = await opts.anthropic.messages.countTokens({
+      model: opts.model,
+      system: opts.system,
+      messages: msgs,
+    });
+    if (input_tokens <= opts.limit) {
+      return {
+        system: opts.system,
+        messages: msgs,
+        trimmedCount: trimmed,
+        inputTokens: input_tokens,
+      };
+    }
+    if (msgs.length === 0) return { tooLarge: true };
+    msgs = msgs.slice(1);
+    trimmed++;
+  }
+  return { tooLarge: true };
 }
