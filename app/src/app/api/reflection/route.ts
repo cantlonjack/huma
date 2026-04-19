@@ -4,6 +4,7 @@ import { createServerSupabase } from "@/lib/supabase-server";
 import { getKnownContext, updateKnownContext } from "@/lib/supabase-v2";
 import { isRateLimited } from "@/lib/rate-limit";
 import { rateLimited, internalError } from "@/lib/api-error";
+import { withObservability } from "@/lib/observability";
 import { parseBody } from "@/lib/schemas/parse";
 import { userTextField } from "@/lib/schemas/sanitize";
 
@@ -49,7 +50,13 @@ TODAY'S SHEET (what they were working with):
 REFLECTION TYPE: {reflection_type}
 REFLECTION TEXT: {reflection_text}`;
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
+  return withObservability(
+    request,
+    "/api/reflection",
+    "user",
+    () => null,
+    async (obs) => {
   // Rate limit
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
   if (await isRateLimited(ip)) return rateLimited();
@@ -70,6 +77,9 @@ export async function POST(request: Request) {
       return Response.json({ error: "Not authenticated" }, { status: 401 });
     }
 
+    // Late-resolve user_id for the observability log now that we have one.
+    obs.setUserId(user.id);
+
     // Get existing context
     const existingContext = await getKnownContext(supabase, user.id);
 
@@ -87,6 +97,10 @@ export async function POST(request: Request) {
       system: "You are HUMA's evening reflection processor. Return ONLY valid JSON, no markdown fences.",
       messages: [{ role: "user", content: prompt }],
     });
+
+    // ─── SEC-05 token attribution ─────────────────────────────────────────
+    obs.setPromptTokens(msg.usage.input_tokens);
+    obs.setOutputTokens(msg.usage.output_tokens);
 
     const raw = (msg.content[0] as { type: string; text: string }).text.trim();
 
@@ -127,4 +141,6 @@ export async function POST(request: Request) {
     console.error("Reflection API error:", err);
     return internalError("Failed to process reflection");
   }
+    },
+  );
 }

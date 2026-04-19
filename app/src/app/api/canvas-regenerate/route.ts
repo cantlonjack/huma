@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
 import { computeCapitalScores, dimensionActivityFromCounts } from "@/lib/capital-computation";
+import { withObservability } from "@/lib/observability";
 import type { CanvasData } from "@/engine/canvas-types";
 
 export const runtime = "nodejs";
@@ -27,17 +28,25 @@ async function getAuthUser(request: Request) {
 
 // ─── Handler ─────────────────────────────────────────────────────────────
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
   if (!process.env.ANTHROPIC_API_KEY) {
     return Response.json({ error: "Service unavailable" }, { status: 503 });
   }
 
+  return withObservability(
+    request,
+    "/api/canvas-regenerate",
+    "user",
+    () => null,
+    async (obs) => {
   const auth = await getAuthUser(request);
   if (!auth) {
     return Response.json({ error: "Authentication required" }, { status: 401 });
   }
 
   const { user, supabase } = auth;
+  // Late-resolve user_id for the observability log (Bearer-resolved user).
+  obs.setUserId(user.id);
 
   try {
     // Fetch all operator data in parallel
@@ -169,6 +178,10 @@ Output ONLY valid JSON. No markdown fences, no explanation.
       messages: [{ role: "user", content: prompt }],
     });
 
+    // ─── SEC-05 token attribution ─────────────────────────────────────────
+    obs.setPromptTokens(response.usage.input_tokens);
+    obs.setOutputTokens(response.usage.output_tokens);
+
     const text = response.content[0]?.type === "text" ? response.content[0].text : "";
 
     let canvasData: CanvasData;
@@ -210,6 +223,8 @@ Output ONLY valid JSON. No markdown fences, no explanation.
     console.error("Canvas regeneration error:", err);
     return Response.json({ error: "Canvas generation failed" }, { status: 500 });
   }
+    },
+  );
 }
 
 // ─── Date helpers ────────────────────────────────────────────────────────

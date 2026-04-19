@@ -7,6 +7,7 @@ import {
   serviceUnavailable,
   internalError,
 } from "@/lib/api-error";
+import { withObservability } from "@/lib/observability";
 import { parseBody } from "@/lib/schemas/parse";
 import { userTextField } from "@/lib/schemas/sanitize";
 import {
@@ -79,9 +80,15 @@ Rules:
 
 // ─── Route ──────────────────────────────────────────────────────────────────
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
   if (!process.env.ANTHROPIC_API_KEY) return serviceUnavailable();
 
+  return withObservability(
+    request,
+    "/api/weekly-review",
+    "user",
+    () => null,
+    async (obs) => {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
   if (await isRateLimited(ip)) return rateLimited();
 
@@ -102,6 +109,10 @@ export async function POST(request: Request) {
       system: WEEKLY_REVIEW_SYSTEM,
       messages: [{ role: "user", content: prompt }],
     });
+
+    // ─── SEC-05 token attribution ─────────────────────────────────────────
+    obs.setPromptTokens(msg.usage.input_tokens);
+    obs.setOutputTokens(msg.usage.output_tokens);
 
     const raw = msg.content[0].type === "text" ? msg.content[0].text.trim() : "";
     const cleaned = raw.replace(/```json\n?|```/g, "").trim();
@@ -164,6 +175,8 @@ export async function POST(request: Request) {
       const supabase = await createServerSupabase();
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        // Late-resolve user_id for the observability log when the user is known.
+        obs.setUserId(user.id);
         await supabase.from("weekly_reviews_v2").upsert(
           {
             user_id: user.id,
@@ -190,6 +203,8 @@ export async function POST(request: Request) {
     console.error("weekly-review error:", err);
     return internalError("Failed to generate weekly review.");
   }
+    },
+  );
 }
 
 // ─── Fetch latest review for the current user ──────────────────────────────
