@@ -112,18 +112,21 @@ describe("quota.ts — resolveTier + checkAndIncrement", () => {
   // --- checkAndIncrement -----------------------------------------------
 
   it("checkAndIncrement passes accurate p_input_tokens to RPC (Blocker 6 — no heuristic)", async () => {
-    const rpc = vi.fn(async () => ({
-      data: [
-        {
-          allowed: true,
-          tier: "free",
-          reset_at: new Date(Date.now() + 86_400_000).toISOString(),
-          req_count: 1,
-          token_count: 100,
-        },
-      ],
-      error: null,
-    }));
+    // Typed param signature so `.mock.calls[0]` is a [name, args] tuple, not [].
+    const rpc = vi.fn<(name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>>(
+      async () => ({
+        data: [
+          {
+            allowed: true,
+            tier: "free",
+            reset_at: new Date(Date.now() + 86_400_000).toISOString(),
+            req_count: 1,
+            token_count: 100,
+          },
+        ],
+        error: null,
+      }),
+    );
     vi.doMock("@/lib/supabase-admin", () => ({
       createAdminSupabase: () => ({
         auth: { admin: { getUserById: vi.fn() } },
