@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useStart } from "@/hooks/useStart";
+import { createClient } from "@/lib/supabase";
 import AuthModal from "@/components/shared/AuthModal";
 import ArchetypeSelectionScreen from "@/components/onboarding/ArchetypeSelectionScreen";
 import MessageBubble from "@/components/onboarding/MessageBubble";
@@ -305,6 +306,29 @@ export default function StartPage() {
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
   const [profilePulse, setProfilePulse] = useState(false);
   const [hasAutoPeeked, setHasAutoPeeked] = useState(false);
+
+  // ─── Anonymous session bootstrap (SEC-01) ──────────────────────────────
+  // Every /start visitor becomes a real Supabase user via signInAnonymously()
+  // on mount. Subsequent quota ledger (Plan 02), rate-limits, and structured
+  // logs (Plan 05a) can then key on user_id from the first keystroke.
+  // If a session already exists (returning operator or mid-flow reload), we
+  // skip — signInAnonymously would otherwise create a second anon user.
+  useEffect(() => {
+    const supabase = createClient();
+    if (!supabase) return;
+    let cancelled = false;
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (cancelled || session) return;
+      const { error } = await supabase.auth.signInAnonymously();
+      if (error) {
+        // Non-fatal — landing without a session just means quota / logs fall
+        // back to the IP-keyed path. Surface for debugging, don't block UI.
+        console.error("[start] anon sign-in failed:", error);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const completeness = useMemo(
     () => profileCompleteness(humaContext),

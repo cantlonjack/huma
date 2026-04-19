@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "./AuthProvider";
+import { createClient } from "@/lib/supabase";
 import { HUMA_EASE } from "@/lib/constants";
 
 interface AuthModalProps {
@@ -18,8 +19,15 @@ export default function AuthModal({ open, onClose, onAuthenticated }: AuthModalP
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // If already authenticated, trigger immediately
-  if (open && user) {
+  // If already authenticated AND NOT anonymous, trigger immediately.
+  // An anonymous user is "authenticated" from Supabase's POV (they have a
+  // session + user_id) but they still need to supply an email to persist
+  // their data across devices. Treat anon sessions as unauthenticated for
+  // modal-dismissal purposes.
+  const isAnon = Boolean(
+    user && (user as { is_anonymous?: boolean }).is_anonymous === true,
+  );
+  if (open && user && !isAnon) {
     // Use microtask to avoid setState during render
     Promise.resolve().then(onAuthenticated);
     return null;
@@ -32,7 +40,25 @@ export default function AuthModal({ open, onClose, onAuthenticated }: AuthModalP
     setSending(true);
     setError(null);
 
-    const { error: authError } = await signInWithMagicLink(email.trim());
+    // Anon → email upgrade uses supabase.auth.updateUser({ email }) so the
+    // user_id stays stable (quota ledger, logs, aspirations all keep working).
+    // linkIdentity is OAuth-only per Supabase docs — do NOT use for email.
+    let authError: string | null = null;
+    if (isAnon) {
+      const supabase = createClient();
+      if (!supabase) {
+        authError = "Authentication is not configured";
+      } else {
+        const { error: updateError } = await supabase.auth.updateUser({
+          email: email.trim(),
+        });
+        authError = updateError?.message ?? null;
+      }
+    } else {
+      const result = await signInWithMagicLink(email.trim());
+      authError = result.error;
+    }
+
     setSending(false);
 
     if (authError) {
