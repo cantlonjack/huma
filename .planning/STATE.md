@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
-current_plan: 3
+current_plan: 5
 status: executing
-stopped_at: Completed 01-01-auth-gate-PLAN.md
-last_updated: "2026-04-19T07:40:42.273Z"
+stopped_at: Completed 01-05a-observability-lib-PLAN.md
+last_updated: "2026-04-19T11:24:25.873Z"
 last_activity: 2026-04-19
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 10
-  completed_plans: 2
-  percent: 10
+  completed_plans: 4
+  percent: 20
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 ## Current Position
 
 Phase: 1 of 8 (Security & Cost Control)
-Current Plan: 3
+Current Plan: 5
 Total Plans in Phase: 10
 Status: In Progress
 Last activity: 2026-04-19
@@ -64,6 +64,8 @@ Progress: [██░░░░░░░░] 20% (2/10 plans complete in Phase 1)
 | 01-01-auth-gate | 15 min | 3 (TDD) | 11 total (5 created, 6 modified) |
 
 *Updated after each plan completion*
+| Phase 01-security-cost-control P06 | 3h 32m | 3 tasks | 3 files |
+| Phase 01-security-cost-control P05a-observability-lib | 5 min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -81,6 +83,11 @@ Recent decisions affecting current work:
 - [Phase 01]: PHASE_1_GATE_ENABLED=false returns source:'system' (Warning 2) — merge-safe shim keeps observability dashboards clean
 - [Phase 01]: IP rate-limit anon/unauth-only (Warning 1) — permanent users rely on per-user ledger from Plan 02; shared-IP operators no longer penalized
 - [Phase 01]: Anon→email upgrade uses supabase.auth.updateUser({email}) NOT linkIdentity (OAuth-only per Supabase docs); user_id preserved across upgrade
+- [Phase 01-security-cost-control]: Plan 01-06: triple-guard SSE abort (SDK signal + abort-event listener + ReadableStream.cancel) + APIUserAbortError suppressed by name-check
+- [Phase 01-security-cost-control]: Plan 01-06: v2-chat route.ts edits kept surgical — Plan 05c (Wave 2) layers withObservability and stream.on('finalMessage',...) on top later
+- [Phase 01-security-cost-control]: Observability uses closure-scoped request telemetry (no globalThis) — Warning 5 resolved; concurrent requests cannot see each other's prompt/output tokens
+- [Phase 01-security-cost-control]: cost_metrics_raw mirror is fire-and-forget with in-memory retry queue (cap 100, drains on next request, overflow drops oldest) — stdout log is authoritative so DB outages cannot block user responses
+- [Phase 01-security-cost-control]: Parallel Wave 1 agents can sweep-in each other's untracked files during 'git add' — individual-file staging is the policy; flag for post-milestone parallelization retrospective
 
 ### Pending Todos
 
@@ -94,6 +101,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-19T07:40:42.262Z
-Stopped at: Completed 01-01-auth-gate-PLAN.md
+Last session: 2026-04-19T11:24:25.865Z
+Stopped at: Completed 01-05a-observability-lib-PLAN.md
 Resume file: None
