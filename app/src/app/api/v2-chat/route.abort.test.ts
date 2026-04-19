@@ -38,6 +38,30 @@ function buildRequest(signal?: AbortSignal): Request {
   });
 }
 
+/**
+ * SEC-02 quota stub — every abort-flow test runs as an anon user with the
+ * gate enabled, so the route's post-auth quota check fires. Return allowed
+ * so the stream actually starts and the abort mechanics can be verified.
+ */
+function mockQuotaAllowAll() {
+  vi.doMock("@/lib/supabase-admin", () => ({
+    createAdminSupabase: () => ({
+      rpc: vi.fn(async () => ({
+        data: [
+          {
+            allowed: true,
+            tier: "anonymous",
+            reset_at: new Date(Date.now() + 86_400_000).toISOString(),
+            req_count: 1,
+            token_count: 0,
+          },
+        ],
+        error: null,
+      })),
+    }),
+  }));
+}
+
 describe("/api/v2-chat SSE abort (SEC-06)", () => {
   it("passes { signal: request.signal } to anthropic.messages.stream", async () => {
     const { mockSupabaseAnonSession } = await import("@/__tests__/fixtures/mock-supabase");
@@ -45,6 +69,7 @@ describe("/api/v2-chat SSE abort (SEC-06)", () => {
       createServerSupabase: () => Promise.resolve(mockSupabaseAnonSession("anon-sig")),
     }));
     vi.doMock("@/lib/rate-limit", () => ({ isRateLimited: async () => false }));
+    mockQuotaAllowAll();
     const { makeMockAnthropic } = await import("@/__tests__/fixtures/mock-anthropic");
     const { MockAnthropic, streamFn } = makeMockAnthropic({ text: "hello" });
     vi.doMock("@anthropic-ai/sdk", () => ({ default: MockAnthropic }));
@@ -71,6 +96,7 @@ describe("/api/v2-chat SSE abort (SEC-06)", () => {
       createServerSupabase: () => Promise.resolve(mockSupabaseAnonSession("anon-abrt")),
     }));
     vi.doMock("@/lib/rate-limit", () => ({ isRateLimited: async () => false }));
+    mockQuotaAllowAll();
     const { makeMockAnthropic } = await import("@/__tests__/fixtures/mock-anthropic");
     // chunkDelayMs keeps the stream open long enough for abort() to fire mid-iteration.
     const { MockAnthropic, abortFn } = makeMockAnthropic({
@@ -99,6 +125,7 @@ describe("/api/v2-chat SSE abort (SEC-06)", () => {
       createServerSupabase: () => Promise.resolve(mockSupabaseAnonSession("anon-cancel")),
     }));
     vi.doMock("@/lib/rate-limit", () => ({ isRateLimited: async () => false }));
+    mockQuotaAllowAll();
     const { makeMockAnthropic } = await import("@/__tests__/fixtures/mock-anthropic");
     const { MockAnthropic, abortFn } = makeMockAnthropic({
       text: "another slow response",
@@ -122,6 +149,7 @@ describe("/api/v2-chat SSE abort (SEC-06)", () => {
       createServerSupabase: () => Promise.resolve(mockSupabaseAnonSession("anon-swallow")),
     }));
     vi.doMock("@/lib/rate-limit", () => ({ isRateLimited: async () => false }));
+    mockQuotaAllowAll();
     const { makeMockAnthropic } = await import("@/__tests__/fixtures/mock-anthropic");
     const { MockAnthropic } = makeMockAnthropic({
       text: "still yet another slow response",

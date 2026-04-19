@@ -46,6 +46,30 @@ function buildRequest(opts: { auth?: string } = {}): Request {
   });
 }
 
+/**
+ * Stub for the SEC-02 quota check that fires AFTER auth/IP-limit for users
+ * with a stable id. Cron bypasses this; authed/anon traverse it. These tests
+ * don't care about denial logic — allow all so the route continues.
+ */
+function mockQuotaAllowAll() {
+  vi.doMock("@/lib/supabase-admin", () => ({
+    createAdminSupabase: () => ({
+      rpc: vi.fn(async () => ({
+        data: [
+          {
+            allowed: true,
+            tier: "free",
+            reset_at: new Date(Date.now() + 86_400_000).toISOString(),
+            req_count: 1,
+            token_count: 0,
+          },
+        ],
+        error: null,
+      })),
+    }),
+  }));
+}
+
 describe("/api/sheet auth gate (SEC-01)", () => {
   it("returns 401 when no session and no bearer", async () => {
     const { mockSupabaseNoSession } = await import("@/__tests__/fixtures/mock-supabase");
@@ -103,6 +127,7 @@ describe("/api/sheet auth gate (SEC-01)", () => {
       createServerSupabase: () => Promise.resolve(mockSupabaseAnonSession("anon-3")),
     }));
     vi.doMock("@/lib/rate-limit", () => ({ isRateLimited: async () => false }));
+    mockQuotaAllowAll();
     vi.doMock("@anthropic-ai/sdk", async () => {
       const { makeMockAnthropic } = await import("@/__tests__/fixtures/mock-anthropic");
       return { default: makeMockAnthropic().MockAnthropic };
@@ -121,6 +146,7 @@ describe("/api/sheet auth gate (SEC-01)", () => {
     }));
     // IP limit tripped — permanent user must still proceed.
     vi.doMock("@/lib/rate-limit", () => ({ isRateLimited: async () => true }));
+    mockQuotaAllowAll();
     vi.doMock("@anthropic-ai/sdk", async () => {
       const { makeMockAnthropic } = await import("@/__tests__/fixtures/mock-anthropic");
       return { default: makeMockAnthropic().MockAnthropic };

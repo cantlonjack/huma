@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { isRateLimited } from "@/lib/rate-limit";
 import { rateLimited, serviceUnavailable, internalError } from "@/lib/api-error";
 import { requireUser } from "@/lib/auth-guard";
+import { checkAndIncrement } from "@/lib/quota";
 import { v2ChatSchema } from "@/lib/schemas";
 import { parseBody } from "@/lib/schemas/parse";
 import type { HumaContext } from "@/types/context";
@@ -33,6 +34,27 @@ export async function POST(request: Request) {
       || "unknown";
     if (await isRateLimited(ip)) {
       return rateLimited();
+    }
+  }
+
+  // ─── Per-user quota (SEC-02) ─────────────────────────────────────────────
+  // Request-count + token-count ledger. Cron and the pre-flag-flip shim
+  // (ctx.user === null) both short-circuit — cron has CRON_SECRET auth and
+  // must not deplete any operator's quota; null-user means the auth gate is
+  // not yet enforced so there is no stable id to key against.
+  //
+  // Plan 03 will hoist budgetCheck() above this call and pass the accurate
+  // inputTokens from client.messages.countTokens(); until then we pass 0,
+  // which enforces request-count limits but leaves token limits inactive.
+  // That's intentional — Blocker 6 rejects the estChars/4 heuristic outright.
+  if (!ctx.isCron && ctx.user) {
+    const quota = await checkAndIncrement(ctx.user.id, "/api/v2-chat", 0);
+    if (!quota.allowed) {
+      return rateLimited({
+        tier: quota.tier,
+        resetAt: quota.resetAt,
+        suggest: quota.suggest,
+      });
     }
   }
 

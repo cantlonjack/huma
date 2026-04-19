@@ -3,6 +3,7 @@ import { isRateLimited } from "@/lib/rate-limit";
 import { matchTemplate, getSpecificityHints } from "@/lib/template-matcher";
 import { rateLimited, serviceUnavailable, internalError } from "@/lib/api-error";
 import { requireUser } from "@/lib/auth-guard";
+import { checkAndIncrement } from "@/lib/quota";
 import { sheetCompileSchema } from "@/lib/schemas";
 import { parseBody } from "@/lib/schemas/parse";
 import type { KnownContext } from "@/types/v2";
@@ -162,6 +163,25 @@ export async function POST(request: Request) {
       || "unknown";
     if (await isRateLimited(ip)) {
       return rateLimited();
+    }
+  }
+
+  // ─── Per-user quota (SEC-02) ─────────────────────────────────────────────
+  // Same skip-rules as v2-chat: cron bypasses (cron's operator_id is logged
+  // but the ledger is user-owned, not cron-owned), and the pre-flag-flip
+  // shim path (ctx.user === null) is a no-op.
+  //
+  // Plan 03 will supply accurate inputTokens via budgetCheck(); until then
+  // we pass 0 (request-count enforcement only — Blocker 6 explicitly rejects
+  // the estChars/4 shortcut).
+  if (!ctx.isCron && ctx.user) {
+    const quota = await checkAndIncrement(ctx.user.id, "/api/sheet", 0);
+    if (!quota.allowed) {
+      return rateLimited({
+        tier: quota.tier,
+        resetAt: quota.resetAt,
+        suggest: quota.suggest,
+      });
     }
   }
 

@@ -35,6 +35,30 @@ function buildRequest(): Request {
   });
 }
 
+/**
+ * Stub for the SEC-02 quota check that fires AFTER auth/IP-limit for users
+ * with a stable id. Tests that traverse the quota path without caring about
+ * denial logic simply return allowed=true so the route continues.
+ */
+function mockQuotaAllowAll() {
+  vi.doMock("@/lib/supabase-admin", () => ({
+    createAdminSupabase: () => ({
+      rpc: vi.fn(async () => ({
+        data: [
+          {
+            allowed: true,
+            tier: "free",
+            reset_at: new Date(Date.now() + 86_400_000).toISOString(),
+            req_count: 1,
+            token_count: 0,
+          },
+        ],
+        error: null,
+      })),
+    }),
+  }));
+}
+
 describe("/api/v2-chat auth gate (SEC-01)", () => {
   it("returns 401 when gate enabled and no session", async () => {
     const { mockSupabaseNoSession } = await import("@/__tests__/fixtures/mock-supabase");
@@ -59,6 +83,7 @@ describe("/api/v2-chat auth gate (SEC-01)", () => {
       createServerSupabase: () => Promise.resolve(mockSupabaseAnonSession("anon-1")),
     }));
     vi.doMock("@/lib/rate-limit", () => ({ isRateLimited: async () => false }));
+    mockQuotaAllowAll();
     const { makeMockAnthropic } = await import("@/__tests__/fixtures/mock-anthropic");
     const { MockAnthropic } = makeMockAnthropic({ text: "hi" });
     vi.doMock("@anthropic-ai/sdk", () => ({ default: MockAnthropic }));
@@ -76,6 +101,7 @@ describe("/api/v2-chat auth gate (SEC-01)", () => {
     }));
     // IP limit tripped — but Warning 1 says permanent users must skip it.
     vi.doMock("@/lib/rate-limit", () => ({ isRateLimited: async () => true }));
+    mockQuotaAllowAll();
     const { makeMockAnthropic } = await import("@/__tests__/fixtures/mock-anthropic");
     const { MockAnthropic } = makeMockAnthropic({ text: "hi" });
     vi.doMock("@anthropic-ai/sdk", () => ({ default: MockAnthropic }));
