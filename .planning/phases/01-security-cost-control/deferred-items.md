@@ -17,3 +17,19 @@ Out-of-scope discoveries made during plan execution. These are tracked for later
 **Suggested fix (for later):** Type the chain methods as `(...args: unknown[]) => ...` so they accept any call signature, matching Supabase's fluent API.
 
 ---
+
+## From Plan 01-05c (observability-streaming)
+
+### BudgetResult discriminated-union narrowing — pre-existing
+
+**Files:** `app/src/app/api/v2-chat/route.ts`, `app/src/app/api/sheet/route.ts`
+
+**Error:** `TS2339: Property 'messages'/'trimmedCount'/'inputTokens' does not exist on type 'BudgetResult | BudgetTooLarge'` at three lines each.
+
+**Origin:** Plan 01-03's `budgetCheck()` returns a discriminated union. The `"tooLarge" in budget && budget.tooLarge` guard narrows semantically but doesn't satisfy TypeScript's structural narrowing — the `.messages`/`.trimmedCount`/`.inputTokens` accesses after the guard are flagged even though they're safe at runtime.
+
+**Why deferred:** Pre-existing baseline errors (verified via `git stash` + `tsc --noEmit`); not introduced by Plan 05c. Runtime behavior is correct — all Vitest cases green. Plan 05c explicitly stays out of Plan 03 territory per parallel-execution discipline (v2-chat/route.ts is my file but the offending block is Plan 03's output).
+
+**Suggested fix (for later):** Rename `BudgetTooLarge.tooLarge` to a proper discriminator (e.g., add `kind: "too-large"` vs `kind: "ok"`), or widen the inline guard to a dedicated type-predicate helper `isBudgetOk(b): b is BudgetOk`.
+
+---
