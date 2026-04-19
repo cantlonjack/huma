@@ -4,15 +4,15 @@ milestone: v0.1
 milestone_name: milestone
 current_plan: 10
 status: executing
-stopped_at: Completed 01-05b-observability-routes-PLAN.md
-last_updated: "2026-04-19T12:28:49.034Z"
+stopped_at: Completed 01-05c-observability-streaming-PLAN.md
+last_updated: "2026-04-19T12:29:44.265Z"
 last_activity: 2026-04-19
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 10
   completed_plans: 9
-  percent: 70
+  percent: 90
 ---
 
 # Project State
@@ -32,7 +32,7 @@ Total Plans in Phase: 10
 Status: In Progress
 Last activity: 2026-04-19
 
-Progress: [███████░░░] 70% (7/10 plans complete in Phase 1)
+Progress: [█████████░] 90% (9/10 plans complete in Phase 1)
 
 ## Performance Metrics
 
@@ -75,6 +75,7 @@ Progress: [███████░░░] 70% (7/10 plans complete in Phase 1)
 | Phase 01-security-cost-control P04 | 6 min | 4 tasks | 8 files |
 | Phase 01-security-cost-control P03-token-budget | 10 min | 3 tasks | 8 files |
 | Phase 01-security-cost-control P01-05b | 11 min | 3 tasks | 10 files |
+| Phase 01-security-cost-control P05c | 11 min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -115,6 +116,11 @@ Recent decisions affecting current work:
 - [Phase 01-security-cost-control]: Plan 01-05b: accumulate() closure helper for multi-call routes (whole-compute) — sums across 1-2 create() calls so the log reflects full per-request Anthropic spend
 - [Phase 01-security-cost-control]: Plan 01-05b: obs.setUserId late-resolution for routes whose auth happens inside the wrap (reflection late Supabase getUser, canvas-regenerate Bearer auth, weekly-review optional persistence)
 - [Phase 01-security-cost-control]: Plan 01-05b: observability-coverage meta-test uses path-segment (not substring) matching for INDIRECT_ALLOWLIST — prevents false negatives if a future unrelated file contains 'morning-sheet' in its path
+- [Phase 01-security-cost-control]: Plan 01-05c: Reconciliation log pattern — streaming routes emit TWO log entries (outer tokens=0 + {reconciles: reqId} with real tokens after finalMessage); cost-rollup GROUPs BY req_id + MAX(tokens) to collapse
+- [Phase 01-security-cost-control]: Plan 01-05c: Closure-scoped finalMessage listener (Warning 5: NO globalThis) captures obs + ctx; concurrent streaming requests remain isolated
+- [Phase 01-security-cost-control]: Plan 01-05c: Secondary user_quota_ledger.update().eq('req_id', obs.reqId) fires from finalMessage listener — reconciles ledger token_count with actual stream output (Blocker 6 follow-through); checkAndIncrement takes obs.reqId as 4th arg
+- [Phase 01-security-cost-control]: Plan 01-05c: cost-rollup source:'system' (ops infra) vs morning-sheet source:'cron' (operator-facing scheduled work) — keeps per-operator analytics dashboards clean; Sonnet USD baseline rates; 48h raw retention + 24h rollup window
+- [Phase 01-security-cost-control]: Plan 01-05c: DOCUMENTED GAP — morning-sheet cron-level per-operator log carries prompt=output=0 because /api/sheet and /api/insight don't expose response.usage in JSON bodies. Children routes log their own usage via 05b. Phase 2 may lift usage into JSON for cron-level accuracy
 
 ### Pending Todos
 
@@ -129,6 +135,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-19T12:28:23.896Z
-Stopped at: Completed 01-05b-observability-routes-PLAN.md
+Last session: 2026-04-19T12:28:51.797Z
+Stopped at: Completed 01-05c-observability-streaming-PLAN.md
 Resume file: None
