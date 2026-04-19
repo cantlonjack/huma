@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { isRateLimited } from "@/lib/rate-limit";
 import { matchTemplate, getSpecificityHints } from "@/lib/template-matcher";
-import { rateLimited, serviceUnavailable, internalError } from "@/lib/api-error";
+import { rateLimited, serviceUnavailable, internalError, apiError } from "@/lib/api-error";
 import { requireUser } from "@/lib/auth-guard";
 import { checkAndIncrement } from "@/lib/quota";
 import { sheetCompileSchema } from "@/lib/schemas";
@@ -9,6 +9,7 @@ import { parseBody } from "@/lib/schemas/parse";
 import type { KnownContext } from "@/types/v2";
 import type { HumaContext } from "@/types/context";
 import { compressConversationHistory } from "@/lib/context-encoding";
+import { budgetCheck, pickBudget } from "@/lib/services/prompt-builder";
 import { allSeeds } from "@/data/rppl-seeds";
 import {
   getSeason,
@@ -166,24 +167,11 @@ export async function POST(request: Request) {
     }
   }
 
-  // ─── Per-user quota (SEC-02) ─────────────────────────────────────────────
-  // Same skip-rules as v2-chat: cron bypasses (cron's operator_id is logged
-  // but the ledger is user-owned, not cron-owned), and the pre-flag-flip
-  // shim path (ctx.user === null) is a no-op.
-  //
-  // Plan 03 will supply accurate inputTokens via budgetCheck(); until then
-  // we pass 0 (request-count enforcement only — Blocker 6 explicitly rejects
-  // the estChars/4 shortcut).
-  if (!ctx.isCron && ctx.user) {
-    const quota = await checkAndIncrement(ctx.user.id, "/api/sheet", 0);
-    if (!quota.allowed) {
-      return rateLimited({
-        tier: quota.tier,
-        resetAt: quota.resetAt,
-        suggest: quota.suggest,
-      });
-    }
-  }
+  // ─── Per-user quota (SEC-02) — runs AFTER budgetCheck below ──────────────
+  // Blocker 6 resolution (Plan 01-03): quota RPC now receives accurate
+  // inputTokens from anthropic.messages.countTokens(). The call site moved
+  // below parseBody + prompt assembly + budgetCheck; see the SEC-03 block
+  // inside the try block near the anthropic.messages.create call.
 
   const parsed = await parseBody(request, sheetCompileSchema);
   if (parsed.error) return parsed.error;
@@ -360,17 +348,62 @@ Meal plans should respect budget. Purchases should reference actual amounts.
 
     const SHEET_SYSTEM_STATIC = "You compile daily production sheets — specific actions, not generic behaviors. Return ONLY valid JSON. No markdown, no explanation. Voice: fence-post neighbor — direct, specific, warm without soft. Every headline names what to do today, not what the behavior is.";
 
+    const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514";
+    const systemBlocks = [
+      {
+        type: "text" as const,
+        text: SHEET_SYSTEM_STATIC,
+        cache_control: { type: "ephemeral" as const },
+      },
+    ];
+    let dispatchMessages: Array<{ role: "user" | "assistant"; content: string }> = [
+      { role: "user", content: prompt },
+    ];
+
+    // ─── SEC-03: token budget (runs BEFORE quota — Blocker 6) ────────────
+    // Cron bypasses budget entirely — scheduled operator traffic uses a
+    // known-good prompt size and must never 413 out of the morning briefing.
+    let trimmedCount = 0;
+    let inputTokens = 0;
+    if (!ctx.isCron) {
+      const budget = await budgetCheck({
+        anthropic,
+        model,
+        system: systemBlocks,
+        messages: dispatchMessages,
+        limit: pickBudget(model),
+      });
+      if ("tooLarge" in budget && budget.tooLarge) {
+        return apiError(
+          "This thread's gotten long. Start a new one — I'll catch you up from your shape.",
+          "PAYLOAD_TOO_LARGE",
+          413,
+        );
+      }
+      dispatchMessages = budget.messages as typeof dispatchMessages;
+      trimmedCount = budget.trimmedCount;
+      inputTokens = budget.inputTokens;
+    }
+
+    // ─── SEC-02: per-user quota (Blocker 6: accurate inputTokens) ────────
+    // Cron bypasses (scheduled traffic is not user-owned); pre-flag-flip
+    // shim (ctx.user === null) also bypasses (no stable id to key against).
+    if (!ctx.isCron && ctx.user) {
+      const quota = await checkAndIncrement(ctx.user.id, "/api/sheet", inputTokens);
+      if (!quota.allowed) {
+        return rateLimited({
+          tier: quota.tier,
+          resetAt: quota.resetAt,
+          suggest: quota.suggest,
+        });
+      }
+    }
+
     const response = await anthropic.messages.create({
-      model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514",
+      model,
       max_tokens: 2048,
-      system: [
-        {
-          type: "text" as const,
-          text: SHEET_SYSTEM_STATIC,
-          cache_control: { type: "ephemeral" as const },
-        },
-      ],
-      messages: [{ role: "user", content: prompt }],
+      system: systemBlocks,
+      messages: dispatchMessages,
     });
 
     const text = response.content[0].type === "text" ? response.content[0].text : "{}";
@@ -385,12 +418,19 @@ Meal plans should respect budget. Purchases should reference actual amounts.
 
     const entries = (parsed.entries || []).slice(0, 5);
 
-    return Response.json({
+    // SEC-03: surface trim events to the client via X-Huma-Truncated.
+    // Header omitted when no trim happened (trimmedCount === 0).
+    const payload = {
       entries,
       through_line: parsed.through_line || null,
       opening: parsed.opening || null,
       date,
-    });
+    };
+    const responseHeaders: Record<string, string> = { "Content-Type": "application/json" };
+    if (trimmedCount > 0) {
+      responseHeaders["X-Huma-Truncated"] = `count=${trimmedCount},reason=budget`;
+    }
+    return new Response(JSON.stringify(payload), { status: 200, headers: responseHeaders });
   } catch (err) {
     console.error("Sheet compilation error:", err);
     return internalError("Failed to compile sheet.");

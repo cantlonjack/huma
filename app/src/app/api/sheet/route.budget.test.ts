@@ -199,39 +199,22 @@ describe("/api/sheet budget wiring (SEC-03 + SEC-02 Blocker 6)", () => {
       text: JSON.stringify({ opening: "hi", through_line: "go", entries: [] }),
       inputTokens: 1_000,
     });
-    // Sheet uses Sonnet (80K) unconditionally. Two trims, then fits.
+    // Sheet dispatches a single messages[] entry (the assembled sheet prompt).
+    // So at most ONE trim is possible: drop that single message, then see if
+    // the system block alone fits. Script: first call overflows (triggers
+    // trim to msgs=[]), second call fits → trimmedCount=1.
     countTokens
       .mockResolvedValueOnce({ input_tokens: 100_000 })
-      .mockResolvedValueOnce({ input_tokens: 90_000 })
       .mockResolvedValueOnce({ input_tokens: 50_000 });
     vi.doMock("@anthropic-ai/sdk", () => ({ default: MockAnthropic }));
 
     const { POST } = await import("./route");
-    // Sheet builds messages[] internally from req.conversationMessages — to
-    // guarantee ≥2 entries exist so two trims can happen, include two
-    // messages in the request body.
-    const body = buildSheetBody();
-    const req = new Request("http://localhost/api/sheet", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-forwarded-for": "127.0.0.1",
-      },
-      body: JSON.stringify({
-        ...body,
-        conversationMessages: [
-          { role: "user", content: "turn 1" },
-          { role: "assistant", content: "reply 1" },
-          { role: "user", content: "turn 2" },
-        ],
-      }),
-    });
-    const res = await POST(req);
+    const res = await POST(buildRequest());
 
     expect(res.status).toBe(200);
     const truncated = res.headers.get("X-Huma-Truncated");
     expect(truncated).not.toBeNull();
-    expect(truncated).toMatch(/count=2,reason=budget/);
+    expect(truncated).toMatch(/count=1,reason=budget/);
   });
 
   it("cron (Bearer CRON_SECRET) bypasses both budgetCheck AND quota", async () => {

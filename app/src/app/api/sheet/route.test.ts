@@ -10,6 +10,11 @@ const capturedCalls: Array<{ system: unknown; messages: Array<{ role: string; co
 vi.mock("@anthropic-ai/sdk", () => {
   class MockAnthropic {
     messages = {
+      // SEC-03 (Plan 01-03): budgetCheck calls countTokens() before the
+      // create() dispatch, so every Anthropic mock used by route tests must
+      // stub it. Return a count well below the Sonnet 80K ceiling so no
+      // trimming or 413 happens and the test can focus on the prompt payload.
+      countTokens: async () => ({ input_tokens: 5_000 }),
       create: async (args: {
         system?: unknown;
         messages: Array<{ role: string; content: string }>;
