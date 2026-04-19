@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
-current_plan: 6
+current_plan: 7
 status: executing
-stopped_at: Completed 01-02-quota-ledger-PLAN.md
-last_updated: "2026-04-19T11:43:20.282Z"
+stopped_at: Completed 01-04-sanitizer-PLAN.md
+last_updated: "2026-04-19T11:55:25.458Z"
 last_activity: 2026-04-19
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 10
-  completed_plans: 5
-  percent: 50
+  completed_plans: 6
+  percent: 60
 ---
 
 # Project State
@@ -27,25 +27,25 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 ## Current Position
 
 Phase: 1 of 8 (Security & Cost Control)
-Current Plan: 6
+Current Plan: 7
 Total Plans in Phase: 10
 Status: In Progress
 Last activity: 2026-04-19
 
-Progress: [█████░░░░░] 50% (5/10 plans complete in Phase 1)
+Progress: [██████░░░░] 60% (6/10 plans complete in Phase 1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: ~13 min
-- Total execution time: ~4h 7m (includes 3h 32m long-running P06 that spanned multiple sessions)
+- Total plans completed: 6
+- Average duration: ~12 min
+- Total execution time: ~4h 13m (includes 3h 32m long-running P06 that spanned multiple sessions; Plan 04 added 6 min resumption session)
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Security & Cost Control | 5 | 4h 7m | ~13 min |
+| 1. Security & Cost Control | 6 | 4h 13m | ~12 min |
 | 2. Regenerative Math Honesty | 0 | — | — |
 | 3. Onboarding Visibility | 0 | — | — |
 | 4. Landing & Funnel Instrumentation | 0 | — | — |
@@ -55,8 +55,8 @@ Progress: [█████░░░░░] 50% (5/10 plans complete in Phase 1)
 | 8. Commons, Protocol, Graduate Flywheel | 0 | — | — |
 
 **Recent Trend:**
-- Last 5 plans: 01-00 (4 min), 01-01 (15 min), 01-06 (3h 32m), 01-05a (5 min), 01-02 (15 min)
-- Trend: 5 plan sample — TDD overhead consistent for gated routes; P06 outlier was spanned-session work, not active time
+- Last 6 plans: 01-00 (4 min), 01-01 (15 min), 01-06 (3h 32m), 01-05a (5 min), 01-02 (15 min), 01-04 (6 min resumption)
+- Trend: 6 plan sample — TDD overhead consistent for gated routes; P06 outlier was spanned-session work; P04 resumption was mostly test-authoring since sanitize.ts pre-landed
 
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
@@ -65,11 +65,13 @@ Progress: [█████░░░░░] 50% (5/10 plans complete in Phase 1)
 | 01-06-sse-abort | 3h 32m | 3 tasks | 3 files |
 | 01-05a-observability-lib | 5 min | 2 tasks | 6 files |
 | 01-02-quota-ledger | 15 min | 3 tasks | 12 files (4 created, 8 modified) |
+| 01-04-sanitizer | 6 min (resume) | 4 tasks | 8 files (3 created this session + 2 pre-landed d3886a1 + 3 modified) |
 
 *Updated after each plan completion*
 | Phase 01-security-cost-control P06 | 3h 32m | 3 tasks | 3 files |
 | Phase 01-security-cost-control P05a-observability-lib | 5 min | 2 tasks | 6 files |
 | Phase 01-security-cost-control P02-quota-ledger | 15 min | 3 tasks | 12 files |
+| Phase 01-security-cost-control P04 | 6 min | 4 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -97,6 +99,10 @@ Recent decisions affecting current work:
 - [Phase 01-security-cost-control]: Plan 01-02: atomic enforcement via SECURITY DEFINER RPC with FOR UPDATE row lock — SQL-level consistency, no app-side retry loop
 - [Phase 01-security-cost-control]: Plan 01-02: user_quota_ledger.req_id column + partial index enables Plan 05c output-token reconciliation via UPDATE keyed on req_id
 - [Phase 01-security-cost-control]: Plan 01-02: Blocker 5 closed — CONTEXT.md 'ten' was illustrative; QuotaCard free-tier copy says 'fifty' to match 50/day spec
+- [Phase 01-security-cost-control]: Plan 01-04: sanitize.ts + sanitize.test.ts landed pre-resumption in parallel commit d3886a1 (01-02 TDD RED sweep-in via git add -A); files match plan spec, 13 tests already green — all subsequent 01-04 work used explicit per-file git add
+- [Phase 01-security-cost-control]: Plan 01-04: injection-phrase stripping is SILENT (iterative peel, bound 10); only [[/]] trigger hard 400 — matches CONTEXT.md design
+- [Phase 01-security-cost-control]: Plan 01-04: route-local schemas (weekly-review.aspirationSchema + reflection.reflectionSchema) refined in place rather than lifted to index.ts — coverage.test.ts asserts via mocked POST handlers + HTTP 400 + /reserved marker/i; Blocker 1 case e pattern
+- [Phase 01-security-cost-control]: Plan 01-04: audit.test.ts enumerate-then-assert pattern with bounded-lookahead regex (fieldKey:...userTextField within 120 chars) — Blocker 1 silent-skip removed; every enumerated user-text field has a per-field it() case with actionable failure message
 
 ### Pending Todos
 
@@ -111,6 +117,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-19T11:42:48.582Z
-Stopped at: Completed 01-02-quota-ledger-PLAN.md
+Last session: 2026-04-19T11:55:25.452Z
+Stopped at: Completed 01-04-sanitizer-PLAN.md
 Resume file: None
