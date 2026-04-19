@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { internalError } from "@/lib/api-error";
+import { withObservability } from "@/lib/observability";
 import { wholeComputeSchema } from "@/lib/schemas";
 import { parseBody } from "@/lib/schemas/parse";
 
@@ -43,7 +44,24 @@ Respond with JSON only:
   "observation": "One sentence (max 20 words) noting what the behavioral data reveals — e.g. 'Your strongest patterns all center on evening rituals with your family.'"
 }`;
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
+  return withObservability(
+    request,
+    "/api/whole-compute",
+    "user",
+    () => null,
+    async (obs) => {
+      // Accumulate tokens across multiple Anthropic calls (e.g. compute="both"
+      // fires archetype + why in parallel). Each call's usage sums into the
+      // closure totals so the log reflects full per-request spend.
+      let totalIn = 0;
+      let totalOut = 0;
+      const accumulate = (u: { input_tokens: number; output_tokens: number }) => {
+        totalIn += u.input_tokens;
+        totalOut += u.output_tokens;
+        obs.setPromptTokens(totalIn);
+        obs.setOutputTokens(totalOut);
+      };
   try {
     const parsed = await parseBody(request, wholeComputeSchema);
     if (parsed.error) return parsed.error;
@@ -66,6 +84,9 @@ ${contextData}`;
         system: WHY_EVOLVE_SYSTEM,
         messages: [{ role: "user", content: prompt }],
       });
+
+      // ─── SEC-05 token attribution ─────────────────────────────────
+      accumulate(res.usage);
 
       const text = res.content[0].type === "text" ? res.content[0].text : "";
       try {
@@ -101,6 +122,10 @@ ${contextData}`;
 
         const [archetypeRes, whyRes] = await Promise.all([archetypePromise, whyPromise]);
 
+        // ─── SEC-05 token attribution (both parallel calls) ───────────
+        accumulate(archetypeRes.usage);
+        accumulate(whyRes.usage);
+
         const archetypeText = archetypeRes.content[0].type === "text" ? archetypeRes.content[0].text : "";
         const whyText = whyRes.content[0].type === "text" ? whyRes.content[0].text : "";
 
@@ -115,6 +140,8 @@ ${contextData}`;
         } catch { /* parse fail */ }
       } else {
         const archetypeRes = await archetypePromise;
+        // ─── SEC-05 token attribution ─────────────────────────────────
+        accumulate(archetypeRes.usage);
         const archetypeText = archetypeRes.content[0].type === "text" ? archetypeRes.content[0].text : "";
         try {
           results.archetypes = JSON.parse(archetypeText.replace(/```json\n?|```/g, "").trim());
@@ -127,6 +154,8 @@ ${contextData}`;
         system: WHY_SYSTEM,
         messages: [{ role: "user", content: userPrompt }],
       });
+      // ─── SEC-05 token attribution ───────────────────────────────────
+      accumulate(whyRes.usage);
       const whyText = whyRes.content[0].type === "text" ? whyRes.content[0].text : "";
       try {
         const parsed = JSON.parse(whyText.replace(/```json\n?|```/g, "").trim());
@@ -139,4 +168,6 @@ ${contextData}`;
     console.error("whole-compute error:", error);
     return internalError("Computation failed.");
   }
+    },
+  );
 }

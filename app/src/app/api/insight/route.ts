@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { serviceUnavailable, internalError } from "@/lib/api-error";
+import { withObservability } from "@/lib/observability";
 import { insightSchema, type InsightRequest } from "@/lib/schemas";
 import { parseBody } from "@/lib/schemas/parse";
 
@@ -118,11 +119,17 @@ Generate a 3-sentence insight:
 Voice: fence-post neighbor. Direct. Specific. No therapy-speak. No "I notice that..." Just state what you see.
 Return ONLY the 3-sentence insight text. Nothing else.`;
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
   if (!process.env.ANTHROPIC_API_KEY) {
     return serviceUnavailable();
   }
 
+  return withObservability(
+    request,
+    "/api/insight",
+    "user",
+    () => null,
+    async (obs) => {
   const parsed = await parseBody(request, insightSchema);
   if (parsed.error) return parsed.error;
   const { name, entries, behaviorMeta } = parsed.data;
@@ -162,6 +169,10 @@ export async function POST(request: Request) {
       messages: [{ role: "user", content: prompt }],
     });
 
+    // ─── SEC-05 token attribution ─────────────────────────────────────────
+    obs.setPromptTokens(response.usage.input_tokens);
+    obs.setOutputTokens(response.usage.output_tokens);
+
     const insightText = response.content[0].type === "text" ? response.content[0].text.trim() : "";
 
     return Response.json({
@@ -185,4 +196,6 @@ export async function POST(request: Request) {
     console.error("Insight generation error:", err);
     return internalError("Failed to generate insight.");
   }
+    },
+  );
 }
