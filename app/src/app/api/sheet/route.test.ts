@@ -31,6 +31,9 @@ vi.mock("@anthropic-ai/sdk", () => {
               }),
             },
           ],
+          // SEC-05 (Plan 01-05b): withObservability reads resp.usage after
+          // create() — the real SDK always returns it, so the mock must too.
+          usage: { input_tokens: 5_000, output_tokens: 50 },
         };
       },
     };

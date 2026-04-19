@@ -4,6 +4,7 @@ import { matchTemplate, getSpecificityHints } from "@/lib/template-matcher";
 import { rateLimited, serviceUnavailable, internalError, apiError } from "@/lib/api-error";
 import { requireUser } from "@/lib/auth-guard";
 import { checkAndIncrement } from "@/lib/quota";
+import { withObservability } from "@/lib/observability";
 import { sheetCompileSchema } from "@/lib/schemas";
 import { parseBody } from "@/lib/schemas/parse";
 import type { KnownContext } from "@/types/v2";
@@ -142,7 +143,7 @@ Every entry MUST have: behavior_key, aspiration_id, headline, detail, because, t
 Optional per entry: connection_note, pattern_note.
 MAXIMUM 5 entries. opening and through_line are REQUIRED. Return ONLY valid JSON.`;
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
   if (!process.env.ANTHROPIC_API_KEY) {
     return serviceUnavailable();
   }
@@ -152,9 +153,24 @@ export async function POST(request: Request) {
   // Returns 401 when PHASE_1_GATE_ENABLED=true and neither path authenticates.
   // Pre-flag-flip path returns ctx.user=null, source:"system".
   const auth = await requireUser(request);
-  if (auth.error) return auth.error;
+  if (auth.error) {
+    // Uniform observability: log the 401 short-circuit too.
+    return withObservability(
+      request,
+      "/api/sheet",
+      "user",
+      () => null,
+      async () => auth.error!,
+    );
+  }
   const { ctx } = auth;
 
+  return withObservability(
+    request,
+    "/api/sheet",
+    ctx.source,
+    () => ctx.user?.id ?? null,
+    async (obs) => {
   // ─── IP rate-limit (Warning 1: anon/unauth only; also skip cron) ─────────
   // Cron jobs bypass both auth and IP-limit (scheduled operator traffic).
   // Permanent users skip IP-limit so shared-IP operators are not penalized.
@@ -406,6 +422,12 @@ Meal plans should respect budget. Purchases should reference actual amounts.
       messages: dispatchMessages,
     });
 
+    // ─── SEC-05: token attribution ───────────────────────────────────────
+    // Capture Anthropic usage BEFORE returning so the withObservability
+    // finally-block sees non-zero tokens (Warning 5 in practice).
+    obs.setPromptTokens(response.usage.input_tokens);
+    obs.setOutputTokens(response.usage.output_tokens);
+
     const text = response.content[0].type === "text" ? response.content[0].text : "{}";
 
     let parsed: { entries: Array<Record<string, unknown>>; through_line?: string; opening?: string };
@@ -435,4 +457,6 @@ Meal plans should respect budget. Purchases should reference actual amounts.
     console.error("Sheet compilation error:", err);
     return internalError("Failed to compile sheet.");
   }
+    },
+  );
 }
