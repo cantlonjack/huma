@@ -55,7 +55,14 @@ Config: `parallelization: true`, `granularity: standard` — eight phases matche
   4. Prompt-injection sanitizer rejects `[[`/`]]` delimiters with 400, strips "ignore previous instructions" patterns, NFC-normalizes input
   5. Every API route emits structured JSON log with req_id, user_id, route, prompt_tokens, output_tokens, latency_ms, status
   6. SSE stream in `v2-chat/route.ts` aborts the Anthropic stream when `request.signal.aborted` fires (verified via disconnect test)
-**Plans**: TBD
+**Plans**: 7 plans (Wave 1: plans 01-06 parallel; Wave 2: plan 07 enablement after all W1 merge)
+- [ ] 01-01-auth-gate-PLAN.md — SEC-01: requireUser + anon session + AuthModal upgrade + smoke
+- [ ] 01-02-quota-ledger-PLAN.md — SEC-02: migration 016 + quota.ts + route wire + QuotaCard + smoke
+- [ ] 01-03-token-budget-PLAN.md — SEC-03: budgetCheck + countTokens + v2-chat/sheet wires + X-Huma-Truncated
+- [ ] 01-04-sanitizer-PLAN.md — SEC-04: sanitize.ts + Zod refinements + coverage meta-test + smoke
+- [ ] 01-05-observability-PLAN.md — SEC-05: ulid + withObservability + 12 route wraps + cost-rollup cron + migration 017
+- [ ] 01-06-sse-abort-PLAN.md — SEC-06: {signal} option + abort handlers + manual smoke
+- [ ] 01-07-enablement-PLAN.md — All SEC: operator-in-loop migration apply + flag flip + smoke triad + rollback doc
 
 ### Phase 2: Regenerative Math Honesty (Plan P1)
 **Goal**: Make the code tell the truth the docs already tell.
@@ -152,7 +159,7 @@ Phases execute in numeric order: 1 → 2 (parallel with 3) → 3 → 4 (parallel
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Security & Cost Control (P0) | 0/TBD | Not started | - |
+| 1. Security & Cost Control (P0) | 0/7 | Planned (Wave 1: plans 01-06; Wave 2: plan 07) | - |
 | 2. Regenerative Math Honesty (P1) | 0/TBD | Not started | - |
 | 3. Onboarding Visibility (P2) | 0/TBD | Not started | - |
 | 4. Landing & Funnel Instrumentation (P3) | 0/TBD | Not started | - |
@@ -165,3 +172,4 @@ Phases execute in numeric order: 1 → 2 (parallel with 3) → 3 → 4 (parallel
 
 ---
 *Roadmap created: 2026-04-18 — derived directly from docs/Remediation-Build-Plan.md P0-P7.*
+*Phase 1 planned: 2026-04-18 — 7 plans (01-01 auth-gate, 01-02 quota-ledger, 01-03 token-budget, 01-04 sanitizer, 01-05 observability, 01-06 sse-abort, 01-07 enablement).*
