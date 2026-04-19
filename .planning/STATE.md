@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
-current_plan: 8
+current_plan: 10
 status: executing
-stopped_at: Completed 01-03-token-budget-PLAN.md
-last_updated: "2026-04-19T12:11:23.826Z"
+stopped_at: Completed 01-05b-observability-routes-PLAN.md
+last_updated: "2026-04-19T12:28:49.034Z"
 last_activity: 2026-04-19
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 10
-  completed_plans: 7
+  completed_plans: 9
   percent: 70
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 ## Current Position
 
 Phase: 1 of 8 (Security & Cost Control)
-Current Plan: 8
+Current Plan: 10
 Total Plans in Phase: 10
 Status: In Progress
 Last activity: 2026-04-19
@@ -74,6 +74,7 @@ Progress: [███████░░░] 70% (7/10 plans complete in Phase 1)
 | Phase 01-security-cost-control P02-quota-ledger | 15 min | 3 tasks | 12 files |
 | Phase 01-security-cost-control P04 | 6 min | 4 tasks | 8 files |
 | Phase 01-security-cost-control P03-token-budget | 10 min | 3 tasks | 8 files |
+| Phase 01-security-cost-control P01-05b | 11 min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -109,6 +110,11 @@ Recent decisions affecting current work:
 - [Phase 01-security-cost-control]: Plan 01-03: budgetCheck uses anthropic.messages.countTokens() (free, matches billing) — NOT @anthropic-ai/tokenizer (RESEARCH.md correction applied)
 - [Phase 01-security-cost-control]: Plan 01-03: Cron path bypasses both budget AND quota on v2-chat and sheet — scheduled operator traffic must never 413 out of morning briefings; cost control for cron lives in cadence, not per-request ledger
 - [Phase 01-security-cost-control]: Plan 01-03: Conservative default budget — unknown models fall back to Sonnet 80K cap, not Haiku 150K; 50-iteration trim loop caps pathological inputs
+- [Phase 01-security-cost-control]: Plan 01-05b: Auth-outside, handler-inside withObservability composition — keeps the 401 short-circuit observable via thin wrap without coupling the lib to AuthContext
+- [Phase 01-security-cost-control]: Plan 01-05b: Synchronous resp.usage capture via obs.setPromptTokens/setOutputTokens BEFORE Response return — closure-scoped setters mutate locals seen by finally-block (Warning 5 in practice)
+- [Phase 01-security-cost-control]: Plan 01-05b: accumulate() closure helper for multi-call routes (whole-compute) — sums across 1-2 create() calls so the log reflects full per-request Anthropic spend
+- [Phase 01-security-cost-control]: Plan 01-05b: obs.setUserId late-resolution for routes whose auth happens inside the wrap (reflection late Supabase getUser, canvas-regenerate Bearer auth, weekly-review optional persistence)
+- [Phase 01-security-cost-control]: Plan 01-05b: observability-coverage meta-test uses path-segment (not substring) matching for INDIRECT_ALLOWLIST — prevents false negatives if a future unrelated file contains 'morning-sheet' in its path
 
 ### Pending Todos
 
@@ -123,6 +129,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-19T12:11:04.559Z
-Stopped at: Completed 01-03-token-budget-PLAN.md
+Last session: 2026-04-19T12:28:23.896Z
+Stopped at: Completed 01-05b-observability-routes-PLAN.md
 Resume file: None
