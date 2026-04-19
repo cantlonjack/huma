@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { isRateLimited } from "@/lib/rate-limit";
 import { matchTemplate, getSpecificityHints } from "@/lib/template-matcher";
 import { rateLimited, serviceUnavailable, internalError } from "@/lib/api-error";
+import { requireUser } from "@/lib/auth-guard";
 import { sheetCompileSchema } from "@/lib/schemas";
 import { parseBody } from "@/lib/schemas/parse";
 import type { KnownContext } from "@/types/v2";
@@ -144,12 +145,18 @@ export async function POST(request: Request) {
     return serviceUnavailable();
   }
 
-  // Cron jobs send the secret to bypass rate limiting
-  const cronSecret = process.env.CRON_SECRET;
-  const authHeader = request.headers.get("authorization");
-  const isCron = cronSecret && authHeader === `Bearer ${cronSecret}`;
+  // ─── Auth gate (SEC-01) ──────────────────────────────────────────────────
+  // requireUser handles CRON_SECRET bearer short-circuit + Supabase session.
+  // Returns 401 when PHASE_1_GATE_ENABLED=true and neither path authenticates.
+  // Pre-flag-flip path returns ctx.user=null, source:"system".
+  const auth = await requireUser(request);
+  if (auth.error) return auth.error;
+  const { ctx } = auth;
 
-  if (!isCron) {
+  // ─── IP rate-limit (Warning 1: anon/unauth only; also skip cron) ─────────
+  // Cron jobs bypass both auth and IP-limit (scheduled operator traffic).
+  // Permanent users skip IP-limit so shared-IP operators are not penalized.
+  if (!ctx.isCron && (!ctx.user || ctx.user.is_anonymous)) {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
       || request.headers.get("x-real-ip")
       || "unknown";

@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { isRateLimited } from "@/lib/rate-limit";
 import { rateLimited, serviceUnavailable, internalError } from "@/lib/api-error";
+import { requireUser } from "@/lib/auth-guard";
 import { v2ChatSchema } from "@/lib/schemas";
 import { parseBody } from "@/lib/schemas/parse";
 import type { HumaContext } from "@/types/context";
@@ -14,11 +15,25 @@ export async function POST(request: Request) {
     return serviceUnavailable();
   }
 
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-    || request.headers.get("x-real-ip")
-    || "unknown";
-  if (await isRateLimited(ip)) {
-    return rateLimited();
+  // ─── Auth gate (SEC-01) ──────────────────────────────────────────────────
+  // requireUser returns 401 when PHASE_1_GATE_ENABLED=true and no session.
+  // Pre-flag-flip path returns ctx.user=null, source:"system".
+  // ctx is referenced downstream by Plans 02 (quota) and 05b (observability).
+  const auth = await requireUser(request);
+  if (auth.error) return auth.error;
+  const { ctx } = auth;
+
+  // ─── IP rate-limit (Warning 1: anon/unauth only) ─────────────────────────
+  // Permanent users are NOT penalized by the shared-IP cap — their per-user
+  // Supabase ledger (Plan 02) covers them. This avoids hurting corporate /
+  // family-WiFi operators who share an egress IP.
+  if (!ctx.user || ctx.user.is_anonymous) {
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      || request.headers.get("x-real-ip")
+      || "unknown";
+    if (await isRateLimited(ip)) {
+      return rateLimited();
+    }
   }
 
   const parsed = await parseBody(request, v2ChatSchema);

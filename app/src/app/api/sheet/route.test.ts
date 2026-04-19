@@ -33,9 +33,21 @@ vi.mock("@anthropic-ai/sdk", () => {
   return { default: MockAnthropic };
 });
 
-// Ensure the API key check in the route passes.
+// Mock Supabase server so requireUser can run outside a Next.js request scope
+// (no cookies() call). With PHASE_1_GATE_ENABLED unset, requireUser returns
+// ctx with source:"system" and lets the request proceed — matching the pre-
+// flag-flip production behavior that Plan 07 later enables.
+vi.mock("@/lib/supabase-server", async () => {
+  const { mockSupabaseNoSession } = await import("@/__tests__/fixtures/mock-supabase");
+  return { createServerSupabase: () => Promise.resolve(mockSupabaseNoSession()) };
+});
+
+// Ensure the API key check in the route passes and the auth gate is off so
+// this pre-existing compressed-encoding test stays green without needing to
+// assert on the auth surface (which route.auth.test.ts covers separately).
 beforeAll(() => {
   process.env.ANTHROPIC_API_KEY = "test-key";
+  process.env.PHASE_1_GATE_ENABLED = "false";
 });
 
 // ─── Helper to build a realistic SheetCompileRequest body ─────────────────────
