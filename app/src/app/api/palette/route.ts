@@ -1,17 +1,24 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { paletteConcepts } from "@/data/palette-concepts";
 import type { PaletteConcept } from "@/types/v2";
+import { withObservability } from "@/lib/observability";
 import { paletteSchema } from "@/lib/schemas";
 import { parseBody } from "@/lib/schemas/parse";
 
 // Adapt engine concepts to V2 type (same shape, different module)
 const PALETTE_CONCEPTS: PaletteConcept[] = paletteConcepts as unknown as PaletteConcept[];
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
   if (!process.env.ANTHROPIC_API_KEY) {
     return Response.json({ error: "Service temporarily unavailable" }, { status: 503 });
   }
 
+  return withObservability(
+    request,
+    "/api/palette",
+    "user",
+    () => null,
+    async (obs) => {
   const parsed = await parseBody(request, paletteSchema);
   if (parsed.error) return parsed.error;
   const { conversationSoFar, selectedConcepts } = parsed.data;
@@ -44,6 +51,10 @@ export async function POST(request: Request) {
       ],
     });
 
+    // ─── SEC-05 token attribution ─────────────────────────────────────────
+    obs.setPromptTokens(response.usage.input_tokens);
+    obs.setOutputTokens(response.usage.output_tokens);
+
     const text = response.content[0].type === "text" ? response.content[0].text : "[]";
 
     // Parse the JSON array from the response
@@ -67,4 +78,6 @@ export async function POST(request: Request) {
     const fallback = availableConcepts.slice(0, 8);
     return Response.json({ concepts: fallback });
   }
+    },
+  );
 }

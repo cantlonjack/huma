@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { isRateLimited } from "@/lib/rate-limit";
 import { rateLimited, serviceUnavailable, internalError } from "@/lib/api-error";
+import { withObservability } from "@/lib/observability";
 import { nudgeSchema } from "@/lib/schemas";
 import { parseBody } from "@/lib/schemas/parse";
 import { contextForPrompt } from "@/lib/context-model";
@@ -8,11 +9,17 @@ import { createEmptyContext } from "@/types/context";
 import type { HumaContext } from "@/types/context";
 import { NUDGE_PROMPT, summarizeHistory } from "@/lib/services/nudge-service";
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
   if (!process.env.ANTHROPIC_API_KEY) {
     return serviceUnavailable();
   }
 
+  return withObservability(
+    request,
+    "/api/nudge",
+    "user",
+    () => null,
+    async (obs) => {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
     || request.headers.get("x-real-ip")
     || "unknown";
@@ -83,6 +90,10 @@ export async function POST(request: Request) {
       messages: [{ role: "user", content: prompt }],
     });
 
+    // ─── SEC-05 token attribution ─────────────────────────────────────────
+    obs.setPromptTokens(response.usage.input_tokens);
+    obs.setOutputTokens(response.usage.output_tokens);
+
     const text = response.content[0].type === "text" ? response.content[0].text : "{}";
 
     let result: { nudges: Array<{ id: string; type: string; text: string; source?: string }> };
@@ -103,4 +114,6 @@ export async function POST(request: Request) {
     console.error("Nudge generation error:", err);
     return internalError("Failed to generate nudges.");
   }
+    },
+  );
 }
