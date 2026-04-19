@@ -89,31 +89,49 @@ export async function POST(request: Request) {
       ? "claude-haiku-4-5-20251001"
       : (process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514");
 
-    const stream = anthropic.messages.stream({
-      model,
-      max_tokens: 2048,
-      system: [
-        {
-          type: "text" as const,
-          text: staticPrompt,
-          cache_control: { type: "ephemeral" as const },
-        },
-        {
-          type: "text" as const,
-          text: dynamicPrompt,
-        },
-      ],
-      messages: messages.map((m) => ({
-        role: (m.role === "user" ? "user" : "assistant") as "user" | "assistant",
-        content: m.content,
-      })),
-    });
+    // SEC-06: pass request.signal so the SDK's underlying fetch aborts when
+    // the client disconnects. Without this, we keep paying for tokens no one
+    // will read.
+    const stream = anthropic.messages.stream(
+      {
+        model,
+        max_tokens: 2048,
+        system: [
+          {
+            type: "text" as const,
+            text: staticPrompt,
+            cache_control: { type: "ephemeral" as const },
+          },
+          {
+            type: "text" as const,
+            text: dynamicPrompt,
+          },
+        ],
+        messages: messages.map((m) => ({
+          role: (m.role === "user" ? "user" : "assistant") as "user" | "assistant",
+          content: m.content,
+        })),
+      },
+      { signal: request.signal },
+    );
 
     const readableStream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
+
+        // Belt-and-suspenders abort wiring. The SDK's signal option catches the
+        // common case; this listener also calls stream.abort() explicitly so
+        // Anthropic tears down immediately on browser nav / tab close.
+        const onAbort = () => {
+          try { stream.abort(); } catch { /* already aborted */ }
+          try { controller.close(); } catch { /* already closed */ }
+        };
+        if (request.signal.aborted) { onAbort(); return; }
+        request.signal.addEventListener("abort", onAbort);
+
         try {
           for await (const event of stream) {
+            if (request.signal.aborted) break;
             if (
               event.type === "content_block_delta" &&
               event.delta.type === "text_delta"
@@ -121,11 +139,23 @@ export async function POST(request: Request) {
               controller.enqueue(encoder.encode(event.delta.text));
             }
           }
-          controller.close();
+          try { controller.close(); } catch { /* already closed by onAbort */ }
         } catch (err) {
-          console.error("Stream error:", err);
-          controller.error(err);
+          const name = (err as Error)?.name;
+          if (name === "APIUserAbortError") {
+            // Expected when the client bailed — not a real error.
+            try { controller.close(); } catch { /* noop */ }
+          } else {
+            console.error("Stream error:", err);
+            try { controller.error(err); } catch { /* noop */ }
+          }
+        } finally {
+          request.signal.removeEventListener("abort", onAbort);
         }
+      },
+      cancel() {
+        // Fires when the consumer (browser) cancels the stream. Mirror abort.
+        try { stream.abort(); } catch { /* noop */ }
       },
     });
 

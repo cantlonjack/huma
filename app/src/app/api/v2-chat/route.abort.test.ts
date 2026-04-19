@@ -59,7 +59,10 @@ describe("/api/v2-chat SSE abort (SEC-06)", () => {
     const call = streamFn.mock.calls[0];
     expect(call.length).toBeGreaterThanOrEqual(2);
     const opts = call[1] as { signal?: AbortSignal } | undefined;
-    expect(opts?.signal).toBe(ctrl.signal);
+    // The Request constructor wraps the caller's AbortSignal — identity is not
+    // preserved, but the wrapper IS an AbortSignal and is chained to ctrl
+    // (asserted via the follow-up abort-propagation tests).
+    expect(opts?.signal).toBeInstanceOf(AbortSignal);
   });
 
   it("calls stream.abort() when request.signal fires", async () => {
