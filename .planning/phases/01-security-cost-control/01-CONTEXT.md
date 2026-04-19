@@ -39,6 +39,8 @@ Security + cost-control primitives across every Anthropic-calling route: auth ga
 - **No silent drops, no cached-briefing misdirection.** If a stream has already begun when the cap trips, close it gracefully with a one-line prose ending, not a truncation error.
 - Copy must pass Voice Bible §02 banned-phrase review before landing.
 
+> **Clarification (2026-04-18):** The "ten" in the free-tier example copy above was illustrative wording drafted before the spec was locked. Actual spec is **50 requests / 100K tokens per day** for the free tier (matches SEC-02 enforcement). QuotaCard copy uses "fifty" to match.
+
 ### Observability — console JSON → Vercel log ingestion
 - **Phase 1 ships `console.log(JSON.stringify(…))` → Vercel automatic log ingestion.** Free, searchable in the Vercel Dashboard, zero external dependencies.
 - **Log payload** (all 7 required fields + source tag):
