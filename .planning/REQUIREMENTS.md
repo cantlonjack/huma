@@ -12,7 +12,7 @@ Requirements for the Remediation milestone. Each maps to one GSD phase. Plan IDs
 
 - [x] **SEC-01** *(P0.1)*: `/api/v2-chat` and `/api/sheet` reject unauthenticated requests with 401. Magic-link auth (already wired) gates pre-auth chat; cron path keeps `CRON_SECRET` bypass.
 - [x] **SEC-02** *(P0.2)*: Per-user token budget + structured rate limit via Supabase-backed ledger. Tiers: anonymous (5 req / 10K tokens/day), free (50 req / 100K tokens/day), Operate (500 req / 2M tokens/day).
-- [ ] **SEC-03** *(P0.3)*: Token counting before dispatch. Prompts exceeding 80K (Sonnet) or 150K tokens get truncated tail-first with warning header. Prevents runaway cost.
+- [x] **SEC-03** *(P0.3)*: Token counting before dispatch. Prompts exceeding 80K (Sonnet) or 150K tokens get truncated tail-first with warning header. Prevents runaway cost.
 - [x] **SEC-04** *(P0.4)*: Prompt-injection defense at input boundary. Reject `[[`/`]]` marker delimiters with 400, strip "ignore previous instructions" patterns, NFC-normalize, strip zero-width chars.
 - [x] **SEC-05** *(P0.5)*: Request IDs + structured JSON logging. Every route emits req_id, user_id, route, prompt_tokens, output_tokens, latency_ms, status. Cost/error/latency dashboards + alerts.
 - [x] **SEC-06** *(P0.6)*: SSE disconnect handling. `v2-chat/route.ts` aborts Anthropic stream when `request.signal.aborted` fires, stopping payment for bytes no one reads.
@@ -104,7 +104,7 @@ Explicitly excluded. See PROJECT.md for rationale.
 |-------------|-------|--------|
 | SEC-01 | Phase 1 | Complete |
 | SEC-02 | Phase 1 | Complete |
-| SEC-03 | Phase 1 | Pending |
+| SEC-03 | Phase 1 | Complete |
 | SEC-04 | Phase 1 | Complete |
 | SEC-05 | Phase 1 | Complete |
 | SEC-06 | Phase 1 | Complete |

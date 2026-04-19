@@ -59,7 +59,7 @@ Config: `parallelization: true`, `granularity: standard` — eight phases matche
 - [ ] 01-00-fixtures-PLAN.md — Wave 0: shared mock-supabase, mock-anthropic, capture-log fixtures
 - [ ] 01-01-auth-gate-PLAN.md — SEC-01: requireUser + anon session + AuthModal upgrade + smoke (IP-limit anon-only — Warning 1)
 - [ ] 01-02-quota-ledger-PLAN.md — SEC-02: migration 016 + quota.ts (accepts inputTokens — Blocker 6) + QuotaCard ('fifty' — Blocker 5)
-- [ ] 01-03-token-budget-PLAN.md — SEC-03: budgetCheck + countTokens + route ordering owner (Blocker 6) + smoke (Warning 3)
+- [x] 01-03-token-budget-PLAN.md — SEC-03: budgetCheck + countTokens + route ordering owner (Blocker 6) + smoke (Warning 3)
 - [x] 01-04-sanitizer-PLAN.md — SEC-04: sanitize.ts + Zod refinements + audit + coverage hard-fail (Blocker 1) + truth shape fixed (Blocker 3)
 - [ ] 01-05a-observability-lib-PLAN.md — SEC-05 lib: ulid + withObservability (closure tokens — Warning 5; queue retry — Warning 4)
 - [ ] 01-05b-observability-routes-PLAN.md — SEC-05: wrap 8 non-streaming routes + coverage meta-test with INDIRECT_ALLOWLIST
@@ -162,7 +162,7 @@ Phases execute in numeric order: 1 → 2 (parallel with 3) → 3 → 4 (parallel
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Security & Cost Control (P0) | 6/10 | In Progress|  |
+| 1. Security & Cost Control (P0) | 7/10 | In Progress|  |
 | 2. Regenerative Math Honesty (P1) | 0/TBD | Not started | - |
 | 3. Onboarding Visibility (P2) | 0/TBD | Not started | - |
 | 4. Landing & Funnel Instrumentation (P3) | 0/TBD | Not started | - |
