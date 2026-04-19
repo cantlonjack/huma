@@ -2,16 +2,17 @@
 gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
+current_plan: 3
 status: executing
-stopped_at: Completed 01-00-fixtures-PLAN.md
-last_updated: "2026-04-19T07:17:59Z"
-last_activity: 2026-04-19 — Plan 01-00 fixtures complete (3 fixture modules + smoke test)
+stopped_at: Completed 01-01-auth-gate-PLAN.md
+last_updated: "2026-04-19T07:40:42.273Z"
+last_activity: 2026-04-19
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 10
-  completed_plans: 1
-  percent: 1
+  completed_plans: 2
+  percent: 10
 ---
 
 # Project State
@@ -26,25 +27,25 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 ## Current Position
 
 Phase: 1 of 8 (Security & Cost Control)
-Current Plan: 2 of 10 (01-01-auth-gate next)
+Current Plan: 3
 Total Plans in Phase: 10
 Status: In Progress
-Last activity: 2026-04-19 — Plan 01-00 fixtures complete (3 fixture modules + smoke test)
+Last activity: 2026-04-19
 
-Progress: [█░░░░░░░░░] 10% (1/10 plans complete in Phase 1)
+Progress: [██░░░░░░░░] 20% (2/10 plans complete in Phase 1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 4 min
-- Total execution time: 4 min
+- Total plans completed: 2
+- Average duration: 9.5 min
+- Total execution time: 19 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Security & Cost Control | 1 | 4 min | 4 min |
+| 1. Security & Cost Control | 2 | 19 min | 9.5 min |
 | 2. Regenerative Math Honesty | 0 | — | — |
 | 3. Onboarding Visibility | 0 | — | — |
 | 4. Landing & Funnel Instrumentation | 0 | — | — |
@@ -54,12 +55,13 @@ Progress: [█░░░░░░░░░] 10% (1/10 plans complete in Phase 1)
 | 8. Commons, Protocol, Graduate Flywheel | 0 | — | — |
 
 **Recent Trend:**
-- Last 5 plans: 01-00 (4 min)
-- Trend: 1 plan sample — no trend yet
+- Last 5 plans: 01-00 (4 min), 01-01 (15 min)
+- Trend: 2 plan sample — TDD overhead as expected for gated routes
 
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | 01-00-fixtures | 4 min | 1 (TDD) | 4 created |
+| 01-01-auth-gate | 15 min | 3 (TDD) | 11 total (5 created, 6 modified) |
 
 *Updated after each plan completion*
 
@@ -76,6 +78,9 @@ Recent decisions affecting current work:
 - **Pre-planning:** Phase 1 (P0) is blocking — nothing ships without auth + budgets + injection defense + observability
 - **Phase 1 / Plan 00:** Extract Wave 0 fixture plan (mock-supabase, mock-anthropic, capture-log) to prevent Plans 02/03/06 from racing to extend mock-anthropic.ts simultaneously. Locks shared fixture contract via smoke test before Wave 1 consumers land.
 - **Phase 1 / Plan 00:** `makeMockStream` provides a single canonical factory with optional `throwOnAbort` — serves both Plan 02/03 (silent abort) and Plan 06 (APIUserAbortError simulation) without divergent implementations.
+- [Phase 01]: PHASE_1_GATE_ENABLED=false returns source:'system' (Warning 2) — merge-safe shim keeps observability dashboards clean
+- [Phase 01]: IP rate-limit anon/unauth-only (Warning 1) — permanent users rely on per-user ledger from Plan 02; shared-IP operators no longer penalized
+- [Phase 01]: Anon→email upgrade uses supabase.auth.updateUser({email}) NOT linkIdentity (OAuth-only per Supabase docs); user_id preserved across upgrade
 
 ### Pending Todos
 
@@ -89,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-19T07:17:59Z
-Stopped at: Completed 01-00-fixtures-PLAN.md
-Resume file: None (next plan: .planning/phases/01-security-cost-control/01-01-auth-gate-PLAN.md)
+Last session: 2026-04-19T07:40:42.262Z
+Stopped at: Completed 01-01-auth-gate-PLAN.md
+Resume file: None
