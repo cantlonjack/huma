@@ -8,6 +8,7 @@ import {
   internalError,
 } from "@/lib/api-error";
 import { parseBody } from "@/lib/schemas/parse";
+import { userTextField } from "@/lib/schemas/sanitize";
 import {
   computeWeeklyReview,
   formatReviewForPrompt,
@@ -21,14 +22,16 @@ import type { Aspiration } from "@/types/v2";
 
 const aspirationSchema = z.object({
   id: z.string(),
-  rawText: z.string().default(""),
-  clarifiedText: z.string().default(""),
+  // userTextField({ min: 0 }) accepts empty strings; .default("") covers undefined.
+  // SEC-04: rejects [[/]] marker delimiters via Zod custom issue → 400 via parseBody.
+  rawText: userTextField({ min: 0 }).default(""),
+  clarifiedText: userTextField({ min: 0 }).default(""),
   title: z.string().optional(),
   status: z.string().default("active"),
   dimensionsTouched: z.array(z.string()).default([]),
   behaviors: z.array(z.object({
     key: z.string(),
-    text: z.string().default(""),
+    text: userTextField({ min: 0 }).default(""),
     dimensions: z.array(z.object({
       dimension: z.string(),
       direction: z.string().optional(),
@@ -49,7 +52,7 @@ const behaviorDaySchema = z.object({
 });
 
 const weeklyReviewSchema = z.object({
-  operatorName: z.string().optional().default("there"),
+  operatorName: userTextField({ min: 0 }).optional().default("there"),
   aspirations: z.array(aspirationSchema).default([]),
   behaviorDays: z.array(behaviorDaySchema).default([]),
 });

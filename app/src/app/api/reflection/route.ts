@@ -1,8 +1,20 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { z } from "zod";
 import { createServerSupabase } from "@/lib/supabase-server";
 import { getKnownContext, updateKnownContext } from "@/lib/supabase-v2";
 import { isRateLimited } from "@/lib/rate-limit";
-import { rateLimited, badRequest, internalError } from "@/lib/api-error";
+import { rateLimited, internalError } from "@/lib/api-error";
+import { parseBody } from "@/lib/schemas/parse";
+import { userTextField } from "@/lib/schemas/sanitize";
+
+// ─── Request schema ─────────────────────────────────────────────────────────
+// SEC-04: user-written fields (text, todaysSheet) go through the sanitizer so
+// `[[`/`]]` marker delimiters reject with 400 before the Anthropic call runs.
+const reflectionSchema = z.object({
+  type: z.string().min(1),
+  text: userTextField({ min: 0, max: 5_000 }).default(""),
+  todaysSheet: userTextField({ min: 0, max: 50_000 }).default(""),
+});
 
 const REFLECTION_PROMPT = `You are HUMA's evening reflection processor. The operator just reflected on their day.
 
@@ -42,18 +54,11 @@ export async function POST(request: Request) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
   if (await isRateLimited(ip)) return rateLimited();
 
-  let body: Record<string, unknown>;
-  try {
-    body = (await request.json()) as Record<string, unknown>;
-  } catch {
-    return badRequest("Invalid JSON");
-  }
-
-  const reflectionType = body.type as string;
-  const reflectionText = body.text as string;
-  const todaysSheet = body.todaysSheet as string;
-
-  if (!reflectionType) return badRequest("type is required");
+  // SEC-04: parseBody surfaces `[[`/`]]` marker rejection as 400 with
+  // "reserved marker delimiters" in the error body (via sanitizeUserText).
+  const parsed = await parseBody(request, reflectionSchema);
+  if (parsed.error) return parsed.error;
+  const { type: reflectionType, text: reflectionText, todaysSheet } = parsed.data;
 
   try {
     const supabase = await createServerSupabase();

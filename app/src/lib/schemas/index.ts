@@ -4,12 +4,13 @@
  */
 
 import { z } from "zod";
+import { userTextField } from "./sanitize";
 
 // ─── Shared primitives ──────────────────────────────────────────────────────
 
 const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
-  content: z.string().min(1).max(50_000),
+  content: userTextField({ min: 1, max: 50_000 }),
 });
 
 // ─── /api/v2-chat ───────────────────────────────────────────────────────────
@@ -18,8 +19,8 @@ export const v2ChatSchema = z.object({
   messages: z.array(messageSchema).min(1).max(100),
   knownContext: z.record(z.string(), z.unknown()).optional().default({}),
   aspirations: z.array(z.object({
-    rawText: z.string(),
-    clarifiedText: z.string(),
+    rawText: userTextField(),
+    clarifiedText: userTextField(),
     status: z.string(),
   })).optional().default([]),
   sourceTab: z.string().optional(),
@@ -72,14 +73,14 @@ const behaviorEntrySchema = z.object({
 
 const behaviorMetaSchema = z.object({
   key: z.string(),
-  text: z.string(),
+  text: userTextField(),
   aspirationId: z.string(),
-  aspirationText: z.string(),
+  aspirationText: userTextField(),
   dimensions: z.array(z.string()),
 });
 
 export const insightSchema = z.object({
-  name: z.string().optional().default("there"),
+  name: userTextField({ min: 0 }).optional().default("there"),
   entries: z.array(behaviorEntrySchema).default([]),
   behaviorMeta: z.array(behaviorMetaSchema).default([]),
 });
@@ -93,11 +94,11 @@ export const sheetCompileSchema = z.object({
   date: z.string().optional(),
   aspirations: z.array(z.object({
     id: z.string(),
-    rawText: z.string(),
-    clarifiedText: z.string(),
+    rawText: userTextField(),
+    clarifiedText: userTextField(),
     behaviors: z.array(z.object({
       key: z.string(),
-      text: z.string(),
+      text: userTextField(),
       frequency: z.string(),
       days: z.array(z.string()).optional(),
       detail: z.string().optional(),
@@ -114,7 +115,7 @@ export const sheetCompileSchema = z.object({
   })).default([]),
   conversationMessages: z.array(z.object({
     role: z.string(),
-    content: z.string(),
+    content: userTextField(),
   })).default([]),
   dayOfWeek: z.string().optional(),
   season: z.string().optional(),
@@ -163,8 +164,8 @@ export type SheetCheckRequest = z.infer<typeof sheetCheckSchema>;
 // ─── /api/palette ───────────────────────────────────────────────────────────
 
 export const paletteSchema = z.object({
-  conversationSoFar: z.array(z.string()).default([]),
-  selectedConcepts: z.array(z.string()).default([]),
+  conversationSoFar: z.array(userTextField()).default([]),
+  selectedConcepts: z.array(userTextField()).default([]),
 });
 
 export type PaletteRequest = z.infer<typeof paletteSchema>;
@@ -172,17 +173,17 @@ export type PaletteRequest = z.infer<typeof paletteSchema>;
 // ─── /api/nudge ────────────────────────────────────────────────────────────
 
 export const nudgeSchema = z.object({
-  name: z.string().optional().default("there"),
+  name: userTextField({ min: 0 }).optional().default("there"),
   date: z.string(),                                    // YYYY-MM-DD
   knownContext: z.record(z.string(), z.unknown()).optional().default({}),
   humaContext: z.record(z.string(), z.unknown()).optional(),
   aspirations: z.array(z.object({
     id: z.string(),
-    rawText: z.string(),
-    clarifiedText: z.string(),
+    rawText: userTextField(),
+    clarifiedText: userTextField(),
     behaviors: z.array(z.object({
       key: z.string(),
-      text: z.string(),
+      text: userTextField(),
       frequency: z.string(),
     })),
   })).default([]),
@@ -204,15 +205,15 @@ export type NudgeRequest = z.infer<typeof nudgeSchema>;
 export const wholeComputeSchema = z.discriminatedUnion("compute", [
   z.object({
     compute: z.literal("why-evolve"),
-    contextData: z.string().min(1),
-    originalWhy: z.string().min(1),
-    behavioralSummary: z.string().min(1),
+    contextData: userTextField({ min: 1 }),
+    originalWhy: userTextField({ min: 1 }),
+    behavioralSummary: userTextField({ min: 1 }),
   }),
   z.object({
     compute: z.enum(["both", "archetypes", "why"]),
-    contextData: z.string().min(1),
-    originalWhy: z.string().optional(),
-    behavioralSummary: z.string().optional(),
+    contextData: userTextField({ min: 1 }),
+    originalWhy: userTextField({ min: 0 }).optional(),
+    behavioralSummary: userTextField({ min: 0 }).optional(),
   }),
 ]);
 
