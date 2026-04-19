@@ -162,7 +162,7 @@ Phases execute in numeric order: 1 → 2 (parallel with 3) → 3 → 4 (parallel
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Security & Cost Control (P0) | 4/10 | In Progress (Wave 0 fixtures + Wave 1 plans 01 auth-gate + 05a observability-lib + 06 sse-abort complete; Wave 1 remaining: 02 quota, 03 token-budget, 04 sanitizer; Wave 2: 05b, 05c; Wave 3: 07) | - |
+| 1. Security & Cost Control (P0) | 5/10 | In Progress|  |
 | 2. Regenerative Math Honesty (P1) | 0/TBD | Not started | - |
 | 3. Onboarding Visibility (P2) | 0/TBD | Not started | - |
 | 4. Landing & Funnel Instrumentation (P3) | 0/TBD | Not started | - |
