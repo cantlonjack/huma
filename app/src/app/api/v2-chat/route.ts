@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { isRateLimited } from "@/lib/rate-limit";
-import { rateLimited, serviceUnavailable, internalError } from "@/lib/api-error";
+import { rateLimited, serviceUnavailable, internalError, apiError } from "@/lib/api-error";
 import { requireUser } from "@/lib/auth-guard";
 import { checkAndIncrement } from "@/lib/quota";
 import { v2ChatSchema } from "@/lib/schemas";
@@ -8,7 +8,7 @@ import { parseBody } from "@/lib/schemas/parse";
 import type { HumaContext } from "@/types/context";
 import type { Aspiration, Pattern } from "@/types/v2";
 import type { CapitalScore } from "@/engine/canvas-types";
-import { buildStaticPrompt, buildDynamicPrompt, detectMode } from "@/lib/services/prompt-builder";
+import { buildStaticPrompt, buildDynamicPrompt, detectMode, budgetCheck, pickBudget } from "@/lib/services/prompt-builder";
 import { allSeeds } from "@/data/rppl-seeds";
 
 export async function POST(request: Request) {
@@ -37,26 +37,12 @@ export async function POST(request: Request) {
     }
   }
 
-  // ─── Per-user quota (SEC-02) ─────────────────────────────────────────────
-  // Request-count + token-count ledger. Cron and the pre-flag-flip shim
-  // (ctx.user === null) both short-circuit — cron has CRON_SECRET auth and
-  // must not deplete any operator's quota; null-user means the auth gate is
-  // not yet enforced so there is no stable id to key against.
-  //
-  // Plan 03 will hoist budgetCheck() above this call and pass the accurate
-  // inputTokens from client.messages.countTokens(); until then we pass 0,
-  // which enforces request-count limits but leaves token limits inactive.
-  // That's intentional — Blocker 6 rejects the estChars/4 heuristic outright.
-  if (!ctx.isCron && ctx.user) {
-    const quota = await checkAndIncrement(ctx.user.id, "/api/v2-chat", 0);
-    if (!quota.allowed) {
-      return rateLimited({
-        tier: quota.tier,
-        resetAt: quota.resetAt,
-        suggest: quota.suggest,
-      });
-    }
-  }
+  // ─── Per-user quota (SEC-02) — runs AFTER budgetCheck below ──────────────
+  // Blocker 6 resolution (Plan 01-03): the quota RPC now receives the
+  // accurate inputTokens count from anthropic.messages.countTokens(),
+  // NOT a cheap estChars/4 heuristic that would under-count by ~3x. The
+  // call site moved below parseBody + prompt assembly + budgetCheck; see
+  // the SEC-03 block later in this function.
 
   const parsed = await parseBody(request, v2ChatSchema);
   if (parsed.error) return parsed.error;
@@ -111,6 +97,67 @@ export async function POST(request: Request) {
       ? "claude-haiku-4-5-20251001"
       : (process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514");
 
+    // Build the system-prompt blocks and messages[] payload once so both
+    // budgetCheck and the stream call operate on the identical inputs.
+    const systemBlocks = [
+      {
+        type: "text" as const,
+        text: staticPrompt,
+        cache_control: { type: "ephemeral" as const },
+      },
+      {
+        type: "text" as const,
+        text: dynamicPrompt,
+      },
+    ];
+    let dispatchMessages = messages.map((m) => ({
+      role: (m.role === "user" ? "user" : "assistant") as "user" | "assistant",
+      content: m.content,
+    }));
+
+    // ─── SEC-03: token budget (runs BEFORE quota — Blocker 6) ────────────
+    // Tail-trim messages[] until the total input fits the per-model ceiling.
+    // humaContext (system) is never modified. If system alone overflows
+    // even after messages[] is empty, return 413.
+    let trimmedCount = 0;
+    let inputTokens = 0;
+    if (!ctx.isCron) {
+      const budget = await budgetCheck({
+        anthropic,
+        model,
+        system: systemBlocks,
+        messages: dispatchMessages,
+        limit: pickBudget(model),
+      });
+      if ("tooLarge" in budget && budget.tooLarge) {
+        return apiError(
+          "This thread's gotten long. Start a new one — I'll catch you up from your shape.",
+          "PAYLOAD_TOO_LARGE",
+          413,
+        );
+      }
+      dispatchMessages = budget.messages as typeof dispatchMessages;
+      trimmedCount = budget.trimmedCount;
+      inputTokens = budget.inputTokens;
+    }
+
+    // ─── SEC-02: per-user quota (Blocker 6: accurate inputTokens) ────────
+    // Cron and the pre-flag-flip shim (ctx.user === null) both short-circuit
+    // — cron has CRON_SECRET auth and must not deplete any operator's quota;
+    // null-user means the auth gate is not yet enforced so there is no
+    // stable id to key against. Plan 05c will pass a ULID reqId as the 4th
+    // arg for output-token reconciliation.
+    if (!ctx.isCron && ctx.user) {
+      const quota = await checkAndIncrement(ctx.user.id, "/api/v2-chat", inputTokens);
+      if (!quota.allowed) {
+        return rateLimited({
+          tier: quota.tier,
+          resetAt: quota.resetAt,
+          suggest: quota.suggest,
+        });
+      }
+    }
+
     // SEC-06: pass request.signal so the SDK's underlying fetch aborts when
     // the client disconnects. Without this, we keep paying for tokens no one
     // will read.
@@ -118,21 +165,8 @@ export async function POST(request: Request) {
       {
         model,
         max_tokens: 2048,
-        system: [
-          {
-            type: "text" as const,
-            text: staticPrompt,
-            cache_control: { type: "ephemeral" as const },
-          },
-          {
-            type: "text" as const,
-            text: dynamicPrompt,
-          },
-        ],
-        messages: messages.map((m) => ({
-          role: (m.role === "user" ? "user" : "assistant") as "user" | "assistant",
-          content: m.content,
-        })),
+        system: systemBlocks,
+        messages: dispatchMessages,
       },
       { signal: request.signal },
     );
@@ -181,12 +215,16 @@ export async function POST(request: Request) {
       },
     });
 
-    return new Response(readableStream, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Transfer-Encoding": "chunked",
-      },
-    });
+    // SEC-03: surface trim events to the client via X-Huma-Truncated.
+    // Header is omitted when no trim happened (trimmedCount === 0).
+    const responseHeaders: Record<string, string> = {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Transfer-Encoding": "chunked",
+    };
+    if (trimmedCount > 0) {
+      responseHeaders["X-Huma-Truncated"] = `count=${trimmedCount},reason=budget`;
+    }
+    return new Response(readableStream, { headers: responseHeaders });
   } catch (err) {
     console.error("V2 chat API error:", err);
     return internalError("Something went wrong. Please try again.");

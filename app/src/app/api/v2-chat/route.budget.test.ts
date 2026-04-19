@@ -191,7 +191,10 @@ describe("/api/v2-chat budget wiring (SEC-03 + SEC-02 Blocker 6)", () => {
 
     const { makeMockAnthropic } = await import("@/__tests__/fixtures/mock-anthropic");
     const { MockAnthropic, countTokens } = makeMockAnthropic({ text: "hi", inputTokens: 1_000 });
-    // Script: first two calls overflow, third is under → 2 trims happen.
+    // Script: first two calls overflow Sonnet's 80K, third is under → 2 trims.
+    // Sonnet budget is 80K; Haiku is 150K. v2-chat uses Haiku when
+    // userMessageCount <= 2 and Sonnet otherwise, so we send 3 user messages
+    // here to force Sonnet and make 100K/90K trigger trimming.
     countTokens
       .mockResolvedValueOnce({ input_tokens: 100_000 })
       .mockResolvedValueOnce({ input_tokens: 90_000 })
@@ -199,7 +202,26 @@ describe("/api/v2-chat budget wiring (SEC-03 + SEC-02 Blocker 6)", () => {
     vi.doMock("@anthropic-ai/sdk", () => ({ default: MockAnthropic }));
 
     const { POST } = await import("./route");
-    const res = await POST(buildRequest());
+    // Use a custom body with 3 user messages so Sonnet (80K) is selected.
+    const req = new Request("http://localhost/api/v2-chat", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": "127.0.0.1",
+      },
+      body: JSON.stringify({
+        messages: [
+          { role: "user" as const, content: "one" },
+          { role: "assistant" as const, content: "reply1" },
+          { role: "user" as const, content: "two" },
+          { role: "assistant" as const, content: "reply2" },
+          { role: "user" as const, content: "three" },
+        ],
+        knownContext: {},
+        aspirations: [],
+      }),
+    });
+    const res = await POST(req);
     try { await (res.body as ReadableStream | null)?.getReader().read(); } catch { /* noop */ }
 
     expect(res.status).toBe(200);
