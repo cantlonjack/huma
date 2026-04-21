@@ -261,7 +261,7 @@ describe("quota.ts — resolveTier + checkAndIncrement", () => {
     expect(result.suggest).toBe("wait");
   });
 
-  it("checkAndIncrement fails open (allowed=true) when RPC errors", async () => {
+  it("checkAndIncrement fails open (allowed=true) when RPC errors AND emits structured WARN", async () => {
     const rpc = vi.fn(async () => ({
       data: null,
       error: { message: "connection refused" },
@@ -274,9 +274,30 @@ describe("quota.ts — resolveTier + checkAndIncrement", () => {
       }),
     }));
 
-    const { checkAndIncrement } = await import("./quota");
-    const result = await checkAndIncrement("u-1", "/api/v2-chat", 100);
-    // Availability > correctness when RPC is down: allow the request.
-    expect(result.allowed).toBe(true);
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const { checkAndIncrement } = await import("./quota");
+      const result = await checkAndIncrement("u-1", "/api/v2-chat", 100, "01JREQABCD");
+
+      // Availability > correctness when RPC is down: allow the request.
+      expect(result.allowed).toBe(true);
+
+      // Hardening: the fail-open path must NOT be silent. Vercel log search
+      // must find the degradation via `component=quota severity=WARN`.
+      expect(warnSpy).toHaveBeenCalledOnce();
+      const arg = warnSpy.mock.calls[0][0] as string;
+      const parsed = JSON.parse(arg) as Record<string, unknown>;
+      expect(parsed).toMatchObject({
+        component: "quota",
+        severity: "WARN",
+        event: "increment_quota_and_check_failed",
+        user_id: "u-1",
+        route: "/api/v2-chat",
+        req_id: "01JREQABCD",
+      });
+      expect(typeof parsed.error_message).toBe("string");
+    } finally {
+      warnSpy.mockRestore();
+    }
   });
 });

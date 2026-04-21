@@ -101,11 +101,22 @@ export async function checkAndIncrement(
   });
 
   if (error) {
-    console.error(
-      "[quota] increment_quota_and_check failed, allowing request:",
-      error.message,
-    );
     // Fail open — availability beats cost correctness when the ledger is down.
+    // Emit a STRUCTURED warning so the degradation is visible in Vercel log
+    // search (searchable via component=quota severity=WARN). This upgrades
+    // the prior `console.error("[quota] ...")` surface that VERIFICATION.md
+    // §Anti-Patterns flagged as silent in production.
+    console.warn(
+      JSON.stringify({
+        component: "quota",
+        severity: "WARN",
+        event: "increment_quota_and_check_failed",
+        error_message: error.message,
+        user_id: userId,
+        route,
+        req_id: reqId ?? null,
+      }),
+    );
     return {
       allowed: true,
       tier: "free",
