@@ -196,8 +196,8 @@ Expect: 401.
   </done>
 </task>
 
-<task type="auto">
-  <name>Task 3: Run automated smoke quad against production (sec-01, sec-02, sec-03, sec-04)</name>
+<task type="auto" status="PARTIAL">
+  <name>Task 3: Run automated smoke quad against production (sec-01, sec-02, sec-03, sec-04) — PARTIAL (2026-04-21): SEC-01 proven via direct Bearer curl (401→200 round-trip). Bearer auth fallback added as scope addition (commit 08cf2c1). SEC-02 BLOCKED — admin client can't write to user_quota_ledger; Supabase disabled legacy keys 2026-04-20 and new sb_secret_* format likely incompatible with installed supabase-js; quota fails open silently. SEC-03 and SEC-04 NOT RUN end-to-end (smoke scripts need CRON_SECRET which is unreadable from this context); both unit-green. See 01-07-enablement-SUMMARY.md and deferred-items.md.</name>
   <files>
     app/scripts/smoke/sec-01-curl.sh,
     app/scripts/smoke/sec-02-quota.sh,
@@ -250,8 +250,8 @@ Expect: `[[`/`]]` → 400 with 'reserved marker' in body; injection prefix → N
   </done>
 </task>
 
-<task type="checkpoint:human-verify" gate="blocking">
-  <name>Task 4: Run sec-06 manual-observed smoke + inspect Vercel logs</name>
+<task type="checkpoint:human-verify" gate="blocking" status="SKIPPED">
+  <name>Task 4: Run sec-06 manual-observed smoke + inspect Vercel logs — SKIPPED (2026-04-21): requires Vercel log access unreachable from this execution context. Unit-test coverage for triple-guard abort is green. Deferred to Phase 1.1 smoke-rerun if needed.</name>
   <files>
     app/scripts/smoke/sec-06-disconnect.sh
   </files>
@@ -289,8 +289,8 @@ BASE_URL=https://huma-two.vercel.app ANON_JWT="$ANON_JWT" bash scripts/smoke/sec
   </done>
 </task>
 
-<task type="auto">
-  <name>Task 5: Document rollback in STATE.md + mark Phase 1 complete + stage SUMMARYs (Warning 7)</name>
+<task type="auto" status="COMPLETE (modified)">
+  <name>Task 5: Document rollback in STATE.md + mark Phase 1 complete + stage SUMMARYs (Warning 7) — COMPLETE WITH MODIFICATIONS (2026-04-21): STATE.md gained Rollback Procedures section; Current Position reflects "partial" status (not "COMPLETE") because SEC-02 runtime is blocked. ROADMAP.md progress row: 10/10 plans with "Partial" status and SEC-02 flagged. REQUIREMENTS.md: SEC-01/03/04/05/06 Complete, SEC-02 Partial. Phase 1 ROADMAP checkbox left unchecked — claiming complete would misrepresent the SEC-02 gap.</name>
   <files>
     .planning/STATE.md,
     .planning/ROADMAP.md
@@ -371,8 +371,8 @@ Verify all 9 SUMMARYs are staged (one per plan: 00, 01, 02, 03, 04, 05a, 05b, 05
   </done>
 </task>
 
-<task type="checkpoint:decision" gate="blocking">
-  <name>Task 6: Final go/no-go decision + commit</name>
+<task type="checkpoint:decision" gate="blocking" status="DECISION: PATH 2 — PARTIAL SHIP">
+  <name>Task 6: Final go/no-go decision + commit — DECIDED 2026-04-21: Path 2 partial-ship. Operator and orchestrator agreed to stop chasing the Supabase credential issue and document the gap. Phase 1 code ships live behind PHASE_1_GATE_ENABLED=true. SEC-02 runtime enforcement deferred to Phase 1.1 (gap-closure plan). Single atomic docs commit captures all Phase 1 documentation updates (SUMMARYs 00-07 + STATE.md + ROADMAP.md + REQUIREMENTS.md + deferred-items.md).</name>
   <files>
     .planning/STATE.md,
     .planning/ROADMAP.md,

@@ -12,7 +12,7 @@ Eight phases that take the three critiques (security, regenerative math, thesis 
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Security & Cost Control (Plan P0)** - Auth-gate Anthropic routes, per-user token budgets, prompt-injection defense, observability, SSE disconnect handling
+- [ ] **Phase 1: Security & Cost Control (Plan P0)** - Auth-gate Anthropic routes, per-user token budgets, prompt-injection defense, observability, SSE disconnect handling *(PARTIAL 2026-04-21 — 10/10 plans landed; SEC-02 runtime enforcement deferred to Phase 1.1 pending Supabase credential resolution; see deferred-items.md)*
 - [ ] **Phase 2: Regenerative Math Honesty (Plan P1)** - Remove engagement penalty, first-class Dormancy + Fallow states, outcome measurement, capital receipt
 - [ ] **Phase 3: Onboarding Visibility (Plan P2)** - Sheet preview in /start, persistent dimension pills, live N-of-8 counter, day-1 structural insight, operator vocabulary, distinctive conversation UI
 - [ ] **Phase 4: Landing & Funnel Instrumentation (Plan P3)** - Inverted hero, CTA rewrite, PostHog + 10 events, UTM/cohort tagging, A/B framework, situation-specific landing pages
@@ -56,16 +56,16 @@ Config: `parallelization: true`, `granularity: standard` — eight phases matche
   5. Every API route emits structured JSON log with req_id, user_id, route, prompt_tokens, output_tokens, latency_ms, status
   6. SSE stream in `v2-chat/route.ts` aborts the Anthropic stream when `request.signal.aborted` fires (verified via disconnect test)
 **Plans**: 9 plans (Wave 0: plan 00 fixtures; Wave 1: plans 01-04, 05a, 06 parallel; Wave 2: plans 05b, 05c parallel; Wave 3: plan 07 enablement)
-- [ ] 01-00-fixtures-PLAN.md — Wave 0: shared mock-supabase, mock-anthropic, capture-log fixtures
-- [ ] 01-01-auth-gate-PLAN.md — SEC-01: requireUser + anon session + AuthModal upgrade + smoke (IP-limit anon-only — Warning 1)
-- [ ] 01-02-quota-ledger-PLAN.md — SEC-02: migration 016 + quota.ts (accepts inputTokens — Blocker 6) + QuotaCard ('fifty' — Blocker 5)
+- [x] 01-00-fixtures-PLAN.md — Wave 0: shared mock-supabase, mock-anthropic, capture-log fixtures
+- [x] 01-01-auth-gate-PLAN.md — SEC-01: requireUser + anon session + AuthModal upgrade + smoke (IP-limit anon-only — Warning 1)
+- [~] 01-02-quota-ledger-PLAN.md — SEC-02: migration 016 + quota.ts + QuotaCard — **code landed, runtime enforcement blocked on Supabase credential migration; deferred to Phase 1.1**
 - [x] 01-03-token-budget-PLAN.md — SEC-03: budgetCheck + countTokens + route ordering owner (Blocker 6) + smoke (Warning 3)
 - [x] 01-04-sanitizer-PLAN.md — SEC-04: sanitize.ts + Zod refinements + audit + coverage hard-fail (Blocker 1) + truth shape fixed (Blocker 3)
 - [x] 01-05a-observability-lib-PLAN.md — SEC-05 lib: ulid + withObservability (closure tokens — Warning 5; queue retry — Warning 4)
 - [x] 01-05b-observability-routes-PLAN.md — SEC-05: wrap 8 non-streaming routes + coverage meta-test with INDIRECT_ALLOWLIST
 - [x] 01-05c-observability-streaming-PLAN.md — SEC-05: v2-chat finalMessage + morning-sheet (fetch-mocked — Blocker 4) + cost-rollup + migration 017
-- [ ] 01-06-sse-abort-PLAN.md — SEC-06: {signal} option + abort handlers + manual smoke (consumes Plan 00 fixture as-is)
-- [ ] 01-07-enablement-PLAN.md — All SEC: migrations + flag flip + smoke quad (Warning 3) + SUMMARY staging (Warning 7) + rollback doc
+- [x] 01-06-sse-abort-PLAN.md — SEC-06: {signal} option + abort handlers + manual smoke (consumes Plan 00 fixture as-is)
+- [~] 01-07-enablement-PLAN.md — **PARTIAL CLOSE 2026-04-21** — migrations + flag flip live; SEC-01 curl-verified + Bearer auth fix (08cf2c1) + TS build fix (57ee0c6); SEC-02 end-to-end blocked, SEC-03/04/06 unit-green but end-to-end smoke deferred; Path 2 ship accepted
 
 ### Phase 2: Regenerative Math Honesty (Plan P1)
 **Goal**: Make the code tell the truth the docs already tell.
@@ -162,7 +162,7 @@ Phases execute in numeric order: 1 → 2 (parallel with 3) → 3 → 4 (parallel
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Security & Cost Control (P0) | 9/10 | In Progress|  |
+| 1. Security & Cost Control (P0) | 10/10 | Partial (5/6 requirements verified; SEC-02 deferred to Phase 1.1) | 2026-04-21 |
 | 2. Regenerative Math Honesty (P1) | 0/TBD | Not started | - |
 | 3. Onboarding Visibility (P2) | 0/TBD | Not started | - |
 | 4. Landing & Funnel Instrumentation (P3) | 0/TBD | Not started | - |
@@ -175,4 +175,5 @@ Phases execute in numeric order: 1 → 2 (parallel with 3) → 3 → 4 (parallel
 
 ---
 *Roadmap created: 2026-04-18 — derived directly from docs/Remediation-Build-Plan.md P0-P7.*
-*Phase 1 planned: 2026-04-18 — 9 plans (00 fixtures, 01-04 + 05a + 06 in Wave 1, 05b + 05c in Wave 2, 07 enablement in Wave 3). Revised after checker feedback (Blockers 1-6 addressed; Warnings 1-7 covered).*
+*Phase 1 planned: 2026-04-18 — 10 plans (00 fixtures, 01-04 + 05a + 06 in Wave 1, 05b + 05c in Wave 2, 07 enablement in Wave 3). Revised after checker feedback (Blockers 1-6 addressed; Warnings 1-7 covered). Observability was split into 05a/05b/05c during planning.*
+*Phase 1 partial close: 2026-04-21 — 10/10 plans landed; code shipped behind PHASE_1_GATE_ENABLED=true. SEC-02 runtime enforcement deferred to Phase 1.1 (Supabase credential migration blocker — see `.planning/phases/01-security-cost-control/deferred-items.md`).*

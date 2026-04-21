@@ -33,3 +33,44 @@ Out-of-scope discoveries made during plan execution. These are tracked for later
 **Suggested fix (for later):** Rename `BudgetTooLarge.tooLarge` to a proper discriminator (e.g., add `kind: "too-large"` vs `kind: "ok"`), or widen the inline guard to a dedicated type-predicate helper `isBudgetOk(b): b is BudgetOk`.
 
 ---
+
+## From Plan 01-07 (enablement) — Phase 1 close-out
+
+### SEC-02 end-to-end quota enforcement blocked on Supabase credential migration
+
+**Requirement:** SEC-02 (per-user token quota ledger)
+**Files:** `app/src/lib/supabase-admin.ts`, `app/src/lib/quota.ts`, Vercel env vars
+**Fix owner:** Phase 1.1 (gap-closure plan — to be planned after Phase 1 close)
+
+**Symptom:**
+`user_quota_ledger` count = 0 in production despite 10+ authenticated requests during enablement smoke runs. Anonymous 5-req/day cap is NOT being enforced. `checkAndIncrement` logs `[quota] increment_quota_and_check failed, allowing request` and returns `allowed: true` (fail-open path).
+
+**Root cause:**
+Supabase disabled legacy anon + service_role JWT keys on 2026-04-20. The replacement is a new `sb_secret_*` key format. The installed `@supabase/supabase-js` version (shipped before this format existed) likely cannot authenticate admin RPC calls with the new key. `createAdminSupabase()` now receives a secret it doesn't know how to sign requests with, the RPC returns an auth error, and `quota.ts` falls through its fail-open safeguard. The anon-key pathway still works (browser signin on `/start` succeeds), so only the admin / service-role path is broken.
+
+**Evidence:**
+- `user_quota_ledger` returns 0 rows in production despite live traffic.
+- Browser-driven anon signin + magic link flows both work (anon key path OK).
+- Direct curl to `/api/v2-chat` returns 401 without auth, 200 with Bearer JWT — the auth gate itself works.
+- 697/697 unit tests pass — the code logic for quota increment is correct; it's the credential that fails.
+- SEC-01 verified via direct Bearer curl. SEC-03 and SEC-04 could not run end-to-end because they depend on either a working quota ledger (SEC-03 amplifies budget truncation with quota) or on `CRON_SECRET` (unreadable from this context without Vercel log access).
+
+**Impact:**
+Quota enforcement is silently disabled in production. Any authenticated or anon user can exceed the configured tier cap (5/day anon, 50/day free, 500/day operate) without hitting a 429. There is no cost-safety backstop on per-user spend until this is resolved. Anthropic cost ceiling rests entirely on the existing request-count rate limit (IP-based, anon-only per Warning 1) plus manual monitoring.
+
+**Mitigation (short-term, acceptable because pre-launch traffic is nominal):**
+- `CRON_SECRET` in place — cron paths unaffected.
+- Manual daily Anthropic spend monitoring by operator.
+- Phase 1 code ships behind `PHASE_1_GATE_ENABLED=true` so auth + budget + sanitizer + observability + SSE abort all still function. Only SEC-02's runtime enforcement is degraded.
+
+**Fix options (pick during Phase 1.1 planning):**
+1. **Upgrade `@supabase/supabase-js`** to a version that natively accepts `sb_secret_*` secret format. Check changelog for breaking changes to `createClient` signature and RPC typing.
+2. **Re-enable Supabase legacy keys** on the project and re-paste the legacy `service_role` JWT into Vercel. Buys time but defers the migration (Supabase will disable legacy keys again).
+3. **Refactor `createAdminSupabase`** to detect key format and branch — if `sb_secret_*`, use whatever the new SDK pathway requires; if JWT, use the current path. Most work but most robust.
+
+**Verification after fix:**
+1. Re-run `app/scripts/smoke/sec-02-quota.sh` against production with a fresh anon JWT.
+2. Expect 5 × 200 OK followed by 1 × 429 with body `{code:"RATE_LIMITED", tier:"anonymous", ...}`.
+3. Confirm `SELECT count(*) FROM user_quota_ledger` > 0 in Supabase dashboard after the smoke run.
+
+---
