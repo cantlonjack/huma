@@ -157,8 +157,8 @@ Rollback: single env var flip; migrations are additive-only.
   </done>
 </task>
 
-<task type="checkpoint:human-action" gate="blocking">
-  <name>Task 2: Set PHASE_1_GATE_ENABLED=true in Vercel production</name>
+<task type="checkpoint:human-action" gate="blocking" status="COMPLETE">
+  <name>Task 2: Set PHASE_1_GATE_ENABLED=true in Vercel production ✓ (operator confirmed 2026-04-19: gate flipped; prod deploy main@57ee0c6 Ready; HTTP 401 verified; commit 57ee0c6 resolved 7 TS build errors — narrowing in sheet/v2-chat route.ts + mock-supabase.ts vi.fn signatures; 695/695 tests green, tsc clean)</name>
   <files>
     (Vercel environment — settings live in Vercel dashboard)
   </files>
