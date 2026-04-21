@@ -5,16 +5,16 @@ type AnyFn = (...args: unknown[]) => unknown;
 /** Build a chainable .from(table).select().eq().eq().single()/.maybeSingle() stub. */
 function chainable(finalValue: unknown) {
   const chain = {
-    select: vi.fn(() => chain),
-    eq: vi.fn(() => chain),
-    gte: vi.fn(() => chain),
-    lt: vi.fn(() => chain),
-    order: vi.fn(() => chain),
-    limit: vi.fn(() => chain),
-    insert: vi.fn(async () => ({ data: null, error: null })),
-    upsert: vi.fn(async () => ({ data: null, error: null })),
-    update: vi.fn(async () => ({ data: null, error: null })),
-    delete: vi.fn(() => chain),
+    select: vi.fn((..._args: unknown[]) => chain),
+    eq: vi.fn((..._args: unknown[]) => chain),
+    gte: vi.fn((..._args: unknown[]) => chain),
+    lt: vi.fn((..._args: unknown[]) => chain),
+    order: vi.fn((..._args: unknown[]) => chain),
+    limit: vi.fn((..._args: unknown[]) => chain),
+    insert: vi.fn(async (..._args: unknown[]) => ({ data: null, error: null })),
+    upsert: vi.fn(async (..._args: unknown[]) => ({ data: null, error: null })),
+    update: vi.fn(async (..._args: unknown[]) => ({ data: null, error: null })),
+    delete: vi.fn((..._args: unknown[]) => chain),
     single: vi.fn(async () => ({ data: finalValue, error: null })),
     maybeSingle: vi.fn(async () => ({ data: finalValue, error: null })),
   };

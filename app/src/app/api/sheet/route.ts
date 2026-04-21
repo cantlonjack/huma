@@ -389,7 +389,7 @@ Meal plans should respect budget. Purchases should reference actual amounts.
         messages: dispatchMessages,
         limit: pickBudget(model),
       });
-      if ("tooLarge" in budget && budget.tooLarge) {
+      if ("tooLarge" in budget) {
         return apiError(
           "This thread's gotten long. Start a new one — I'll catch you up from your shape.",
           "PAYLOAD_TOO_LARGE",
