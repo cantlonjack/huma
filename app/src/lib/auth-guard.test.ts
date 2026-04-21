@@ -77,4 +77,58 @@ describe("requireUser", () => {
       expect(result.ctx.isCron).toBe(false);
     }
   });
+
+  it("Bearer user JWT resolves via supabase.auth.getUser(token) → source:'user'", async () => {
+    process.env.PHASE_1_GATE_ENABLED = "true";
+    const jwt = "eyJhbGciOi.user-jwt-token.sig";
+    vi.doMock("@/lib/supabase-server", () => ({
+      createServerSupabase: async () => ({
+        auth: {
+          getUser: vi.fn(async (token?: string) => {
+            if (token === jwt) {
+              return {
+                data: {
+                  user: {
+                    id: "bearer-user-1",
+                    is_anonymous: true,
+                    email: null,
+                  },
+                },
+                error: null,
+              };
+            }
+            return { data: { user: null }, error: null };
+          }),
+        },
+      }),
+    }));
+    const { requireUser } = await import("./auth-guard");
+    const req = new Request("http://localhost/api/x", {
+      headers: { Authorization: `Bearer ${jwt}` },
+    });
+    const result = await requireUser(req);
+    expect("ctx" in result).toBe(true);
+    if ("ctx" in result && result.ctx) {
+      expect(result.ctx.user?.id).toBe("bearer-user-1");
+      expect(result.ctx.user?.is_anonymous).toBe(true);
+      expect(result.ctx.source).toBe("user");
+      expect(result.ctx.isCron).toBe(false);
+    }
+  });
+
+  it("Bearer with invalid JWT falls through to cookie path → 401 when gate on", async () => {
+    process.env.PHASE_1_GATE_ENABLED = "true";
+    vi.doMock("@/lib/supabase-server", () => ({
+      createServerSupabase: () => Promise.resolve(mockSupabaseNoSession()),
+    }));
+    const { requireUser } = await import("./auth-guard");
+    const req = new Request("http://localhost/api/x", {
+      headers: { Authorization: "Bearer bogus-jwt" },
+    });
+    const result = await requireUser(req);
+    expect("error" in result).toBe(true);
+    if ("error" in result && result.error) {
+      expect(result.error.status).toBe(401);
+    }
+  });
 });

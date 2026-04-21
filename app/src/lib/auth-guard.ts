@@ -24,9 +24,10 @@ export interface AuthContext {
  *
  * Behavior by case:
  * 1. `Authorization: Bearer ${CRON_SECRET}` → ctx with isCron:true, source:"cron"
- * 2. Valid Supabase session → ctx with user, source:"user"
- * 3. No session + PHASE_1_GATE_ENABLED=true → 401 Response
- * 4. No session + PHASE_1_GATE_ENABLED≠"true" → ctx with user:null, source:"system"
+ * 2. `Authorization: Bearer <user-jwt>` → ctx with user, source:"user"
+ * 3. Valid Supabase session cookie → ctx with user, source:"user"
+ * 4. No session + PHASE_1_GATE_ENABLED=true → 401 Response
+ * 5. No session + PHASE_1_GATE_ENABLED≠"true" → ctx with user:null, source:"system"
  *    (pre-enablement shim — lets Plan 07 flip the flag later without breaking
  *    callers. source:"system" keeps observability dashboards clean.)
  *
@@ -49,8 +50,30 @@ export async function requireUser(
   //    system-tagged entries don't pollute per-operator analytics.
   const gateEnabled = process.env.PHASE_1_GATE_ENABLED === "true";
 
-  // 3. Supabase session check.
   const supabase = await createServerSupabase();
+
+  // 3. Bearer user-JWT path — API callers (smoke scripts, third-party SDKs)
+  //    authenticate via Authorization: Bearer <supabase-access-token>.
+  //    Falls through to the cookie path on failure.
+  if (authHeader?.startsWith("Bearer ") && authHeader !== `Bearer ${cronSecret ?? ""}`) {
+    const token = authHeader.slice("Bearer ".length);
+    const { data } = await supabase.auth.getUser(token);
+    if (data.user) {
+      return {
+        ctx: {
+          user: {
+            id: data.user.id,
+            is_anonymous: Boolean((data.user as { is_anonymous?: boolean }).is_anonymous),
+            email: data.user.email ?? null,
+          },
+          isCron: false,
+          source: "user",
+        },
+      };
+    }
+  }
+
+  // 4. Supabase cookie session check (browser callers).
   const {
     data: { user },
   } = await supabase.auth.getUser();
