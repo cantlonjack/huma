@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { CapitalScore, CapitalForm } from "@/engine/canvas-types";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 interface CapitalRadarProps {
   profile: CapitalScore[];
@@ -142,6 +143,9 @@ export default function CapitalRadar({
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
   const animFrameRef = useRef<number>(0);
   const prefersReducedMotion = useRef(false);
+  // REGEN-01: also consume the hook so downstream transitions can suppress
+  // motion. `useReducedMotion` is SSR-safe (returns false until useEffect runs).
+  const reducedMotionHook = useReducedMotion();
 
   useEffect(() => {
     prefersReducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -176,8 +180,24 @@ export default function CapitalRadar({
 
   // Normalize profile to CAPITAL_ORDER
   const sorted = CAPITAL_ORDER.map(
-    (form) => profile.find((p) => p.form === form) || { form, score: 1, note: "" }
+    (form) =>
+      profile.find((p) => p.form === form) || {
+        form,
+        score: 1,
+        note: "No activity yet",
+        confidence: 0,
+      },
   );
+
+  // REGEN-01: shape opacity reflects the operator's accumulated confidence in
+  // their own shape. Floor at 0.08 so brand-new accounts still see a faint
+  // anchor shape; cap at 0.4 so the filled region never fully obscures the
+  // guide rings behind it (even at confidence=1).
+  const avgConfidence =
+    sorted.length > 0
+      ? sorted.reduce((sum, cap) => sum + (cap.confidence ?? 0), 0) / sorted.length
+      : 0;
+  const shapeFillOpacity = Math.min(0.4, Math.max(0.08, avgConfidence * 0.4));
 
   const numAxes = sorted.length;
   const maxScore = 5;
@@ -232,10 +252,14 @@ export default function CapitalRadar({
       ))}
 
       {/* Axis lines */}
-      {sorted.map((_, i) => {
+      {sorted.map((cap, i) => {
         const end = axisEnd(i, numAxes, chartRadius, centerX, centerY);
         const isHovered = hoveredAxis === i;
         const isDimmed = hoveredAxis !== null && hoveredAxis !== i;
+        // REGEN-01: zero-contribution capitals render dashed so the operator can
+        // see at a glance which axes are informed by actual behavior.
+        const isZeroContribution =
+          cap.note === "No activity yet" || (cap.confidence ?? 0) === 0;
         return (
           <line
             key={`axis-${i}`}
@@ -245,34 +269,51 @@ export default function CapitalRadar({
             y2={end.y}
             stroke={isHovered ? "var(--color-sage-700)" : "var(--color-sand-300)"}
             strokeWidth={isHovered ? "1" : "0.5"}
-            opacity={isDimmed ? 0.25 : 0.4}
+            strokeDasharray={isZeroContribution ? "4 4" : undefined}
+            opacity={isDimmed ? 0.25 : isZeroContribution ? 0.35 : 0.4}
             className="transition-all duration-200"
           />
         );
       })}
 
-      {/* Filled shape */}
+      {/* Filled shape — REGEN-01: opacity reflects avg confidence */}
       <path
         d={shapePath}
         fill="var(--color-sage-400)"
-        fillOpacity={0.2}
+        fillOpacity={shapeFillOpacity}
         stroke="var(--color-sage-600)"
         strokeWidth="1.5"
         strokeOpacity={0.6}
-        style={{ transition: "d 200ms ease" }}
+        style={{
+          transition:
+            reducedMotionHook || prefersReducedMotion.current
+              ? "none"
+              : "d 200ms ease, fill-opacity 400ms ease",
+        }}
       />
 
-      {/* Vertex dots */}
+      {/* Vertex dots — REGEN-01: hollow (transparent fill + stroke) for zero-contribution capitals */}
       {vertices.map((v, i) => {
+        const cap = sorted[i];
         const isHovered = hoveredAxis === i;
         const isDimmed = hoveredAxis !== null && hoveredAxis !== i;
+        const isZeroContribution =
+          cap.note === "No activity yet" || (cap.confidence ?? 0) === 0;
         return (
           <circle
             key={`vertex-${i}`}
             cx={v.x}
             cy={v.y}
             r={isHovered ? 5 : 4}
-            fill={isHovered ? "var(--color-sage-700)" : "var(--color-sage-600)"}
+            fill={
+              isZeroContribution
+                ? "transparent"
+                : isHovered
+                ? "var(--color-sage-700)"
+                : "var(--color-sage-600)"
+            }
+            stroke={isZeroContribution ? "var(--color-sage-500)" : "none"}
+            strokeWidth={isZeroContribution ? 1.2 : 0}
             opacity={isDimmed ? 0.4 : 1}
             className="transition-all duration-200"
           />
