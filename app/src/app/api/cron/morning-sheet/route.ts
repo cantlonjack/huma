@@ -129,6 +129,43 @@ export async function GET(request: Request): Promise<Response> {
 
       for (const userId of userIds) {
         try {
+          // REGEN-02 (Plan 02-02): skip operators who have declared Dormancy
+          // BEFORE fetching aspirations. Short-circuiting here saves both the
+          // aspirations query AND the downstream Anthropic sheet-compile +
+          // push send. Adds one extra single-row select on contexts, but the
+          // cost avoided (a sheet-compile Anthropic call) is orders of
+          // magnitude larger. The later context fetch at ~line 157 still
+          // happens for active users; we don't de-dupe it to keep the change
+          // surgical and the diff readable.
+          const { data: dormantCheck } = await supabase
+            .from("contexts")
+            .select("huma_context")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
+          const dormantFlag =
+            (dormantCheck?.huma_context as
+              | { dormant?: { active?: boolean } }
+              | undefined)?.dormant?.active === true;
+          if (dormantFlag) {
+            totalSkipped++;
+            // Structured log — source:"cron" keeps per-operator analytics
+            // dashboards clean; skip_reason:"dormant" is queryable for
+            // observing "how much Anthropic spend did Dormancy save us?"
+            console.log(
+              JSON.stringify({
+                req_id: obs.reqId,
+                user_id: userId,
+                route: "/api/cron/morning-sheet",
+                source: "cron",
+                skip_reason: "dormant",
+                status: 200,
+              }),
+            );
+            continue;
+          }
+
           // 2. Fetch user's aspirations
           const { data: aspirationRows } = await supabase
             .from("aspirations")
