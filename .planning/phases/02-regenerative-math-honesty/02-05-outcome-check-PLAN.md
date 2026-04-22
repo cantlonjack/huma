@@ -1026,6 +1026,8 @@ const { data: outcomeRecords = [] } = useQuery<OutcomeRecord[]>({
     // Assumes GET /api/outcome exists; if not, skip for now and derive from direct Supabase query.
     // For Phase 2 scope: add a lightweight GET to the same route file, OR query the outcome_checks table via Supabase client directly.
     // Pragmatic choice: query via createClient (browser Supabase) — outcomes is user-scoped + RLS-enforced.
+    // NOTE (checker revision): hook-level READ bypasses observability wrapper by design —
+    // RLS on outcome_checks gates access; writes still go through /api/outcome + withObservability (CONTEXT.md Decision 18).
     const supa = createClient();
     const { data, error } = await supa
       .from("outcome_checks")

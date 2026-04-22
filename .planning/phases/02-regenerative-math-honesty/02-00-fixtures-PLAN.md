@@ -509,7 +509,7 @@ NOTE on surgical edits — none. This plan only **creates** new files. It never 
   <done>
     - All 16 Phase 2 test stub files exist as importable Vitest modules
     - scripts/smoke/regen-02-dormancy.sh exists as an executable shell
-    - phase-2-scaffolds.test.ts (17 file-exists assertions) green
+    - phase-2-scaffolds.test.ts (16 file-exists assertions) green
     - Full suite still green (skipped tests are non-fatal)
     - Wave 1 plans will replace it.skip with real assertions — no new test files will be created in Wave 1
   </done>

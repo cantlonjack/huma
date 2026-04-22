@@ -2,9 +2,10 @@
 phase: 02-regenerative-math-honesty
 plan: 04
 type: execute
-wave: 1
+wave: 2
 depends_on:
   - "02-00"
+  - "02-02"
 files_modified:
   - app/src/types/context.ts
   - app/src/lib/schemas/index.ts
@@ -96,6 +97,8 @@ Deliver REGEN-05: Fallow day ("do-nothing sheet"). One-tap mark from the sheet h
 Purpose: Rest is the work has a second variant: *active* rest (Dormancy — multi-day state) and *situational* rest (Fallow — one-day state). Fallow lets the operator say "today is compost — let the soil work" without the system penalizing or prompting. Complements Plan 02's Dormancy. Matches REQUIREMENTS.md REGEN-05 and the Ethical Framework §03 "no shame, no rush" principle.
 
 Output: HumaContext.fallowDays type extension, pure helpers (`lib/fallow.ts`), new endpoint (`/api/sheet/fallow`), guard prepended to existing `/api/sheet/check`, useToday branch, FallowCard component, sheet header toggle button, three test files filled in from Wave 0 stubs, Voice Bible §02 audit on new copy.
+
+**Wave assignment note (from checker revision):** This plan was moved from Wave 1 → Wave 2 with added `depends_on: ["02-02"]` to serialize the `app/src/types/context.ts` edit after Plan 02. Both plans extend `HumaContext` (Plan 02 adds `dormant?`; this plan adds `fallowDays?`), so parallel execution risked last-writer-wins on the same file. Plan 05 stays in Wave 1 — its additions to `useToday.ts` / `today/page.tsx` are disjoint line-ranges (different destructure fields, different render branches) that a 3-way merge handles cleanly, and Plan 05 does NOT touch `types/context.ts` per its `files_modified` frontmatter.
 </objective>
 
 <execution_context>
