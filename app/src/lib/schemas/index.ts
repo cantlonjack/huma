@@ -200,6 +200,26 @@ export const nudgeSchema = z.object({
 
 export type NudgeRequest = z.infer<typeof nudgeSchema>;
 
+// ─── /api/outcome ──────────────────────────────────────────────────────────
+// REGEN-03 (Plan 02-05): 90-day outcome check — Yes/Some/No/Worse + one-sentence why.
+// `why` uses userTextField so SEC-04 sanitization (marker rejection, zero-width
+// stripping, injection-prefix peeling from Plan 01-04) applies for free.
+// `snooze: true` branch in the route increments snooze_count instead of writing
+// an answer row; the snooze placeholder 'some' answer is required by the Zod
+// enum but ignored by the snooze branch.
+
+export const outcomeSubmitSchema = z.object({
+  target_kind: z.enum(["aspiration", "pattern"]),
+  target_id: z.string().uuid(),
+  answer: z.enum(["yes", "some", "no", "worse"]),
+  // why is optional; when present, sanitized + marker-rejected via userTextField.
+  // Max 280 (one-sentence constraint from 02-CONTEXT.md).
+  why: userTextField({ min: 0, max: 280 }).optional(),
+  snooze: z.boolean().optional(),
+});
+
+export type OutcomeSubmitRequest = z.infer<typeof outcomeSubmitSchema>;
+
 // ─── /api/whole-compute ─────────────────────────────────────────────────────
 
 export const wholeComputeSchema = z.discriminatedUnion("compute", [
