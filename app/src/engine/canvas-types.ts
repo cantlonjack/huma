@@ -12,6 +12,7 @@ export interface CapitalScore {
   form: CapitalForm;
   score: number; // 1-5
   note: string;
+  confidence: number; // 0-1, min(1, daysSinceFirstBehavior / 14). Drives shape opacity on /whole radar. REGEN-01.
 }
 
 export interface FieldLayer {

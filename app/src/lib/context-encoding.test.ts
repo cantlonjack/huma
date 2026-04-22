@@ -83,14 +83,14 @@ function makeRichContext(): HumaContext {
 
 function makeCapitalScores(): CapitalScore[] {
   return [
-    { form: "financial", score: 2.5, note: "" },
-    { form: "material", score: 3.0, note: "" },
-    { form: "living", score: 3.5, note: "" },
-    { form: "social", score: 4.0, note: "" },
-    { form: "intellectual", score: 3.0, note: "" },
-    { form: "experiential", score: 2.5, note: "" },
-    { form: "spiritual", score: 3.5, note: "" },
-    { form: "cultural", score: 2.0, note: "" },
+    { form: "financial", score: 2.5, note: "", confidence: 1 },
+    { form: "material", score: 3.0, note: "", confidence: 1 },
+    { form: "living", score: 3.5, note: "", confidence: 1 },
+    { form: "social", score: 4.0, note: "", confidence: 1 },
+    { form: "intellectual", score: 3.0, note: "", confidence: 1 },
+    { form: "experiential", score: 2.5, note: "", confidence: 1 },
+    { form: "spiritual", score: 3.5, note: "", confidence: 1 },
+    { form: "cultural", score: 2.0, note: "", confidence: 1 },
   ];
 }
 

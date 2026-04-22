@@ -56,7 +56,7 @@ function RadarChart({ profile, size }: { profile: CapitalScore[]; size: number }
   const labelR = vbSize * 0.44;  // labels outside the shape
 
   const sorted = CAPITAL_ORDER.map(
-    (form) => profile.find((p) => p.form === form) || { form, score: 1, note: "" }
+    (form) => profile.find((p) => p.form === form) || { form, score: 1, note: "", confidence: 0 }
   );
 
   function polarToXY(index: number, radius: number): [number, number] {

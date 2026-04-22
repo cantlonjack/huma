@@ -27,7 +27,7 @@ const ALL_CAPITALS: CapitalForm[] = [
   "intellectual", "experiential", "spiritual", "cultural",
 ];
 
-interface DimensionActivity {
+export interface DimensionActivity {
   dimension: DimensionKey;
   completionRate: number; // 0–1 (completions / possible days over window)
   totalCompletions: number;
@@ -36,15 +36,22 @@ interface DimensionActivity {
 /**
  * Compute capital scores from dimensional behavioral activity.
  *
- * @param dimensionActivity — per-dimension completion rates from behavior_log
- * @param totalActiveDays  — total days with any activity (for baseline calibration)
- * @param windowDays       — observation window size (default 28)
- * @returns CapitalScore[] — 8 capital scores (1–5 scale)
+ * REGEN-01: `engagementFactor` multiplier removed — rest no longer punishes
+ * the score. Confidence is emitted separately as a 0–1 shader that the
+ * radar renders as shape opacity, so the math shows *what we know* without
+ * distorting *what we see*.
+ *
+ * @param dimensionActivity       — per-dimension completion rates from behavior_log
+ * @param totalActiveDays         — total days with any activity (kept for backwards compat; no longer gates score)
+ * @param windowDays              — observation window size (default 28)
+ * @param daysSinceFirstBehavior  — calendar days since the operator's first behavior_log entry (default 0). Feeds confidence shader.
+ * @returns CapitalScore[] — 8 capital scores (1–5 scale) + per-capital confidence (0–1)
  */
 export function computeCapitalScores(
   dimensionActivity: DimensionActivity[],
   totalActiveDays: number,
   windowDays: number = 28,
+  daysSinceFirstBehavior: number = 0,
 ): CapitalScore[] {
   // Accumulate weighted scores per capital form
   const capitalRaw = new Map<CapitalForm, number>();
@@ -71,9 +78,13 @@ export function computeCapitalScores(
     }
   }
 
-  // Engagement factor: how active is the operator overall?
-  // Scales from 0.4 (minimal use) to 1.0 (daily use)
-  const engagementFactor = Math.min(1, 0.4 + (totalActiveDays / windowDays) * 0.6);
+  // REGEN-01: confidence is a shader (0-1), not a score multiplier. Calendar days
+  // so Fallow weeks still teach the system the operator's shape. Void the old
+  // engagementFactor entirely — rest does not reduce score.
+  // Reference totalActiveDays + windowDays to keep the signature stable (backwards compat).
+  void totalActiveDays;
+  void windowDays;
+  const confidence = Math.min(1, Math.max(0, daysSinceFirstBehavior / 14));
 
   // Convert to 1–5 scale
   const scores: CapitalScore[] = ALL_CAPITALS.map((form) => {
@@ -81,13 +92,14 @@ export function computeCapitalScores(
     const contributions = capitalContributions.get(form) || 0;
 
     if (contributions === 0) {
-      // No behavioral data touches this capital — baseline 1
-      return { form, score: 1, note: "No activity yet" };
+      // No behavioral data touches this capital — baseline 1, confidence 0.
+      // Radar renders dashed axis + hollow vertex when confidence === 0 or note === "No activity yet".
+      return { form, score: 1, note: "No activity yet", confidence: 0 };
     }
 
-    // Normalize: average contribution rate, scaled by engagement
+    // Normalize: average contribution rate. Confidence is a shader (emitted
+    // alongside, rendered as opacity) — NOT a multiplier on avgRate.
     const avgRate = raw / contributions;
-    const adjusted = avgRate * engagementFactor;
 
     // Map to 1–5:
     // 0.0–0.15 → 1 (minimal)
@@ -96,14 +108,14 @@ export function computeCapitalScores(
     // 0.55–0.75 → 4 (strong)
     // 0.75–1.0  → 5 (thriving)
     let score: number;
-    if (adjusted < 0.15) score = 1;
-    else if (adjusted < 0.35) score = 2;
-    else if (adjusted < 0.55) score = 3;
-    else if (adjusted < 0.75) score = 4;
+    if (avgRate < 0.15) score = 1;
+    else if (avgRate < 0.35) score = 2;
+    else if (avgRate < 0.55) score = 3;
+    else if (avgRate < 0.75) score = 4;
     else score = 5;
 
     const note = generateCapitalNote(form, score, avgRate);
-    return { form, score, note };
+    return { form, score, note, confidence };
   });
 
   return scores;
