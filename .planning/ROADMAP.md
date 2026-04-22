@@ -78,7 +78,13 @@ Config: `parallelization: true`, `granularity: standard` — eight phases matche
   3. User can mark any day Fallow from the sheet; sheet shows "Fallow. Compost day." with checkoff disabled and no behavior log entry written
   4. Every capital score on /whole expands into a receipt showing inputs, weights, thresholds, and confidence — math is reproducible by a patient user
   5. Aspirations and patterns older than 90 days prompt the Yes/Some/No/Worse + one-sentence-why outcome check; pattern-strength signal becomes outcome-weighted
-**Plans**: TBD
+**Plans**: 6 plans (Wave 0: plan 00 fixtures/test stubs; Wave 1: plans 01, 02, 04, 05 parallel; Wave 2: plan 03 capital-receipt — depends on plan 01 CapitalRadar edits)
+- [ ] 02-00-fixtures-PLAN.md — Wave 0: 16 test-file stubs + regen-02-dormancy.sh shell + shape-parity smoke
+- [ ] 02-01-confidence-math-PLAN.md — REGEN-01: capital-computation engagement multiplier removal + CapitalScore.confidence + CapitalRadar opacity/dashed-axis
+- [ ] 02-02-dormancy-PLAN.md — REGEN-02: HumaContext.dormant + /api/operator/dormancy + SettingsSheet toggle + useToday DormantCard + cron skip + CapitalPulse.dormant → quiet rename
+- [ ] 02-03-capital-receipt-PLAN.md — REGEN-04: CapitalReceiptSheet bottom-sheet + CapitalRadar tap-to-open + buildCapitalReceipt pure helper + reproducibility parity test (Wave 2 after plan 01)
+- [ ] 02-04-fallow-day-PLAN.md — REGEN-05: HumaContext.fallowDays + /api/sheet/fallow + sheet/check 409 FALLOW_DAY guard + useToday FallowCard + sheet header toggle + post-midnight freeze
+- [ ] 02-05-outcome-check-PLAN.md — REGEN-03: migration 020_outcomes.sql + /api/outcome + isOutcomeDue / applyOutcomeToStrength pure libs + OutcomeCheckCard on /today + pattern-strength re-compute
 
 ### Phase 3: Onboarding Visibility (Plan P2)
 **Goal**: The promise is "see the whole." The promise must be fulfilled before minute three.
@@ -164,7 +170,7 @@ Phases execute in numeric order: 1 → 2 (parallel with 3) → 3 → 4 (parallel
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Security & Cost Control (P0) | 11/11 | Complete | 2026-04-21 |
-| 2. Regenerative Math Honesty (P1) | 0/TBD | Not started | - |
+| 2. Regenerative Math Honesty (P1) | 0/6 | Planned | - |
 | 3. Onboarding Visibility (P2) | 0/TBD | Not started | - |
 | 4. Landing & Funnel Instrumentation (P3) | 0/TBD | Not started | - |
 | 5. Viral Insight Artifact (P4) | 0/TBD | Not started | - |
@@ -179,3 +185,4 @@ Phases execute in numeric order: 1 → 2 (parallel with 3) → 3 → 4 (parallel
 *Phase 1 planned: 2026-04-18 — 10 plans (00 fixtures, 01-04 + 05a + 06 in Wave 1, 05b + 05c in Wave 2, 07 enablement in Wave 3). Revised after checker feedback (Blockers 1-6 addressed; Warnings 1-7 covered). Observability was split into 05a/05b/05c during planning.*
 *Phase 1 partial close: 2026-04-21 — 10/10 plans landed; code shipped behind PHASE_1_GATE_ENABLED=true. SEC-02 runtime enforcement deferred to Phase 1.1 (Supabase credential migration blocker — see `.planning/phases/01-security-cost-control/deferred-items.md`).*
 *Phase 1 complete: 2026-04-21 — 11/11 plans; plan 01-08 closed SEC-02 runtime gap via @supabase/supabase-js ^2.104.0 upgrade + migrations 018/019 fixing latent PL/pgSQL ambiguity in increment_quota_and_check. All SEC-01..SEC-06 enforcing in production.*
+*Phase 2 planned: 2026-04-22 — 6 plans (00 fixtures, 01/02/04/05 in Wave 1, 03 in Wave 2 depending on 01's CapitalRadar edits). All 5 REGEN requirement IDs mapped exactly once. 17 new test files pre-stubbed in Wave 0 per 02-VALIDATION.md.*
