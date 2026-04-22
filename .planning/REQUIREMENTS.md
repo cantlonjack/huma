@@ -11,7 +11,7 @@ Requirements for the Remediation milestone. Each maps to one GSD phase. Plan IDs
 ### Security & Cost Control (Plan P0)
 
 - [x] **SEC-01** *(P0.1)*: `/api/v2-chat` and `/api/sheet` reject unauthenticated requests with 401. Magic-link auth (already wired) gates pre-auth chat; cron path keeps `CRON_SECRET` bypass.
-- [~] **SEC-02** *(P0.2)*: Per-user token budget + structured rate limit via Supabase-backed ledger. Tiers: anonymous (5 req / 10K tokens/day), free (50 req / 100K tokens/day), Operate (500 req / 2M tokens/day). **PARTIAL (code complete, runtime enforcement blocked on Supabase credential migration — deferred to Phase 1.1).**
+- [x] **SEC-02** *(P0.2)*: Per-user token budget + structured rate limit via Supabase-backed ledger. Tiers: anonymous (5 req / 10K tokens/day), free (50 req / 100K tokens/day), Operate (500 req / 2M tokens/day). **Complete 2026-04-21 — runtime enforcement verified in production via sec-02-quota.sh smoke (5×200 + 1×429); user_quota_ledger row count > 0 with req_count=5 on 6th-request rejection.**
 - [x] **SEC-03** *(P0.3)*: Token counting before dispatch. Prompts exceeding 80K (Sonnet) or 150K tokens get truncated tail-first with warning header. Prevents runaway cost.
 - [x] **SEC-04** *(P0.4)*: Prompt-injection defense at input boundary. Reject `[[`/`]]` marker delimiters with 400, strip "ignore previous instructions" patterns, NFC-normalize, strip zero-width chars.
 - [x] **SEC-05** *(P0.5)*: Request IDs + structured JSON logging. Every route emits req_id, user_id, route, prompt_tokens, output_tokens, latency_ms, status. Cost/error/latency dashboards + alerts.
@@ -103,7 +103,7 @@ Explicitly excluded. See PROJECT.md for rationale.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | SEC-01 | Phase 1 | Complete |
-| SEC-02 | Phase 1 | Partial — deferred to Phase 1.1 (Supabase credential migration blocker) |
+| SEC-02 | Phase 1 | Complete |
 | SEC-03 | Phase 1 | Complete |
 | SEC-04 | Phase 1 | Complete |
 | SEC-05 | Phase 1 | Complete |
@@ -151,4 +151,4 @@ Explicitly excluded. See PROJECT.md for rationale.
 
 ---
 *Requirements defined: 2026-04-18*
-*Last updated: 2026-04-21 — Phase 1 partial close. SEC-01/03/04/05/06 Complete; SEC-02 Partial (code landed, runtime enforcement blocked on Supabase credential migration — see `.planning/phases/01-security-cost-control/deferred-items.md`).*
+*Last updated: 2026-04-21 — Phase 1 complete. SEC-01 through SEC-06 all Complete; runtime enforcement of all six verified via production smoke + ledger inspection. SEC-02 gap closed by Plan 01-08 (@supabase/supabase-js upgrade + migrations 018/019 PL/pgSQL ambiguity fix + structured fail-open WARN).*

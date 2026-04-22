@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
-current_plan: 10
-status: partial
-stopped_at: Completed 01-07-enablement-PLAN.md (partial — SEC-02 deferred to Phase 1.1)
-last_updated: "2026-04-21T07:25:00Z"
+current_plan: 11
+status: complete
+stopped_at: Completed 01-08-sec02-admin-credentials-PLAN.md — Phase 1 fully enforcing in production
+last_updated: "2026-04-21T23:55:00Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 8
-  completed_phases: 0
-  total_plans: 10
-  completed_plans: 10
-  percent: 100
+  completed_phases: 1
+  total_plans: 11
+  completed_plans: 11
+  percent: 12
 ---
 
 # Project State
@@ -22,16 +22,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-18)
 
 **Core value:** Reduce cognitive load and reveal connections — every feature must pass The Single Test.
-**Current focus:** Phase 1 partial close — SEC-02 runtime enforcement deferred to Phase 1.1
+**Current focus:** Phase 1 complete — Phase 2 (Regenerative Math Honesty) unblocked
 
 ## Current Position
 
-Phase: 1 of 8 (Security & Cost Control) — PARTIAL CLOSE as of 2026-04-21
-Plan: 10/10 plans landed (code-wise). SEC-02 runtime enforcement blocked on Supabase credential migration — deferred to Phase 1.1.
-Status: Live in production behind `PHASE_1_GATE_ENABLED=true`. Auth + budget + sanitizer + observability + SSE abort verified. Quota code ships but fails open silently (credential issue). See `.planning/phases/01-security-cost-control/deferred-items.md` for full root cause.
-Last activity: 2026-04-21 — Path 2 partial-ship decision; plan 07 SUMMARY authored; rollback procedure documented.
+Phase: 1 of 8 (Security & Cost Control) — COMPLETE as of 2026-04-21
+Plan: 11/11 plans landed. All six SEC requirements enforcing in production behind `PHASE_1_GATE_ENABLED=true`.
+Status: Live and enforcing. SEC-02 gap closed via @supabase/supabase-js upgrade (2.99.2 → ^2.104.0) + migrations 018/019 (fix latent PL/pgSQL ambiguities in increment_quota_and_check) + structured fail-open warning + operator env-var rotation. Ledger writes confirmed (req_count=5, 6th request returns 429 with structured RATE_LIMITED body).
+Last activity: 2026-04-21 — Plan 01-08 landed; production SEC-02 smoke passed; user_quota_ledger confirmed writing rows.
 
-Progress: [██████████] 100% (10/10 plans complete in Phase 1; SEC-02 verified requirement deferred)
+Progress: [██████████] 100% (11/11 plans complete in Phase 1)
 
 ## Rollback Procedures
 
@@ -129,21 +129,24 @@ Recent decisions affecting current work:
 - [Phase 01-security-cost-control]: Plan 01-07: Bearer JWT fallback added to ensureUser() as scope addition (commit 08cf2c1) — API callers without Supabase SSR cookies can authenticate via `Authorization: Bearer <jwt>`
 - [Phase 01-security-cost-control]: Plan 01-07: Path 2 partial-ship over Path 1 continue-debugging — Supabase credential migration (legacy keys disabled 2026-04-20, new sb_secret_* likely incompatible with installed supabase-js) is an infra task, not a code task; fix owner is Phase 1.1 gap-closure plan
 - [Phase 01-security-cost-control]: Plan 01-07: Phase 1 not marked completed_phases: 1 despite 10/10 plans landed — SEC-02 runtime enforcement blocked; honesty over neatness
+- [Phase 01-security-cost-control]: Plan 01-08: Path 1 (@supabase/supabase-js upgrade) resolved SDK-side auth; migrations 018+019 fixed latent PL/pgSQL ambiguities in increment_quota_and_check that predated Plan 01-02 landing. VERIFICATION.md misdiagnosed the gap as credential-only; the PL/pgSQL bug was masked by unit-test mocking + deferred enablement smoke, then surfaced first through structured WARN logs made non-silent by this same plan
+- [Phase 01-security-cost-control]: Plan 01-08: `#variable_conflict use_column` pragma chosen over renaming RETURNS TABLE columns — preserves quota.ts caller contract; single-point catch-all for ambiguity between table columns and implicit RETURNS TABLE variables
+- [Phase 01-security-cost-control]: Plan 01-08: integration testing gap flagged for future planning — all quota RPC unit tests mock the RPC; PL/pgSQL body never executes against real Postgres in CI. Local Supabase docker instance or pgTAP recommended for Phase 2+ quota / subscriptions work
 
 ### Pending Todos
 
-- Phase 1.1 — plan gap-closure for SEC-02. Scope: resolve Supabase credential migration (3 options scored in deferred-items.md); re-run SEC-02 smoke end-to-end; confirm `user_quota_ledger` accrues rows; optionally re-run SEC-03/04/06 smoke for full coverage.
+- (none — Phase 1 closed; ready for Phase 2)
 
 ### Blockers/Concerns
 
-- **SEC-02 runtime enforcement blocked on Supabase credential migration** — legacy anon + service_role keys disabled 2026-04-20; new `sb_secret_*` format likely incompatible with installed `@supabase/supabase-js`. `user_quota_ledger` count = 0 in production despite live traffic. Code is correct (697/697 tests green); `checkAndIncrement` fails open silently. Fix options: upgrade supabase-js, re-enable legacy keys, or refactor createAdminSupabase to branch on format. Full root cause + options in `.planning/phases/01-security-cost-control/deferred-items.md`. Owner: Phase 1.1.
 - **Phase 6 PRICE-04 depends on Phase 7 DEPTH-05** — graduation-aware upgrade path requires four graduation capacities to be measurable. Flagged in roadmap; revisit when planning Phase 6.
 - **Phase 8 LONG-01 depends on Phase 2 REGEN-03** — pattern contribution gate requires 6+ months of outcome data, so Phase 2's outcome-measurement infrastructure must have shipped well before Phase 8 starts.
 - **Supabase migrations are manual** — every phase that adds a migration (Phase 2's `017_outcomes.sql`, etc.) requires dashboard SQL-editor execution; code push alone does NOT apply them.
+- **No PL/pgSQL integration tests** — `quota.test.ts` and any future RPC tests mock the database layer; PL/pgSQL bodies are not exercised by CI. Add local Supabase / pgTAP coverage when Phase 2+ touches database-side logic.
 
 ## Session Continuity
 
-Last session: 2026-04-21T07:25:00Z
-Stopped at: Completed 01-07-enablement-PLAN.md (partial close — SEC-02 deferred to Phase 1.1)
+Last session: 2026-04-21T23:55:00Z
+Stopped at: Completed 01-08-sec02-admin-credentials-PLAN.md — Phase 1 fully complete (11/11 plans landed; SEC-01 through SEC-06 all enforcing in production)
 Resume file: None
-Expected next: `/gsd:plan-phase 1.1` (gap-closure) OR operator proceeds to Phase 2 with SEC-02 gap acknowledged
+Expected next: `/gsd:plan-phase 2` — Regenerative Math Honesty (Phase 2)

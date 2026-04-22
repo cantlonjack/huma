@@ -73,4 +73,40 @@ Quota enforcement is silently disabled in production. Any authenticated or anon 
 2. Expect 5 × 200 OK followed by 1 × 429 with body `{code:"RATE_LIMITED", tier:"anonymous", ...}`.
 3. Confirm `SELECT count(*) FROM user_quota_ledger` > 0 in Supabase dashboard after the smoke run.
 
+### RESOLVED — 2026-04-21 (Plan 01-08)
+
+**Actual root cause was two-part, not one.** VERIFICATION.md correctly identified the Supabase credential migration (legacy JWT service_role disabled 2026-04-20) as a blocker, but it missed a **second, older bug**: migration 016's `increment_quota_and_check` PL/pgSQL function contained two ambiguous column references (`tier` and `req_count`) that collided with implicit variables exposed by the function's `RETURNS TABLE (...)` declaration. Every production call errored with `column reference ... is ambiguous`, fell through `quota.ts`'s fail-open branch, and returned `allowed: true`. The bug had been dormant since migration 016 shipped — unit tests mock the RPC, enablement smoke was deferred, no one ran end-to-end. The credential migration on 2026-04-20 shifted the failure mode from "SQL error" to "auth error," obscuring the real bug until this plan cleared the auth layer.
+
+**Fix shipped — three layers, in diagnostic order:**
+
+1. **SDK upgrade** — `@supabase/supabase-js` `^2.99.2 → ^2.104.0` (commit `1396b11`). New version natively accepts both legacy JWT and `sb_secret_*` service-role key formats; no branching in `createAdminSupabase()`. This fixed the auth layer VERIFICATION.md called out.
+
+2. **Migration `018_fix_quota_tier_ambiguity.sql`** — qualified `WHERE tier = v_tier` to `WHERE user_quotas_tiers.tier = v_tier`. Fixed one ambiguity; surfaced the second (the WARN log revealed `column reference "req_count" is ambiguous` on round two).
+
+3. **Migration `019_quota_variable_conflict_pragma.sql`** — added `#variable_conflict use_column` pragma to the function body. Tells Postgres to always prefer column interpretation when a name could be either a column or a variable. Belt-and-suspenders catch-all; local vars all `v_`-prefixed so no real collision exists except with RETURNS TABLE output names where column-interpretation is always what we want.
+
+**Hardening shipped alongside:** `quota.ts` fail-open branch upgraded from silent `console.error("[quota] ...")` to structured `console.warn(JSON.stringify({component:"quota", severity:"WARN", event:"increment_quota_and_check_failed", error_message, user_id, route, req_id}))`. This is what let us diagnose the PL/pgSQL bug in-flight — the `error_message` field surfaced the ambiguity errors in Vercel log search. Any future runtime credential / RPC / data-model failure on this path will now surface immediately via `component=quota severity=WARN`.
+
+**Verification evidence:**
+- `scripts/smoke/sec-02-quota.sh` vs https://huma-two.vercel.app → **PASS** (5×200 + 6th=429 with `{code:"RATE_LIMITED", tier:"anonymous", suggest:"sign_in", resetAt:ISO}`; exit 0).
+- `SELECT * FROM user_quota_ledger ORDER BY window_start DESC LIMIT 1` → `user_id=b425c92d-..., route=/api/v2-chat, req_count=5, token_count=1371, window_start=2026-04-21 23:38:27+00`.
+- Denials don't touch the ledger (6th request was rejected BEFORE increment — req_count caps at 5, consistent with function design).
+- 697/697 Vitest suite stayed green across the SDK upgrade.
+
+**Paths NOT taken:**
+- Path 2 (re-enable Supabase legacy keys + re-paste legacy service_role into Vercel) — rejected as explicit short-term debt; Supabase will disable legacy keys again.
+- Path 3 (format-detection branch in `createAdminSupabase`) — kept in reserve as fallback if SDK upgrade broke the surface; it didn't, so never applied.
+- Renaming RETURNS TABLE output columns (`tier → out_tier`, `req_count → out_req_count`) — would change caller contract in `quota.ts`. Pragma is a smaller, more maintainable fix.
+
+**Systemic gap flagged for Phase 2+ planning:** all four `increment_quota_and_check` tests in `quota.test.ts` mock the RPC (`vi.fn(async () => ({data, error}))`) — the PL/pgSQL body never executes against real Postgres in CI. A local Supabase docker instance or pgTAP coverage should be added before Phase 6's subscription / billing RPC work lands, since those will add more database-side logic at risk of similar latent bugs.
+
+### Carryover — deferred as still-unresolved
+
+Three Phase 1 smokes remain deferred after this plan:
+- **SEC-03** end-to-end budget-truncation smoke against production — needs a test account seeded with enough quota to execute 100+ requests (anon cap of 5/day blocks it). Unit tests for `budgetCheck()` are green.
+- **SEC-04** end-to-end injection-sanitizer smoke against production — needs `CRON_SECRET` (not accessible from this execution context) to bypass the auth gate so a clean 400 on marker-delimiter input is reachable. Unit + coverage tests are green.
+- **SEC-06** Vercel-log manual verify of `APIUserAbortError` signature — needs operator to disconnect mid-stream and inspect the req_id in Vercel logs. Unit tests green (4 abort assertions).
+
+None of these are blockers for Phase 2. Flagged for operator attention on a future Vercel-dashboard session.
+
 ---
