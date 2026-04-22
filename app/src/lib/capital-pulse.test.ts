@@ -114,7 +114,7 @@ describe("check-off flow: capital pulse", () => {
     expect(pulse.movedDimensions).toContain("joy");  // from dimensionOverrides
   });
 
-  it("dormant dimension: flags dimension with 5+ days inactive", () => {
+  it("quiet dimension: flags dimension with 5+ days inactive", () => {
     const entries = [makeEntry({ dimensions: ["body"] })];
     const checked = new Set(["a1:walk"]);
     const aspirations = [makeAspiration("a1", [makeBehavior("walk", ["body"])])];
@@ -130,13 +130,14 @@ describe("check-off flow: capital pulse", () => {
     };
 
     const pulse = computeCapitalPulse(entries, checked, aspirations, recentDays);
-    expect(pulse.dormantDimension).toBeDefined();
-    // purpose has 15 days inactive — the most dormant
-    expect(pulse.dormantDimension!.key).toBe("purpose");
-    expect(pulse.dormantDimension!.days).toBe(15);
+    expect(pulse.quietDimension).toBeDefined();
+    // purpose has 15 days inactive — the most quiet (dimension-level signal,
+    // renamed from "dormant" in REGEN-02 to free the name for operator-state Dormancy).
+    expect(pulse.quietDimension!.key).toBe("purpose");
+    expect(pulse.quietDimension!.days).toBe(15);
   });
 
-  it("no dormant dimension when all have recent activity", () => {
+  it("no quiet dimension when all have recent activity", () => {
     const entries = [makeEntry({ dimensions: ["body"] })];
     const checked = new Set(["a1:walk"]);
     const aspirations = [makeAspiration("a1", [makeBehavior("walk", ["body"])])];
@@ -145,12 +146,12 @@ describe("check-off flow: capital pulse", () => {
     };
 
     const pulse = computeCapitalPulse(entries, checked, aspirations, recentDays);
-    expect(pulse.dormantDimension).toBeNull();
+    expect(pulse.quietDimension).toBeNull();
   });
 
   it("empty compiledEntries + empty checked → null-like pulse", () => {
     const pulse = computeCapitalPulse([], new Set(), []);
     expect(pulse.movedDimensions).toHaveLength(0);
-    expect(pulse.dormantDimension).toBeNull();
+    expect(pulse.quietDimension).toBeNull();
   });
 });

@@ -679,7 +679,7 @@ export function useToday(): UseTodayReturn {
     return best;
   }, [compiledEntries]);
 
-  // State sentence: which dimensions are moving, which are dormant
+  // State sentence: which dimensions are moving, which are quiet (dimension-level signal)
   const stateSentence = useMemo<string | null>(() => {
     if (!capitalPulse && compiledEntries.length === 0) return null;
 
@@ -693,8 +693,8 @@ export function useToday(): UseTodayReturn {
       } else if (moved.length === 1) {
         parts.push(`${DIMENSION_LABELS[moved[0]]} moved today.`);
       }
-      if (capitalPulse.dormantDimension) {
-        const dim = capitalPulse.dormantDimension;
+      if (capitalPulse.quietDimension) {
+        const dim = capitalPulse.quietDimension;
         parts.push(`${DIMENSION_LABELS[dim.key]} has been quiet for ${dim.days} days.`);
       }
       return parts.length > 0 ? parts.join(" ") : null;
@@ -715,7 +715,9 @@ export function useToday(): UseTodayReturn {
     return null;
   }, [capitalPulse, compiledEntries]);
 
-  // Watching signal: from dormant dims + hypothesized correlations
+  // Watching signal: from quiet dims + hypothesized correlations
+  // ("quiet" = dimension-level signal, renamed from "dormant" in REGEN-02 to free
+  //  the name for operator-state Dormancy on HumaContext.dormant.)
   const watchingSignal = useMemo<{ text: string; dimensions: [DimensionKey, DimensionKey] } | null>(() => {
     // Use hypothesized correlations if available
     if (hypotheses.length > 0) {
@@ -727,15 +729,15 @@ export function useToday(): UseTodayReturn {
         };
       }
     }
-    // Or use dormant dimension data
-    if (capitalPulse?.dormantDimension && capitalPulse.dormantDimensions.length >= 1) {
-      const dormant = capitalPulse.dormantDimension;
+    // Or use quiet dimension data (dimension-level signal — NOT operator-state Dormancy)
+    if (capitalPulse?.quietDimension && capitalPulse.quietDimensions.length >= 1) {
+      const quiet = capitalPulse.quietDimension;
       // Find a moving dim to pair with
       const moving = capitalPulse.movedDimensions[0];
       if (moving) {
         return {
-          text: `${DIMENSION_LABELS[dormant.key]} dropped this week. Worth watching.`,
-          dimensions: [dormant.key, moving],
+          text: `${DIMENSION_LABELS[quiet.key]} dropped this week. Worth watching.`,
+          dimensions: [quiet.key, moving],
         };
       }
     }

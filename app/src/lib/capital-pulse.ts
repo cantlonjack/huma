@@ -1,6 +1,10 @@
 /**
  * Capital Pulse — computes which dimensions were moved today
  * and which haven't been touched in 5+ days.
+ *
+ * REGEN-02: the dimension-level "quiet" signal was previously named "dormant".
+ * That name is now reserved for operator-state Dormancy (HumaContext.dormant);
+ * the dimension-level signal is "quiet" to keep the two concepts separable.
  */
 
 import type { DimensionKey, SheetEntry, Aspiration } from "@/types/v2";
@@ -8,8 +12,8 @@ import { getEffectiveDimensions } from "@/types/v2";
 
 export interface PulseData {
   movedDimensions: DimensionKey[];
-  dormantDimension: { key: DimensionKey; days: number } | null;
-  dormantDimensions: DimensionKey[];
+  quietDimension: { key: DimensionKey; days: number } | null;
+  quietDimensions: DimensionKey[];
 }
 
 /**
@@ -57,9 +61,10 @@ export function computeCapitalPulse(
 
   const movedDimensions = Array.from(movedSet);
 
-  // Find dormant dimensions (5+ days without activity)
-  let dormantDimension: PulseData["dormantDimension"] = null;
-  const dormantDimensions: DimensionKey[] = [];
+  // Find quiet dimensions (5+ days without activity) — dimension-level signal,
+  // distinct from operator-state Dormancy (HumaContext.dormant).
+  let quietDimension: PulseData["quietDimension"] = null;
+  const quietDimensions: DimensionKey[] = [];
   if (recentDimensionDays) {
     const allDimensions: DimensionKey[] = [
       "body", "people", "money", "home", "growth", "joy", "purpose", "identity",
@@ -70,14 +75,14 @@ export function computeCapitalPulse(
       if (movedSet.has(dim)) continue; // Skip if moved today
       const days = recentDimensionDays[dim] ?? 999;
       if (days >= 5) {
-        dormantDimensions.push(dim);
+        quietDimensions.push(dim);
         if (days > maxDays) {
           maxDays = days;
-          dormantDimension = { key: dim, days };
+          quietDimension = { key: dim, days };
         }
       }
     }
   }
 
-  return { movedDimensions, dormantDimension, dormantDimensions };
+  return { movedDimensions, quietDimension, quietDimensions };
 }

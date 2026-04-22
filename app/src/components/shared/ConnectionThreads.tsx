@@ -43,7 +43,10 @@ export interface PulseState {
 export interface ConnectionThreadsProps {
   activeDimensions: DimensionKey[];
   connections?: DimensionConnection[];
-  dormantDimensions?: DimensionKey[];
+  /** Dimension-level "quiet" signal — dims with 5+ days without activity.
+   *  Renamed from dormantDimensions in REGEN-02 to free the "dormant" name for
+   *  operator-state Dormancy (HumaContext.dormant). Rendered as a red ring. */
+  quietDimensions?: DimensionKey[];
   size: ConnectionThreadsSize;
   animate?: boolean;
   /** For "pulse" variant: per-dimension activity states */
@@ -300,7 +303,7 @@ export const ConnectionThreads = memo(function ConnectionThreads(props: Connecti
 function Ring({
   activeDimensions,
   conns,
-  dormantDimensions = [],
+  quietDimensions = [],
   size,
   anim,
   pulseStates,
@@ -326,7 +329,7 @@ function Ring({
   const useDarkBg = isSignature || darkMode;
 
   const activeSet = useMemo(() => new Set(activeDimensions), [activeDimensions]);
-  const dormantSet = useMemo(() => new Set(dormantDimensions), [dormantDimensions]);
+  const quietSet = useMemo(() => new Set(quietDimensions), [quietDimensions]);
 
   // Pulse state lookup
   const pulseMap = useMemo(() => {
@@ -352,7 +355,7 @@ function Ring({
   const drawMs = isMinimal ? 600 : 1000;
   const stagger = isMinimal ? 40 : 80;
 
-  if (!activeDimensions.length && !dormantDimensions?.length) return null;
+  if (!activeDimensions.length && !quietDimensions?.length) return null;
 
   // Badge renders only the strongest connection thread
   const visibleConns = isBadge && strongestConn ? [strongestConn] : conns;
@@ -468,15 +471,17 @@ function Ring({
       {ALL_DIMS.map((dim, i) => {
         const { x, y } = xy(dim, r, C);
         const active = activeSet.has(dim);
-        const dormant = dormantSet.has(dim);
+        // "quiet" = dimension-level signal (5+ days no activity). Distinct from
+        // operator-state Dormancy (HumaContext.dormant) which silences /today entirely.
+        const quiet = quietSet.has(dim);
 
         // Signature: inactive dims are ghost outlines
-        const dotFill = dormant
+        const dotFill = quiet
           ? "#A04040"
           : active
             ? DIMENSION_COLORS[dim]
             : useDarkBg ? "transparent" : "#C4D9C6";
-        const dotOpacity = active ? 1 : dormant ? 0.5 : useDarkBg ? 0.15 : 0.2;
+        const dotOpacity = active ? 1 : quiet ? 0.5 : useDarkBg ? 0.15 : 0.2;
         const currentR = active ? dotR : inactiveR;
 
         // Pulse variant: determine breathing animation per-dimension
@@ -515,8 +520,8 @@ function Ring({
               />
             )}
 
-            {/* Dormant marker */}
-            {dormant && !isMinimal && !isBadge && (
+            {/* Quiet marker — dimension-level "hasn't been touched" ring */}
+            {quiet && !isMinimal && !isBadge && (
               <circle
                 cx={x}
                 cy={y}
@@ -532,7 +537,7 @@ function Ring({
             )}
 
             {/* Ghost outline for inactive dots in signature mode */}
-            {!active && !dormant && useDarkBg && (
+            {!active && !quiet && useDarkBg && (
               <circle
                 cx={x}
                 cy={y}
@@ -576,7 +581,7 @@ function Ring({
                     fontFamily: "'Source Sans 3', 'Helvetica Neue', sans-serif",
                     fontSize: "11px",
                     fontWeight: 500,
-                    fill: active ? "#554D42" : dormant ? "#A04040" : "#A89E90",
+                    fill: active ? "#554D42" : quiet ? "#A04040" : "#A89E90",
                     opacity: drawn ? 1 : 0,
                     transition: anim
                       ? `opacity 400ms ${EASE} ${200 + i * 30}ms, fill 300ms ${EASE}`

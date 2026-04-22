@@ -374,7 +374,7 @@ export interface Nudge {
 
 export interface CapitalPulse {
   moved: DimensionKey[];           // Dimensions with at least one check-off today
-  dormant: DimensionKey[];         // Dimensions with no activity in 5+ days
+  quiet: DimensionKey[];           // Dimensions with no activity in 5+ days (renamed from dormant — REGEN-02 frees the name for operator-state Dormancy)
   text: string;                    // e.g. "Today moved Body and Money. Growth hasn't been touched in 5 days."
 }
 

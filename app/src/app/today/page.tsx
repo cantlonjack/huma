@@ -96,11 +96,13 @@ const ALL_DIMENSIONS: DimensionKey[] = [
 const BriefingPulse = memo(function BriefingPulse({
   compiledDimensions,
   movedDimensions,
-  dormantDimensions = [],
+  quietDimensions = [],
 }: {
   compiledDimensions: DimensionKey[];
   movedDimensions?: DimensionKey[];
-  dormantDimensions?: DimensionKey[];
+  /** Dimension-level signal — dims with 5+ days no activity (renamed from
+   *  dormantDimensions in REGEN-02 to separate from operator-state Dormancy). */
+  quietDimensions?: DimensionKey[];
 }) {
   // Show all dimensions from today's sheet as active, with pulse states
   const active = movedDimensions && movedDimensions.length > 0
@@ -116,7 +118,7 @@ const BriefingPulse = memo(function BriefingPulse({
     <div className="flex justify-center">
       <ConnectionThreads
         activeDimensions={active as DimensionKey[]}
-        dormantDimensions={dormantDimensions}
+        quietDimensions={quietDimensions}
         size="compact"
         pulseStates={pulseStates}
       />
@@ -324,7 +326,7 @@ export default function TodayPage() {
                     <BriefingPulse
                       compiledDimensions={compiledDimensions}
                       movedDimensions={t.capitalPulse?.movedDimensions}
-                      dormantDimensions={t.capitalPulse?.dormantDimensions}
+                      quietDimensions={t.capitalPulse?.quietDimensions}
                     />
                   </div>
                 </div>

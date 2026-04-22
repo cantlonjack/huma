@@ -216,6 +216,11 @@ export interface HumaContext {
   decisions: Decision[];
   capacityState?: CapacityState;
 
+  // REGEN-02: Dormancy — operator-state rest signal. Toggle from /whole SettingsSheet.
+  // active=true silences sheet + push + nudges; visibility (Whole, Grow, patterns) unaffected.
+  // `since` is set on enable; left intact on disable so analytics can compute rest duration.
+  dormant?: { active: boolean; since: string };
+
   // Meta
   _sources: ContextSource[];
   _lastUpdated: string;
