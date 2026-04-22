@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
-status: Live and enforcing. SEC-02 gap closed via @supabase/supabase-js upgrade (2.99.2 → ^2.104.0) + migrations 018/019 (fix latent PL/pgSQL ambiguities in increment_quota_and_check) + structured fail-open warning + operator env-var rotation. Ledger writes confirmed (req_count=5, 6th request returns 429 with structured RATE_LIMITED body).
-stopped_at: Completed 02-00-fixtures-PLAN.md
-last_updated: "2026-04-22T07:20:05.394Z"
-last_activity: 2026-04-22 — Plan 02-00 landed; Phase 2 Wave 0 test scaffolds complete (17 artifacts; shape-parity smoke green).
+current_plan: 2
+status: completed
+stopped_at: Completed 02-01-confidence-math-PLAN.md (Wave 1 plan 1 of 5)
+last_updated: "2026-04-22T10:05:37.871Z"
+last_activity: 2026-04-22
 progress:
   total_phases: 8
   completed_phases: 1
   total_plans: 17
-  completed_plans: 12
+  completed_plans: 13
   percent: 71
 ---
 
@@ -28,13 +29,13 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 Phase: 2 of 8 (Regenerative Math Honesty) — IN PROGRESS
 Plan: 1/6 plans landed (02-00-fixtures); next is Wave 1 (02-01 confidence, 02-02 dormancy, 02-03 outcomes, 02-04 receipt, 02-05 fallow). Phase 1 closed at 11/11 on 2026-04-21.
 Status: Phase 2 Wave 0 complete. Test surface locked: 15 Vitest .skip stubs + 1 smoke shell + 1 shape-parity smoke cover REGEN-01..REGEN-05. Wave 1 executors will replace .skip with real assertions; they do NOT create new test files.
-Last activity: 2026-04-22 — Plan 02-00 landed; Phase 2 Wave 0 test scaffolds complete (17 artifacts; shape-parity smoke green).
+Last activity: 2026-04-22
 
 Progress: [███████░░░] 71% (12/17 plans complete across phases 1–2)
 
 ### Current Plan: 1 of 6 in Phase 2
 
-Current Plan: 1
+Current Plan: 2
 Total Plans in Phase: 6
 
 ## Rollback Procedures
@@ -100,6 +101,7 @@ Total Plans in Phase: 6
 | 02-00-fixtures | 7 min | 1 | 17 created (15 test stubs + 1 smoke shell + 1 shape-parity smoke) |
 
 *Updated after each plan completion*
+| Phase 02-regenerative-math-honesty P01 | 2h 36min | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -141,6 +143,10 @@ Recent decisions affecting current work:
 - [Phase 02-regenerative-math-honesty]: Plan 02-00: `.tsx` test files flagged as Wave 1 follow-up — current `app/vitest.config.ts` has `include: ["src/**/*.test.ts"]` which silently excludes .tsx stubs; Wave 1 plan creating the first component-test assertion must broaden include to `src/**/*.test.{ts,tsx}`. Non-blocking for Wave 0 because shape-parity smoke only checks existsSync
 - [Phase 02-regenerative-math-honesty]: Plan 02-00: 6 stubs padded via substantive JSDoc headers (not whitespace filler) to meet `must_haves.artifacts.min_lines` — documents intent for Wave 1 implementers
 - [Phase 02-regenerative-math-honesty]: Plan 02-00: Smoke-shell executable bit requires `git update-index --chmod=+x` as follow-up commit — Git for Windows doesn't honor `chmod +x` on disk when staging; two-commit dance documented so future smoke scripts can pre-empt it
+- [Phase 02-regenerative-math-honesty]: Plan 02-01: Confidence-as-shader pattern — math emits 0-1 field, renderer decides perceptual translation (opacity 0.08-0.4, dashed axes, hollow vertices). Calendar-day formula (daysSinceFirstBehavior/14) ensures Fallow weeks advance confidence, preserving regenerative thesis.
+- [Phase 02-regenerative-math-honesty]: Plan 02-01: engagementFactor multiplier deleted from capital-computation.ts line 90; avgRate feeds threshold mapping directly. Rest no longer reduces score. computeCapitalScores gained optional 4th param daysSinceFirstBehavior (backwards-compat, default 0).
+- [Phase 02-regenerative-math-honesty]: Plan 02-01: vitest.config.ts include glob widened from 'src/**/*.test.ts' to 'src/**/*.test.{ts,tsx}' (Wave 0 SUMMARY.md flagged as Wave 1 follow-up; this plan was first .tsx test consumer so fix landed here, unblocking Plans 02-04/02-05 component tests downstream).
+- [Phase 02-regenerative-math-honesty]: Plan 02-01: Component tests via renderToStaticMarkup (react-dom/server) — no jsdom dep, no @testing-library/react dep. SSR output is regex-able HTML; useEffect doesn't fire so window.matchMedia race is avoided. Pattern available for all Phase 2+ component tests.
 
 ### Pending Todos
 
@@ -152,10 +158,11 @@ Recent decisions affecting current work:
 - **Phase 8 LONG-01 depends on Phase 2 REGEN-03** — pattern contribution gate requires 6+ months of outcome data, so Phase 2's outcome-measurement infrastructure must have shipped well before Phase 8 starts.
 - **Supabase migrations are manual** — every phase that adds a migration (Phase 2's `017_outcomes.sql`, etc.) requires dashboard SQL-editor execution; code push alone does NOT apply them.
 - **No PL/pgSQL integration tests** — `quota.test.ts` and any future RPC tests mock the database layer; PL/pgSQL bodies are not exercised by CI. Add local Supabase / pgTAP coverage when Phase 2+ touches database-side logic.
+- Pre-existing Vitest parallel-import race on Windows: 3-6 tests rotate non-deterministically during full-suite runs (capital-pulse, /api/sheet auth+budget, v2-chat marker). All pass 100% in isolation. Recommended fix: pool=forks + poolOptions.forks.singleFork=true. Documented in .planning/phases/02-regenerative-math-honesty/deferred-items.md. Out of REGEN-01 scope.
 
 ## Session Continuity
 
-Last session: 2026-04-22T07:20:05Z
-Stopped at: Completed 02-00-fixtures-PLAN.md (Phase 2 Wave 0)
-Resume file: .planning/phases/02-regenerative-math-honesty/02-00-fixtures-SUMMARY.md
+Last session: 2026-04-22T10:05:27.398Z
+Stopped at: Completed 02-01-confidence-math-PLAN.md (Wave 1 plan 1 of 5)
+Resume file: None
 Expected next: `/gsd:execute-phase 2` continuing with Wave 1 — 02-01 (confidence), 02-02 (dormancy), 02-03 (outcomes), 02-04 (receipt), 02-05 (fallow)

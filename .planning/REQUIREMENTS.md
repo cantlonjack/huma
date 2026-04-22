@@ -19,7 +19,7 @@ Requirements for the Remediation milestone. Each maps to one GSD phase. Plan IDs
 
 ### Regenerative Math Honesty (Plan P1)
 
-- [ ] **REGEN-01** *(P1.1)*: Remove engagement penalty for rest. `capital-computation.ts:76` becomes a confidence shader (0→1 over 14 days of data), not a score multiplier. UI opacity reflects confidence; no score penalty for rest.
+- [x] **REGEN-01** *(P1.1)*: Remove engagement penalty for rest. `capital-computation.ts:76` becomes a confidence shader (0→1 over 14 days of data), not a score multiplier. UI opacity reflects confidence; no score penalty for rest.
 - [ ] **REGEN-02** *(P1.2)*: Dormancy as first-class operator state. Toggle from Whole profile panel. Sheet replaced with "Nothing today. Rest is the work." No push, no decay, no nudges, no guilt. Re-entry is one message.
 - [ ] **REGEN-03** *(P1.3)*: Outcome measurement at pattern/aspiration level. 90-day outcome check asks Yes/Some/No/Worse + one-sentence why. Pattern strength becomes outcome-weighted.
 - [ ] **REGEN-04** *(P1.4)*: Capital algorithm transparency. Every capital score on /whole expandable to a receipt showing inputs, weights, thresholds, and confidence. Sovereignty means the math is reproducible.
@@ -108,7 +108,7 @@ Explicitly excluded. See PROJECT.md for rationale.
 | SEC-04 | Phase 1 | Complete |
 | SEC-05 | Phase 1 | Complete |
 | SEC-06 | Phase 1 | Complete |
-| REGEN-01 | Phase 2 | Pending |
+| REGEN-01 | Phase 2 | Complete |
 | REGEN-02 | Phase 2 | Pending |
 | REGEN-03 | Phase 2 | Pending |
 | REGEN-04 | Phase 2 | Pending |
