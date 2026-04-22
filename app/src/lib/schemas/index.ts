@@ -220,6 +220,18 @@ export const outcomeSubmitSchema = z.object({
 
 export type OutcomeSubmitRequest = z.infer<typeof outcomeSubmitSchema>;
 
+// ─── /api/operator/dormancy ─────────────────────────────────────────────────
+// REGEN-02 (Plan 02-02): toggle huma_context.dormant.active on/off.
+// Minimal body — { enable: boolean }. The route reads current huma_context,
+// sets .dormant.active = enable, preserves .since on disable, writes a new ISO
+// on enable. No client-supplied timestamp: the route owns the clock.
+
+export const operatorDormancySchema = z.object({
+  enable: z.boolean(),
+});
+
+export type OperatorDormancyRequest = z.infer<typeof operatorDormancySchema>;
+
 // ─── /api/whole-compute ─────────────────────────────────────────────────────
 
 export const wholeComputeSchema = z.discriminatedUnion("compute", [
