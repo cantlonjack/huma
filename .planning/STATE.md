@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
 status: Live and enforcing. SEC-02 gap closed via @supabase/supabase-js upgrade (2.99.2 → ^2.104.0) + migrations 018/019 (fix latent PL/pgSQL ambiguities in increment_quota_and_check) + structured fail-open warning + operator env-var rotation. Ledger writes confirmed (req_count=5, 6th request returns 429 with structured RATE_LIMITED body).
-stopped_at: Phase 2 context gathered
-last_updated: "2026-04-22T00:39:48.763Z"
-last_activity: 2026-04-21 — Plan 01-08 landed; production SEC-02 smoke passed; user_quota_ledger confirmed writing rows.
+stopped_at: Completed 02-00-fixtures-PLAN.md
+last_updated: "2026-04-22T07:20:05.394Z"
+last_activity: 2026-04-22 — Plan 02-00 landed; Phase 2 Wave 0 test scaffolds complete (17 artifacts; shape-parity smoke green).
 progress:
   total_phases: 8
   completed_phases: 1
-  total_plans: 11
-  completed_plans: 11
-  percent: 100
+  total_plans: 17
+  completed_plans: 12
+  percent: 71
 ---
 
 # Project State
@@ -25,12 +25,17 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 
 ## Current Position
 
-Phase: 1 of 8 (Security & Cost Control) — COMPLETE as of 2026-04-21
-Plan: 11/11 plans landed. All six SEC requirements enforcing in production behind `PHASE_1_GATE_ENABLED=true`.
-Status: Live and enforcing. SEC-02 gap closed via @supabase/supabase-js upgrade (2.99.2 → ^2.104.0) + migrations 018/019 (fix latent PL/pgSQL ambiguities in increment_quota_and_check) + structured fail-open warning + operator env-var rotation. Ledger writes confirmed (req_count=5, 6th request returns 429 with structured RATE_LIMITED body).
-Last activity: 2026-04-21 — Plan 01-08 landed; production SEC-02 smoke passed; user_quota_ledger confirmed writing rows.
+Phase: 2 of 8 (Regenerative Math Honesty) — IN PROGRESS
+Plan: 1/6 plans landed (02-00-fixtures); next is Wave 1 (02-01 confidence, 02-02 dormancy, 02-03 outcomes, 02-04 receipt, 02-05 fallow). Phase 1 closed at 11/11 on 2026-04-21.
+Status: Phase 2 Wave 0 complete. Test surface locked: 15 Vitest .skip stubs + 1 smoke shell + 1 shape-parity smoke cover REGEN-01..REGEN-05. Wave 1 executors will replace .skip with real assertions; they do NOT create new test files.
+Last activity: 2026-04-22 — Plan 02-00 landed; Phase 2 Wave 0 test scaffolds complete (17 artifacts; shape-parity smoke green).
 
-Progress: [██████████] 100% (11/11 plans complete in Phase 1)
+Progress: [███████░░░] 71% (12/17 plans complete across phases 1–2)
+
+### Current Plan: 1 of 6 in Phase 2
+
+Current Plan: 1
+Total Plans in Phase: 6
 
 ## Rollback Procedures
 
@@ -60,16 +65,16 @@ Progress: [██████████] 100% (11/11 plans complete in Phase 1
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10 (code-wise)
+- Total plans completed: 11 (10 Phase 1 code plans + 1 Phase 2 Wave 0 scaffold)
 - Average duration: ~13 min per plan during active execution
-- Total execution time: ~4h 40m (includes 3h 32m long-running P06 that spanned multiple sessions; P04 added 6 min resumption; P03 added 10 min; P07 added ~2 days wall-clock but minimal active work — bulk was credential-investigation stall)
+- Total execution time: ~4h 47m (Phase 1: ~4h 40m; Phase 2: 7 min)
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1. Security & Cost Control | 10 | ~4h 40m | ~13 min |
-| 2. Regenerative Math Honesty | 0 | — | — |
+| 2. Regenerative Math Honesty | 1 | 7 min | 7 min |
 | 3. Onboarding Visibility | 0 | — | — |
 | 4. Landing & Funnel Instrumentation | 0 | — | — |
 | 5. Viral Insight Artifact | 0 | — | — |
@@ -78,7 +83,7 @@ Progress: [██████████] 100% (11/11 plans complete in Phase 1
 | 8. Commons, Protocol, Graduate Flywheel | 0 | — | — |
 
 **Recent Trend:**
-- Last 10 plans: 01-00 (4 min), 01-01 (15 min), 01-06 (3h 32m), 01-05a (5 min), 01-02 (15 min), 01-04 (6 min), 01-03 (10 min), 01-05b (11 min), 01-05c (11 min), 01-07 (~2d wall-clock, partial close)
+- Last 10 plans: 01-05a (5 min), 01-02 (15 min), 01-04 (6 min), 01-03 (10 min), 01-05b (11 min), 01-05c (11 min), 01-07 (~2d wall-clock, partial close), 01-08 (gap-close), 02-00 (7 min)
 
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
@@ -92,6 +97,7 @@ Progress: [██████████] 100% (11/11 plans complete in Phase 1
 | 01-05b-observability-routes | 11 min | 3 tasks | 10 files |
 | 01-05c-observability-streaming | 11 min | 3 tasks | 7 files |
 | 01-07-enablement (partial) | ~2d wall | 6 (2 complete, 1 partial, 1 skipped, 1 complete-modified, 1 decision-close) | 8 docs + 4 source (scope additions) |
+| 02-00-fixtures | 7 min | 1 | 17 created (15 test stubs + 1 smoke shell + 1 shape-parity smoke) |
 
 *Updated after each plan completion*
 
@@ -131,10 +137,14 @@ Recent decisions affecting current work:
 - [Phase 01-security-cost-control]: Plan 01-08: Path 1 (@supabase/supabase-js upgrade) resolved SDK-side auth; migrations 018+019 fixed latent PL/pgSQL ambiguities in increment_quota_and_check that predated Plan 01-02 landing. VERIFICATION.md misdiagnosed the gap as credential-only; the PL/pgSQL bug was masked by unit-test mocking + deferred enablement smoke, then surfaced first through structured WARN logs made non-silent by this same plan
 - [Phase 01-security-cost-control]: Plan 01-08: `#variable_conflict use_column` pragma chosen over renaming RETURNS TABLE columns — preserves quota.ts caller contract; single-point catch-all for ambiguity between table columns and implicit RETURNS TABLE variables
 - [Phase 01-security-cost-control]: Plan 01-08: integration testing gap flagged for future planning — all quota RPC unit tests mock the RPC; PL/pgSQL body never executes against real Postgres in CI. Local Supabase docker instance or pgTAP recommended for Phase 2+ quota / subscriptions work
+- [Phase 02-regenerative-math-honesty]: Plan 02-00: Wave 0 test-scaffold pattern repeated from Phase 1 Plan 00 — pre-create 15 .skip stubs + 1 smoke shell + 1 shape-parity smoke, so Wave 1 plans (02-01..05) cannot race on test-file creation and shape-parity smoke fails loudly if a stub is deleted
+- [Phase 02-regenerative-math-honesty]: Plan 02-00: `.tsx` test files flagged as Wave 1 follow-up — current `app/vitest.config.ts` has `include: ["src/**/*.test.ts"]` which silently excludes .tsx stubs; Wave 1 plan creating the first component-test assertion must broaden include to `src/**/*.test.{ts,tsx}`. Non-blocking for Wave 0 because shape-parity smoke only checks existsSync
+- [Phase 02-regenerative-math-honesty]: Plan 02-00: 6 stubs padded via substantive JSDoc headers (not whitespace filler) to meet `must_haves.artifacts.min_lines` — documents intent for Wave 1 implementers
+- [Phase 02-regenerative-math-honesty]: Plan 02-00: Smoke-shell executable bit requires `git update-index --chmod=+x` as follow-up commit — Git for Windows doesn't honor `chmod +x` on disk when staging; two-commit dance documented so future smoke scripts can pre-empt it
 
 ### Pending Todos
 
-- (none — Phase 1 closed; ready for Phase 2)
+- Wave 1 Phase 2 (02-01 .. 02-05): replace `.skip` placeholders with real assertions; amend `vitest.config.ts` to include `.tsx` before component-test runs
 
 ### Blockers/Concerns
 
@@ -145,7 +155,7 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-22T00:39:48.739Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-regenerative-math-honesty/02-CONTEXT.md
-Expected next: `/gsd:plan-phase 2` — Regenerative Math Honesty (Phase 2)
+Last session: 2026-04-22T07:20:05Z
+Stopped at: Completed 02-00-fixtures-PLAN.md (Phase 2 Wave 0)
+Resume file: .planning/phases/02-regenerative-math-honesty/02-00-fixtures-SUMMARY.md
+Expected next: `/gsd:execute-phase 2` continuing with Wave 1 — 02-01 (confidence), 02-02 (dormancy), 02-03 (outcomes), 02-04 (receipt), 02-05 (fallow)
