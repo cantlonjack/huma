@@ -31,7 +31,14 @@ import {
   fetchWeekCounts,
   fetchThirtyDayCounts,
   fetchRhythmData,
+  fetchPatterns,
+  fetchHumaContext,
 } from "@/lib/queries";
+import {
+  getNextDueOutcome,
+  type OutcomeTarget,
+  type OutcomeRecord,
+} from "@/lib/outcome-check";
 
 // Re-export types and helpers from their canonical locations for backwards compatibility
 export type { BehaviorStep, ComingUpItem } from "@/lib/today-utils";
@@ -107,6 +114,26 @@ export interface UseTodayReturn {
   isValidationDay: boolean;
   validationAspirations: Aspiration[];
   handleValidationAnswer: (answer: ValidationAnswer) => void;
+
+  // Outcome check (REGEN-03 Plan 02-05) — 90-day ground-truth prompt surface.
+  // nextDueOutcome is the earliest-due aspiration/pattern (>=90 calendar days
+  // from createdAt, with no existing outcome record); null when nothing is due.
+  // isOutcomeDue === (nextDueOutcome !== null). One card per day, gated by
+  // the /today page (Dormancy > Fallow > Outcome priority).
+  isOutcomeDue: boolean;
+  nextDueOutcome: OutcomeTarget | null;
+  nextDueOutcomeLabel: string;
+  submitOutcome: (answer: "yes" | "some" | "no" | "worse", why: string) => Promise<void>;
+  snoozeOutcome: () => Promise<void>;
+
+  // Dormancy (REGEN-02 Plan 02-02) — operator-state rest signal.
+  // isDormant is derived from huma_context.dormant.active === true. When
+  // true, /today replaces the sheet with DormantCard + a single re-entry
+  // input; typing anything calls dormantReEntrySubmit which POSTs
+  // { enable: false } to /api/operator/dormancy and invalidates contexts.
+  // Priority ordering: Dormancy > Fallow > Outcome > normal sheet.
+  isDormant: boolean;
+  dormantReEntrySubmit: (text: string) => Promise<void>;
 }
 
 // ─── Hook ───────────────────────────────────────────────────────────────────
@@ -146,6 +173,15 @@ export function useToday(): UseTodayReturn {
   const { data: ctxData, isLoading: ctxLoading } = useQuery({
     queryKey: queryKeys.knownContext(userId),
     queryFn: () => fetchKnownContext(userId),
+    enabled,
+  });
+
+  // REGEN-02 Plan 02-02: fetch huma_context so we can derive isDormant.
+  // Uses the shared queryKeys.humaContext key so useWhole's toggle + this
+  // hook's read invalidate each other cleanly.
+  const { data: humaContext } = useQuery({
+    queryKey: queryKeys.humaContext(userId),
+    queryFn: () => fetchHumaContext(userId),
     enabled,
   });
 
@@ -806,6 +842,142 @@ export function useToday(): UseTodayReturn {
     }
   }, [date, user]);
 
+  // ─── Outcome Check (REGEN-03 Plan 02-05) ────────────────────────────────
+  // Surfaces a 90-day ground-truth prompt (Yes/Some/No/Worse + why) on /today
+  // for each aspiration or pattern that has lived ≥ 90 calendar days from its
+  // createdAt with no outcome record yet. The /today page renders at most one
+  // OutcomeCheckCard per day, gated by `isOutcomeDue && !isDormant && !isFallow`
+  // (Dormancy > Fallow > Outcome priority — other plans own those flags).
+  //
+  // Reading outcome_checks directly via the browser Supabase client (bypasses
+  // /api/outcome's withObservability wrapper) is intentional: RLS on
+  // outcome_checks gates access by user_id, and writes still flow through
+  // /api/outcome + withObservability for audit-log completeness.
+
+  const { data: patternsData } = useQuery({
+    queryKey: queryKeys.patterns(userId),
+    queryFn: () => fetchPatterns(userId),
+    enabled,
+  });
+  const patterns = patternsData?.patterns ?? [];
+
+  const { data: outcomeRecords = [] } = useQuery<OutcomeRecord[]>({
+    queryKey: ["outcomes", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const supabase = createClient();
+      if (!supabase) return [];
+      const { data, error } = await supabase
+        .from("outcome_checks")
+        .select("target_kind, target_id, answered_at, snooze_count")
+        .eq("user_id", userId)
+        .order("answered_at", { ascending: false });
+      if (error) return [];
+      return (data || []) as OutcomeRecord[];
+    },
+    enabled: enabled && Boolean(userId),
+  });
+
+  const nextDueOutcome = useMemo<OutcomeTarget | null>(() => {
+    if (aspirations.length === 0 && patterns.length === 0) return null;
+    const today = new Date();
+    // Skip aspirations whose createdAt wasn't hydrated (pre-REGEN-03 local
+    // fallback rows). The 90-day trigger requires a real anchor; absent one
+    // no outcome is due — fail-safe (no prompt) is correct for orphan rows.
+    const aspirationTargets: OutcomeTarget[] = aspirations
+      .filter((a): a is Aspiration & { createdAt: string } => typeof a.createdAt === "string")
+      .map((a) => ({
+        kind: "aspiration" as const,
+        id: a.id,
+        createdAt: a.createdAt,
+      }));
+    const patternTargets: OutcomeTarget[] = patterns.map((p) => ({
+      kind: "pattern" as const,
+      id: p.id,
+      createdAt: p.createdAt,
+    }));
+    return getNextDueOutcome(aspirationTargets, patternTargets, outcomeRecords, today);
+  }, [aspirations, patterns, outcomeRecords]);
+
+  const isOutcomeDue = nextDueOutcome !== null;
+
+  const nextDueOutcomeLabel = useMemo<string>(() => {
+    if (!nextDueOutcome) return "";
+    if (nextDueOutcome.kind === "aspiration") {
+      const asp = aspirations.find((a) => a.id === nextDueOutcome.id);
+      return asp?.clarifiedText || asp?.rawText || "Your aspiration";
+    }
+    const pat = patterns.find((p) => p.id === nextDueOutcome.id);
+    return pat?.name || pat?.trigger || "Your pattern";
+  }, [nextDueOutcome, aspirations, patterns]);
+
+  const submitOutcome = useCallback(
+    async (answer: "yes" | "some" | "no" | "worse", why: string) => {
+      if (!nextDueOutcome) return;
+      try {
+        await fetch("/api/outcome", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            target_kind: nextDueOutcome.kind,
+            target_id: nextDueOutcome.id,
+            answer,
+            why: why || undefined,
+          }),
+        });
+      } finally {
+        await queryClient.invalidateQueries({ queryKey: ["outcomes", userId] });
+        // pattern evidence.strength may have shifted — nudge pattern cache
+        await queryClient.invalidateQueries({ queryKey: queryKeys.patterns(userId) });
+      }
+    },
+    [nextDueOutcome, queryClient, userId],
+  );
+
+  // ─── Dormancy (REGEN-02 Plan 02-02) ─────────────────────────────────────
+  // Derive isDormant from huma_context.dormant.active. `?.active === true`
+  // handles all three missing-field shapes (null humaContext, undefined
+  // dormant, dormant.active === false).
+  const isDormant =
+    (humaContext as { dormant?: { active?: boolean } } | undefined | null)
+      ?.dormant?.active === true;
+
+  const dormantReEntrySubmit = useCallback(
+    async (_text: string) => {
+      // Toggle dormancy off — the text itself is informational for Phase 2
+      // (not yet routed to /api/v2-chat; future plan can forward as first
+      // message of the re-entry conversation).
+      await fetch("/api/operator/dormancy", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ enable: false }),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.humaContext(userId),
+      });
+    },
+    [queryClient, userId],
+  );
+
+  const snoozeOutcome = useCallback(async () => {
+    if (!nextDueOutcome) return;
+    try {
+      await fetch("/api/outcome", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          target_kind: nextDueOutcome.kind,
+          target_id: nextDueOutcome.id,
+          // placeholder — server treats snooze:true as the control signal
+          answer: "some",
+          snooze: true,
+        }),
+      });
+    } finally {
+      await queryClient.invalidateQueries({ queryKey: ["outcomes", userId] });
+    }
+  }, [nextDueOutcome, queryClient, userId]);
+
   return {
     loading,
     date,
@@ -865,5 +1037,14 @@ export function useToday(): UseTodayReturn {
     watchingSignal,
     checkedCount,
     isEvening,
+    // REGEN-03 outcome-check surface
+    isOutcomeDue,
+    nextDueOutcome,
+    nextDueOutcomeLabel,
+    submitOutcome,
+    snoozeOutcome,
+    // REGEN-02 dormancy surface
+    isDormant,
+    dormantReEntrySubmit,
   };
 }

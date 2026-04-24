@@ -16,6 +16,12 @@ interface SettingsSheetProps {
   whyStatement?: string | null;
   onArchetypeTap?: () => void;
   onWhySave?: (value: string) => void;
+
+  // REGEN-02 Plan 02-02: Dormancy toggle — operator-state rest signal.
+  // When undefined, the row is hidden (keeps SettingsSheet backwards-compatible
+  // with callers that haven't wired the handler yet).
+  dormant?: { active: boolean; since: string };
+  onDormancyToggle?: (enable: boolean) => Promise<void>;
 }
 
 const RESET_OPTIONS: {
@@ -111,6 +117,8 @@ export default function SettingsSheet({
   whyStatement,
   onArchetypeTap,
   onWhySave,
+  dormant,
+  onDormancyToggle,
 }: SettingsSheetProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const [selectedOption, setSelectedOption] = useState<ResetOption | null>(null);
@@ -291,6 +299,44 @@ export default function SettingsSheet({
                     </button>
                   )}
                 </div>
+
+                {/* REGEN-02 Plan 02-02: Dormancy toggle.
+                    Only rendered when onDormancyToggle is wired (keeps back-compat
+                    for callers that haven't updated). Toggle-on silences /today
+                    + morning-sheet cron; toggle-off resumes. Copy is spare
+                    per Voice Bible §02 (no "journey", no "on track"). */}
+                {onDormancyToggle && (
+                  <div className="bg-sand-100 rounded-xl p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <span className="font-sans text-[11px] tracking-[0.12em] uppercase text-sage-400 block mb-1">
+                          Dormancy
+                        </span>
+                        <span className="font-serif text-[15px] text-earth-650 leading-snug">
+                          {dormant?.active ? "On. Rest is the work." : "Off."}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={dormant?.active === true}
+                        aria-label="Dormancy toggle"
+                        onClick={() => {
+                          void onDormancyToggle(!(dormant?.active === true));
+                        }}
+                        className={`relative w-11 h-6 rounded-full transition-colors duration-200 border-none cursor-pointer ${
+                          dormant?.active ? "bg-sage-500" : "bg-sand-300"
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 w-5 h-5 rounded-full bg-sand-50 shadow-sm transition-transform duration-200 ${
+                            dormant?.active ? "translate-x-5" : "translate-x-0.5"
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               /* Data tab — appearance + reset options */

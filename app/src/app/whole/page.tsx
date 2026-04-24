@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queries";
 import TabShell from "@/components/shared/TabShell";
 import InsightCard from "@/components/whole/InsightCard";
 import ShareworthyInsightCard from "@/components/whole/ShareworthyInsightCard";
@@ -37,6 +39,25 @@ export default function WholePage() {
   const handleShowProvenance = useCallback((pattern: Pattern) => {
     setProvenancePattern(pattern);
   }, []);
+
+  // REGEN-02 Plan 02-02: Dormancy toggle handler — POSTs to /api/operator/
+  // dormancy and invalidates humaContext so /today picks up the new state
+  // immediately on the next navigation.
+  const queryClient = useQueryClient();
+  const handleDormancyToggle = useCallback(
+    async (enable: boolean) => {
+      await fetch("/api/operator/dormancy", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ enable }),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.humaContext(w.user?.id ?? null),
+      });
+    },
+    [queryClient, w.user?.id],
+  );
+
   const provenanceAspirationId = provenancePattern?.aspirationId;
   const provenanceBehaviorKey = provenancePattern?.steps.find(s => s.isTrigger)?.behaviorKey
     ?? provenancePattern?.steps[0]?.behaviorKey;
@@ -227,6 +248,8 @@ export default function WholePage() {
         whyStatement={w.whyStatement}
         onArchetypeTap={() => { w.setSettingsOpen(false); w.setArchetypeSelectorOpen(true); }}
         onWhySave={w.handleWhySave}
+        dormant={w.humaContext?.dormant}
+        onDormancyToggle={handleDormancyToggle}
       />
 
       {/* RPPL Provenance Sheet — opened from any Pattern with provenance.rpplId */}

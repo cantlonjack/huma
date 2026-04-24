@@ -24,6 +24,8 @@ import {
   TransitionCard,
 } from "@/components/today/TodayCards";
 import { ValidationCard } from "@/components/today/ValidationCard";
+import { OutcomeCheckCard } from "@/components/today/OutcomeCheckCard";
+import DormantCard from "@/components/today/DormantCard";
 import WeekRhythm from "@/components/today/WeekRhythm";
 import type { Nudge, DimensionKey, SheetEntry } from "@/types/v2";
 import { DIMENSION_LABELS, DIMENSION_COLORS } from "@/types/v2";
@@ -278,6 +280,14 @@ export default function TodayPage() {
         {/* Loading state */}
         {t.loading ? (
           <TodaySkeleton />
+        ) : t.isDormant ? (
+          /* ─── REGEN-02 Dormancy ─── */
+          /* Operator declared rest from /whole SettingsSheet. Replace the
+             sheet entirely with the spec-line copy + a single re-entry
+             input. Typing anything ends Dormancy (POSTs enable:false and
+             invalidates huma_context cache). Priority: Dormancy > Fallow
+             > Outcome > normal sheet. */
+          <DormantCard onReEntry={t.dormantReEntrySubmit} />
         ) : t.aspirations.length === 0 ? (
           /* ─── Empty State ─── */
           <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6">
@@ -380,6 +390,21 @@ export default function TodayPage() {
                   </p>
                 )}
               </div>
+            )}
+
+            {/* ═══ REGEN-03 (Plan 02-05): 90-day outcome check ═══
+                Top-of-sheet card, max one per day. Dormancy (Plan 02-02) and Fallow
+                (Plan 02-04) render their own full screens earlier in this component,
+                so by the time this branch renders the normal sheet, we can surface
+                the outcome prompt without fighting either state (Dormancy > Fallow >
+                Outcome priority). isOutcomeDue === (nextDueOutcome !== null). */}
+            {t.isOutcomeDue && t.nextDueOutcome && (
+              <OutcomeCheckCard
+                target={t.nextDueOutcome}
+                targetLabel={t.nextDueOutcomeLabel}
+                onSubmit={t.submitOutcome}
+                onSnooze={t.snoozeOutcome}
+              />
             )}
 
             {/* ═══ 2. TODAY'S ACTIONS — Narrative Entries ═══ */}

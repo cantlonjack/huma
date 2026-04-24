@@ -31,3 +31,21 @@ Items discovered during Phase 2 execution that are **out of scope** for their di
 - The three REGEN-01 files exercise pure math + a pure React component — no Next/Anthropic/Supabase dynamic imports, so they are not affected by the race.
 
 **Logged:** 2026-04-22 by Plan 02-01 executor.
+
+---
+
+## CapitalScore literal sweep missed two sites (pre-existing, Phase 2-01 scope)
+
+**Discovered by:** Plan 02-02 (dormancy) during post-rename `npx tsc --noEmit`.
+
+**Symptom:** `tsc --noEmit` reports 10 errors across two files:
+- `scripts/sanity-check-encoding.ts` (lines 149–156) — 8 CapitalScore literals constructed without `confidence`
+- `src/components/canvas/MapDocument.tsx` (line 202) — CapitalScore literal passed to a function expecting the full type
+
+**Root cause:** Plan 02-01 added required `confidence: number` to `CapitalScore` and swept 4 existing literal construction sites (sample-map.ts ×2, context-encoding.test.ts, ShareCard.tsx). Two additional sites were missed — `scripts/sanity-check-encoding.ts` is a root-level scripts file (excluded from vitest/build globs, so no red surface), and `MapDocument.tsx` was evidently not touched during Plan 02-01's sweep.
+
+**Not blocking Plan 02-02:** The rename this plan performs (`CapitalPulse.dormant → CapitalPulse.quiet`) is orthogonal to `CapitalScore.confidence`. My scope is `CapitalPulse` / `PulseData` / `huma_context.dormant`. The `tsc` errors pre-date my edits — `git stash` + `tsc` on HEAD shows the same 10 errors.
+
+**Recommended fix:** Add `confidence: 1` to each of the 8 literals in `sanity-check-encoding.ts` (it's a sample-data script — fully-formed operator) and `confidence: 0` to the `MapDocument.tsx` construction site (likely a fallback path). One-line per site; tiny sweep. Owner: whoever writes the next `CapitalScore`-touching plan (02-03 capital receipt likely will).
+
+**Logged:** 2026-04-22 by Plan 02-02 executor.
