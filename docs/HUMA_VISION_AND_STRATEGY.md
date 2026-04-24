@@ -1,10 +1,12 @@
 # HUMA Vision & Strategy
 
-*This document defines what HUMA is, why it exists, and the strategic architecture that protects it. Read this FIRST before any other foundational document.*
+> **Reading order (April 2026):** `HUMA_EXECUTIVE_THESIS.md` is the current primary thesis — read it first for the commons / steward / interface framing and the four-level ontology (Axiom → Principle → Framework → Practice). This document remains authoritative for the intellectual lineage, the five perceptual capacities, the twenty strategic principles, the concentric model, and the multiple-mediums strategy — content not condensed into the Executive Thesis.
+
+*This document defines what HUMA is, why it exists, and the strategic architecture that protects it.*
 
 *March 2026 -- Foundational*
 
-_Related: HUMA_V2_FOUNDATION.md (current product spec), HUMA_CONVERSATION_ARCHITECTURE.md (AI behavior), HUMA_DESIGN_SYSTEM.md (visual), HUMA_VOICE_BIBLE.md (voice), HUMA_ETHICAL_FRAMEWORK.md (principles). Note: this document defines three **strategic layers** (Notation / Mediums / Commons); V2 Foundation defines three **product layers** (Conversation / Computation / Output)._
+_Related: HUMA_EXECUTIVE_THESIS.md (current thesis), HUMA_V2_FOUNDATION.md (current product spec), HUMA_CONVERSATION_ARCHITECTURE.md (AI behavior), HUMA_DESIGN_SYSTEM.md (visual), HUMA_VOICE_BIBLE.md (voice), HUMA_ETHICAL_FRAMEWORK.md (principles). Note: this document defines three **strategic layers** (Notation / Mediums / Commons); V2 Foundation defines three **product layers** (Conversation / Computation / Output)._
 
 ---
 

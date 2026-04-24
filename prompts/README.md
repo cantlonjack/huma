@@ -1,5 +1,7 @@
 # HUMA Build Prompts — "Open the Door"
 
+> **STATUS — earlier design exploration (2026-04).** These prompts were the first pass at growth/polish work. Most of the scope has been folded into the current 8-phase milestone: `docs/Remediation-Build-Plan.md` is the master plan, `docs/PHASES.md` has the copy-paste prompts per phase, and `.planning/phases/` holds live phase execution. Use those first. Prompts here remain readable for additional detail the phase plans don't reproduce.
+
 Six prompts to take HUMA from brilliant-but-invisible to product-people-talk-about.
 
 ## Execution Order

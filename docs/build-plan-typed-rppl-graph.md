@@ -1,5 +1,7 @@
 # Build Plan: Typed RPPL Graph & Compressed Life Context
 
+> **STATUS — deferred to Phase 7 (Deeper Regenerative Model).** This document is the design blueprint for typed RPPL ports and compressed life-graph context. Not currently active. Live scope lives in `.planning/phases/` and `docs/Remediation-Build-Plan.md`. Re-surface when Phase 7 begins.
+
 ## What We're Taking From WeaveMind
 
 Not the platform. The design principles:
