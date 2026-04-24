@@ -10,6 +10,12 @@ One-page index. Each doc has one job. When in doubt, start from the top.
 | 2 | [HUMA_V2_FOUNDATION.md](HUMA_V2_FOUNDATION.md) | Current product spec. Three product layers (Conversation / Computation / Output). What operators see, how context deepens, pricing. |
 | 3 | [HUMA_VISION_AND_STRATEGY.md](HUMA_VISION_AND_STRATEGY.md) | Strategic architecture. Five perceptual capacities, twenty principles, concentric model, multiple mediums, intellectual lineage. Extends the Thesis with content not condensed into it. |
 
+## Positioning
+
+| Doc | What it answers |
+|-----|-----------------|
+| [UVP.md](UVP.md) | How HUMA presents externally. Locked primary UVP + short forms + audience wedge + rationale. Every landing page, pitch, and email calibrates against this. |
+
 ## Read when the work demands it
 
 | Doc | Read when |
