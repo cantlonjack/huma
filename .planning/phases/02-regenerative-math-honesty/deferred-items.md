@@ -34,7 +34,7 @@ Items discovered during Phase 2 execution that are **out of scope** for their di
 
 ---
 
-## CapitalScore literal sweep missed two sites (pre-existing, Phase 2-01 scope)
+## CapitalScore literal sweep missed two sites (pre-existing, Phase 2-01 scope) — RESOLVED 2026-04-24 by Plan 02-03
 
 **Discovered by:** Plan 02-02 (dormancy) during post-rename `npx tsc --noEmit`.
 
@@ -49,3 +49,9 @@ Items discovered during Phase 2 execution that are **out of scope** for their di
 **Recommended fix:** Add `confidence: 1` to each of the 8 literals in `sanity-check-encoding.ts` (it's a sample-data script — fully-formed operator) and `confidence: 0` to the `MapDocument.tsx` construction site (likely a fallback path). One-line per site; tiny sweep. Owner: whoever writes the next `CapitalScore`-touching plan (02-03 capital receipt likely will).
 
 **Logged:** 2026-04-22 by Plan 02-02 executor.
+
+**RESOLVED:** 2026-04-24 by Plan 02-03 executor (REGEN-04 capital receipt).
+- `scripts/sanity-check-encoding.ts` — 8 literals received `confidence: 1` (sample data = fully-formed operator)
+- `src/components/canvas/MapDocument.tsx` — markdown-parsed literal at line ~202 received `confidence: 0` (inferred from markdown, not observed from behavior — renders dashed/hollow via shader)
+- Post-fix `tsc --noEmit` on those files: 0 CapitalScore-related errors remain.
+- Committed in Plan 02-03's literal-sweep commit.

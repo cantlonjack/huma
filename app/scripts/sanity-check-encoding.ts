@@ -145,15 +145,17 @@ const patterns: Pattern[] = [
   },
 ];
 
+// REGEN-01 literal sweep (Plan 02-03): sample operator is fully formed, so
+// confidence: 1 matches the "well-known" shader tier for sanity-check output.
 const capitalScores: CapitalScore[] = [
-  { form: "financial", score: 2.1, note: "" },
-  { form: "material", score: 3.2, note: "" },
-  { form: "living", score: 3.4, note: "" },
-  { form: "social", score: 4.1, note: "" },
-  { form: "intellectual", score: 3.3, note: "" },
-  { form: "experiential", score: 2.7, note: "" },
-  { form: "spiritual", score: 3.6, note: "" },
-  { form: "cultural", score: 2.2, note: "" },
+  { form: "financial", score: 2.1, note: "", confidence: 1 },
+  { form: "material", score: 3.2, note: "", confidence: 1 },
+  { form: "living", score: 3.4, note: "", confidence: 1 },
+  { form: "social", score: 4.1, note: "", confidence: 1 },
+  { form: "intellectual", score: 3.3, note: "", confidence: 1 },
+  { form: "experiential", score: 2.7, note: "", confidence: 1 },
+  { form: "spiritual", score: 3.6, note: "", confidence: 1 },
+  { form: "cultural", score: 2.2, note: "", confidence: 1 },
 ];
 
 const behaviorCounts: Record<string, { completed: number; total: number }> = {

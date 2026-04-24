@@ -199,10 +199,14 @@ export default function MapDocument({ markdown, shapeScores, operatorName }: Map
           const numMatch = scoreText.match(/(\d)\s*\/\s*5/);
           const score = numMatch ? parseInt(numMatch[1]) : 0;
           if (score > 0) {
+            // REGEN-01 literal sweep (Plan 02-03): markdown-parsed capital has
+            // no behavior history, so confidence: 0 renders as dashed/hollow
+            // via CapitalRadar — signals "inferred, not observed".
             capitalScores.push({
               form: capital.toLowerCase() as import("@/engine/canvas-types").CapitalForm,
               score,
               note,
+              confidence: 0,
             });
           }
         }
