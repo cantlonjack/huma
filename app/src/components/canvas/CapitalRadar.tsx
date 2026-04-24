@@ -19,6 +19,8 @@ interface CapitalRadarProps {
   cy?: number;
   /** Scale factor when rendered as group */
   scale?: number;
+  /** REGEN-04: tap an axis (line or label) to open a receipt for that capital. */
+  onCapitalTap?: (form: CapitalForm) => void;
 }
 
 const CAPITAL_ORDER: CapitalForm[] = [
@@ -137,6 +139,7 @@ export default function CapitalRadar({
   cx: groupCx,
   cy: groupCy,
   scale: groupScale,
+  onCapitalTap,
 }: CapitalRadarProps) {
   const [progress, setProgress] = useState(animated ? 0 : 1);
   const [hoveredAxis, setHoveredAxis] = useState<number | null>(null);
@@ -328,7 +331,7 @@ export default function CapitalRadar({
         const isDimmed = hoveredAxis !== null && hoveredAxis !== i;
         return (
           <g key={`label-${i}`}>
-            {/* Invisible wider hit area for hover */}
+            {/* Invisible wider hit area for hover + REGEN-04 tap-to-open */}
             <line
               x1={centerX}
               y1={centerY}
@@ -340,6 +343,7 @@ export default function CapitalRadar({
               onMouseEnter={(e) => handleAxisHover(i, e)}
               onMouseMove={(e) => handleAxisHover(i, e)}
               onMouseLeave={() => handleAxisHover(null)}
+              onClick={() => onCapitalTap?.(cap.form)}
             />
             <text
               x={label.x}
@@ -356,6 +360,7 @@ export default function CapitalRadar({
               onMouseEnter={(e) => handleAxisHover(i, e)}
               onMouseMove={(e) => handleAxisHover(i, e)}
               onMouseLeave={() => handleAxisHover(null)}
+              onClick={() => onCapitalTap?.(cap.form)}
             >
               {CAPITAL_LABELS[cap.form]}
             </text>
