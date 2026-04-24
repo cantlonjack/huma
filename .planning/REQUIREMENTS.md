@@ -22,8 +22,8 @@ Requirements for the Remediation milestone. Each maps to one GSD phase. Plan IDs
 - [x] **REGEN-01** *(P1.1)*: Remove engagement penalty for rest. `capital-computation.ts:76` becomes a confidence shader (0→1 over 14 days of data), not a score multiplier. UI opacity reflects confidence; no score penalty for rest.
 - [x] **REGEN-02** *(P1.2)*: Dormancy as first-class operator state. Toggle from Whole profile panel. Sheet replaced with "Nothing today. Rest is the work." No push, no decay, no nudges, no guilt. Re-entry is one message.
 - [x] **REGEN-03** *(P1.3)*: Outcome measurement at pattern/aspiration level. 90-day outcome check asks Yes/Some/No/Worse + one-sentence why. Pattern strength becomes outcome-weighted.
-- [ ] **REGEN-04** *(P1.4)*: Capital algorithm transparency. Every capital score on /whole expandable to a receipt showing inputs, weights, thresholds, and confidence. Sovereignty means the math is reproducible.
-- [ ] **REGEN-05** *(P1.5)*: Fallow day ("do-nothing sheet"). One-tap mark from sheet. Shows "Fallow. Compost day." Checkoff disabled; no behavior log entry; engagement-confidence unaffected.
+- [x] **REGEN-04** *(P1.4)*: Capital algorithm transparency. Every capital score on /whole expandable to a receipt showing inputs, weights, thresholds, and confidence. Sovereignty means the math is reproducible.
+- [x] **REGEN-05** *(P1.5)*: Fallow day ("do-nothing sheet"). One-tap mark from sheet. Shows "Fallow. Compost day." Checkoff disabled; no behavior log entry; engagement-confidence unaffected.
 
 ### Onboarding Visibility (Plan P2)
 
@@ -111,8 +111,8 @@ Explicitly excluded. See PROJECT.md for rationale.
 | REGEN-01 | Phase 2 | Complete |
 | REGEN-02 | Phase 2 | Complete |
 | REGEN-03 | Phase 2 | Complete |
-| REGEN-04 | Phase 2 | Pending |
-| REGEN-05 | Phase 2 | Pending |
+| REGEN-04 | Phase 2 | Complete |
+| REGEN-05 | Phase 2 | Complete |
 | ONBOARD-01 | Phase 3 | Pending |
 | ONBOARD-02 | Phase 3 | Pending |
 | ONBOARD-03 | Phase 3 | Pending |

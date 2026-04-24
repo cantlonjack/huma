@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
-current_plan: 4
-status: completed
-stopped_at: Completed 02-02-dormancy-PLAN.md and 02-05-outcome-check-PLAN.md (Wave 1 plans 3 + 5 of 6 — coordinated close-out after socket crashes; 4/6 plans complete, 02-03 + 02-04 pending)
-last_updated: "2026-04-24T10:17:13.243Z"
+current_plan: 6
+status: executing
+stopped_at: Completed 02-04-fallow-day-PLAN.md (Wave 2 plan 4 of 6 — REGEN-05 fallow day with schema-less state; Phase 2 nearing close pending 02-03 capital-receipt completion)
+last_updated: "2026-04-24T10:35:41.710Z"
 last_activity: 2026-04-24
 progress:
   total_phases: 8
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 17
-  completed_plans: 15
+  completed_plans: 17
   percent: 88
 ---
 
@@ -35,7 +35,7 @@ Progress: [█████████░] 88% (15/17 plans complete across phas
 
 ### Current Plan: 4 of 6 in Phase 2
 
-Current Plan: 4
+Current Plan: 6
 Total Plans in Phase: 6
 
 ## Rollback Procedures
@@ -104,6 +104,8 @@ Total Plans in Phase: 6
 | Phase 02-regenerative-math-honesty P01 | 2h 36min | 2 tasks | 13 files |
 | Phase 02-regenerative-math-honesty P02 | ~3h orchestrated (socket-crash respawn + close-out) | 3 tasks | 16 (2 created, 14 modified) files |
 | Phase 02-regenerative-math-honesty P05 | ~4h orchestrated (socket-crash + coordinated close-out with 02-02) | 3 tasks | 13 (5 created, 8 modified) files |
+| Phase 02-regenerative-math-honesty P03-capital-receipt | 8min | 2 tasks + 1 sweep tasks | 9 (2 created, 7 modified) files |
+| Phase 02-regenerative-math-honesty P04 | 9min | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -155,6 +157,15 @@ Recent decisions affecting current work:
 - [Phase 02-regenerative-math-honesty]: Plan 02-05: 90-day outcome-check clock reads createdAt (not updatedAt) — aspiration renames and context edits do NOT reset the clock. Operator committed on day 0; the question 'did this work?' is about that commitment, not about the day-90 name. Test asserts this directly.
 - [Phase 02-regenerative-math-honesty]: Plan 02-05: outcome_checks table is append-only — no UPDATE or DELETE RLS policies. Operator 'changing their mind' = new row with later answered_at; downstream reads take latest-timestamped. Preserves immutable record of what the operator said at that moment. Migration 020_outcomes.sql requires MANUAL APPLY via Supabase dashboard SQL editor before merge (code push does NOT apply Supabase migrations per Phase 1 precedent).
 - [Phase 02-regenerative-math-honesty]: Plans 02-02 + 02-05 coordinated close-out: both executors crashed with Anthropic API FailedToOpenSocket mid-Task-3. Orchestrator committed the respawn's staged Task 3b state as cross-plan commit 52f13ec (useToday.ts + today/page.tsx outcome + dormancy wiring together) because splitting hunks would have produced non-buildable intermediate state. OutcomeCheckCard.tsx + Aspiration.createdAt committed separately as 49ca4b0 (02-05 Task 3a, not shared with 02-02). Co-location into a cross-plan commit is a deliberate atomic-buildability choice, not scope creep — both plans' SUMMARYs document the shared commit honestly.
+- [Phase 02-regenerative-math-honesty]: Plan 02-03: Reproducibility-via-shared-helper pattern — buildCapitalReceipt + THRESHOLDS duplicated from computeCapitalScores, parity test (capital-receipt-math.test.ts) guards drift. Chose duplication over extraction to keep 02-01's capital-computation.ts locked; first test run after any edit catches drift.
+- [Phase 02-regenerative-math-honesty]: Plan 02-03: Bottom-sheet receipt primitive landed — header + Contributions + Weighted sum + Threshold + Confidence + Computed. Reusable for Phase 4 viral artifacts (reveal math behind insights) and Phase 8 LONG-01 outcome-validated pattern receipts. Three-section + drag-handle shape codified.
+- [Phase 02-regenerative-math-honesty]: Plan 02-03: CapitalRadar gains onCapitalTap as optional progressive-enhancement prop — axis-line hit-area (strokeWidth=16) AND text label both fire onCapitalTap(cap.form). Hover tooltip (onMouseEnter/Move/Leave) preserved on same surface. Tap and hover are independent — click fires on pointerup, hover tracks motion.
+- [Phase 02-regenerative-math-honesty]: Plan 02-03: CapitalScore literal-sweep gap from Plan 02-01 closed in dedicated commit 8818567 — 8 literals in scripts/sanity-check-encoding.ts gained confidence: 1 (sample-operator = well-known tier); 1 literal in components/canvas/MapDocument.tsx gained confidence: 0 (markdown-parsed, renders dashed/hollow via shader). deferred-items.md entry marked RESOLVED.
+- [Phase 02-regenerative-math-honesty]: Plan 02-03: /whole/page.tsx NOT modified — CapitalRadar is currently rendered in SpatialCanvas.tsx + MapDocument.tsx + CanvasRegenerate.tsx (via /map/[id] + /map/sample flows), NOT on /whole/page.tsx. Plan frontmatter's files_modified list omits /whole/page.tsx by design; the plan's action-step mentioned wiring there but that would be dead-wiring on a non-rendered component. onCapitalTap prop ready for any consumer.
+- [Phase 02-regenerative-math-honesty]: Plan 02-04: Fallow state is schema-less — lives in huma_context.fallowDays string[] (no migration). Matches Plan 02-02 dormant-field pattern. Phase 7 DEPTH-04 Hard Season will extend the same JSONB column with a third variant.
+- [Phase 02-regenerative-math-honesty]: Plan 02-04: Same-day-only unmark + post-midnight freeze (409 FALLOW_FROZEN) makes past fallow marks immutable — operator 'changing their mind' is not a supported operation, matching Plan 02-05 outcome_checks append-only principle. Server enforces via isFrozenAfterMidnight; UI hides the affordance after the date changes.
+- [Phase 02-regenerative-math-honesty]: Plan 02-04: Confidence clock ticks on fallow days (calendar-day formula from REGEN-01 — min(1, daysSinceFirstBehavior/14) — already handles this correctly; no special case added). Explicit REGEN-01 × REGEN-05 invariant test pins this against future refactors. Philosophically load-bearing: rest is the work, so rest preserves (doesn't reset) the learning signal.
+- [Phase 02-regenerative-math-honesty]: Plan 02-04: Plan-local error codes (FALLOW_FROZEN, FALLOW_DAY) returned via ad-hoc Response.json instead of expanding the Phase 1 apiError closed code union. Keeps app-wide error contract stable; tests assert against raw body so behavior is unchanged. Flagged for future retrospective: a plan-scoped error-code registry might be worth building if more plans need this.
 
 ### Pending Todos
 
@@ -173,7 +184,7 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-24T10:17:04.055Z
-Stopped at: Completed 02-02-dormancy-PLAN.md and 02-05-outcome-check-PLAN.md (Wave 1 plans 3 + 5 of 6 — coordinated close-out after socket crashes; 4/6 plans complete, 02-03 + 02-04 pending)
+Last session: 2026-04-24T10:35:41.698Z
+Stopped at: Completed 02-04-fallow-day-PLAN.md (Wave 2 plan 4 of 6 — REGEN-05 fallow day with schema-less state; Phase 2 nearing close pending 02-03 capital-receipt completion)
 Resume file: None
 Expected next: `/gsd:execute-phase 2` continuing with remaining plans — 02-03 (REGEN-04 capital receipt, Wave 2) and 02-04 (REGEN-05 fallow day, Wave 1)
