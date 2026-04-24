@@ -161,6 +161,21 @@ export const sheetCheckSchema = z.object({
 
 export type SheetCheckRequest = z.infer<typeof sheetCheckSchema>;
 
+// ─── /api/sheet/fallow ─────────────────────────────────────────────────────
+// REGEN-05 (Plan 02-04): Fallow day toggle. Body shape is intentionally
+// symmetric: { mark: boolean, date: YYYY-MM-DD }. The route enforces
+// same-day-only unmark — post-midnight unmark attempts (date != today)
+// return 409 FALLOW_FROZEN. Marking is always allowed on today only
+// (enforced by the route-level `date === today` check; schema only shapes
+// the string format here).
+
+export const sheetFallowSchema = z.object({
+  mark: z.boolean(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD"),
+});
+
+export type SheetFallowInput = z.infer<typeof sheetFallowSchema>;
+
 // ─── /api/palette ───────────────────────────────────────────────────────────
 
 export const paletteSchema = z.object({

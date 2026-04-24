@@ -221,6 +221,13 @@ export interface HumaContext {
   // `since` is set on enable; left intact on disable so analytics can compute rest duration.
   dormant?: { active: boolean; since: string };
 
+  // REGEN-05 (Plan 02-04): Fallow days — situational one-day rest. ISO YYYY-MM-DD entries.
+  // Additive, no new table (lives in the existing huma_context JSONB column). When today's
+  // local date is in this array, /today replaces the sheet with "Fallow. Compost day." and
+  // /api/sheet/check rejects new checkoffs (409 FALLOW_DAY). Unmark is allowed on the same
+  // calendar day only; post-midnight unmark returns 409 FALLOW_FROZEN.
+  fallowDays?: string[];
+
   // Meta
   _sources: ContextSource[];
   _lastUpdated: string;
