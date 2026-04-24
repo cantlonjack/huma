@@ -20,8 +20,8 @@ Requirements for the Remediation milestone. Each maps to one GSD phase. Plan IDs
 ### Regenerative Math Honesty (Plan P1)
 
 - [x] **REGEN-01** *(P1.1)*: Remove engagement penalty for rest. `capital-computation.ts:76` becomes a confidence shader (0→1 over 14 days of data), not a score multiplier. UI opacity reflects confidence; no score penalty for rest.
-- [ ] **REGEN-02** *(P1.2)*: Dormancy as first-class operator state. Toggle from Whole profile panel. Sheet replaced with "Nothing today. Rest is the work." No push, no decay, no nudges, no guilt. Re-entry is one message.
-- [ ] **REGEN-03** *(P1.3)*: Outcome measurement at pattern/aspiration level. 90-day outcome check asks Yes/Some/No/Worse + one-sentence why. Pattern strength becomes outcome-weighted.
+- [x] **REGEN-02** *(P1.2)*: Dormancy as first-class operator state. Toggle from Whole profile panel. Sheet replaced with "Nothing today. Rest is the work." No push, no decay, no nudges, no guilt. Re-entry is one message.
+- [x] **REGEN-03** *(P1.3)*: Outcome measurement at pattern/aspiration level. 90-day outcome check asks Yes/Some/No/Worse + one-sentence why. Pattern strength becomes outcome-weighted.
 - [ ] **REGEN-04** *(P1.4)*: Capital algorithm transparency. Every capital score on /whole expandable to a receipt showing inputs, weights, thresholds, and confidence. Sovereignty means the math is reproducible.
 - [ ] **REGEN-05** *(P1.5)*: Fallow day ("do-nothing sheet"). One-tap mark from sheet. Shows "Fallow. Compost day." Checkoff disabled; no behavior log entry; engagement-confidence unaffected.
 
@@ -109,8 +109,8 @@ Explicitly excluded. See PROJECT.md for rationale.
 | SEC-05 | Phase 1 | Complete |
 | SEC-06 | Phase 1 | Complete |
 | REGEN-01 | Phase 2 | Complete |
-| REGEN-02 | Phase 2 | Pending |
-| REGEN-03 | Phase 2 | Pending |
+| REGEN-02 | Phase 2 | Complete |
+| REGEN-03 | Phase 2 | Complete |
 | REGEN-04 | Phase 2 | Pending |
 | REGEN-05 | Phase 2 | Pending |
 | ONBOARD-01 | Phase 3 | Pending |
@@ -152,3 +152,5 @@ Explicitly excluded. See PROJECT.md for rationale.
 ---
 *Requirements defined: 2026-04-18*
 *Last updated: 2026-04-21 — Phase 1 complete. SEC-01 through SEC-06 all Complete; runtime enforcement of all six verified via production smoke + ledger inspection. SEC-02 gap closed by Plan 01-08 (@supabase/supabase-js upgrade + migrations 018/019 PL/pgSQL ambiguity fix + structured fail-open WARN).*
+*Updated 2026-04-22 — REGEN-01 Complete. Plan 02-01 landed the capital-computation engagement-multiplier removal + CapitalScore.confidence shader + CapitalRadar opacity/dashed-axis rendering (commits 71c4c86 + 72bd9f1).*
+*Updated 2026-04-24 — REGEN-02 + REGEN-03 Complete (coordinated close-out after Anthropic API socket crashes). REGEN-02 (Plan 02-02): HumaContext.dormant first-class operator state + POST /api/operator/dormancy + SettingsSheet toggle + /today DormantCard + morning-sheet cron skip + CapitalPulse.dormant → quiet rename (commits a32153a + a027e71 + ed96fab + 52f13ec). REGEN-03 (Plan 02-05): migration 020_outcomes.sql (MANUAL APPLY REQUIRED via Supabase dashboard SQL editor before merge) + pure 90-day trigger/strength libs + POST /api/outcome with snooze + pattern-strength multiplier + OutcomeCheckCard on /today (commits 1851f7b + 382fd3f + 49ca4b0 + 52f13ec). useToday.ts + today/page.tsx wiring co-located in cross-plan commit 52f13ec for atomic buildability — both plans' SUMMARYs document the shared commit.*

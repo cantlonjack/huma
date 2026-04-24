@@ -80,11 +80,11 @@ Config: `parallelization: true`, `granularity: standard` — eight phases matche
   5. Aspirations and patterns older than 90 days prompt the Yes/Some/No/Worse + one-sentence-why outcome check; pattern-strength signal becomes outcome-weighted
 **Plans**: 6 plans (Wave 0: plan 00 fixtures/test stubs; Wave 1: plans 01, 02, 04, 05 parallel; Wave 2: plan 03 capital-receipt — depends on plan 01 CapitalRadar edits)
 - [x] 02-00-fixtures-PLAN.md — Wave 0: 15 test-file stubs + regen-02-dormancy.sh shell + shape-parity smoke (16 file-exists assertions) — landed 2026-04-22 (723f258 + d819f49)
-- [ ] 02-01-confidence-math-PLAN.md — REGEN-01: capital-computation engagement multiplier removal + CapitalScore.confidence + CapitalRadar opacity/dashed-axis
-- [ ] 02-02-dormancy-PLAN.md — REGEN-02: HumaContext.dormant + /api/operator/dormancy + SettingsSheet toggle + useToday DormantCard + cron skip + CapitalPulse.dormant → quiet rename
+- [x] 02-01-confidence-math-PLAN.md — REGEN-01: capital-computation engagement multiplier removal + CapitalScore.confidence + CapitalRadar opacity/dashed-axis — landed 2026-04-22 (71c4c86 + 72bd9f1)
+- [x] 02-02-dormancy-PLAN.md — REGEN-02: HumaContext.dormant + /api/operator/dormancy + SettingsSheet toggle + useToday DormantCard + cron skip + CapitalPulse.dormant → quiet rename — landed 2026-04-24 (a32153a + a027e71 + ed96fab + 52f13ec)
 - [ ] 02-03-capital-receipt-PLAN.md — REGEN-04: CapitalReceiptSheet bottom-sheet + CapitalRadar tap-to-open + buildCapitalReceipt pure helper + reproducibility parity test (Wave 2 after plan 01)
 - [ ] 02-04-fallow-day-PLAN.md — REGEN-05: HumaContext.fallowDays + /api/sheet/fallow + sheet/check 409 FALLOW_DAY guard + useToday FallowCard + sheet header toggle + post-midnight freeze
-- [ ] 02-05-outcome-check-PLAN.md — REGEN-03: migration 020_outcomes.sql + /api/outcome + isOutcomeDue / applyOutcomeToStrength pure libs + OutcomeCheckCard on /today + pattern-strength re-compute
+- [x] 02-05-outcome-check-PLAN.md — REGEN-03: migration 020_outcomes.sql + /api/outcome + isOutcomeDue / applyOutcomeToStrength pure libs + OutcomeCheckCard on /today + pattern-strength re-compute — landed 2026-04-24 (1851f7b + 382fd3f + 49ca4b0 + 52f13ec). **Manual migration 020_outcomes.sql via Supabase dashboard required before merge.**
 
 ### Phase 3: Onboarding Visibility (Plan P2)
 **Goal**: The promise is "see the whole." The promise must be fulfilled before minute three.
@@ -170,7 +170,7 @@ Phases execute in numeric order: 1 → 2 (parallel with 3) → 3 → 4 (parallel
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Security & Cost Control (P0) | 11/11 | Complete | 2026-04-21 |
-| 2. Regenerative Math Honesty (P1) | 1/6 | In Progress|  |
+| 2. Regenerative Math Honesty (P1) | 4/6 | In Progress|  |
 | 3. Onboarding Visibility (P2) | 0/TBD | Not started | - |
 | 4. Landing & Funnel Instrumentation (P3) | 0/TBD | Not started | - |
 | 5. Viral Insight Artifact (P4) | 0/TBD | Not started | - |

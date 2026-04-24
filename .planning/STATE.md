@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: milestone
-current_plan: 2
+current_plan: 4
 status: completed
-stopped_at: Completed 02-01-confidence-math-PLAN.md (Wave 1 plan 1 of 5)
-last_updated: "2026-04-22T10:05:37.871Z"
-last_activity: 2026-04-22
+stopped_at: Completed 02-02-dormancy-PLAN.md and 02-05-outcome-check-PLAN.md (Wave 1 plans 3 + 5 of 6 — coordinated close-out after socket crashes; 4/6 plans complete, 02-03 + 02-04 pending)
+last_updated: "2026-04-24T10:17:13.243Z"
+last_activity: 2026-04-24
 progress:
   total_phases: 8
   completed_phases: 1
   total_plans: 17
-  completed_plans: 13
-  percent: 71
+  completed_plans: 15
+  percent: 88
 ---
 
 # Project State
@@ -27,15 +27,15 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 ## Current Position
 
 Phase: 2 of 8 (Regenerative Math Honesty) — IN PROGRESS
-Plan: 1/6 plans landed (02-00-fixtures); next is Wave 1 (02-01 confidence, 02-02 dormancy, 02-03 outcomes, 02-04 receipt, 02-05 fallow). Phase 1 closed at 11/11 on 2026-04-21.
-Status: Phase 2 Wave 0 complete. Test surface locked: 15 Vitest .skip stubs + 1 smoke shell + 1 shape-parity smoke cover REGEN-01..REGEN-05. Wave 1 executors will replace .skip with real assertions; they do NOT create new test files.
-Last activity: 2026-04-22
+Plan: 4/6 plans landed (02-00-fixtures, 02-01-confidence-math, 02-02-dormancy, 02-05-outcome-check); remaining Wave 1/2 — 02-03 capital-receipt, 02-04 fallow-day. Phase 1 closed at 11/11 on 2026-04-21.
+Status: Phase 2 Wave 1 + 2 close-out in progress. REGEN-01 (confidence math), REGEN-02 (dormancy), REGEN-03 (outcome check) all complete and committed. Remaining: REGEN-04 (capital receipt — Plan 02-03) and REGEN-05 (fallow day — Plan 02-04). Coordinated close-out of 02-02 + 02-05 landed 2026-04-24 after Anthropic API socket crashes interrupted both executors mid-Task-3; orchestrator committed respawn-staged state as 49ca4b0 + cross-plan 52f13ec.
+Last activity: 2026-04-24
 
-Progress: [███████░░░] 71% (12/17 plans complete across phases 1–2)
+Progress: [█████████░] 88% (15/17 plans complete across phases 1–2)
 
-### Current Plan: 1 of 6 in Phase 2
+### Current Plan: 4 of 6 in Phase 2
 
-Current Plan: 2
+Current Plan: 4
 Total Plans in Phase: 6
 
 ## Rollback Procedures
@@ -102,6 +102,8 @@ Total Plans in Phase: 6
 
 *Updated after each plan completion*
 | Phase 02-regenerative-math-honesty P01 | 2h 36min | 2 tasks | 13 files |
+| Phase 02-regenerative-math-honesty P02 | ~3h orchestrated (socket-crash respawn + close-out) | 3 tasks | 16 (2 created, 14 modified) files |
+| Phase 02-regenerative-math-honesty P05 | ~4h orchestrated (socket-crash + coordinated close-out with 02-02) | 3 tasks | 13 (5 created, 8 modified) files |
 
 ## Accumulated Context
 
@@ -147,22 +149,31 @@ Recent decisions affecting current work:
 - [Phase 02-regenerative-math-honesty]: Plan 02-01: engagementFactor multiplier deleted from capital-computation.ts line 90; avgRate feeds threshold mapping directly. Rest no longer reduces score. computeCapitalScores gained optional 4th param daysSinceFirstBehavior (backwards-compat, default 0).
 - [Phase 02-regenerative-math-honesty]: Plan 02-01: vitest.config.ts include glob widened from 'src/**/*.test.ts' to 'src/**/*.test.{ts,tsx}' (Wave 0 SUMMARY.md flagged as Wave 1 follow-up; this plan was first .tsx test consumer so fix landed here, unblocking Plans 02-04/02-05 component tests downstream).
 - [Phase 02-regenerative-math-honesty]: Plan 02-01: Component tests via renderToStaticMarkup (react-dom/server) — no jsdom dep, no @testing-library/react dep. SSR output is regex-able HTML; useEffect doesn't fire so window.matchMedia race is avoided. Pattern available for all Phase 2+ component tests.
+- [Phase 02-regenerative-math-honesty]: Plan 02-02: Operator-state-as-huma-context pattern landed — optional nested flag { active, since } on HumaContext JSONB, toggled by dedicated operator route (parseBody + Zod + withObservability + requireUser, anon-accepting), read by cron + hooks + UI. Reusable template for Fallow (02-04) and Hard-Season (DEPTH-04).
+- [Phase 02-regenerative-math-honesty]: Plan 02-02: Cron cost short-circuit pattern — morning-sheet reads each user's dormant flag via targeted single-row Supabase select at top of userIds loop, BEFORE aspirations fetch. Dormant users cost one Supabase read; non-dormant proceed to existing Anthropic sheet-compile + push. Structured log with source:'cron' + skip_reason:'dormant'. Template for Fallow cron gate (02-04).
+- [Phase 02-regenerative-math-honesty]: Plan 02-02: CapitalPulse.dormant renamed to CapitalPulse.quiet — dimension-level signal ('no activity 5+ days') and operator-state ('declared rest') are different concepts. Rename frees the operator-state name for HumaContext.dormant and prevents latent ambiguity like the one Phase 1 Plan 01-08 hunted in PL/pgSQL.
+- [Phase 02-regenerative-math-honesty]: Plan 02-05: 90-day outcome-check clock reads createdAt (not updatedAt) — aspiration renames and context edits do NOT reset the clock. Operator committed on day 0; the question 'did this work?' is about that commitment, not about the day-90 name. Test asserts this directly.
+- [Phase 02-regenerative-math-honesty]: Plan 02-05: outcome_checks table is append-only — no UPDATE or DELETE RLS policies. Operator 'changing their mind' = new row with later answered_at; downstream reads take latest-timestamped. Preserves immutable record of what the operator said at that moment. Migration 020_outcomes.sql requires MANUAL APPLY via Supabase dashboard SQL editor before merge (code push does NOT apply Supabase migrations per Phase 1 precedent).
+- [Phase 02-regenerative-math-honesty]: Plans 02-02 + 02-05 coordinated close-out: both executors crashed with Anthropic API FailedToOpenSocket mid-Task-3. Orchestrator committed the respawn's staged Task 3b state as cross-plan commit 52f13ec (useToday.ts + today/page.tsx outcome + dormancy wiring together) because splitting hunks would have produced non-buildable intermediate state. OutcomeCheckCard.tsx + Aspiration.createdAt committed separately as 49ca4b0 (02-05 Task 3a, not shared with 02-02). Co-location into a cross-plan commit is a deliberate atomic-buildability choice, not scope creep — both plans' SUMMARYs document the shared commit honestly.
 
 ### Pending Todos
 
-- Wave 1 Phase 2 (02-01 .. 02-05): replace `.skip` placeholders with real assertions; amend `vitest.config.ts` to include `.tsx` before component-test runs
+- Phase 2 remaining plans: 02-03 (REGEN-04 capital receipt — Wave 2) and 02-04 (REGEN-05 fallow day — Wave 1)
+- Apply migration `020_outcomes.sql` via Supabase dashboard SQL editor BEFORE merging REGEN-03 (Plan 02-05) to main; without it, `/api/outcome` returns 500
+- Cleanup: CapitalScore literal sweep in `scripts/sanity-check-encoding.ts` + `src/components/canvas/MapDocument.tsx` (10 pre-existing `tsc --noEmit` errors inherited from Plan 02-01's partial sweep; logged in `.planning/phases/02-regenerative-math-honesty/deferred-items.md`; owner: Plan 02-03 or 02-04)
 
 ### Blockers/Concerns
 
 - **Phase 6 PRICE-04 depends on Phase 7 DEPTH-05** — graduation-aware upgrade path requires four graduation capacities to be measurable. Flagged in roadmap; revisit when planning Phase 6.
-- **Phase 8 LONG-01 depends on Phase 2 REGEN-03** — pattern contribution gate requires 6+ months of outcome data, so Phase 2's outcome-measurement infrastructure must have shipped well before Phase 8 starts.
-- **Supabase migrations are manual** — every phase that adds a migration (Phase 2's `017_outcomes.sql`, etc.) requires dashboard SQL-editor execution; code push alone does NOT apply them.
+- **Phase 8 LONG-01 depends on Phase 2 REGEN-03** — REGEN-03 (outcome-check) infrastructure SHIPPED 2026-04-24 (Plan 02-05). Data accumulates naturally; Phase 8 writes its 6-months-Yes/Some-across-10-operators query + gate when time comes.
+- **Supabase migration 020_outcomes.sql requires MANUAL APPLY** via dashboard SQL editor before merging REGEN-03 code to main; per PROJECT.md + Phase 1 precedent, code push alone does NOT apply Supabase migrations. Without application, `/api/outcome` returns 500.
 - **No PL/pgSQL integration tests** — `quota.test.ts` and any future RPC tests mock the database layer; PL/pgSQL bodies are not exercised by CI. Add local Supabase / pgTAP coverage when Phase 2+ touches database-side logic.
-- Pre-existing Vitest parallel-import race on Windows: 3-6 tests rotate non-deterministically during full-suite runs (capital-pulse, /api/sheet auth+budget, v2-chat marker). All pass 100% in isolation. Recommended fix: pool=forks + poolOptions.forks.singleFork=true. Documented in .planning/phases/02-regenerative-math-honesty/deferred-items.md. Out of REGEN-01 scope.
+- Pre-existing Vitest parallel-import race on Windows: 3-6 tests rotate non-deterministically during full-suite runs (capital-pulse, /api/sheet auth+budget, v2-chat marker). All pass 100% in isolation. Recommended fix: pool=forks + poolOptions.forks.singleFork=true. Documented in `.planning/phases/02-regenerative-math-honesty/deferred-items.md`. Out of REGEN-01/02/03 scope.
+- **Cross-plan shared-file conflicts during parallel execution:** 02-02 and 02-05 both needed wiring in useToday.ts + today/page.tsx. Orchestrator committed coordinated state as cross-plan commit 52f13ec. Post-milestone retrospective candidate: when two plans' scope converges on the same files, either run them serially OR the planner should split the merge file into a dedicated Wave N+1 integration plan.
 
 ## Session Continuity
 
-Last session: 2026-04-22T10:05:27.398Z
-Stopped at: Completed 02-01-confidence-math-PLAN.md (Wave 1 plan 1 of 5)
+Last session: 2026-04-24T10:17:04.055Z
+Stopped at: Completed 02-02-dormancy-PLAN.md and 02-05-outcome-check-PLAN.md (Wave 1 plans 3 + 5 of 6 — coordinated close-out after socket crashes; 4/6 plans complete, 02-03 + 02-04 pending)
 Resume file: None
-Expected next: `/gsd:execute-phase 2` continuing with Wave 1 — 02-01 (confidence), 02-02 (dormancy), 02-03 (outcomes), 02-04 (receipt), 02-05 (fallow)
+Expected next: `/gsd:execute-phase 2` continuing with remaining plans — 02-03 (REGEN-04 capital receipt, Wave 2) and 02-04 (REGEN-05 fallow day, Wave 1)
