@@ -39,6 +39,7 @@ import {
   type OutcomeTarget,
   type OutcomeRecord,
 } from "@/lib/outcome-check";
+import { isFallow as checkFallow } from "@/lib/fallow";
 
 // Re-export types and helpers from their canonical locations for backwards compatibility
 export type { BehaviorStep, ComingUpItem } from "@/lib/today-utils";
@@ -134,6 +135,19 @@ export interface UseTodayReturn {
   // Priority ordering: Dormancy > Fallow > Outcome > normal sheet.
   isDormant: boolean;
   dormantReEntrySubmit: (text: string) => Promise<void>;
+
+  // Fallow (REGEN-05 Plan 02-04) — situational one-day "compost day".
+  // isFallow is true when today's local date is in huma_context.fallowDays.
+  // When true, /today replaces the sheet with FallowCard + a same-day
+  // unmark affordance. fallowMarkToday POSTs { mark: true, date: today }
+  // to /api/sheet/fallow; fallowUnmarkToday POSTs { mark: false, ... }
+  // (only today is unmarkable — post-midnight unmark returns 409
+  // FALLOW_FROZEN). /api/sheet/check also guards on this flag and rejects
+  // new checkoffs with 409 FALLOW_DAY. Priority ordering: Dormancy >
+  // Fallow > Outcome > normal sheet.
+  isFallow: boolean;
+  fallowMarkToday: () => Promise<void>;
+  fallowUnmarkToday: () => Promise<void>;
 }
 
 // ─── Hook ───────────────────────────────────────────────────────────────────
@@ -959,6 +973,38 @@ export function useToday(): UseTodayReturn {
     [queryClient, userId],
   );
 
+  // ─── Fallow (REGEN-05 Plan 02-04) ───────────────────────────────────────
+  // Derive isFallow from huma_context.fallowDays.includes(today). The pure
+  // helper in lib/fallow handles all missing-field shapes (null humaContext,
+  // undefined fallowDays, non-array values) defensively.
+  //
+  // The date comes from component state (`date = getLocalDate()` set once at
+  // mount) so the render doesn't flip on midnight crossover without a
+  // re-render — matches existing /today semantics for check-off keys.
+  const isFallow = checkFallow(humaContext as Record<string, unknown> | null | undefined, date);
+
+  const fallowMarkToday = useCallback(async () => {
+    await fetch("/api/sheet/fallow", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ mark: true, date }),
+    });
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.humaContext(userId),
+    });
+  }, [date, queryClient, userId]);
+
+  const fallowUnmarkToday = useCallback(async () => {
+    await fetch("/api/sheet/fallow", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ mark: false, date }),
+    });
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.humaContext(userId),
+    });
+  }, [date, queryClient, userId]);
+
   const snoozeOutcome = useCallback(async () => {
     if (!nextDueOutcome) return;
     try {
@@ -1046,5 +1092,9 @@ export function useToday(): UseTodayReturn {
     // REGEN-02 dormancy surface
     isDormant,
     dormantReEntrySubmit,
+    // REGEN-05 fallow surface
+    isFallow,
+    fallowMarkToday,
+    fallowUnmarkToday,
   };
 }

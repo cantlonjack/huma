@@ -26,6 +26,7 @@ import {
 import { ValidationCard } from "@/components/today/ValidationCard";
 import { OutcomeCheckCard } from "@/components/today/OutcomeCheckCard";
 import DormantCard from "@/components/today/DormantCard";
+import FallowCard from "@/components/today/FallowCard";
 import WeekRhythm from "@/components/today/WeekRhythm";
 import type { Nudge, DimensionKey, SheetEntry } from "@/types/v2";
 import { DIMENSION_LABELS, DIMENSION_COLORS } from "@/types/v2";
@@ -273,6 +274,20 @@ export default function TodayPage() {
             <span className="font-sans text-sage-400 text-[11px]">
               Day {t.dayCount}
             </span>
+            {/* REGEN-05 Fallow toggle. Hidden when already dormant or
+                fallow (operator is already in a rest state) + on the empty
+                state (no aspirations yet = nothing to mark fallow from).
+                Lowercase "fallow today" is the inline affordance — Voice
+                Bible §02 compliant (no urgency verbs, no "reset" framing). */}
+            {!t.loading && !t.isDormant && !t.isFallow && t.aspirations.length > 0 && (
+              <button
+                onClick={t.fallowMarkToday}
+                aria-label="Mark today fallow"
+                className="font-sans text-sage-400 text-[11px] bg-transparent border-0 cursor-pointer hover:text-sage-600 transition-colors"
+              >
+                fallow today
+              </button>
+            )}
             <ThemeToggleIcon className="size-7 -mr-1.5" />
           </div>
         </div>
@@ -288,6 +303,16 @@ export default function TodayPage() {
              invalidates huma_context cache). Priority: Dormancy > Fallow
              > Outcome > normal sheet. */
           <DormantCard onReEntry={t.dormantReEntrySubmit} />
+        ) : t.isFallow ? (
+          /* ─── REGEN-05 Fallow ─── */
+          /* Operator declared today fallow (one-day "compost day"). Replace
+             the sheet with the spec-line copy + a same-day unmark link.
+             /api/sheet/check rejects new checkoffs while this flag is set
+             (409 FALLOW_DAY). After midnight, unmark is frozen (409
+             FALLOW_FROZEN). Priority: Dormancy > Fallow > Outcome > normal
+             sheet — Dormancy already branched above, so Fallow wins over
+             Outcome + the normal sheet from here. */
+          <FallowCard onUnmark={t.fallowUnmarkToday} />
         ) : t.aspirations.length === 0 ? (
           /* ─── Empty State ─── */
           <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6">

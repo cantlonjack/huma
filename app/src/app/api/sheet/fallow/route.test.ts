@@ -152,7 +152,7 @@ describe("REGEN-05: POST /api/sheet/fallow", () => {
 
     // The update payload carries the new fallowDays entry.
     expect(capturedUpdate).toBeTruthy();
-    const hc = (capturedUpdate as { huma_context: Record<string, unknown> })
+    const hc = (capturedUpdate as unknown as { huma_context: Record<string, unknown> })
       .huma_context;
     const fallowDays = hc.fallowDays as string[];
     expect(fallowDays).toContain(today);
@@ -190,7 +190,7 @@ describe("REGEN-05: POST /api/sheet/fallow", () => {
 
     // No duplicate: exactly one occurrence of `today` in fallowDays.
     expect(capturedUpdate).toBeTruthy();
-    const hc = (capturedUpdate as { huma_context: Record<string, unknown> })
+    const hc = (capturedUpdate as unknown as { huma_context: Record<string, unknown> })
       .huma_context;
     const fallowDays = hc.fallowDays as string[];
     expect(fallowDays.filter((d) => d === today)).toHaveLength(1);
@@ -231,7 +231,7 @@ describe("REGEN-05: POST /api/sheet/fallow", () => {
 
     // Update payload has the date removed.
     expect(capturedUpdate).toBeTruthy();
-    const hc = (capturedUpdate as { huma_context: Record<string, unknown> })
+    const hc = (capturedUpdate as unknown as { huma_context: Record<string, unknown> })
       .huma_context;
     const fallowDays = hc.fallowDays as string[];
     expect(fallowDays).not.toContain(today);
