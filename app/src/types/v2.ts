@@ -113,6 +113,10 @@ export interface Aspiration {
   validationTarget?: string;         // "5 or more out of 7"
   validationFrequency?: ValidationFrequency;
   failureResponse?: string;          // Systemic, never personal
+  // ISO timestamp of when the aspiration was created. Optional because
+  // pre-existing localStorage fallback reads and older rows may not have it.
+  // REGEN-03 Plan 02-05 reads this as the 90-day outcome-check clock anchor.
+  createdAt?: string;
 }
 
 export interface ValidationAnswer {

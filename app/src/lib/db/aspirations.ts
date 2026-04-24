@@ -32,6 +32,9 @@ export async function getAspirations(
     stage: (row.stage as Aspiration["stage"]) || "active",
     funnel: (row.funnel as AspirationFunnel) || undefined,
     triggerData: (row.trigger_data as AspirationTrigger) || undefined,
+    // REGEN-03: surface created_at so /today can compute the 90-day
+    // outcome-check clock against the real creation timestamp.
+    createdAt: (row.created_at as string | undefined) || undefined,
   }));
 }
 
@@ -61,6 +64,8 @@ export async function getAllAspirations(
     stage: (row.stage as Aspiration["stage"]) || "active",
     funnel: (row.funnel as AspirationFunnel) || undefined,
     triggerData: (row.trigger_data as AspirationTrigger) || undefined,
+    // REGEN-03: surface created_at for the 90-day outcome-check clock.
+    createdAt: (row.created_at as string | undefined) || undefined,
   }));
 }
 
